@@ -37,7 +37,7 @@ import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.fsdevicemodule.business.FlySightCharacteristic
 import fr.hozakan.flysightble.fsdevicemodule.business.FlySightDevice
-import fr.hozakan.flysightble.model.DirectoryEntry
+import fr.hozakan.flysightble.model.FileInfo
 import timber.log.Timber
 
 
@@ -190,7 +190,7 @@ fun FlySightDeviceItem(
             Text("Device: ${device.bluetoothDevice.name}")
             var state by remember { mutableStateOf<FlySightDevice.State>(FlySightDevice.State.Disconnected) }
             var services by remember { mutableStateOf<List<BluetoothGattService>>(emptyList()) }
-            var directoryContent by remember { mutableStateOf<List<DirectoryEntry>>(emptyList()) }
+            var directoryContent by remember { mutableStateOf<List<FileInfo>>(emptyList()) }
             var logs by remember { mutableStateOf<List<String>>(emptyList()) }
             LaunchedEffect(device) {
                 device.state.collect {
@@ -237,7 +237,7 @@ fun FlySightDeviceItem(
             }
             Spacer(modifier = Modifier.padding(8.dp))
             directoryContent.forEach { entry ->
-                Text("Entry: ${entry.name}")
+                Text("Entry: ${entry.fileName}")
             }
             Spacer(modifier = Modifier.padding(8.dp))
             Text("Logs:")
