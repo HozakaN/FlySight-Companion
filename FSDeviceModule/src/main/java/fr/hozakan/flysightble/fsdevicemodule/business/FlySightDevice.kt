@@ -10,7 +10,6 @@ import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothProfile
 import android.bluetooth.BluetoothSocket
 import android.content.Context
-import android.util.Log
 import fr.hozakan.flysightble.framework.extension.bytesToHex
 import fr.hozakan.flysightble.model.FileInfo
 import kotlinx.coroutines.CancellableContinuation
@@ -19,6 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -28,10 +28,7 @@ import timber.log.Timber
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.Calendar
-import java.util.Date
 import java.util.GregorianCalendar
-import java.util.TimeZone
 import java.util.UUID
 import kotlin.coroutines.resume
 
@@ -138,6 +135,17 @@ class FlySightDevice(
                 )
             }
 
+            override fun onMtuChanged(gatt: BluetoothGatt?, mtu: Int, status: Int) {
+                super.onMtuChanged(gatt, mtu, status)
+                log("[MTU_CHANGED] mtu = $mtu, status = $status")
+                Timber.d(
+                    "Hoz mtu changed : $mtu, status = $status"
+                )
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+//                    startGattServicesDiscovery()
+                }
+            }
+
             override fun onCharacteristicChanged(
                 gatt: BluetoothGatt,
                 characteristic: BluetoothGattCharacteristic,
@@ -154,8 +162,27 @@ class FlySightDevice(
                 )
                 when (characteristic.uuid) {
                     FlySightCharacteristic.CRS_TX.uuid -> {
-                        val truc = characteristic.value
-                        handleDirectoryEntries(value)
+                        val cmdCode = value[0].toInt() and 0xFF
+                        val cmd = Command.fromValue(cmdCode)
+                        when (cmd) {
+                            Command.ACK -> {}
+                            Command.CANCEL -> {}
+                            Command.CREATE -> {}
+                            Command.DELETE -> {}
+                            Command.FILE_ACK -> {}
+                            Command.FILE_DATA -> {}
+                            Command.FILE_INFO -> {
+                                handleFileEntry(value.sliceArray(1 until value.size))
+                            }
+                            Command.MK_DIR -> {}
+                            Command.NAK -> {}
+                            Command.READ -> {}
+                            Command.READ_DIR -> {}
+                            Command.WRITE -> {}
+                            else -> {
+                                log("Unknown command code : $cmdCode")
+                            }
+                        }
                     }
 
                     else -> {}
@@ -169,7 +196,11 @@ class FlySightDevice(
             newState
         }
         if (newState == State.Connected && isNewConnection) {
-            startGattServicesDiscovery()
+            increaseMtuSize()
+            scope?.launch {
+                delay(500)
+                startGattServicesDiscovery()
+            }
             isNewConnection = false
         }
         freeConnectionContinuation(newState == State.Connected)
@@ -274,6 +305,7 @@ class FlySightDevice(
                 }
             }
         }
+        gatt.requestMtu(250)
         if (txCharacteristic != null && rxCharacteristic != null) {
             gattTaskQueue.addTask(GattTask.ReadTask(gatt, rxCharacteristic!!, {
                 log(
@@ -321,65 +353,44 @@ class FlySightDevice(
         val tx = this.txCharacteristic ?: return
 
         Timber.i("Getting directory $directory")
-        val command = byteArrayOf(0x05) + directory.toByteArray(Charsets.UTF_8)
-        gattTaskQueue.addTask(
-            GattTask.WriteTask(
-                gatt,
-                rx,
-                command,
-                BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
-                {
-                    log(
-                        "[COMMAND] [WRITE] [${
-                            FlySightCharacteristic.fromUuid(
-                                rx.uuid
-                            )?.name
-                        }] ${command.bytesToHex()}"
-                    )
-                }
-            )
+        val task = TaskBuilder.buildGetDirectoryTask(
+            gatt = gatt,
+            characteristic = rx,
+            path = directory,
+            commandLogger = {
+                log(it)
+            }
         )
-//        gattTaskQueue.addTask(
-//            GattTask.ReadTask(
-//                gatt,
-//                tx,
-//                {
-//                    log(
-//                        "[COMMAND] [READ] [${
-//                            FlySightCharacteristic.fromUuid(
-//                                tx.uuid
-//                            )?.name
-//                        }]"
-//                    )
-//                }
-//            )
-//        )
-//        gatt.writeCharacteristic(
-//            characteristic,
-//            directoryCommand,
-//            BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
-//        )
+        gattTaskQueue.addTask(task)
     }
 
-    fun ByteArray.toIntLE(startIndex: Int): Int {
-        require(startIndex + 3 < this.size) { "Index out of bounds for converting to Int" }
-        return (this[startIndex].toInt() and 0xFF) or
-                ((this[startIndex + 1].toInt() and 0xFF) shl 8) or
-                ((this[startIndex + 2].toInt() and 0xFF) shl 16) or
-                ((this[startIndex + 3].toInt() and 0xFF) shl 24)
-    }
+//    fun ByteArray.toIntLE(startIndex: Int): Int {
+//        require(startIndex + 3 < this.size) { "Index out of bounds for converting to Int" }
+//        return (this[startIndex].toInt() and 0xFF) or
+//                ((this[startIndex + 1].toInt() and 0xFF) shl 8) or
+//                ((this[startIndex + 2].toInt() and 0xFF) shl 16) or
+//                ((this[startIndex + 3].toInt() and 0xFF) shl 24)
+//    }
 
     private fun decodeFileInfo(byteArray: ByteArray): FileInfo? {
-        if (byteArray.size != 20) return null // Ensure byte array length is as expected
-
+        if (byteArray.isEmpty()) return null
         val buffer = ByteBuffer.wrap(byteArray)
         buffer.order(ByteOrder.LITTLE_ENDIAN) //TODO remove and check if it's needed
-
-        //packet ID (1 byte) + file size (4 bytes) + file date (2 bytes) + file time (2 bytes) + file attributes (1 byte) + file name (13 bytes)
 
         // Decode packet ID (1 byte)
         val packetId = buffer.get().toInt() and 0xFF
         val packetIdKt = byteArray[0].toInt() and 0xFF
+        log("Packet ID : $packetId")
+
+
+//        if (byteArray.size != 20) return null // Ensure byte array length is as expected
+
+
+        //packet ID (1 byte) + file size (4 bytes) + file date (2 bytes) + file time (2 bytes) + file attributes (1 byte) + file name (13 bytes)
+
+        // Decode packet ID (1 byte)
+//        val packetId = buffer.get().toInt() and 0xFF
+//        val packetIdKt = byteArray[0].toInt() and 0xFF
 
         // Decode file size (4 bytes)
         val fileSize = buffer.int
@@ -417,40 +428,15 @@ class FlySightDevice(
         val isDirectory = attributesRaw and 0x10 != 0 // Assuming 0x10 bit indicates a directory
 
         // Decode file name (13 bytes)
-//        val fileNameBytes = ByteArray(13)
-        val fileNameBytes = ByteArray(10)
+        val fileNameBytes = ByteArray(13)
         buffer.get(fileNameBytes)
-        val fileName = String(fileNameBytes).trimEnd { it == '\u0000' } // Remove null characters
-
-        /*
-
-        val size = value.sliceArray(2..5).toInt()
-        val fdate = value.sliceArray(6..7).toInt()
-        val ftime = value.sliceArray(8..9).toInt()
-        val fattrib = value[10].toInt()
-
-        val nameData = value.sliceArray(11..23)
-        val nameDataNullTerminated = nameData.takeWhile { it != 0.toByte() }.toByteArray()
-
-        val name = nameDataNullTerminated.toString(Charsets.UTF_8)
-
-        val year = ((fdate shr 9) and 0x7F) + 1980
-        val month = (fdate shr 5) and 0x0F
-        val day = fdate and 0x1F
-        val hour = (ftime shr 11) and 0x1F
-        val minute = (ftime shr 5) and 0x3F
-        val second = (ftime and 0x1F) * 2
-
-        val calendar = Calendar.getInstance(TimeZone.getDefault())
-        calendar.set(year, month, day, hour, minute, second)
-
-        //Decode attributes
-        val attributesOrder = listOf("r", "h", "s", "a", "d")
-        val attribText = attributesOrder.mapIndexed { index, letter ->
-            if ((fattrib and (1 shl index)) != 0) letter else "-"
-        }.joinToString("")
-         */
-
+        val nullByteIndex = fileNameBytes.indexOf(0.toByte())
+        val nameDataNullTerminated = if (nullByteIndex != -1) {
+            fileNameBytes.copyOfRange(0, nullByteIndex)
+        } else {
+            fileNameBytes
+        }
+        val fileName = String(nameDataNullTerminated, Charsets.UTF_8)
         return FileInfo(packetId, fileSize.toLong(), fileDate, fileTime, attributes, fileName, isDirectory)
     }
 
@@ -529,7 +515,7 @@ class FlySightDevice(
         return FileInfo(packetId, fileSize.toLong(), fileDate, fileTime, attributes, fileName, isDirectory)
     }
 
-    private fun handleDirectoryEntries(value: ByteArray) {
+    private fun handleFileEntry(value: ByteArray) {
         /*
         private func parseDirectoryEntry(from data: Data) -> DirectoryEntry? {
         guard data.count == 24 else { return nil } // Ensure data length is as expected
@@ -631,6 +617,12 @@ class FlySightDevice(
             currentPath.removeAt(currentPath.lastIndex)
             loadDirectoryEntries()
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun increaseMtuSize() {
+        val gatt = this.gatt ?: return
+        gatt.requestMtu(512)
     }
 
     @SuppressLint("MissingPermission")
