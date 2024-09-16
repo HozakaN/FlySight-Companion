@@ -1,5 +1,6 @@
 package fr.hozakan.flysightble.fsdevicemodule.ui.device_detail
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,7 +33,8 @@ import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 
 @Composable
 fun DeviceDetailComposables(
-    deviceId: String
+    deviceId: String,
+    onNavigateUp: () -> Unit
 ) {
     val factory = LocalViewModelFactory.current
 
@@ -43,6 +45,15 @@ fun DeviceDetailComposables(
     LaunchedEffect(key1 = deviceId) {
         viewModel.loadDevice(deviceId)
     }
+
+    BackHandler(enabled = true) {
+        if (state.currentDirectoryPath.size > 1) {
+            viewModel.loadDirectory(state.currentDirectoryPath.dropLast(1))
+        } else {
+            onNavigateUp()
+        }
+    }
+
     Surface(
         modifier = Modifier
             .fillMaxSize(),

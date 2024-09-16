@@ -128,7 +128,12 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                 composable(route = AppScreen.DeviceDetail.route) { backStackEntry ->
                                     val deviceId = backStackEntry.arguments?.getString("deviceId")
                                     if (deviceId != null) {
-                                        DeviceDetailComposables(deviceId = deviceId)
+                                        DeviceDetailComposables(
+                                            deviceId = deviceId,
+                                            onNavigateUp = {
+                                                navController.popBackStack()
+                                            }
+                                        )
                                     }
                                 }
                             }
