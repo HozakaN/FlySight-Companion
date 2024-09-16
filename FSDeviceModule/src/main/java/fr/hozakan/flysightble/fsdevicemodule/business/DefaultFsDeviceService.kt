@@ -2,8 +2,10 @@ package fr.hozakan.flysightble.fsdevicemodule.business
 
 import android.content.Context
 import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
 class DefaultFsDeviceService(
@@ -26,6 +28,9 @@ class DefaultFsDeviceService(
         }
     }
 
+    override fun observeDevice(deviceId: String): Flow<FlySightDevice?> =
+        _devices.map { flySightDevices -> flySightDevices.firstOrNull { it.uuid == deviceId } }
+
     override suspend fun connectToDevice(device: FlySightDevice) {
         device.connectGatt()
     }
@@ -34,11 +39,4 @@ class DefaultFsDeviceService(
         device.disconnectGatt()
     }
 
-    override suspend fun refreshDirectoryContent(device: FlySightDevice) {
-        device.refreshDirectoryContent()
-    }
-
-//    private fun FlySightDevice.connect() {
-//
-//    }
 }

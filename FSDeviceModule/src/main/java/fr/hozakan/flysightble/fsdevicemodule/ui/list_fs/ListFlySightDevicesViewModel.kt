@@ -7,6 +7,7 @@ import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightble.framework.service.permission.AndroidPermissionsService
 import fr.hozakan.flysightble.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightble.fsdevicemodule.business.FsDeviceService
+import fr.hozakan.flysightble.model.DeviceConnectionState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -74,19 +75,13 @@ class ListFlySightDevicesViewModel @Inject constructor(
         }
     }
 
-    fun selectDevice(device: FlySightDevice) {
+    fun connectDevice(device: FlySightDevice) {
         viewModelScope.launch {
-            if (device.state.value == FlySightDevice.State.Disconnected) {
+            if (device.connectionState.value == DeviceConnectionState.Disconnected) {
                 fsDeviceService.connectToDevice(device)
             } else {
                 fsDeviceService.disconnectFromDevice(device)
             }
-        }
-    }
-
-    fun refreshDirectoryContent(device: FlySightDevice) {
-        viewModelScope.launch {
-            fsDeviceService.refreshDirectoryContent(device)
         }
     }
 

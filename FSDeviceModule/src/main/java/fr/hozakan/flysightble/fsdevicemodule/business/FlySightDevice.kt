@@ -11,6 +11,7 @@ import android.bluetooth.BluetoothProfile
 import android.bluetooth.BluetoothSocket
 import android.content.Context
 import fr.hozakan.flysightble.framework.extension.bytesToHex
+import fr.hozakan.flysightble.model.DeviceConnectionState
 import fr.hozakan.flysightble.model.FileInfo
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CompletableDeferred
@@ -38,10 +39,9 @@ class FlySightDevice(
     private val context: Context
 ) {
 
-    private val uuid = UUID.randomUUID()
+    val uuid = UUID.randomUUID().toString()
 
-    private var socket: BluetoothSocket? = null
-    private var /**/gatt: BluetoothGatt? = null
+    private var gatt: BluetoothGatt? = null
         private set(value) {
             field = value
             if (value == null) {
@@ -53,7 +53,10 @@ class FlySightDevice(
                 pvCharacteristic = null
                 controlCharacteristic = null
                 resultCharacteristic = null
-                currentPath.clear()
+//                currentPath.clear()
+                _directory.update {
+                    emptyList()
+                }
             }
         }
     private var scope: CoroutineScope? = null
@@ -66,7 +69,23 @@ class FlySightDevice(
     private var controlCharacteristic: BluetoothGattCharacteristic? = null
     private var resultCharacteristic: BluetoothGattCharacteristic? = null
 
-    private val currentPath = mutableListOf<String>()
+//    private val currentPath = mutableListOf<String>()
+
+    private var isLoadingDirectory = false
+    private val _directory = MutableStateFlow<List<FileInfo>>(emptyList())
+    val directory = _directory.asStateFlow()
+
+    private val _connectionState =
+        MutableStateFlow<DeviceConnectionState>(DeviceConnectionState.Disconnected)
+    val connectionState = _connectionState.asStateFlow()
+
+    private val _logs = MutableStateFlow<List<String>>(emptyList())
+    val logs = _logs.asStateFlow()
+
+    private val _services = MutableStateFlow<List<BluetoothGattService>>(emptyList())
+    val services = _services.asStateFlow()
+
+    private var connectionContinuation: CancellableContinuation<Boolean>? = null
 
     private val gattTaskQueue = GattTaskQueue(
         gattCallback = object : BluetoothGattCallback() {
@@ -74,10 +93,17 @@ class FlySightDevice(
                 super.onConnectionStateChange(gatt, status, newState)
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     log("Gatt connected")
-                    stateUpdater(State.Connected)
+                    increaseMtuSize()
+                    scope?.launch {
+                        delay(500)
+                        startGattServicesDiscovery()
+                    }
+                    isNewConnection = false
                 } else {
                     log("Gatt disconnected")
-                    stateUpdater(State.Disconnected)
+                    if (_connectionState.value != DeviceConnectionState.ConnectionError) {
+                        stateUpdater(DeviceConnectionState.Disconnected)
+                    }
                 }
             }
 
@@ -174,6 +200,7 @@ class FlySightDevice(
                             Command.FILE_INFO -> {
                                 handleFileEntry(value.sliceArray(1 until value.size))
                             }
+
                             Command.MK_DIR -> {}
                             Command.NAK -> {}
                             Command.READ -> {}
@@ -191,35 +218,12 @@ class FlySightDevice(
         }
     )
 
-    private fun stateUpdater(newState: State) {
-        _state.update {
-            newState
+    private fun stateUpdater(newConnectionState: DeviceConnectionState) {
+        _connectionState.update {
+            newConnectionState
         }
-        if (newState == State.Connected && isNewConnection) {
-            increaseMtuSize()
-            scope?.launch {
-                delay(500)
-                startGattServicesDiscovery()
-            }
-            isNewConnection = false
-        }
-        freeConnectionContinuation(newState == State.Connected)
+        freeConnectionContinuation(newConnectionState == DeviceConnectionState.Connected)
     }
-
-    private var isLoadingDirectory = false
-    private val _directory = MutableStateFlow<List<FileInfo>>(emptyList())
-    val directory = _directory.asStateFlow()
-
-    private val _state = MutableStateFlow<State>(State.Disconnected)
-    val state = _state.asStateFlow()
-
-    private val _logs = MutableStateFlow<List<String>>(emptyList())
-    val logs = _logs.asStateFlow()
-
-    private val _services = MutableStateFlow<List<BluetoothGattService>>(emptyList())
-    val services = _services.asStateFlow()
-
-    private var connectionContinuation: CancellableContinuation<Boolean>? = null
 
     @SuppressLint("MissingPermission")
     private fun doDiscoverGattServices(gatt: BluetoothGatt) {
@@ -316,33 +320,20 @@ class FlySightDevice(
                     }]"
                 )
             }))
-            loadDirectoryEntries()
+//            loadDirectoryEntries()
+            stateUpdater(DeviceConnectionState.Connected)
+        } else {
+            gatt.disconnect()
+            stateUpdater(DeviceConnectionState.ConnectionError)
         }
     }
 
-    fun refreshDirectoryContent() {
-        loadDirectoryEntries()
-    }
+//    fun refreshDirectoryContent() {
+//        loadDirectoryEntries()
+//    }
 
-    @SuppressLint("MissingPermission")
-    private fun loadDirectoryEntries() {
-        /*
-        private func loadDirectoryEntries() {
-            // Reset the directory listings
-            directoryEntries = []
-
-            // Set waiting flag
-            isAwaitingResponse = true
-
-            if let peripheral = connectedPeripheral?.peripheral, let rx = rxCharacteristic {
-                let directory = "/" + (currentPath).joined(separator: "/")
-                print("  Getting directory \(directory)")
-                let directoryCommand = Data([0x05]) + directory.data(using: .utf8)!
-                peripheral.writeValue(directoryCommand, for: rx, type: .withoutResponse)
-            }
-        }
-         */
-        val directory = "/${currentPath.joinToString("/")}"
+    fun loadDirectory(directoryPath: List<String>) {
+        val directory = "/${directoryPath.joinToString("/")}"
         log("Loading directory $directory")
         _directory.update { emptyList() }
 
@@ -350,7 +341,6 @@ class FlySightDevice(
 
         val gatt = this.gatt ?: return
         val rx = this.rxCharacteristic ?: return
-        val tx = this.txCharacteristic ?: return
 
         Timber.i("Getting directory $directory")
         val task = TaskBuilder.buildGetDirectoryTask(
@@ -363,6 +353,29 @@ class FlySightDevice(
         )
         gattTaskQueue.addTask(task)
     }
+
+//    @SuppressLint("MissingPermission")
+//    private fun loadDirectoryEntries() {
+//        val directory = "/${currentPath.joinToString("/")}"
+//        log("Loading directory $directory")
+//        _directory.update { emptyList() }
+//
+//        isLoadingDirectory = true
+//
+//        val gatt = this.gatt ?: return
+//        val rx = this.rxCharacteristic ?: return
+//
+//        Timber.i("Getting directory $directory")
+//        val task = TaskBuilder.buildGetDirectoryTask(
+//            gatt = gatt,
+//            characteristic = rx,
+//            path = directory,
+//            commandLogger = {
+//                log(it)
+//            }
+//        )
+//        gattTaskQueue.addTask(task)
+//    }
 
 //    fun ByteArray.toIntLE(startIndex: Int): Int {
 //        require(startIndex + 3 < this.size) { "Index out of bounds for converting to Int" }
@@ -398,7 +411,6 @@ class FlySightDevice(
 //        val fileSizeKt = sliceArray.toInt()
         //pick next 4 bytes as little endian and convert it to int
 //        val fileSizeLe = byteArray.toIntLE(1)
-
 
 
         // Decode file date (2 bytes)
@@ -437,7 +449,16 @@ class FlySightDevice(
             fileNameBytes
         }
         val fileName = String(nameDataNullTerminated, Charsets.UTF_8)
-        return FileInfo(packetId, fileSize.toLong(), fileDate, fileTime, attributes, fileName, isDirectory)
+        if (fileName.isBlank()) return null
+        return FileInfo(
+            packetId,
+            fileSize.toLong(),
+            fileDate,
+            fileTime,
+            attributes,
+            fileName,
+            isDirectory
+        )
     }
 
     private fun decodeFileInfoOld(byteArray: ByteArray): FileInfo? {
@@ -512,7 +533,15 @@ class FlySightDevice(
         }.joinToString("")
          */
 
-        return FileInfo(packetId, fileSize.toLong(), fileDate, fileTime, attributes, fileName, isDirectory)
+        return FileInfo(
+            packetId,
+            fileSize.toLong(),
+            fileDate,
+            fileTime,
+            attributes,
+            fileName,
+            isDirectory
+        )
     }
 
     private fun handleFileEntry(value: ByteArray) {
@@ -563,7 +592,7 @@ class FlySightDevice(
         }
     }
 
-    fun ByteArray.toInt(): Int {
+    private fun ByteArray.toInt(): Int {
 //            return this[0].toInt() or (this[1].toInt() shl 8) or (this[2].toInt() shl 16) or (this[3].toInt() shl 24)
         var value = 0
         for (b in this) {
@@ -605,19 +634,19 @@ class FlySightDevice(
 //        log("[COMMAND] [${FlySightCharacteristic.fromUuid(characteristic.uuid)?.name}] ${directoryCommand.bytesToHex()}")
 //    }
 
-    private fun changeDirectory(newDirectory: String) {
-        if (isLoadingDirectory) return
-        currentPath += newDirectory
-        loadDirectoryEntries()
-    }
-
-    private fun goUpOneDirectory() {
-        if (isLoadingDirectory) return
-        if (currentPath.isNotEmpty()) {
-            currentPath.removeAt(currentPath.lastIndex)
-            loadDirectoryEntries()
-        }
-    }
+//    private fun changeDirectory(newDirectory: String) {
+//        if (isLoadingDirectory) return
+//        currentPath += newDirectory
+//        loadDirectoryEntries()
+//    }
+//
+//    private fun goUpOneDirectory() {
+//        if (isLoadingDirectory) return
+//        if (currentPath.isNotEmpty()) {
+//            currentPath.removeAt(currentPath.lastIndex)
+//            loadDirectoryEntries()
+//        }
+//    }
 
     @SuppressLint("MissingPermission")
     private fun increaseMtuSize() {
@@ -645,6 +674,7 @@ class FlySightDevice(
             return false
         }
         scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        stateUpdater(DeviceConnectionState.Connecting)
         scope?.launch {
             isNewConnection = true
             gatt = bluetoothDevice.connectGatt(context, true, gattTaskQueue.gattCallback())
@@ -670,8 +700,8 @@ class FlySightDevice(
                     connection.close()
                     gatt = null
                     scope = null
-                    _state.update {
-                        State.Disconnected
+                    _connectionState.update {
+                        DeviceConnectionState.Disconnected
                     }
                     true
                 } catch (ex: IOException) {
@@ -680,11 +710,6 @@ class FlySightDevice(
             }
             job?.await() ?: false
         } ?: false
-    }
-
-    sealed interface State {
-        data object Connected : State
-        data object Disconnected : State
     }
 
     private fun log(message: String) {
@@ -703,7 +728,10 @@ class FlySightDevice(
     }
 
     @SuppressLint("MissingPermission")
-    private fun enableNotifications(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+    private fun enableNotifications(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic
+    ) {
         characteristic.getDescriptor(cccdUuid)?.let { cccdDescriptor ->
             val payload = when {
                 characteristic.isIndicatable() -> BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
@@ -752,7 +780,11 @@ class FlySightDevice(
                 Timber.e("setCharacteristicNotification failed for ${characteristic.uuid}")
                 return
             }
-            writeDescriptor(gatt, cccdDescriptor, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)
+            writeDescriptor(
+                gatt,
+                cccdDescriptor,
+                BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+            )
         } ?: Timber.e("${characteristic.uuid} doesn't contain the CCC descriptor!")
     }
 }
