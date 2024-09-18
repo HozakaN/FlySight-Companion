@@ -202,7 +202,9 @@ class FlySightDevice(
                             }
 
                             Command.MK_DIR -> {}
-                            Command.NAK -> {}
+                            Command.NAK -> {
+                                log("getting NAK on cmd ${Command.fromValue( value[1].toInt() and 0xFF)}")
+                            }
                             Command.READ -> {}
                             Command.READ_DIR -> {}
                             Command.WRITE -> {}
@@ -322,6 +324,7 @@ class FlySightDevice(
             }))
 //            loadDirectoryEntries()
             stateUpdater(DeviceConnectionState.Connected)
+            readCurrentConfigFile()
         } else {
             gatt.disconnect()
             stateUpdater(DeviceConnectionState.ConnectionError)
@@ -347,6 +350,23 @@ class FlySightDevice(
             gatt = gatt,
             characteristic = rx,
             path = directory,
+            commandLogger = {
+                log(it)
+            }
+        )
+        gattTaskQueue.addTask(task)
+    }
+
+    private fun readCurrentConfigFile() {
+        val file = "/CONFIG.TXT"
+        log("Reading configuration file")
+        val gatt = this.gatt ?: return
+        val rx = this.rxCharacteristic ?: return
+
+        val task = TaskBuilder.buildReadConfigFileTask(
+            gatt = gatt,
+            characteristic = rx,
+            path = file,
             commandLogger = {
                 log(it)
             }
@@ -461,129 +481,7 @@ class FlySightDevice(
         )
     }
 
-    private fun decodeFileInfoOld(byteArray: ByteArray): FileInfo? {
-        if (byteArray.size != 20) return null // Ensure byte array length is as expected
-
-        val buffer = ByteBuffer.wrap(byteArray)
-        buffer.order(ByteOrder.LITTLE_ENDIAN)
-
-        // Decode packet ID (1 byte)
-        val packetId = buffer.get().toInt() and 0xFF
-
-        // Decode file size (4 bytes)
-        val fileSize = buffer.int
-
-        // Decode file date (2 bytes)
-        val array = ByteArray(2)
-        val fileDateRaw = buffer.short.toInt() and 0xFFFF
-        val year = (fileDateRaw shr 9) + 1980
-        val month = (fileDateRaw shr 5) and 0x0F
-        val day = fileDateRaw and 0x1F
-        val fileDate = GregorianCalendar(year, month - 1, day).time
-
-        // Decode file time (2 bytes)
-        val fileTimeRaw = buffer.short.toInt() and 0xFFFF
-        val hour = fileTimeRaw shr 11
-        val minute = (fileTimeRaw shr 5) and 0x3F
-        val second = (fileTimeRaw and 0x1F) * 2
-        val fileTime = GregorianCalendar(0, 0, 0, hour, minute, second).time
-
-        // Decode file attributes (1 byte)
-        val attributesRaw = buffer.get().toInt() and 0xFF
-        val attributes = mutableSetOf<String>()
-        if (attributesRaw and 0x01 != 0) attributes.add("Read-Only")
-        if (attributesRaw and 0x02 != 0) attributes.add("Hidden")
-        if (attributesRaw and 0x04 != 0) attributes.add("System")
-        if (attributesRaw and 0x20 != 0) attributes.add("Archive")
-
-        // Check if it's a directory
-        val isDirectory = attributesRaw and 0x10 != 0 // Assuming 0x10 bit indicates a directory
-
-        // Decode file name (13 bytes)
-        val fileNameBytes = ByteArray(13)
-        buffer.get(fileNameBytes)
-        val fileName = String(fileNameBytes).trimEnd { it == '\u0000' } // Remove null characters
-
-        /*
-
-        val size = value.sliceArray(2..5).toInt()
-        val fdate = value.sliceArray(6..7).toInt()
-        val ftime = value.sliceArray(8..9).toInt()
-        val fattrib = value[10].toInt()
-
-        val nameData = value.sliceArray(11..23)
-        val nameDataNullTerminated = nameData.takeWhile { it != 0.toByte() }.toByteArray()
-
-        val name = nameDataNullTerminated.toString(Charsets.UTF_8)
-
-        val year = ((fdate shr 9) and 0x7F) + 1980
-        val month = (fdate shr 5) and 0x0F
-        val day = fdate and 0x1F
-        val hour = (ftime shr 11) and 0x1F
-        val minute = (ftime shr 5) and 0x3F
-        val second = (ftime and 0x1F) * 2
-
-        val calendar = Calendar.getInstance(TimeZone.getDefault())
-        calendar.set(year, month, day, hour, minute, second)
-
-        //Decode attributes
-        val attributesOrder = listOf("r", "h", "s", "a", "d")
-        val attribText = attributesOrder.mapIndexed { index, letter ->
-            if ((fattrib and (1 shl index)) != 0) letter else "-"
-        }.joinToString("")
-         */
-
-        return FileInfo(
-            packetId,
-            fileSize.toLong(),
-            fileDate,
-            fileTime,
-            attributes,
-            fileName,
-            isDirectory
-        )
-    }
-
     private fun handleFileEntry(value: ByteArray) {
-        /*
-        private func parseDirectoryEntry(from data: Data) -> DirectoryEntry? {
-        guard data.count == 24 else { return nil } // Ensure data length is as expected
-
-        let size: UInt32 = data.subdata(in: 2..<6).withUnsafeBytes { $0.load(as: UInt32.self) }
-        let fdate: UInt16 = data.subdata(in: 6..<8).withUnsafeBytes { $0.load(as: UInt16.self) }
-        let ftime: UInt16 = data.subdata(in: 8..<10).withUnsafeBytes { $0.load(as: UInt16.self) }
-        let fattrib: UInt8 = data.subdata(in: 10..<11).withUnsafeBytes { $0.load(as: UInt8.self) }
-
-        let nameData = data.subdata(in: 11..<24) // Assuming the rest is the name
-        let nameDataNullTerminated = nameData.split(separator: 0, maxSplits: 1, omittingEmptySubsequences: false).first ?? Data() // Split at the first null byte
-        guard let name = String(data: nameDataNullTerminated, encoding: .utf8), !name.isEmpty else { return nil } // Check for empty name
-
-        // Decode date and time
-        let year = Int((fdate >> 9) & 0x7F) + 1980
-        let month = Int((fdate >> 5) & 0x0F)
-        let day = Int(fdate & 0x1F)
-        let hour = Int((ftime >> 11) & 0x1F)
-        let minute = Int((ftime >> 5) & 0x3F)
-        let second = Int((ftime & 0x1F) * 2) // Multiply by 2 to get the actual seconds
-
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
-        guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day, hour: hour, minute: minute, second: second)) else { return nil }
-
-        // Decode attributes
-        let attributesOrder = ["r", "h", "s", "a", "d"]
-        let attribText = attributesOrder.enumerated().map { index, letter in
-            (fattrib & (1 << index)) != 0 ? letter : "-"
-        }.joined()
-
-        return DirectoryEntry(size: size, date: date, attributes: attribText, name: name)
-    }
-         */
-//        if (value.size != 24) {
-//            return
-//        }
-//        0x1101 611C 0000 2859 5D43 2043 4F4E 4649 472E 5458
-
         val fileInfo = decodeFileInfo(value) ?: return
         log("File name : ${fileInfo.fileName}")
         Timber.d("Hoz directory entry : $fileInfo")

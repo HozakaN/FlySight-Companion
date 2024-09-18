@@ -41,6 +41,11 @@ android {
 }
 
 dependencies {
+    implementation(project(":model"))
+    implementation(project(":framework"))
+    implementation(project(":BluetoothModule"))
+    implementation(project(":FSDeviceModule"))
+    implementation(project(":ConfigFilesModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -53,10 +58,6 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-
-    implementation(project(":framework"))
-    implementation(project(":BluetoothModule"))
-    implementation(project(":FSDeviceModule"))
 
     //Dagger
     compileOnly(libs.dagger)

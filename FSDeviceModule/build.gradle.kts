@@ -37,6 +37,9 @@ android {
 }
 
 dependencies {
+    implementation(project(":BluetoothModule"))
+    implementation(project(":model"))
+    implementation(project(":framework"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -46,9 +49,6 @@ dependencies {
     implementation(libs.dagger)
     implementation(libs.dagger.android)
     implementation(libs.dagger.android.support)
-    implementation(project(":BluetoothModule"))
-    implementation(project(":model"))
-    implementation(project(":framework"))
 
     //Compose
     implementation(libs.androidx.ui)
@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.activity.compose)
+    implementation(project(":ComposableCommons"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

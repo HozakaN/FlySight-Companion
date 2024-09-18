@@ -31,9 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
+import fr.hozakan.flysightble.composablecommons.ExpandableColumn
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.fsdevicemodule.business.FlySightDevice
-import fr.hozakan.flysightble.fsdevicemodule.ui.common.ExpandableColumn
 import fr.hozakan.flysightble.model.DeviceConnectionState
 
 @Composable

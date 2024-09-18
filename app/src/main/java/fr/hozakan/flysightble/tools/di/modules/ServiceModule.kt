@@ -5,6 +5,8 @@ import dagger.Provides
 import fr.hozakan.flysightble.BaseApplication
 import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightble.bluetoothmodule.DefaultBluetoothService
+import fr.hozakan.flysightble.configfilesmodule.business.ConfigFileService
+import fr.hozakan.flysightble.configfilesmodule.business.DefaultConfigFileService
 import fr.hozakan.flysightble.framework.service.applifecycle.ActivityLifecycleService
 import fr.hozakan.flysightble.framework.service.async.ActivityOperationsService
 import fr.hozakan.flysightble.fsdevicemodule.business.DefaultFsDeviceService
@@ -45,5 +47,11 @@ class ServiceModule {
         baseApplication.applicationContext,
         bluetoothService
     )
+
+    @Singleton
+    @Provides
+    fun provideConfigFileService(
+        baseApplication: BaseApplication
+    ): ConfigFileService = DefaultConfigFileService(baseApplication.applicationContext)
 
 }

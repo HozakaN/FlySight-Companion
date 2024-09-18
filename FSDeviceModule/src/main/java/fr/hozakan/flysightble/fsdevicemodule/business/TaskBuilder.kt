@@ -28,4 +28,28 @@ object TaskBuilder {
             }
         )
     }
+
+    fun buildReadConfigFileTask(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic,
+        path: String,
+        commandLogger: (String) -> Unit
+    ) : GattTask {
+        val command = CommandBuilder.buildReadFileCommand(path)
+        return GattTask.WriteTask(
+            gatt,
+            characteristic,
+            command,
+            BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
+            {
+                commandLogger(
+                    "[COMMAND] [WRITE] [${
+                        FlySightCharacteristic.fromUuid(
+                            characteristic.uuid
+                        )?.name
+                    }] ${command.bytesToHex()}"
+                )
+            }
+        )
+    }
 }

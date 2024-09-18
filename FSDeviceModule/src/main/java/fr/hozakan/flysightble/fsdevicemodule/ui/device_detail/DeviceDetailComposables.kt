@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -117,14 +118,21 @@ fun BreadCrumb(
                     onPathPartClicked(path.subList(0, index + 1))
                 }
             }
-            Row(modifier = rowModifier) {
+            Row(
+                modifier = rowModifier.padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 if (index > 0) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowRight,
                         contentDescription = "path separator",
                     )
+                    Spacer(modifier = Modifier.requiredWidth(8.dp))
                 }
-                Text(pathPart)
+                Text(
+                    text = pathPart,
+                    style = MaterialTheme.typography.titleLarge
+                )
             }
         }
     }

@@ -16,16 +16,19 @@ class DeviceDetailViewModel @Inject constructor(
     private val fsDeviceService: FsDeviceService,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(DeviceDetailState(
-        device = null,
-        currentDirectoryPath = listOf("/"),
-        directoryContent = emptyList()
-    ))
+    private val _state = MutableStateFlow(
+        DeviceDetailState(
+            device = null,
+            currentDirectoryPath = listOf("/"),
+            directoryContent = emptyList(),
+            configFileInfo = null
+        )
+    )
 
     val state = _state.asStateFlow()
 
-    private  var deviceJob: Job? = null
-    private  var deviceDirectoryJob: Job? = null
+    private var deviceJob: Job? = null
+    private var deviceDirectoryJob: Job? = null
 
     fun loadDevice(deviceId: String) {
         var initialLoad = true
@@ -64,6 +67,16 @@ class DeviceDetailViewModel @Inject constructor(
                             .sortedBy { it.fileName }
                             .sortedByDescending { it.isDirectory }
                     )
+                }
+                if (fileInfos.isNotEmpty() && _state.value.configFileInfo == null && _state.value.currentDirectoryPath.size == 1) {
+                    val configFileInfo = fileInfos.firstOrNull { it.fileName == "config.txt" }
+                    if (configFileInfo != null) {
+                        _state.update {
+                            it.copy(
+                                configFileInfo = configFileInfo
+                            )
+                        }
+                    }
                 }
             }
         }

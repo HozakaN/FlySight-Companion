@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="misc_expand_more">More</string>
+    <string name="misc_reduce">Reduce</string>
+    <string name="misc_save">Save</string>
+    <string name="misc_cancel">Cancel</string>
+</resources>
