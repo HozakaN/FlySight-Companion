@@ -62,6 +62,11 @@ object CommandBuilder {
         byteArrayOf(FS_CRS_COMMAND_DELETE.toByte()) + path.toByteArray(Charsets.UTF_8)
 
     fun buildReadFileCommand(path: String): ByteArray =
-        byteArrayOf(FS_CRS_COMMAND_READ.toByte()) + path.toByteArray(Charsets.UTF_8)
+        byteArrayOf(FS_CRS_COMMAND_READ.toByte()) + 0.toByte() + 242.toByte() + path.toByteArray(
+            Charsets.UTF_8
+        )
+
+    fun buildFileAckCommand(): ByteArray =
+        byteArrayOf(FS_CRS_COMMAND_FILE_ACK.toByte())
 
 }
