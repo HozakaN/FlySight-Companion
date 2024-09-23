@@ -1,5 +1,5 @@
 [versions]
-agp = "8.8.0-alpha02"
+agp = "8.8.0-alpha03"
 dagger = "2.46.1"
 kotlin = "2.0.0"
 coreKtx = "1.13.1"

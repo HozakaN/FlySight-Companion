@@ -10,6 +10,8 @@ import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothProfile
 import android.content.Context
 import fr.hozakan.flysightble.framework.extension.bytesToHex
+import fr.hozakan.flysightble.fsdevicemodule.business.job.BleFileCreator
+import fr.hozakan.flysightble.fsdevicemodule.business.job.BleFileWriter
 import fr.hozakan.flysightble.model.FileState
 import fr.hozakan.flysightble.model.DeviceConnectionState
 import fr.hozakan.flysightble.model.FileInfo
@@ -55,7 +57,6 @@ class FlySightDevice(
                 pvCharacteristic = null
                 controlCharacteristic = null
                 resultCharacteristic = null
-//                currentPath.clear()
                 _directory.update {
                     emptyList()
                 }
@@ -70,8 +71,6 @@ class FlySightDevice(
     private var pvCharacteristic: BluetoothGattCharacteristic? = null
     private var controlCharacteristic: BluetoothGattCharacteristic? = null
     private var resultCharacteristic: BluetoothGattCharacteristic? = null
-
-//    private val currentPath = mutableListOf<String>()
 
     private var isLoadingDirectory = false
     private val _directory = MutableStateFlow<List<FileInfo>>(emptyList())
@@ -137,7 +136,7 @@ class FlySightDevice(
                     "Hoz characteristic read : ${characteristic.uuid} (${
                         FlySightCharacteristic.fromUuid(
                             characteristic.uuid
-                        )
+                        )?.name
                     }), status = $status, value = ${value.bytesToHex()}"
                 )
                 logReadCharacteristic(characteristic.uuid, value)
@@ -150,20 +149,13 @@ class FlySightDevice(
             ) {
                 super.onCharacteristicWrite(gatt, characteristic, status)
                 Timber.d(
-                    "Hoz2 characteristic write : ${characteristic?.uuid} (${
+                    "Hoz characteristic write : ${characteristic?.uuid} (${
                         FlySightCharacteristic.fromUuid(
                             characteristic?.uuid
                         )?.name
                     }), status = $status}"
                 )
                 log("[WRITE][${FlySightCharacteristic.fromUuid(characteristic?.uuid)?.name}] status = $status")
-                Timber.d(
-                    "Hoz characteristic write : ${characteristic?.uuid} (${
-                        FlySightCharacteristic.fromUuid(
-                            characteristic?.uuid
-                        )
-                    }), status = $status}"
-                )
             }
 
             override fun onDescriptorWrite(
@@ -200,7 +192,7 @@ class FlySightDevice(
                     "Hoz characteristic changed : ${characteristic.uuid} (${
                         FlySightCharacteristic.fromUuid(
                             characteristic.uuid
-                        )
+                        )?.name
                     }), value = ${value.bytesToHex()}"
                 )
                 when (characteristic.uuid) {
@@ -212,7 +204,10 @@ class FlySightDevice(
                             Command.CANCEL -> {}
                             Command.CREATE -> {}
                             Command.DELETE -> {}
-                            Command.FILE_ACK -> {}
+                            Command.FILE_ACK -> {
+                                handleFileWriteAck(value)
+                            }
+
                             Command.FILE_DATA -> {
                                 handleFileDataPart(value.sliceArray(1 until value.size))
                             }
@@ -345,7 +340,9 @@ class FlySightDevice(
             }))
 //            loadDirectoryEntries()
             stateUpdater(DeviceConnectionState.Connected)
-            readCurrentConfigFile()
+//            readCurrentConfigFile()
+//            createAndWriteFile("/test.txt", "Hello world")
+            writeFile("/test.txt", "Hello world")
         } else {
             gatt.disconnect()
             stateUpdater(DeviceConnectionState.ConnectionError)
@@ -393,6 +390,61 @@ class FlySightDevice(
             }
         )
         gattTaskQueue.addTask(task)
+    }
+
+    fun createAndWriteFile(
+        fileName: String,
+        fileContent: String
+    ) {
+        log("Writing file $fileName")
+        val gatt = this.gatt ?: return
+        val rx = this.rxCharacteristic ?: return
+
+        val fileCreator = BleFileCreator(
+            gatt = gatt,
+            gattCharacteristic = rx,
+            gattTaskQueue = gattTaskQueue
+        )
+
+        val fileWriter = BleFileWriter(
+            gatt = gatt,
+            gattCharacteristic = rx,
+            gattTaskQueue = gattTaskQueue
+        )
+        scope?.launch {
+            try {
+                fileCreator.createFile(fileName)
+                try {
+                    fileWriter.writeFile(fileName, fileContent)
+                } catch (e: Exception) {
+                    log("Error writing file : $e")
+                }
+            } catch (e: Exception) {
+                log("Error creating file : $e")
+            }
+        }
+    }
+
+    fun writeFile(
+        fileName: String,
+        fileContent: String
+    ) {
+        log("Writing file $fileName")
+        val gatt = this.gatt ?: return
+        val rx = this.rxCharacteristic ?: return
+
+        val fileWriter = BleFileWriter(
+            gatt = gatt,
+            gattCharacteristic = rx,
+            gattTaskQueue = gattTaskQueue
+        )
+        scope?.launch {
+            try {
+                fileWriter.writeFile(fileName, fileContent)
+            } catch (e: Exception) {
+                log("Error writing file : $e")
+            }
+        }
     }
 
     private fun readCurrentConfigFile() {
@@ -564,6 +616,10 @@ class FlySightDevice(
                 }
             }
         }
+    }
+
+    private fun handleFileWriteAck(value: ByteArray) {
+
     }
 
     private fun handleFileEntry(value: ByteArray) {
@@ -794,7 +850,7 @@ sealed class GattTask(
         completion: CompletableDeferred<Unit> = CompletableDeferred()
     ) : GattTask(gatt, characteristic, commandLogger, completion) {
         override fun toString(): String {
-            return "WriteTask(gatt=$gatt, characteristic=$characteristic, command=${command.bytesToHex()}, writeType=$writeType)"
+            return "WriteTask(characteristic=${characteristic.uuid}, command=${command.bytesToHex()}, writeType=$writeType)"
         }
     }
 

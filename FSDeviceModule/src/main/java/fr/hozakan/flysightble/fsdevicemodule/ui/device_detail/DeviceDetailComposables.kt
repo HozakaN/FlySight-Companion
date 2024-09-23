@@ -2,7 +2,10 @@ package fr.hozakan.flysightble.fsdevicemodule.ui.device_detail
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -14,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
@@ -82,7 +86,15 @@ fun DeviceDetailComposables(
                         FileState.Nothing -> "No config file"
                         is FileState.Success -> (state.configFile as FileState.Success).content
                     }
-                    Text(text)
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        item {
+                            Text(
+                                text = text
+                            )
+                        }
+                    }
                 }
             )
             BreadCrumb(
@@ -101,11 +113,7 @@ fun DeviceDetailComposables(
                 items(state.directoryContent) { fileInfo ->
                     Row(
                         modifier = Modifier.clickable {
-//                            if (fileInfo.isDirectory) {
-                                viewModel.onFileClicked(fileInfo)
-//                            } else {
-//                                onFileClicked(fileInfo)
-//                            }
+                            viewModel.onFileClicked(fileInfo)
                         }
                     ) {
                         if (fileInfo.isDirectory) {

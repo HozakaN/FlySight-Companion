@@ -1,7 +1,6 @@
 package fr.hozakan.flysightble.fsdevicemodule.business
 
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
 
 private const val FS_CRS_COMMAND_CREATE = 0x00
 private const val FS_CRS_COMMAND_DELETE = 0x01
@@ -69,6 +68,12 @@ object CommandBuilder {
             .array() + ByteBuffer.allocate(4).putInt(0).array() + path.toByteArray(
             Charsets.UTF_8
         )
+
+    fun buildWriteFileCommand(path: String): ByteArray =
+        byteArrayOf(FS_CRS_COMMAND_WRITE.toByte()) + path.toByteArray(Charsets.UTF_8)
+
+    fun buildFileDataCommand(packetId: Int, data: ByteArray): ByteArray =
+        byteArrayOf(FS_CRS_COMMAND_FILE_DATA.toByte()) + byteArrayOf(packetId.toByte()) + data
 
     fun buildFileAckCommand(packetId: Int): ByteArray =
         byteArrayOf(FS_CRS_COMMAND_FILE_ACK.toByte()) + byteArrayOf(packetId.toByte())

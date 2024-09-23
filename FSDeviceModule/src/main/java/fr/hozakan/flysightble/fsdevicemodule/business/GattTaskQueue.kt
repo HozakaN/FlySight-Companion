@@ -6,13 +6,13 @@ import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import timber.log.Timber
+import java.util.UUID
 import java.util.concurrent.Executors
 
 @SuppressLint("MissingPermission")
@@ -28,6 +28,8 @@ class GattTaskQueue(
     )
 
     fun gattCallback() = _gattCallback
+
+    private val characteristicChangeCallbacks = mutableMapOf<UUID, List<BluetoothGattCallback>>()
 
     private val _gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
@@ -48,7 +50,6 @@ class GattTaskQueue(
             super.onDescriptorWrite(gatt, descriptor, status)
             gattCallback.onDescriptorWrite(gatt, descriptor, status)
             val task = tasks.filterIsInstance<GattTask.WriteDescriptorTask>().firstOrNull()
-//            val task = tasks.firstOrNull { it.characteristic.uuid == characteristic.uuid && it.gatt == gatt }
             if (task != null) {
                 task.completion.complete(Unit)
                 tasks -= task
@@ -77,7 +78,7 @@ class GattTaskQueue(
             status: Int
         ) {
             super.onCharacteristicWrite(gatt, characteristic, status)
-            Timber.d("Hoz2 onCharacteristicWrite $characteristic $status")
+            Timber.d("Hoz2 onCharacteristicWrite characteristic=${characteristic?.uuid} status=$status")
             gattCallback.onCharacteristicWrite(gatt, characteristic, status)
             val task =
                 tasks.firstOrNull { it.characteristic.uuid == characteristic?.uuid && it.gatt == gatt }
@@ -94,6 +95,11 @@ class GattTaskQueue(
         ) {
             super.onCharacteristicChanged(gatt, characteristic, value)
             gattCallback.onCharacteristicChanged(gatt, characteristic, value)
+            characteristicChangeCallbacks[characteristic.uuid]?.let { callbacks ->
+                callbacks.forEach { callback ->
+                    callback.onCharacteristicChanged(gatt, characteristic, value)
+                }
+            }
         }
     }
 
@@ -104,6 +110,22 @@ class GattTaskQueue(
                 processTask(task)
                 Timber.d("Hoz2 task ended $task")
             }
+        }
+    }
+
+    operator fun plusAssign(callback: Pair<UUID, BluetoothGattCallback>) {
+        val list = characteristicChangeCallbacks[callback.first]
+        if (list != null) {
+            characteristicChangeCallbacks[callback.first] = list + callback.second
+        } else {
+            characteristicChangeCallbacks[callback.first] = listOf(callback.second)
+        }
+    }
+
+    operator fun minusAssign(callback: BluetoothGattCallback) {
+//        callbacks -= callback
+        characteristicChangeCallbacks.forEach { (uuid, callbacks) ->
+            characteristicChangeCallbacks[uuid] = callbacks.filter { it != callback }
         }
     }
 
@@ -131,17 +153,17 @@ class GattTaskQueue(
         val command = task.command
         val writeType = task.writeType
         task.commandLogger()
-//        gatt.setCharacteristicNotification(characteristic, true)
         gatt.writeCharacteristic(
             characteristic,
             command,
             writeType
         )
+        Timber.d("Hoz awaiting completion")
         withTimeout(5000) {
             task.completion.await()
+            Timber.d("Hoz completion awaited before timeout")
         }
-        Timber.d("Hoz2 task $task written")
-//        gatt.setCharacteristicNotification(characteristic, false)
+        Timber.d("Hoz completion awaited")
     }
 
     private suspend fun handleWriteDescriptorTask(task: GattTask.WriteDescriptorTask) {
