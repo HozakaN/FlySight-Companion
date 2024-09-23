@@ -30,11 +30,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import fr.hozakan.flysightble.composablecommons.ExpandableColumn
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
+import fr.hozakan.flysightble.model.FileInfo
+import fr.hozakan.flysightble.model.FileState
 
 @Composable
 fun DeviceDetailComposables(
     deviceId: String,
+    onFileClicked: (filePath: List<String>) -> Unit,
     onNavigateUp: () -> Unit
 ) {
     val factory = LocalViewModelFactory.current
@@ -55,12 +59,32 @@ fun DeviceDetailComposables(
         }
     }
 
+    val event = state.fileClicked?.getContentIfNotHandled()
+
+    if (event != null) {
+        onFileClicked(event)
+    }
+
     Surface(
         modifier = Modifier
             .fillMaxSize(),
         color = MaterialTheme.colorScheme.surface
     ) {
         Column {
+            ExpandableColumn(
+                headerComposable = {
+                    Text("Config file")
+                },
+                contentComposable = {
+                    val text = when (state.configFile) {
+                        is FileState.Error -> "Error fetching config file"
+                        FileState.Loading -> "Loading config file"
+                        FileState.Nothing -> "No config file"
+                        is FileState.Success -> (state.configFile as FileState.Success).content
+                    }
+                    Text(text)
+                }
+            )
             BreadCrumb(
                 modifier = Modifier.padding(8.dp),
                 path = state.currentDirectoryPath,
@@ -77,7 +101,11 @@ fun DeviceDetailComposables(
                 items(state.directoryContent) { fileInfo ->
                     Row(
                         modifier = Modifier.clickable {
-                            viewModel.onFileClicked(fileInfo)
+//                            if (fileInfo.isDirectory) {
+                                viewModel.onFileClicked(fileInfo)
+//                            } else {
+//                                onFileClicked(fileInfo)
+//                            }
                         }
                     ) {
                         if (fileInfo.isDirectory) {

@@ -8,9 +8,9 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothProfile
-import android.bluetooth.BluetoothSocket
 import android.content.Context
 import fr.hozakan.flysightble.framework.extension.bytesToHex
+import fr.hozakan.flysightble.model.FileState
 import fr.hozakan.flysightble.model.DeviceConnectionState
 import fr.hozakan.flysightble.model.FileInfo
 import kotlinx.coroutines.CancellableContinuation
@@ -20,7 +20,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -87,6 +89,14 @@ class FlySightDevice(
 
     private var connectionContinuation: CancellableContinuation<Boolean>? = null
 
+    private var fileData: ByteArray? = null
+    private var fileDataPacketNumber: Int? = null
+
+    private val _file = MutableSharedFlow<FileState>()
+    private val _configFile = MutableStateFlow<FileState>(FileState.Nothing)
+    val fileReceived = _file.asSharedFlow()
+    val configFile = _configFile.asStateFlow()
+
     private val gattTaskQueue = GattTaskQueue(
         gattCallback = object : BluetoothGattCallback() {
             override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
@@ -139,6 +149,13 @@ class FlySightDevice(
                 status: Int
             ) {
                 super.onCharacteristicWrite(gatt, characteristic, status)
+                Timber.d(
+                    "Hoz2 characteristic write : ${characteristic?.uuid} (${
+                        FlySightCharacteristic.fromUuid(
+                            characteristic?.uuid
+                        )?.name
+                    }), status = $status}"
+                )
                 log("[WRITE][${FlySightCharacteristic.fromUuid(characteristic?.uuid)?.name}] status = $status")
                 Timber.d(
                     "Hoz characteristic write : ${characteristic?.uuid} (${
@@ -196,15 +213,19 @@ class FlySightDevice(
                             Command.CREATE -> {}
                             Command.DELETE -> {}
                             Command.FILE_ACK -> {}
-                            Command.FILE_DATA -> {}
+                            Command.FILE_DATA -> {
+                                handleFileDataPart(value.sliceArray(1 until value.size))
+                            }
+
                             Command.FILE_INFO -> {
                                 handleFileEntry(value.sliceArray(1 until value.size))
                             }
 
                             Command.MK_DIR -> {}
                             Command.NAK -> {
-                                log("getting NAK on cmd ${Command.fromValue( value[1].toInt() and 0xFF)}")
+                                log("getting NAK on cmd ${Command.fromValue(value[1].toInt() and 0xFF)}")
                             }
+
                             Command.READ -> {}
                             Command.READ_DIR -> {}
                             Command.WRITE -> {}
@@ -357,13 +378,33 @@ class FlySightDevice(
         gattTaskQueue.addTask(task)
     }
 
+    fun readFile(fileName: String) {
+        _file.tryEmit(FileState.Loading)
+        log("Reading file $fileName")
+        val gatt = this.gatt ?: return
+        val rx = this.rxCharacteristic ?: return
+
+        val task = TaskBuilder.buildReadFileTask(
+            gatt = gatt,
+            characteristic = rx,
+            path = fileName,
+            commandLogger = {
+                log(it)
+            }
+        )
+        gattTaskQueue.addTask(task)
+    }
+
     private fun readCurrentConfigFile() {
+        _configFile.update {
+            FileState.Loading
+        }
         val file = "/CONFIG.TXT"
         log("Reading configuration file")
         val gatt = this.gatt ?: return
         val rx = this.rxCharacteristic ?: return
 
-        val task = TaskBuilder.buildReadConfigFileTask(
+        val task = TaskBuilder.buildReadFileTask(
             gatt = gatt,
             characteristic = rx,
             path = file,
@@ -371,6 +412,23 @@ class FlySightDevice(
                 log(it)
             }
         )
+        gattTaskQueue.addTask(task)
+    }
+
+    private fun readFileAck(packetId: Int) {
+        log("File reading ack on packet $packetId")
+        val gatt = this.gatt ?: return
+        val rx = this.rxCharacteristic ?: return
+
+        val task = TaskBuilder.buildReadFileAckTask(
+            gatt = gatt,
+            characteristic = rx,
+            packetId = packetId,
+            commandLogger = {
+                log(it)
+            }
+        )
+        Timber.d("Hoz2 sending reading ack on packet $packetId : ${(task as GattTask.WriteTask).command.bytesToHex()}")
         gattTaskQueue.addTask(task)
     }
 
@@ -479,6 +537,33 @@ class FlySightDevice(
             fileName,
             isDirectory
         )
+    }
+
+    private fun handleFileDataPart(value: ByteArray) {
+        val dataArray = value.sliceArray(1 until value.size)
+        val packetId = value[0].toInt() and 0xFF
+        Timber.d("Hoz2 receiving file data part : $packetId (fileDataPacketNumber is $fileDataPacketNumber); byte array size : ${dataArray.size}")
+        if (fileData == null) {
+            fileDataPacketNumber = packetId
+            fileData = dataArray
+            readFileAck(packetId)
+        } else {
+            if (packetId == fileDataPacketNumber!! + 1) {
+                fileDataPacketNumber = packetId
+                if (dataArray.isNotEmpty()) {
+                    fileData = fileData!! + dataArray
+                    readFileAck(packetId)
+                } else {
+                    val fileState = FileState.Success(String(fileData!!, Charsets.UTF_8))
+                    _file.tryEmit(fileState)
+                    if (_configFile.value is FileState.Loading) {
+                        _configFile.tryEmit(fileState)
+                    }
+                    fileData = null
+                    fileDataPacketNumber = null
+                }
+            }
+        }
     }
 
     private fun handleFileEntry(value: ByteArray) {
@@ -707,7 +792,11 @@ sealed class GattTask(
         val writeType: Int,
         commandLogger: () -> Unit,
         completion: CompletableDeferred<Unit> = CompletableDeferred()
-    ) : GattTask(gatt, characteristic, commandLogger, completion)
+    ) : GattTask(gatt, characteristic, commandLogger, completion) {
+        override fun toString(): String {
+            return "WriteTask(gatt=$gatt, characteristic=$characteristic, command=${command.bytesToHex()}, writeType=$writeType)"
+        }
+    }
 
     class WriteDescriptorTask(
         gatt: BluetoothGatt,

@@ -2,8 +2,10 @@ package fr.hozakan.flysightble.fsdevicemodule.ui.device_detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
 import fr.hozakan.flysightble.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightble.fsdevicemodule.business.FsDeviceService
+import fr.hozakan.flysightble.model.FileState
 import fr.hozakan.flysightble.model.FileInfo
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +23,9 @@ class DeviceDetailViewModel @Inject constructor(
             device = null,
             currentDirectoryPath = listOf("/"),
             directoryContent = emptyList(),
-            configFileInfo = null
+            configFileInfo = null,
+            configFile = FileState.Nothing,
+            fileClicked = null
         )
     )
 
@@ -29,6 +33,7 @@ class DeviceDetailViewModel @Inject constructor(
 
     private var deviceJob: Job? = null
     private var deviceDirectoryJob: Job? = null
+    private var deviceConfigFileJob: Job? = null
 
     fun loadDevice(deviceId: String) {
         var initialLoad = true
@@ -50,6 +55,7 @@ class DeviceDetailViewModel @Inject constructor(
                     }
                     if (initialLoad && device != null) {
                         observeDeviceDirectories(device)
+                        observeDeviceConfigFile(device)
                         device.loadDirectory(_state.value.currentDirectoryPath)
                         initialLoad = false
                     }
@@ -82,6 +88,19 @@ class DeviceDetailViewModel @Inject constructor(
         }
     }
 
+    private fun observeDeviceConfigFile(device: FlySightDevice) {
+        deviceConfigFileJob?.cancel()
+        deviceConfigFileJob = viewModelScope.launch {
+            device.configFile.collect { configFileState ->
+                _state.update { deviceDetailState ->
+                    deviceDetailState.copy(
+                        configFile = configFileState
+                    )
+                }
+            }
+        }
+    }
+
     fun loadDirectory(path: List<String>) {
         _state.update {
             it.copy(
@@ -96,7 +115,11 @@ class DeviceDetailViewModel @Inject constructor(
         if (fileInfo.isDirectory) {
             loadDirectory(_state.value.currentDirectoryPath + fileInfo.fileName)
         } else {
-
+            _state.update {
+                it.copy(
+                    fileClicked = (_state.value.currentDirectoryPath + fileInfo.fileName).asEvent()
+                )
+            }
         }
     }
 

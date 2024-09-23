@@ -47,6 +47,7 @@ import fr.hozakan.flysightble.configfilesmodule.ui.list_files.ListConfigFilesScr
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.framework.dagger.Injectable
 import fr.hozakan.flysightble.fsdevicemodule.ui.device_detail.DeviceDetailComposables
+import fr.hozakan.flysightble.fsdevicemodule.ui.file.FileScreenComposable
 import fr.hozakan.flysightble.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
 import fr.hozakan.flysightble.ui.theme.FlySightBLETheme
 import javax.inject.Inject
@@ -241,11 +242,30 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                         if (deviceId != null) {
                                             DeviceDetailComposables(
                                                 deviceId = deviceId,
+                                                onFileClicked = {
+                                                    navController.navigate(AppScreen.Device.DeviceFile.buildRoute(deviceId, it))
+                                                },
                                                 onNavigateUp = {
                                                     navController.popBackStack()
                                                 }
                                             )
                                         }
+                                    }
+                                    composable(route = AppScreen.Device.DeviceFile.route) { backStackEntry ->
+                                        val deviceId =
+                                            backStackEntry.arguments?.getString("deviceId")
+                                        val filePath =
+                                            backStackEntry.arguments?.getString("filePath")?.split(";")
+                                        if (deviceId != null && filePath != null) {
+                                            FileScreenComposable(
+                                                deviceId = deviceId,
+                                                filePath = "/" + filePath.joinToString("/"),
+                                                onNavigateUp = {
+                                                    navController.popBackStack()
+                                                }
+                                            )
+                                        }
+
                                     }
                                 }
                                 navigation(

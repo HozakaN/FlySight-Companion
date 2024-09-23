@@ -8,10 +8,12 @@ import android.bluetooth.BluetoothGattDescriptor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import timber.log.Timber
+import java.util.concurrent.Executors
 
 @SuppressLint("MissingPermission")
 class GattTaskQueue(
@@ -21,7 +23,9 @@ class GattTaskQueue(
     private val tasks = mutableListOf<GattTask>()
 
     private val taskChannel = Channel<GattTask>(Channel.UNLIMITED)
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val scope = CoroutineScope(
+        SupervisorJob() + Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    )
 
     fun gattCallback() = _gattCallback
 
@@ -59,7 +63,8 @@ class GattTaskQueue(
         ) {
             super.onCharacteristicRead(gatt, characteristic, value, status)
             gattCallback.onCharacteristicRead(gatt, characteristic, value, status)
-            val task = tasks.firstOrNull { it.characteristic.uuid == characteristic.uuid && it.gatt == gatt }
+            val task =
+                tasks.firstOrNull { it.characteristic.uuid == characteristic.uuid && it.gatt == gatt }
             if (task != null) {
                 task.completion.complete(Unit)
                 tasks -= task
@@ -72,8 +77,10 @@ class GattTaskQueue(
             status: Int
         ) {
             super.onCharacteristicWrite(gatt, characteristic, status)
+            Timber.d("Hoz2 onCharacteristicWrite $characteristic $status")
             gattCallback.onCharacteristicWrite(gatt, characteristic, status)
-            val task = tasks.firstOrNull { it.characteristic.uuid == characteristic?.uuid && it.gatt == gatt }
+            val task =
+                tasks.firstOrNull { it.characteristic.uuid == characteristic?.uuid && it.gatt == gatt }
             if (task != null) {
                 task.completion.complete(Unit)
                 tasks -= task
@@ -93,9 +100,9 @@ class GattTaskQueue(
     init {
         scope.launch {
             for (task in taskChannel) {
-                Timber.d("Hoz picking task $task")
+                Timber.d("Hoz2 picking task $task")
                 processTask(task)
-                Timber.d("Hoz task ended $task")
+                Timber.d("Hoz2 task ended $task")
             }
         }
     }
@@ -124,7 +131,7 @@ class GattTaskQueue(
         val command = task.command
         val writeType = task.writeType
         task.commandLogger()
-        gatt.setCharacteristicNotification(characteristic, true)
+//        gatt.setCharacteristicNotification(characteristic, true)
         gatt.writeCharacteristic(
             characteristic,
             command,
@@ -133,7 +140,8 @@ class GattTaskQueue(
         withTimeout(5000) {
             task.completion.await()
         }
-        gatt.setCharacteristicNotification(characteristic, false)
+        Timber.d("Hoz2 task $task written")
+//        gatt.setCharacteristicNotification(characteristic, false)
     }
 
     private suspend fun handleWriteDescriptorTask(task: GattTask.WriteDescriptorTask) {
