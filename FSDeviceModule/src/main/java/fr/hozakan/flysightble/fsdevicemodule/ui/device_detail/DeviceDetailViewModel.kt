@@ -54,19 +54,21 @@ class DeviceDetailViewModel @Inject constructor(
                         )
                     }
                     if (initialLoad && device != null) {
-                        observeDeviceDirectories(device)
+                        observeDeviceDirectories(_state.value.currentDirectoryPath)
                         observeDeviceConfigFile(device)
-                        device.loadDirectory(_state.value.currentDirectoryPath)
+
                         initialLoad = false
                     }
                 }
         }
     }
 
-    private fun observeDeviceDirectories(device: FlySightDevice) {
+    private fun observeDeviceDirectories(path: List<String>) {
+        val device = _state.value.device ?: return
         deviceDirectoryJob?.cancel()
         deviceDirectoryJob = viewModelScope.launch {
-            device.directory.collect { fileInfos ->
+            device.loadDirectory(path)
+                .collect { fileInfos ->
                 _state.update { deviceDetailState ->
                     deviceDetailState.copy(
                         directoryContent = fileInfos
@@ -107,8 +109,9 @@ class DeviceDetailViewModel @Inject constructor(
                 currentDirectoryPath = path
             )
         }
-        val device = _state.value.device ?: return
-        device.loadDirectory(path)
+//        val device = _state.value.device ?: return
+        observeDeviceDirectories(path)
+//        device.loadDirectory(path)
     }
 
     fun onFileClicked(fileInfo: FileInfo) {

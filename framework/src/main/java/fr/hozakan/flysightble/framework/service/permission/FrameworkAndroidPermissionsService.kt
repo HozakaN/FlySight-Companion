@@ -183,7 +183,9 @@ class FrameworkAndroidPermissionsService(
             return true
         }
         val hasPermission =
-            activityOperationsService.requestPermission(Manifest.permission.BLUETOOTH_CONNECT)
+            activityOperationsService.requestPermissions(
+                Manifest.permission.BLUETOOTH_CONNECT
+            )
         if (hasPermission) {
             freeBluetoothCoroutines()
             delegate(PermissionEvent.BluetoothPermissionChanged(true))

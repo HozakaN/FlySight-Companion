@@ -59,6 +59,13 @@ class FrameworkActivityOperationsService(private val activityLifecycleService: A
         return currentFragment!!.requestPermission(permission)
     }
 
+    override suspend fun requestPermissions(vararg permissions: String): Boolean {
+        while (currentFragment == null || currentFragment?.isAdded != true) {
+            delay(200)
+        }
+        return currentFragment!!.requestPermissions(*permissions)
+    }
+
     override suspend fun requestActivityResult(intent: Intent): Pair<Int, Intent?> {
         while (currentFragment == null || currentFragment?.isAdded != true) {
             delay(200)

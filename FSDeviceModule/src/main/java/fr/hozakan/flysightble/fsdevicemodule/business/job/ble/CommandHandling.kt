@@ -1,4 +1,4 @@
-package fr.hozakan.flysightble.fsdevicemodule.business
+package fr.hozakan.flysightble.fsdevicemodule.business.job.ble
 
 import java.nio.ByteBuffer
 
@@ -77,9 +77,5 @@ object CommandBuilder {
 
     fun buildFileAckCommand(packetId: Int): ByteArray =
         byteArrayOf(FS_CRS_COMMAND_FILE_ACK.toByte()) + byteArrayOf(packetId.toByte())
-
-//    fun buildFileAckCommand(packetId: Int): ByteArray =
-//        byteArrayOf(FS_CRS_COMMAND_FILE_ACK.toByte()) + ByteBuffer.allocate(1)
-//            .order(ByteOrder.LITTLE_ENDIAN).putInt(packetId).array()
 
 }

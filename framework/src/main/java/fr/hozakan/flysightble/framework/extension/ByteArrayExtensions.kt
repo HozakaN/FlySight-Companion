@@ -32,3 +32,13 @@ fun String.hexToBytes(): ByteArray {
 
 private fun String.removeHexPrefix(): String =
     if (this.startsWith(HEX_PREFIX)) this.substring(2) else this
+
+
+
+fun ByteArray.toInt(): Int {
+    var value = 0
+    for (b in this) {
+        value = (value shl 8) + (b.toInt() and 0xFF)
+    }
+    return value
+}

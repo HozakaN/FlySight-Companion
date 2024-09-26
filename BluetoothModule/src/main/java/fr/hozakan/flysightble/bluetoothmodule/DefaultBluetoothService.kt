@@ -5,10 +5,12 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
-import android.bluetooth.le.BluetoothLeScanner
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
+import androidx.core.util.size
 import fr.hozakan.flysightble.framework.service.applifecycle.ActivityLifecycleService
 import fr.hozakan.flysightble.framework.service.async.ActivityOperationsService
 import kotlinx.coroutines.CancellableContinuation
@@ -25,14 +27,12 @@ class DefaultBluetoothService(
 ) : BluetoothService {
 
     private val bluetoothAdapter: BluetoothAdapter?
-    private val bluetoothLeScanner : BluetoothLeScanner?
 
     private val btAvailabilityContinuations = mutableListOf<CancellableContinuation<Unit>>()
 
     init {
         val bluetoothManager = context.getSystemService(BluetoothManager::class.java)
         bluetoothAdapter = bluetoothManager.adapter
-        bluetoothLeScanner = bluetoothAdapter?.bluetoothLeScanner
     }
 
     override fun checkBluetoothState(): BluetoothService.BluetoothState {
@@ -72,6 +72,7 @@ class DefaultBluetoothService(
         if (adapter != null) {
             val bondedDevices = adapter.bondedDevices
             bondedDevices.onEachIndexed { index, device ->
+                device.bondState
                 Timber.d("device $index : $device")
                 if (isFlySightDevice(device)) {
                     devices.add(device)

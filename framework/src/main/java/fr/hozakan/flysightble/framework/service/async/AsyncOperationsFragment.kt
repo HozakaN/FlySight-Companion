@@ -65,6 +65,14 @@ class AsyncOperationsFragment : Fragment() {
         }
     }
 
+    suspend fun requestPermissions(vararg permissions: String): Boolean = suspendCancellableCoroutine { continuation ->
+        requestPermission(arrayListOf(*permissions)) {
+            if (continuation.isActive) {
+                continuation.resume(it)
+            }
+        }
+    }
+
     fun usePermissions(permissions: ArrayList<String>, job: (Boolean) -> Unit) {
         val notGrantedPermissions = mutableListOf<String>()
         permissions.forEach {

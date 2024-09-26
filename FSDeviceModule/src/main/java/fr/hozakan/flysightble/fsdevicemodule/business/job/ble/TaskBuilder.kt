@@ -1,8 +1,10 @@
-package fr.hozakan.flysightble.fsdevicemodule.business
+package fr.hozakan.flysightble.fsdevicemodule.business.job.ble
 
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
+import fr.hozakan.flysightble.bluetoothmodule.GattTask
 import fr.hozakan.flysightble.framework.extension.bytesToHex
+import fr.hozakan.flysightble.model.ble.FlySightCharacteristic
 
 object TaskBuilder {
     fun buildGetDirectoryTask(

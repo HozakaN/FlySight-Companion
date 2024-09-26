@@ -1,12 +1,11 @@
-package fr.hozakan.flysightble.fsdevicemodule.business.job
+package fr.hozakan.flysightble.fsdevicemodule.business.job.ble
 
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
-import fr.hozakan.flysightble.fsdevicemodule.business.Command
-import fr.hozakan.flysightble.fsdevicemodule.business.FlySightCharacteristic
-import fr.hozakan.flysightble.fsdevicemodule.business.GattTaskQueue
-import fr.hozakan.flysightble.fsdevicemodule.business.TaskBuilder
+import fr.hozakan.flysightble.bluetoothmodule.GattTaskQueue
+import fr.hozakan.flysightble.fsdevicemodule.business.job.FileCreator
+import fr.hozakan.flysightble.model.ble.FlySightCharacteristic
 import kotlinx.coroutines.CompletableDeferred
 
 class BleFileCreator(

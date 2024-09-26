@@ -1,4 +1,4 @@
-package fr.hozakan.flysightble.fsdevicemodule.business
+package fr.hozakan.flysightble.bluetoothmodule
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothGatt
@@ -123,7 +123,6 @@ class GattTaskQueue(
     }
 
     operator fun minusAssign(callback: BluetoothGattCallback) {
-//        callbacks -= callback
         characteristicChangeCallbacks.forEach { (uuid, callbacks) ->
             characteristicChangeCallbacks[uuid] = callbacks.filter { it != callback }
         }
