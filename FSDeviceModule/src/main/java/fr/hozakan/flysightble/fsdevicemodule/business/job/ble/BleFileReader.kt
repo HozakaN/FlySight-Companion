@@ -44,7 +44,7 @@ class BleFileReader(
             path = filePath,
             commandLogger = {}
         )
-        gattTaskQueue += FlySightCharacteristic.CRS_RX.uuid to gattCallback
+        gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
         gattTaskQueue.addTask(task)
 
         val fileState = fileContent.await()
@@ -63,9 +63,9 @@ class BleFileReader(
         } else {
             if (packetId == fileDataPacketNumber!! + 1) {
                 fileDataPacketNumber = packetId
+                sendReadFileAck(packetId)
                 if (dataArray.isNotEmpty()) {
                     fileData = fileData!! + dataArray
-                    sendReadFileAck(packetId)
                 } else {
                     val fileState = FileState.Success(String(fileData!!, Charsets.UTF_8))
                     fileData = null

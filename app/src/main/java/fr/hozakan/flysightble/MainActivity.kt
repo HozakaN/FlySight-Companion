@@ -89,7 +89,10 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                 AppScreen.ConfigFiles.ConfigFileList.route -> {
                                     "Config files"
                                 }
-
+                                AppScreen.Device.DeviceFile.route -> {
+                                    val filePath = currentBackStack.value?.arguments?.getString("filePath")?.split(";")
+                                    "File ${filePath?.lastOrNull()}"
+                                }
                                 else -> {
                                     "FlySight BLE"
                                 }
@@ -106,6 +109,19 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                         }
 
                                         AppScreen.Device.DeviceDetail.route -> {
+                                            IconButton(
+                                                onClick = {
+                                                    navController.popBackStack()
+                                                },
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                                    contentDescription = "Navigate up"
+                                                )
+                                            }
+                                        }
+
+                                        AppScreen.Device.DeviceFile.route -> {
                                             IconButton(
                                                 onClick = {
                                                     navController.popBackStack()

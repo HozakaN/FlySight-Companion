@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -49,12 +50,10 @@ fun FileScreenComposable(
             FileState.Nothing -> "Unknown"
             is FileState.Success -> (state.fileContent as FileState.Success).content
         }
-        Text(
-            modifier = Modifier.scrollable(
-                state = rememberScrollState(),
-                orientation = Orientation.Vertical
-            ),
-            text = content
-        )
+        LazyColumn {
+            item {
+                Text(text = content)
+            }
+        }
     }
 }

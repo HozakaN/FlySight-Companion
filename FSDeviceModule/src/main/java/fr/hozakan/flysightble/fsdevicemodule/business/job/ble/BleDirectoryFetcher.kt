@@ -41,7 +41,7 @@ class BleDirectoryFetcher(
 
 
     override fun listDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>> {
-        val directory = "/${directoryPath.joinToString("/")}"
+        val directory = directoryPath.joinToString("/")
 
         gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
         Timber.i("Getting directory $directory")
