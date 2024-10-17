@@ -22,7 +22,7 @@ class SilenceWindowParser : MultilineConfigItemParser() {
         if (line.startsWith("Win_Top")) {
             windowTop = parseLine(key(), line).toIntOrNull() ?: -1
         } else if (line.startsWith("Win_Bottom")) {
-            windowBottom = parseLine("Sp_Dec", line).toIntOrNull()
+            windowBottom = parseLine("Win_Bottom", line).toIntOrNull()
             if (windowTop != null && windowBottom != null) {
                 return configFile.copy(
                     silenceWindows = configFile.silenceWindows + SilenceWindow(

@@ -1,9 +1,18 @@
 package fr.hozakan.flysightble.model.config
 
-sealed class AltitudeUnit(
+enum class AltitudeUnit(
     val value: Int,
     val text: String
 ) {
-    data object Metric : AltitudeUnit(0, "m")
-    data object Imperial : AltitudeUnit(1, "ft")
+    Metric(0, "m"),
+    Imperial(1, "ft");
+
+    companion object {
+        fun fromText(text: String): AltitudeUnit? {
+            return entries.firstOrNull { it.text == text }
+        }
+        fun fromValue(value: Int): AltitudeUnit? {
+            return entries.firstOrNull { it.value == value }
+        }
+    }
 }

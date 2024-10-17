@@ -7,8 +7,8 @@ enum class AlarmType(
     NoAlarm(0, "No alarm"),
     Beep(1, "Beep"),
     ChirpUp(2, "Chirp up"),
-    ChirpDown(2, "Chirp down"),
-    PlayFile(2, "Play file");
+    ChirpDown(3, "Chirp down"),
+    PlayFile(4, "Play file");
 
     companion object {
         fun fromText(text: String): AlarmType? {

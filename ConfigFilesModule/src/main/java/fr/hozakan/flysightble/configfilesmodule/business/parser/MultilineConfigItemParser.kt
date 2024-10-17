@@ -5,7 +5,7 @@ abstract class MultilineConfigItemParser : ConfigItemParser() {
     override fun isMultilineParser(): Boolean = true
     fun isSatisfied(): Boolean {
         satisfyCallCounter++
-        return configItemFilled() || satisfyCallCounter >= maxLoop
+        return configItemFilled() || satisfyCallCounter >= maxLoop()
     }
 
     protected abstract fun configItemFilled(): Boolean
@@ -14,7 +14,10 @@ abstract class MultilineConfigItemParser : ConfigItemParser() {
         satisfyCallCounter = 0
         doReset()
     }
+
     protected abstract fun doReset()
+
+    protected open fun maxLoop() = maxLoop
 }
 
 private const val maxLoop = 10

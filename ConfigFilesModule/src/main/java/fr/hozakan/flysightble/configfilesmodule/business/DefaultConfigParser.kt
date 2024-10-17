@@ -1,9 +1,36 @@
 package fr.hozakan.flysightble.configfilesmodule.business
 
+import fr.hozakan.flysightble.configfilesmodule.business.parser.AlarmParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.AlarmWindowAboveParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.AlarmWindowBelowParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.AltitudeStepParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.AltitudeUnitParser
 import fr.hozakan.flysightble.configfilesmodule.business.parser.DynamicModelParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.DzElevParser
 import fr.hozakan.flysightble.configfilesmodule.business.parser.FILENAME_INDICATOR
+import fr.hozakan.flysightble.configfilesmodule.business.parser.FlatlineParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.HorizontalThresholdParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.InitFileParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.InitModeParser
 import fr.hozakan.flysightble.configfilesmodule.business.parser.MultilineConfigItemParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.RateMaximumParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.RateMaximumValueParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.RateMinimumParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.RateMinimumValueParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.RateModeParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.SamplePeriodParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.SilenceWindowParser
 import fr.hozakan.flysightble.configfilesmodule.business.parser.SpeechParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.SpeechRateParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.SpeechVolumeParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.TimeZoneOffsetParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.ToneLimitBehaviourParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.ToneMaximumParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.ToneMinimumParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.ToneModeParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.ToneVolumeParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.UseSASParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.VerticalThresholdParser
 import fr.hozakan.flysightble.model.ConfigFile
 import fr.hozakan.flysightble.model.defaultConfigFile
 
@@ -61,5 +88,32 @@ class DefaultConfigParser : ConfigParser {
 
 private val configItemsParsers = listOf(
     DynamicModelParser(),
-    SpeechParser()
+    SamplePeriodParser(),
+    ToneModeParser(),
+    ToneMinimumParser(),
+    ToneMaximumParser(),
+    ToneLimitBehaviourParser(),
+    ToneVolumeParser(),
+    RateModeParser(),
+    RateMinimumValueParser(),
+    RateMaximumValueParser(),
+    RateMinimumParser(),
+    RateMaximumParser(),
+    FlatlineParser(),
+    SpeechRateParser(),
+    SpeechVolumeParser(),
+    SpeechParser(),
+    VerticalThresholdParser(),
+    HorizontalThresholdParser(),
+    UseSASParser(),
+    TimeZoneOffsetParser(),
+    InitModeParser(),
+    InitFileParser(),
+    AlarmWindowAboveParser(),
+    AlarmWindowBelowParser(),
+    DzElevParser(),
+    AlarmParser(),
+    AltitudeUnitParser(),
+    AltitudeStepParser(),
+    SilenceWindowParser()
 )

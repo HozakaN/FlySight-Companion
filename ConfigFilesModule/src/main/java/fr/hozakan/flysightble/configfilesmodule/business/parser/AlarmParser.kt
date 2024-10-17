@@ -24,7 +24,7 @@ class AlarmParser : MultilineConfigItemParser() {
         if (line.startsWith("Alarm_Elev")) {
             alarmElev = parseLine("Alarm_Elev", line).toIntOrNull() ?: -1
         } else if (line.startsWith("Alarm_Type")) {
-            alarmType = AlarmType.fromValue(parseLine("Sp_Dec", line).toIntOrNull() ?: -1)
+            alarmType = AlarmType.fromValue(parseLine("Alarm_Type", line).toIntOrNull() ?: -1)
         } else if (line.startsWith("Alarm_File")) {
             alarmFile = parseLine("Alarm_File", line)
             if (alarmElev != null && alarmType != null) {

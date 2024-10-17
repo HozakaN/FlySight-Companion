@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.activity.compose)
     implementation(project(":ComposableCommons"))
+    implementation(project(":ConfigFilesModule"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

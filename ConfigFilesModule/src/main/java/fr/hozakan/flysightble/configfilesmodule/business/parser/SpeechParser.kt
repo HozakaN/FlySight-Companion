@@ -39,6 +39,10 @@ class SpeechParser : MultilineConfigItemParser() {
         return configFile
     }
 
+    override fun maxLoop(): Int {
+        return 11
+    }
+
     override fun doReset() {
         speechMode = null
         speechUnit = null

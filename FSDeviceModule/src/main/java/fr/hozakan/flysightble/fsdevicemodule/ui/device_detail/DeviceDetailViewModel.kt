@@ -93,7 +93,7 @@ class DeviceDetailViewModel @Inject constructor(
     private fun observeDeviceConfigFile(device: FlySightDevice) {
         deviceConfigFileJob?.cancel()
         deviceConfigFileJob = viewModelScope.launch {
-            device.configFile.collect { configFileState ->
+            device.configFileStr.collect { configFileState ->
                 _state.update { deviceDetailState ->
                     deviceDetailState.copy(
                         configFile = configFileState

@@ -6,7 +6,7 @@ import fr.hozakan.flysightble.model.config.ToneMode
 import fr.hozakan.flysightble.model.defaultConfigFile
 
 class DzElevParser : ConfigItemParser() {
-    override fun key(): String = "Dz_Elev"
+    override fun key(): String = "DZ_Elev"
 
     override fun fillConfigFile(line: String, configFile: ConfigFile): ConfigFile =
         configFile.copy(

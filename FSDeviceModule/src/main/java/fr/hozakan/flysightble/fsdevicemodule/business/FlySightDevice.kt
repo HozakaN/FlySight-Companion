@@ -16,6 +16,8 @@ import fr.hozakan.flysightble.bluetoothmodule.isNotifiable
 import fr.hozakan.flysightble.bluetoothmodule.isReadable
 import fr.hozakan.flysightble.bluetoothmodule.isWritable
 import fr.hozakan.flysightble.bluetoothmodule.isWritableWithoutResponse
+import fr.hozakan.flysightble.configfilesmodule.business.ConfigParser
+import fr.hozakan.flysightble.configfilesmodule.business.DefaultConfigParser
 import fr.hozakan.flysightble.framework.extension.bytesToHex
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BleDirectoryFetcher
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BleFileCreator
@@ -23,6 +25,7 @@ import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BleFileReader
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BleFileWriter
 import fr.hozakan.flysightble.fsdevicemodule.business.job.DirectoryFetcher
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.Command
+import fr.hozakan.flysightble.model.ConfigFileState
 import fr.hozakan.flysightble.model.DeviceConnectionState
 import fr.hozakan.flysightble.model.FileInfo
 import fr.hozakan.flysightble.model.FileState
@@ -90,11 +93,15 @@ class FlySightDevice(
     private val _services = MutableStateFlow<List<BluetoothGattService>>(emptyList())
     val services = _services.asStateFlow()
 
+    private val parser: ConfigParser = DefaultConfigParser()
+
     private var connectionContinuation: CancellableContinuation<Boolean>? = null
 
     private val _file = MutableSharedFlow<FileState>()
-    private val _configFile = MutableStateFlow<FileState>(FileState.Nothing)
+    private val _configFileStr = MutableStateFlow<FileState>(FileState.Nothing)
+    private val _configFile = MutableStateFlow<ConfigFileState>(ConfigFileState.Nothing)
     val fileReceived = _file.asSharedFlow()
+    val configFileStr = _configFileStr.asStateFlow()
     val configFile = _configFile.asStateFlow()
 
     private val gattTaskQueue = GattTaskQueue(
@@ -401,7 +408,7 @@ class FlySightDevice(
     }
 
     private fun readCurrentConfigFile() {
-        _configFile.update {
+        _configFileStr.update {
             FileState.Loading
         }
 
@@ -420,8 +427,12 @@ class FlySightDevice(
             try {
                 val fileState = fileReader.readFile(file)
                 _file.emit(fileState)
-                if (_configFile.value is FileState.Loading) {
-                    _configFile.emit(fileState)
+                if (_configFileStr.value is FileState.Loading) {
+                    _configFileStr.emit(fileState)
+                    if (fileState is FileState.Success) {
+                        val configFile = parser.parse(fileState.content.lines())
+                        _configFile.emit(ConfigFileState.Success(configFile))
+                    }
                 }
             } catch (e: Exception) {
                 log("Error reading file : $e")

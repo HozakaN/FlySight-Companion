@@ -44,8 +44,8 @@ data class ConfigFile(
     val verticalThreshold: Int,
     val horizontalThreshold: Int,
     //Miscellaneous
+    val tzOffset: Int,
     val useSAS: Boolean,
-    //val tzOffset: Int, TODO some day
     //initialization
     val initMode: InitMode,
     val initFile: String?,
@@ -82,6 +82,7 @@ val defaultConfigFile = ConfigFile(
     speeches = emptyList(),
     verticalThreshold = 1000,
     horizontalThreshold = 0,
+    tzOffset = 0,
     useSAS = true,
     initMode = InitMode.DoNothing,
     initFile = "0",
