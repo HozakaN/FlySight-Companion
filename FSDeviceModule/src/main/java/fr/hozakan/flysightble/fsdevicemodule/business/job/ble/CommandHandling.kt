@@ -13,6 +13,7 @@ private const val FS_CRS_COMMAND_FILE_INFO = 0x11
 private const val FS_CRS_COMMAND_FILE_ACK = 0x12
 private const val FS_CRS_COMMAND_NAK = 0xf0
 private const val FS_CRS_COMMAND_ACK = 0xf1
+private const val FS_CRS_COMMAND_PING = 0xfe
 private const val FS_CRS_COMMAND_CANCEL = 0xff
 
 enum class Command(val value: Int) {
@@ -27,6 +28,7 @@ enum class Command(val value: Int) {
     FILE_ACK(FS_CRS_COMMAND_FILE_ACK),
     NAK(FS_CRS_COMMAND_NAK),
     ACK(FS_CRS_COMMAND_ACK),
+    PING(FS_CRS_COMMAND_PING),
     CANCEL(FS_CRS_COMMAND_CANCEL);
 
     companion object {
@@ -43,6 +45,7 @@ enum class Command(val value: Int) {
             FS_CRS_COMMAND_FILE_ACK -> FILE_ACK
             FS_CRS_COMMAND_NAK -> NAK
             FS_CRS_COMMAND_ACK -> ACK
+            FS_CRS_COMMAND_PING -> PING
             FS_CRS_COMMAND_CANCEL -> CANCEL
             else -> null
         }
@@ -77,5 +80,8 @@ object CommandBuilder {
 
     fun buildFileAckCommand(packetId: Int): ByteArray =
         byteArrayOf(FS_CRS_COMMAND_FILE_ACK.toByte()) + byteArrayOf(packetId.toByte())
+
+    fun buildPingCommand(): ByteArray =
+        byteArrayOf(FS_CRS_COMMAND_PING.toByte())
 
 }

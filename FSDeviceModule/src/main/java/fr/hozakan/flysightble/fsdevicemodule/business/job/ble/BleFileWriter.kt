@@ -7,7 +7,6 @@ import fr.hozakan.flysightble.bluetoothmodule.GattTaskQueue
 import fr.hozakan.flysightble.fsdevicemodule.business.job.FileWriter
 import fr.hozakan.flysightble.model.ble.FlySightCharacteristic
 import kotlinx.coroutines.CompletableDeferred
-import timber.log.Timber
 
 class BleFileWriter(
     private val gatt: BluetoothGatt,
@@ -48,14 +47,11 @@ class BleFileWriter(
                     }
                 } else if (cmd == Command.FILE_ACK) {
                     val ackNum = value[1].toInt() and 0xFF
-                    Timber.d("Hoz received ack for packet $ackNum (current: $currentPacket; total: ${dataPackets.size})")
                     if (ackNum == currentPacket) {
                         currentPacket++
                         if (currentPacket > dataPackets.size) {
-                            Timber.d("Hoz all packets sent")
                             fileDataSent.complete(Unit)
                         } else {
-                            Timber.d("Hoz sending next packet")
                             sendNextDataPacket()
                         }
                     }

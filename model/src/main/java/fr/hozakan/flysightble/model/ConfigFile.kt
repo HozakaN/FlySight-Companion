@@ -7,8 +7,6 @@ import fr.hozakan.flysightble.model.config.InitMode
 import fr.hozakan.flysightble.model.config.RateMode
 import fr.hozakan.flysightble.model.config.SilenceWindow
 import fr.hozakan.flysightble.model.config.Speech
-import fr.hozakan.flysightble.model.config.SpeechMode
-import fr.hozakan.flysightble.model.config.SpeechUnit
 import fr.hozakan.flysightble.model.config.ToneLimitBehaviour
 import fr.hozakan.flysightble.model.config.ToneMode
 import fr.hozakan.flysightble.model.config.UnitSystem

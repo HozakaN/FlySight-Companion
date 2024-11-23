@@ -24,6 +24,7 @@ import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BleFileCreator
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BleFileReader
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BleFileWriter
 import fr.hozakan.flysightble.fsdevicemodule.business.job.DirectoryFetcher
+import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BlePingJob
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.Command
 import fr.hozakan.flysightble.model.ConfigFileState
 import fr.hozakan.flysightble.model.DeviceConnectionState
@@ -327,7 +328,10 @@ class FlySightDevice(
             }))
 //            loadDirectoryEntries()
             stateUpdater(DeviceConnectionState.Connected)
-            readCurrentConfigFile()
+//            readCurrentConfigFile()
+            scope?.launch {
+                startPingSystem()
+            }
 //            createAndWriteFile("/test.txt", "Hello world")
 //            writeFile("/test.txt", "Hello world")
         } else {
@@ -404,6 +408,36 @@ class FlySightDevice(
             } catch (e: Exception) {
                 log("Error writing file : $e")
             }
+        }
+    }
+
+    private suspend fun startPingSystem() {
+        while (_connectionState.value == DeviceConnectionState.Connected)  {
+            val ping = pingDevice()
+            if (!ping) {
+                log("Device not responding to pings")
+                disconnectGatt()
+                return
+            }
+            delay(14_000)
+        }
+    }
+
+    private suspend fun pingDevice(): Boolean {
+        log("pinging device ${bluetoothDevice.address}")
+        val gatt = this.gatt ?: return false
+        val rx = this.rxCharacteristic ?: return false
+
+        val pingJob = BlePingJob(
+            gatt = gatt,
+            gattCharacteristic = rx,
+            gattTaskQueue = gattTaskQueue
+        )
+        return try {
+            pingJob.ping()
+        } catch (e: Exception) {
+            log("Error pinging device : $e")
+            false
         }
     }
 

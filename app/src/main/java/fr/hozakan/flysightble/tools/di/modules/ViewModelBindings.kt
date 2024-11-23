@@ -9,6 +9,7 @@ import fr.hozakan.flysightble.configfilesmodule.ui.config_detail.ConfigDetailVie
 import fr.hozakan.flysightble.configfilesmodule.ui.list_files.ListConfigFilesViewModel
 import fr.hozakan.flysightble.framework.dagger.ViewModelKey
 import fr.hozakan.flysightble.framework.viewmodel.ViewModelFactory
+import fr.hozakan.flysightble.fsdevicemodule.ui.device_config.DeviceConfigurationViewModel
 import fr.hozakan.flysightble.fsdevicemodule.ui.device_detail.DeviceDetailViewModel
 import fr.hozakan.flysightble.fsdevicemodule.ui.file.FileScreenViewModel
 import fr.hozakan.flysightble.fsdevicemodule.ui.list_fs.ListFlySightDevicesViewModel
@@ -46,6 +47,12 @@ internal abstract class ViewModelBindings {
     @IntoMap
     @ViewModelKey(FileScreenViewModel::class)
     abstract fun bindFileScreenViewModel(fileScreenViewModel: FileScreenViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(DeviceConfigurationViewModel::class)
+    abstract fun bindDeviceConfigurationViewModel(deviceConfigurationViewModel: DeviceConfigurationViewModel): ViewModel
 
     @Binds
     abstract fun bindViewModelFactory(factory: ViewModelFactory): ViewModelProvider.Factory

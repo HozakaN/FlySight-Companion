@@ -10,6 +10,9 @@ sealed class AppScreen(val route: String) {
             fun buildRoute(deviceId: String, filePath: List<String>) = "device_file/$deviceId/${filePath.subList(1, filePath.size).joinToString(";")}"
 //            fun buildRoute(deviceId: String, filePath: List<String>) = "device_file/$deviceId/$deviceId"
         }
+        data object DeviceConfig : AppScreen("device_config/{config}") {
+            fun buildRoute(config: String) = "device_config/$config"
+        }
     }
     data object ConfigFiles : AppScreen("config_files") {
         data object ConfigFileList : AppScreen("config_file_list")

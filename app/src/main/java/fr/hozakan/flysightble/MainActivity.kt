@@ -18,8 +18,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Engineering
-import androidx.compose.material.icons.filled.NoteAdd
-import androidx.compose.material.icons.filled.NoteAlt
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -39,6 +37,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.google.gson.Gson
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
@@ -46,9 +45,11 @@ import fr.hozakan.flysightble.configfilesmodule.ui.config_detail.ConfigDetailScr
 import fr.hozakan.flysightble.configfilesmodule.ui.list_files.ListConfigFilesScreen
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.framework.dagger.Injectable
-import fr.hozakan.flysightble.fsdevicemodule.ui.device_detail.DeviceDetailComposables
-import fr.hozakan.flysightble.fsdevicemodule.ui.file.FileScreenComposable
+import fr.hozakan.flysightble.fsdevicemodule.ui.device_config.DeviceConfigurationScreen
+import fr.hozakan.flysightble.fsdevicemodule.ui.device_detail.DeviceDetailScreen
+import fr.hozakan.flysightble.fsdevicemodule.ui.file.DeviceFileScreen
 import fr.hozakan.flysightble.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
+import fr.hozakan.flysightble.model.ConfigFile
 import fr.hozakan.flysightble.ui.theme.FlySightBLETheme
 import javax.inject.Inject
 
@@ -59,6 +60,9 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
+
+    @Inject
+    lateinit var json: Gson
 
     override fun androidInjector(): AndroidInjector<Any> = androidInjector
 
@@ -89,10 +93,14 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                 AppScreen.ConfigFiles.ConfigFileList.route -> {
                                     "Config files"
                                 }
+
                                 AppScreen.Device.DeviceFile.route -> {
-                                    val filePath = currentBackStack.value?.arguments?.getString("filePath")?.split(";")
+                                    val filePath =
+                                        currentBackStack.value?.arguments?.getString("filePath")
+                                            ?.split(";")
                                     "File ${filePath?.lastOrNull()}"
                                 }
+
                                 else -> {
                                     "FlySight BLE"
                                 }
@@ -135,6 +143,19 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                         }
 
                                         AppScreen.ConfigFiles.ConfigFileDetail.route -> {
+                                            IconButton(
+                                                onClick = {
+                                                    navController.popBackStack()
+                                                },
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                                    contentDescription = "Navigate up"
+                                                )
+                                            }
+                                        }
+
+                                        AppScreen.Device.DeviceConfig.route -> {
                                             IconButton(
                                                 onClick = {
                                                     navController.popBackStack()
@@ -256,10 +277,23 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                         val deviceId =
                                             backStackEntry.arguments?.getString("deviceId")
                                         if (deviceId != null) {
-                                            DeviceDetailComposables(
+                                            DeviceDetailScreen(
                                                 deviceId = deviceId,
                                                 onFileClicked = {
-                                                    navController.navigate(AppScreen.Device.DeviceFile.buildRoute(deviceId, it))
+                                                    navController.navigate(
+                                                        AppScreen.Device.DeviceFile.buildRoute(
+                                                            deviceId,
+                                                            it
+                                                        )
+                                                    )
+                                                },
+                                                onShowDeviceConfigClicked = {
+                                                    navController.navigate(
+                                                        AppScreen.Device.DeviceConfig.buildRoute(
+//                                                            json.encodeToString(it)
+                                                            json.toJson(it)
+                                                        )
+                                                    )
                                                 },
                                                 onNavigateUp = {
                                                     navController.popBackStack()
@@ -271,9 +305,10 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                         val deviceId =
                                             backStackEntry.arguments?.getString("deviceId")
                                         val filePath =
-                                            backStackEntry.arguments?.getString("filePath")?.split(";")
+                                            backStackEntry.arguments?.getString("filePath")
+                                                ?.split(";")
                                         if (deviceId != null && filePath != null) {
-                                            FileScreenComposable(
+                                            DeviceFileScreen(
                                                 deviceId = deviceId,
                                                 filePath = "/" + filePath.joinToString("/"),
                                                 onNavigateUp = {
@@ -282,6 +317,18 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             )
                                         }
 
+                                    }
+                                    composable(route = AppScreen.Device.DeviceConfig.route) { backStackEntry ->
+                                        val config =
+                                            backStackEntry.arguments?.getString("config")
+                                        if (config != null) {
+                                            DeviceConfigurationScreen(
+//                                                conf = Json.decodeFromString<ConfigFile>(
+//                                                    config
+//                                                )
+                                                conf = json.fromJson(config, ConfigFile::class.java),
+                                            )
+                                        }
                                     }
                                 }
                                 navigation(

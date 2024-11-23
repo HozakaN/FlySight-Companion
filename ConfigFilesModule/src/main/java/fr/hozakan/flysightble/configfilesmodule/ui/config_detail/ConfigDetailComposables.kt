@@ -36,6 +36,12 @@ import fr.hozakan.flysightble.composablecommons.DropdownContainer
 import fr.hozakan.flysightble.composablecommons.EmptyIntTextField
 import fr.hozakan.flysightble.composablecommons.ExpandableColumn
 import fr.hozakan.flysightble.composablecommons.SimpleDialogActionBar
+import fr.hozakan.flysightble.composablecommons.distanceUnit
+import fr.hozakan.flysightble.composablecommons.hourSpeed
+import fr.hozakan.flysightble.composablecommons.rateMaximumLabel
+import fr.hozakan.flysightble.composablecommons.rateMinimumLabel
+import fr.hozakan.flysightble.composablecommons.toneMaximumLabel
+import fr.hozakan.flysightble.composablecommons.toneMinimumLabel
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.model.config.Alarm
 import fr.hozakan.flysightble.model.config.AlarmType
@@ -773,136 +779,6 @@ fun SilenceItemContainer(
             Text("Bottom (${distanceUnit(unitSystem)}) : ${silenceWindow.bottom}")
         }
     }
-}
-
-private fun toneMinimumLabel(toneMode: ToneMode, unitSystem: UnitSystem): String = when (toneMode) {
-    ToneMode.HorizontalSpeed -> {
-        "Minimum speed (${hourSpeed(unitSystem)})"
-    }
-
-    ToneMode.VerticalSpeed -> {
-        "Minimum speed (${hourSpeed(unitSystem)})"
-    }
-
-    ToneMode.GlideRatio -> {
-        "Minimum glide ratio"
-    }
-
-    ToneMode.InverseGlideRatio -> {
-        "Minimum glide ratio"
-    }
-
-    ToneMode.TotalSpeed -> {
-        "Minimum speed (${hourSpeed(unitSystem)})"
-    }
-
-    ToneMode.DiveAngle -> {
-        "Minimum angle (degrees)"
-    }
-}
-
-private fun toneMaximumLabel(toneMode: ToneMode, unitSystem: UnitSystem): String = when (toneMode) {
-    ToneMode.HorizontalSpeed -> {
-        "Maximum speed (${hourSpeed(unitSystem)})"
-    }
-
-    ToneMode.VerticalSpeed -> {
-        "Maximum speed (${hourSpeed(unitSystem)})"
-    }
-
-    ToneMode.GlideRatio -> {
-        "Maximum glide ratio"
-    }
-
-    ToneMode.InverseGlideRatio -> {
-        "Maximum glide ratio"
-    }
-
-    ToneMode.TotalSpeed -> {
-        "Maximum speed (${hourSpeed(unitSystem)})"
-    }
-
-    ToneMode.DiveAngle -> {
-        "Maximum angle (degrees)"
-    }
-}
-
-private fun rateMinimumLabel(rateMode: RateMode, unitSystem: UnitSystem): String = when (rateMode) {
-    RateMode.HorizontalSpeed -> {
-        "Minimum speed (${hourSpeed(unitSystem)})"
-    }
-
-    RateMode.VerticalSpeed -> {
-        "Minimum speed (${hourSpeed(unitSystem)})"
-    }
-
-    RateMode.GlideRatio -> {
-        "Minimum glide ratio"
-    }
-
-    RateMode.InverseGlideRatio -> {
-        "Minimum glide ratio"
-    }
-
-    RateMode.TotalSpeed -> {
-        "Minimum speed (${hourSpeed(unitSystem)})"
-    }
-
-    RateMode.MagnitudeOf1 -> {
-        "Minimum magnitude"
-    }
-
-    RateMode.ChangeInValue1 -> {
-        "Minimum change (percent/s)"
-    }
-
-    RateMode.DiveAngle -> {
-        "Minimum angle (degrees)"
-    }
-}
-
-private fun rateMaximumLabel(rateMode: RateMode, unitSystem: UnitSystem): String = when (rateMode) {
-    RateMode.HorizontalSpeed -> {
-        "Maximum speed (${hourSpeed(unitSystem)})"
-    }
-
-    RateMode.VerticalSpeed -> {
-        "Maximum speed (${hourSpeed(unitSystem)})"
-    }
-
-    RateMode.GlideRatio -> {
-        "Maximum glide ratio"
-    }
-
-    RateMode.InverseGlideRatio -> {
-        "Maximum glide ratio"
-    }
-
-    RateMode.TotalSpeed -> {
-        "Maximum speed (${hourSpeed(unitSystem)})"
-    }
-
-    RateMode.MagnitudeOf1 -> {
-        "Maximum magnitude"
-    }
-
-    RateMode.ChangeInValue1 -> {
-        "Maximum change (percent/s)"
-    }
-
-    RateMode.DiveAngle -> {
-        "Maximum angle (degrees)"
-    }
-}
-
-private fun hourSpeed(unitSystem: UnitSystem): String = when (unitSystem) {
-    UnitSystem.Metric -> "km/h"
-    UnitSystem.Imperial -> "mph"
-}
-
-private fun distanceUnit(unitSystem: UnitSystem): String = when (unitSystem) {
-    UnitSystem.Metric -> "m"
-    UnitSystem.Imperial -> "ft"
 }
 
 @Composable

@@ -45,6 +45,7 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
+    implementation(project(":model"))
 
     //Tests
     testImplementation(libs.junit)

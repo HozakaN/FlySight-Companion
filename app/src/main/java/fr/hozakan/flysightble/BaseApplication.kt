@@ -25,7 +25,6 @@ class BaseApplication : Application() , HasAndroidInjector {
         injectApp(this)
         super.onCreate()
         initTimber()
-
     }
 
     private fun initTimber() {

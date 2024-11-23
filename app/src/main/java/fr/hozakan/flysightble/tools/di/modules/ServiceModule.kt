@@ -1,5 +1,7 @@
 package fr.hozakan.flysightble.tools.di.modules
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import fr.hozakan.flysightble.BaseApplication
@@ -25,6 +27,10 @@ class ServiceModule {
     @Provides
     @Named("serviceExecutor")
     fun provideLibExecutor(): ExecutorService = Executors.newSingleThreadExecutor()
+
+    @Singleton
+    @Provides
+    fun provideGson(): Gson = Gson()
 
     @Singleton
     @Provides

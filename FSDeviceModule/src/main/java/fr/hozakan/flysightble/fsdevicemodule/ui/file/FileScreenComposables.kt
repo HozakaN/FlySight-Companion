@@ -1,11 +1,8 @@
 package fr.hozakan.flysightble.fsdevicemodule.ui.file
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -19,7 +16,7 @@ import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.model.FileState
 
 @Composable
-fun FileScreenComposable(
+fun DeviceFileScreen(
     deviceId: String,
     filePath: String,
     onNavigateUp: () -> Unit
