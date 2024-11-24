@@ -2,7 +2,6 @@ package fr.hozakan.flysightble.configfilesmodule.business
 
 import android.content.Context
 import fr.hozakan.flysightble.configfilesmodule.business.parser.CONFIG_FILES_FOLDER
-import fr.hozakan.flysightble.configfilesmodule.business.parser.CONFIG_NAME_INDICATOR
 import fr.hozakan.flysightble.model.ConfigFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +27,8 @@ class DefaultConfigFileService(
 
     private val parser: ConfigParser = DefaultConfigParser()
 
+    private val encoder: ConfigEncoder = DefaultConfigEncoder()
+
     init {
         serviceScope.launch {
             loadConfigFiles()
@@ -47,12 +48,7 @@ class DefaultConfigFileService(
     }
 
     private fun buildFileContent(configFile: ConfigFile): String {
-        return buildString {
-            append("; $CONFIG_NAME_INDICATOR${configFile.name}\n")
-            configItemsEncoders.forEach { key ->
-//                append("$key=${configFile.data[key]}\n")
-            }
-        }
+        return encoder.encodeConfig(configFile)
     }
 
     private fun getOrCreateConfigFilesFolder(): File {
@@ -68,12 +64,14 @@ class DefaultConfigFileService(
             val configFiles =
                 (configFolder.listFiles()?.mapNotNull { parseConfiguration(it.readLines()) }
                     ?: emptyList()).toMutableList()
+            _configs.update {
+                configFiles
+            }
         }
     }
 
     //    private fun parseConfiguration(configFile: File): ConfigFile? {
     private fun parseConfiguration(fileLines: List<String>): ConfigFile? {
-
         val configFile = parser.parse(fileLines)
         return configFile
     }

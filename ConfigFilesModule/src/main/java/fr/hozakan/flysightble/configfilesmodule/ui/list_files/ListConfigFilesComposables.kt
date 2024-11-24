@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -101,6 +102,7 @@ fun ConfigFileItem(
     onConfigSelected: () -> Unit
 ) {
     Card(
+        modifier = Modifier.fillMaxWidth(),
         onClick = onConfigSelected
     ) {
         Column(

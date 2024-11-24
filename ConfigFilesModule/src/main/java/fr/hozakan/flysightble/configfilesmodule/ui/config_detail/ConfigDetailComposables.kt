@@ -355,8 +355,7 @@ fun ConfigDetailScreenInternal(
                     },
                     label = {
                         Text(text = "Description")
-                    },
-                    isError = !state.hasValidFileName
+                    }
                 )
             }
             item {

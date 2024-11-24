@@ -16,16 +16,15 @@ class DefaultConfigEncoderTests {
         val encore = DefaultConfigEncoder()
         val config = defaultConfigFile().copy(
             name = "test",
-            unitSystem = UnitSystem.Imperial,
             speeches = listOf(
                 Speech(
                     mode = SpeechMode.VerticalSpeed,
-                    unit = SpeechUnit.Imperial,
+                    unit = UnitSystem.Imperial,
                     value = 100
                 )
             )
         )
-        val encoded = encore.encoreConfig(config)
+        val encoded = encore.encodeConfig(config)
 
         //TODO check git and speeches addition
         Assert.assertTrue(encoded.contains("${CONFIG_NAME_INDICATOR}test"))
