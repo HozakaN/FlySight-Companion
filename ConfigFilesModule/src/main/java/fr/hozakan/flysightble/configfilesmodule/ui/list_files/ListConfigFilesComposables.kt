@@ -10,8 +10,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -24,6 +28,20 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.model.ConfigFile
+
+@Composable
+fun ListConfigFileMenuActions(
+    onCreateConfigFile: () -> Unit
+) {
+    IconButton(
+        onClick = onCreateConfigFile
+    ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.NoteAdd,
+            contentDescription = "New config file"
+        )
+    }
+}
 
 @Composable
 fun ListConfigFilesScreen(

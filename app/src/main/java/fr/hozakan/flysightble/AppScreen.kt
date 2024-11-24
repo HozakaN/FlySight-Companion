@@ -1,7 +1,7 @@
 package fr.hozakan.flysightble
 
 sealed class AppScreen(val route: String) {
-    data object Device : AppScreen("device") {
+    data object DeviceTab : AppScreen("device_tab") {
         data object DeviceList : AppScreen("device_list")
         data object DeviceDetail: AppScreen("device_detail/{deviceId}") {
             fun buildRoute(deviceId: String) = "device_detail/$deviceId"
@@ -14,10 +14,10 @@ sealed class AppScreen(val route: String) {
             fun buildRoute(config: String) = "device_config/$config"
         }
     }
-    data object ConfigFiles : AppScreen("config_files") {
-        data object ConfigFileList : AppScreen("config_file_list")
-        data object ConfigFileDetail: AppScreen("config_file_detail/{configFileName}") {
-            fun buildRoute(configFileName: String) = "config_file_detail/$configFileName"
+    data object ConfigTab : AppScreen("config_tab") {
+        data object ConfigList : AppScreen("config_list")
+        data object ConfigDetail: AppScreen("config_detail/{configName}") {
+            fun buildRoute(configName: String) = "config_detail/$configName"
         }
     }
 }

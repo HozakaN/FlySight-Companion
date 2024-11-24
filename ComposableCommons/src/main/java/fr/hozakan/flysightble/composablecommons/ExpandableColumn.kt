@@ -29,7 +29,7 @@ public fun ExpandableColumn(
     headerComposable: @Composable (Boolean) -> Unit,
     contentComposable: @Composable ColumnScope.() -> Unit
 ) {
-    var contentExpanded by remember { mutableStateOf(false) }
+    var contentExpanded by remember { mutableStateOf(true) }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),

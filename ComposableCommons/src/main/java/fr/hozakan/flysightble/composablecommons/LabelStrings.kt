@@ -1,17 +1,22 @@
 package fr.hozakan.flysightble.composablecommons
 
+import fr.hozakan.flysightble.framework.extension.distanceInUnit
+import fr.hozakan.flysightble.framework.extension.fromDistanceUnitToMeter
+import fr.hozakan.flysightble.framework.extension.fromSpeedUnitToCmPerSec
+import fr.hozakan.flysightble.framework.extension.speedInUnit
 import fr.hozakan.flysightble.model.config.RateMode
+import fr.hozakan.flysightble.model.config.SpeechMode
 import fr.hozakan.flysightble.model.config.ToneMode
 import fr.hozakan.flysightble.model.config.UnitSystem
 
 
 fun toneMinimumLabel(toneMode: ToneMode, unitSystem: UnitSystem): String = when (toneMode) {
     ToneMode.HorizontalSpeed -> {
-        "Minimum speed (${hourSpeed(unitSystem)})"
+        "Minimum speed (${unitSystem.speedText})"
     }
 
     ToneMode.VerticalSpeed -> {
-        "Minimum speed (${hourSpeed(unitSystem)})"
+        "Minimum speed (${unitSystem.speedText})"
     }
 
     ToneMode.GlideRatio -> {
@@ -23,7 +28,7 @@ fun toneMinimumLabel(toneMode: ToneMode, unitSystem: UnitSystem): String = when 
     }
 
     ToneMode.TotalSpeed -> {
-        "Minimum speed (${hourSpeed(unitSystem)})"
+        "Minimum speed (${unitSystem.speedText})"
     }
 
     ToneMode.DiveAngle -> {
@@ -33,11 +38,11 @@ fun toneMinimumLabel(toneMode: ToneMode, unitSystem: UnitSystem): String = when 
 
 fun toneMaximumLabel(toneMode: ToneMode, unitSystem: UnitSystem): String = when (toneMode) {
     ToneMode.HorizontalSpeed -> {
-        "Maximum speed (${hourSpeed(unitSystem)})"
+        "Maximum speed (${unitSystem.speedText})"
     }
 
     ToneMode.VerticalSpeed -> {
-        "Maximum speed (${hourSpeed(unitSystem)})"
+        "Maximum speed (${unitSystem.speedText})"
     }
 
     ToneMode.GlideRatio -> {
@@ -49,7 +54,7 @@ fun toneMaximumLabel(toneMode: ToneMode, unitSystem: UnitSystem): String = when 
     }
 
     ToneMode.TotalSpeed -> {
-        "Maximum speed (${hourSpeed(unitSystem)})"
+        "Maximum speed (${unitSystem.speedText})"
     }
 
     ToneMode.DiveAngle -> {
@@ -57,13 +62,39 @@ fun toneMaximumLabel(toneMode: ToneMode, unitSystem: UnitSystem): String = when 
     }
 }
 
+fun Int.valueForToneMode(toneMode: ToneMode, unitSystem: UnitSystem): Int = when (toneMode) {
+    ToneMode.HorizontalSpeed,
+    ToneMode.VerticalSpeed,
+    ToneMode.TotalSpeed -> {
+        this.speedInUnit(unitSystem)
+    }
+    ToneMode.GlideRatio,
+    ToneMode.InverseGlideRatio,
+    ToneMode.DiveAngle -> {
+        this
+    }
+}
+
+fun Int.valueFromToneMode(toneMode: ToneMode, unitSystem: UnitSystem): Int = when (toneMode) {
+    ToneMode.HorizontalSpeed,
+    ToneMode.VerticalSpeed,
+    ToneMode.TotalSpeed -> {
+        this.fromSpeedUnitToCmPerSec(unitSystem)
+    }
+    ToneMode.GlideRatio,
+    ToneMode.InverseGlideRatio,
+    ToneMode.DiveAngle -> {
+        this
+    }
+}
+
 fun rateMinimumLabel(rateMode: RateMode, unitSystem: UnitSystem): String = when (rateMode) {
     RateMode.HorizontalSpeed -> {
-        "Minimum speed (${hourSpeed(unitSystem)})"
+        "Minimum speed (${unitSystem.speedText})"
     }
 
     RateMode.VerticalSpeed -> {
-        "Minimum speed (${hourSpeed(unitSystem)})"
+        "Minimum speed (${unitSystem.speedText})"
     }
 
     RateMode.GlideRatio -> {
@@ -75,7 +106,7 @@ fun rateMinimumLabel(rateMode: RateMode, unitSystem: UnitSystem): String = when 
     }
 
     RateMode.TotalSpeed -> {
-        "Minimum speed (${hourSpeed(unitSystem)})"
+        "Minimum speed (${unitSystem.speedText})"
     }
 
     RateMode.MagnitudeOf1 -> {
@@ -93,11 +124,11 @@ fun rateMinimumLabel(rateMode: RateMode, unitSystem: UnitSystem): String = when 
 
 fun rateMaximumLabel(rateMode: RateMode, unitSystem: UnitSystem): String = when (rateMode) {
     RateMode.HorizontalSpeed -> {
-        "Maximum speed (${hourSpeed(unitSystem)})"
+        "Maximum speed (${unitSystem.speedText})"
     }
 
     RateMode.VerticalSpeed -> {
-        "Maximum speed (${hourSpeed(unitSystem)})"
+        "Maximum speed (${unitSystem.speedText})"
     }
 
     RateMode.GlideRatio -> {
@@ -109,7 +140,7 @@ fun rateMaximumLabel(rateMode: RateMode, unitSystem: UnitSystem): String = when 
     }
 
     RateMode.TotalSpeed -> {
-        "Maximum speed (${hourSpeed(unitSystem)})"
+        "Maximum speed (${unitSystem.speedText})"
     }
 
     RateMode.MagnitudeOf1 -> {
@@ -125,12 +156,62 @@ fun rateMaximumLabel(rateMode: RateMode, unitSystem: UnitSystem): String = when 
     }
 }
 
-fun hourSpeed(unitSystem: UnitSystem): String = when (unitSystem) {
-    UnitSystem.Metric -> "km/h"
-    UnitSystem.Imperial -> "mph"
+fun Int.valueForRateMode(rateMode: RateMode, unitSystem: UnitSystem): Int = when (rateMode) {
+    RateMode.HorizontalSpeed,
+    RateMode.VerticalSpeed,
+    RateMode.TotalSpeed -> {
+        this.speedInUnit(unitSystem)
+    }
+    RateMode.GlideRatio,
+    RateMode.InverseGlideRatio,
+    RateMode.MagnitudeOf1,
+    RateMode.ChangeInValue1,
+    RateMode.DiveAngle -> {
+        this
+    }
 }
 
-fun distanceUnit(unitSystem: UnitSystem): String = when (unitSystem) {
-    UnitSystem.Metric -> "m"
-    UnitSystem.Imperial -> "ft"
+fun Int.valueFromRateMode(rateMode: RateMode, unitSystem: UnitSystem): Int = when (rateMode) {
+    RateMode.HorizontalSpeed,
+    RateMode.VerticalSpeed,
+    RateMode.TotalSpeed -> {
+        this.fromSpeedUnitToCmPerSec(unitSystem)
+    }
+    RateMode.GlideRatio,
+    RateMode.InverseGlideRatio,
+    RateMode.MagnitudeOf1,
+    RateMode.ChangeInValue1,
+    RateMode.DiveAngle -> {
+        this
+    }
+}
+
+fun speechValueLabel(speechMode: SpeechMode, unitSystem: UnitSystem): String = when (speechMode) {
+    SpeechMode.AltitudeAboveDropzone -> {
+        "Altitude step (${unitSystem.distanceText})"
+    }
+
+    else -> {
+        "Decimals"
+    }
+}
+
+fun Int.speechValueForMode(speechMode: SpeechMode, unitSystem: UnitSystem): Int = when (speechMode) {
+    SpeechMode.AltitudeAboveDropzone -> {
+        this.distanceInUnit(unitSystem)
+    }
+
+    else -> {
+        this
+    }
+}
+
+fun Int.speechValueFromMode(speechMode: SpeechMode, unitSystem: UnitSystem): Int = when (speechMode) {
+    SpeechMode.AltitudeAboveDropzone -> {
+        this.fromDistanceUnitToMeter(unitSystem)
+    }
+
+    else -> {
+        this
+    }
 }

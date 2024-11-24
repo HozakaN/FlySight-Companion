@@ -3,6 +3,7 @@ package fr.hozakan.flysightble.fsdevicemodule.ui.device_config
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
+import fr.hozakan.flusightble.userpreferencesmodule.UserPrefService
 import fr.hozakan.flysightble.configfilesmodule.business.DefaultConfigParser
 import fr.hozakan.flysightble.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightble.fsdevicemodule.business.FsDeviceService
@@ -17,15 +18,31 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class DeviceConfigurationViewModel @Inject constructor() : ViewModel() {
+class DeviceConfigurationViewModel @Inject constructor(
+    userPrefService: UserPrefService
+) : ViewModel() {
 
     private val _state = MutableStateFlow(
         DeviceConfigurationState(
-            configuration = defaultConfigFile()
+            configuration = defaultConfigFile(),
+            unitSystem = userPrefService.unitSystem.value
         )
     )
 
     val state = _state.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            userPrefService.unitSystem
+                .collect { unitSystem ->
+                    _state.update {
+                        it.copy(
+                            unitSystem = unitSystem
+                        )
+                    }
+                }
+        }
+    }
 
     fun loadConfiguration(conf: ConfigFile) {
         _state.update {

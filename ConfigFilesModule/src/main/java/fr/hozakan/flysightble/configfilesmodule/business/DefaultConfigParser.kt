@@ -7,7 +7,7 @@ import fr.hozakan.flysightble.configfilesmodule.business.parser.AltitudeStepPars
 import fr.hozakan.flysightble.configfilesmodule.business.parser.AltitudeUnitParser
 import fr.hozakan.flysightble.configfilesmodule.business.parser.DynamicModelParser
 import fr.hozakan.flysightble.configfilesmodule.business.parser.DzElevParser
-import fr.hozakan.flysightble.configfilesmodule.business.parser.FILENAME_INDICATOR
+import fr.hozakan.flysightble.configfilesmodule.business.parser.CONFIG_NAME_INDICATOR
 import fr.hozakan.flysightble.configfilesmodule.business.parser.FlatlineParser
 import fr.hozakan.flysightble.configfilesmodule.business.parser.HorizontalThresholdParser
 import fr.hozakan.flysightble.configfilesmodule.business.parser.InitFileParser
@@ -38,7 +38,7 @@ class DefaultConfigParser : ConfigParser {
     override fun parse(fileLines: List<String>): ConfigFile {
 
         fun parseFileName(line: String): String? {
-            if (line.contains(FILENAME_INDICATOR)) {line.substringAfter(FILENAME_INDICATOR).trim().run {
+            if (line.contains(CONFIG_NAME_INDICATOR)) {line.substringAfter(CONFIG_NAME_INDICATOR).trim().run {
                     return if (contains(";")) {
                         substringBefore(";").trim()
                     } else {

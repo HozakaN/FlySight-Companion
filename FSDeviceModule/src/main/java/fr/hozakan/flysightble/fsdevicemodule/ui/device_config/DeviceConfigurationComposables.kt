@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -22,14 +21,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import fr.hozakan.flysightble.composablecommons.distanceUnit
-import fr.hozakan.flysightble.composablecommons.hourSpeed
 import fr.hozakan.flysightble.composablecommons.rateMaximumLabel
 import fr.hozakan.flysightble.composablecommons.rateMinimumLabel
 import fr.hozakan.flysightble.composablecommons.toneMaximumLabel
 import fr.hozakan.flysightble.composablecommons.toneMinimumLabel
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
+import fr.hozakan.flysightble.framework.extension.speedInUnit
 import fr.hozakan.flysightble.model.ConfigFile
+import fr.hozakan.flysightble.model.config.UnitSystem
 import fr.hozakan.flysightble.model.defaultConfigFile
 
 @Composable
@@ -49,13 +48,15 @@ fun DeviceConfigurationScreen(
     val config = state.configuration
 
     DeviceConfigurationScreenInternal(
-        config = config
+        config = config,
+        unitSystem = state.unitSystem
     )
 }
 
 @Composable
 fun DeviceConfigurationScreenInternal(
-    config: ConfigFile
+    config: ConfigFile,
+    unitSystem: UnitSystem
 ) {
     Surface(
         modifier = Modifier
@@ -85,6 +86,28 @@ fun DeviceConfigurationScreenInternal(
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
                         text = config.name
+                    )
+                }
+            }
+            item {
+                Row {
+                    Text(
+                        text = "Configuration description :"
+                    )
+                    Spacer(modifier = Modifier.requiredWidth(8.dp))
+                    Text(
+                        text = config.description
+                    )
+                }
+            }
+            item {
+                Row {
+                    Text(
+                        text = "Configuration kind :"
+                    )
+                    Spacer(modifier = Modifier.requiredWidth(8.dp))
+                    Text(
+                        text = config.kind
                     )
                 }
             }
@@ -133,7 +156,7 @@ fun DeviceConfigurationScreenInternal(
             item {
                 Row {
                     Text(
-                        text = toneMinimumLabel(config.toneMode, config.unitSystem)
+                        text = toneMinimumLabel(config.toneMode, unitSystem)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -144,7 +167,7 @@ fun DeviceConfigurationScreenInternal(
             item {
                 Row {
                     Text(
-                        text = toneMaximumLabel(config.toneMode, config.unitSystem)
+                        text = toneMaximumLabel(config.toneMode, unitSystem)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -197,7 +220,7 @@ fun DeviceConfigurationScreenInternal(
             item {
                 Row {
                     Text(
-                        text = rateMinimumLabel(config.rateMode, config.unitSystem)
+                        text = rateMinimumLabel(config.rateMode, unitSystem)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -208,7 +231,7 @@ fun DeviceConfigurationScreenInternal(
             item {
                 Row {
                     Text(
-                        text = rateMaximumLabel(config.rateMode, config.unitSystem)
+                        text = rateMaximumLabel(config.rateMode, unitSystem)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -252,7 +275,7 @@ fun DeviceConfigurationScreenInternal(
             item {
                 Column {
                     Text(
-                        text = "Speech",
+                        text = "Speech (${config.speeches.size})",
                         style = MaterialTheme.typography.titleLarge
                     )
                     HorizontalDivider(modifier = Modifier.fillMaxSize())
@@ -287,7 +310,7 @@ fun DeviceConfigurationScreenInternal(
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
-                        text = "${speech.mode.text} ${speech.unit.text} ${speech.value}"
+                        text = "${speech.mode.text} ${speech.unit.speedText} ${speech.value}"
                     )
                 }
             }
@@ -303,22 +326,22 @@ fun DeviceConfigurationScreenInternal(
             item {
                 Row {
                     Text(
-                        text = "Vertical speed (${hourSpeed(config.unitSystem)}) :"
+                        text = "Vertical speed (${unitSystem.speedText}) :"
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
-                        text = "${config.verticalThreshold}"
+                        text = "${config.verticalThreshold.speedInUnit(unitSystem)}"
                     )
                 }
             }
             item {
                 Row {
                     Text(
-                        text = "Horizontal speed (${hourSpeed(config.unitSystem)}) :"
+                        text = "Horizontal speed (${unitSystem.speedText}) :"
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
-                        text = "${config.horizontalThreshold}"
+                        text = "${config.horizontalThreshold * 0.036}"
                     )
                 }
             }
@@ -387,7 +410,7 @@ fun DeviceConfigurationScreenInternal(
             item {
                 Column {
                     Text(
-                        text = "Alarm",
+                        text = "Alarm (${config.alarms.size}",
                         style = MaterialTheme.typography.titleLarge
                     )
                     HorizontalDivider(modifier = Modifier.fillMaxSize())
@@ -396,7 +419,7 @@ fun DeviceConfigurationScreenInternal(
             item {
                 Row {
                     Text(
-                        text = "Window above (${distanceUnit(config.unitSystem)}) :"
+                        text = "Window above (${unitSystem.distanceText}) :"
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -407,7 +430,7 @@ fun DeviceConfigurationScreenInternal(
             item {
                 Row {
                     Text(
-                        text = "Window below (${distanceUnit(config.unitSystem)}) :"
+                        text = "Window below (${unitSystem.distanceText}) :"
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -418,7 +441,7 @@ fun DeviceConfigurationScreenInternal(
             item {
                 Row {
                     Text(
-                        text = "Ground elevation (${distanceUnit(config.unitSystem)}) :"
+                        text = "Ground elevation (${unitSystem.distanceText}) :"
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -453,7 +476,7 @@ fun DeviceConfigurationScreenInternal(
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
-                        text = config.altitudeUnit.text
+                        text = config.altitudeUnit.distanceText
                     )
                 }
             }
@@ -471,7 +494,7 @@ fun DeviceConfigurationScreenInternal(
             item {
                 Column {
                     Text(
-                        text = "Silence :",
+                        text = "Silence (${config.silenceWindows.size})",
                         style = MaterialTheme.typography.titleLarge
                     )
                     HorizontalDivider(modifier = Modifier.fillMaxSize())
@@ -496,6 +519,7 @@ fun DeviceConfigurationScreenInternal(
 @Composable
 fun DeviceConfigurationScreenInternalPreview() {
     DeviceConfigurationScreenInternal(
-        defaultConfigFile()
+        config = defaultConfigFile(),
+        unitSystem = UnitSystem.Metric
     )
 }

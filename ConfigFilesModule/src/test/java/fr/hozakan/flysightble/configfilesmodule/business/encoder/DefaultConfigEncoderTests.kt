@@ -1,10 +1,9 @@
 package fr.hozakan.flysightble.configfilesmodule.business.encoder
 
 import fr.hozakan.flysightble.configfilesmodule.business.DefaultConfigEncoder
-import fr.hozakan.flysightble.configfilesmodule.business.parser.FILENAME_INDICATOR
+import fr.hozakan.flysightble.configfilesmodule.business.parser.CONFIG_NAME_INDICATOR
 import fr.hozakan.flysightble.model.config.Speech
 import fr.hozakan.flysightble.model.config.SpeechMode
-import fr.hozakan.flysightble.model.config.SpeechUnit
 import fr.hozakan.flysightble.model.config.UnitSystem
 import fr.hozakan.flysightble.model.defaultConfigFile
 import org.junit.Assert
@@ -29,7 +28,7 @@ class DefaultConfigEncoderTests {
         val encoded = encore.encoreConfig(config)
 
         //TODO check git and speeches addition
-        Assert.assertTrue(encoded.contains("${FILENAME_INDICATOR}test"))
+        Assert.assertTrue(encoded.contains("${CONFIG_NAME_INDICATOR}test"))
         Assert.assertTrue(encoded.contains("Sp_Mode:        1"))
     }
 

@@ -1,5 +1,6 @@
 package fr.hozakan.flysightble.configfilesmodule.ui.config_detail
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,10 +13,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -29,6 +38,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,13 +47,22 @@ import fr.hozakan.flysightble.composablecommons.DropdownContainer
 import fr.hozakan.flysightble.composablecommons.EmptyIntTextField
 import fr.hozakan.flysightble.composablecommons.ExpandableColumn
 import fr.hozakan.flysightble.composablecommons.SimpleDialogActionBar
-import fr.hozakan.flysightble.composablecommons.distanceUnit
-import fr.hozakan.flysightble.composablecommons.hourSpeed
 import fr.hozakan.flysightble.composablecommons.rateMaximumLabel
 import fr.hozakan.flysightble.composablecommons.rateMinimumLabel
+import fr.hozakan.flysightble.composablecommons.speechValueForMode
+import fr.hozakan.flysightble.composablecommons.speechValueFromMode
+import fr.hozakan.flysightble.composablecommons.speechValueLabel
 import fr.hozakan.flysightble.composablecommons.toneMaximumLabel
 import fr.hozakan.flysightble.composablecommons.toneMinimumLabel
+import fr.hozakan.flysightble.composablecommons.valueForRateMode
+import fr.hozakan.flysightble.composablecommons.valueForToneMode
+import fr.hozakan.flysightble.composablecommons.valueFromRateMode
+import fr.hozakan.flysightble.composablecommons.valueFromToneMode
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
+import fr.hozakan.flysightble.framework.extension.distanceInUnit
+import fr.hozakan.flysightble.framework.extension.fromDistanceUnitToMeter
+import fr.hozakan.flysightble.framework.extension.fromSpeedUnitToCmPerSec
+import fr.hozakan.flysightble.framework.extension.speedInUnit
 import fr.hozakan.flysightble.model.config.Alarm
 import fr.hozakan.flysightble.model.config.AlarmType
 import fr.hozakan.flysightble.model.config.DynamicModel
@@ -51,15 +71,76 @@ import fr.hozakan.flysightble.model.config.RateMode
 import fr.hozakan.flysightble.model.config.SilenceWindow
 import fr.hozakan.flysightble.model.config.Speech
 import fr.hozakan.flysightble.model.config.SpeechMode
-import fr.hozakan.flysightble.model.config.SpeechUnit
 import fr.hozakan.flysightble.model.config.ToneLimitBehaviour
 import fr.hozakan.flysightble.model.config.ToneMode
 import fr.hozakan.flysightble.model.config.UnitSystem
 import fr.hozakan.flysightble.model.config.Volume
+import fr.hozakan.flysightble.model.defaultConfigFile
+
+@Composable
+fun ConfigDetailMenuActions() {
+
+    val factory = LocalViewModelFactory.current
+
+    val viewModel: ConfigDetailViewModel = viewModel(factory = factory)
+    val state by viewModel.state.collectAsState()
+    val unitSystem = state.unitSystem
+
+    var expanded by remember { mutableStateOf(false) }
+
+    IconButton(
+        onClick = {
+            expanded = !expanded
+        }
+    ) {
+        Icon(
+            imageVector = Icons.Filled.MoreVert,
+            contentDescription = "Unit system picker"
+        )
+    }
+
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = { expanded = false }
+    ) {
+        DropdownMenuItem(
+            text = { Text(text = UnitSystem.Metric.unitName) },
+            leadingIcon = {
+                RadioButton(
+                    selected = unitSystem == UnitSystem.Metric,
+                    onClick = {
+                        viewModel.updateUnitSystem(UnitSystem.Metric)
+                        expanded = false
+                    }
+                )
+            },
+            onClick = {
+                viewModel.updateUnitSystem(UnitSystem.Metric)
+                expanded = false
+            }
+        )
+        DropdownMenuItem(
+            text = { Text(text = UnitSystem.Imperial.unitName) },
+            leadingIcon = {
+                RadioButton(
+                    selected = unitSystem == UnitSystem.Imperial,
+                    onClick = {
+                        viewModel.updateUnitSystem(UnitSystem.Imperial)
+                        expanded = false
+                    }
+                )
+            },
+            onClick = {
+                viewModel.updateUnitSystem(UnitSystem.Imperial)
+                expanded = false
+            }
+        )
+    }
+}
 
 @Composable
 fun ConfigDetailScreen(
-    configFileName: String,
+    configName: String,
     onNavigateUp: () -> Unit
 ) {
     val factory = LocalViewModelFactory.current
@@ -68,8 +149,8 @@ fun ConfigDetailScreen(
 
     val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(key1 = configFileName) {
-        viewModel.loadConfigFile(configFileName)
+    LaunchedEffect(key1 = configName) {
+        viewModel.loadConfigFile(configName)
     }
 
     LaunchedEffect(state.fileSaved) {
@@ -78,6 +159,158 @@ fun ConfigDetailScreen(
         }
     }
 
+    ConfigDetailScreenInternal(
+        state = state,
+        updateConfigFileName = {
+            viewModel.updateConfigFileName(it)
+        },
+        updateConfigFileDescription = {
+            viewModel.updateConfigFileDescription(it)
+        },
+        updateConfigFileKind = {
+            viewModel.updateConfigFileKind(it)
+        },
+        updateDynamicModel = {
+            viewModel.updateDynamicModel(it)
+        },
+        updateSamplePeriod = {
+            viewModel.updateSamplePeriod(it)
+        },
+        updateUseSAS = {
+            viewModel.updateUseSAS(it)
+        },
+        updateToneMode = {
+            viewModel.updateToneMode(it)
+        },
+        updateToneMinimum = {
+            viewModel.updateToneMinimum(it)
+        },
+        updateToneMaximum = {
+            viewModel.updateToneMaximum(it)
+        },
+        updateToneLimitBehaviour = {
+            viewModel.updateToneLimitBehaviour(it)
+        },
+        updateToneVolume = {
+            viewModel.updateToneVolume(it)
+        },
+        updateRateMode = {
+            viewModel.updateRateMode(it)
+        },
+        updateRateMinimumValue = {
+            viewModel.updateRateMinimumValue(it)
+        },
+        updateRateMaximumValue = {
+            viewModel.updateRateMaximumValue(it)
+        },
+        updateRateMinimum = {
+            viewModel.updateRateMinimum(it)
+        },
+        updateRateMaximum = {
+            viewModel.updateRateMaximum(it)
+        },
+        updateFlatLineAtMinimumRate = {
+            viewModel.updateFlatLineAtMinimumRate(it)
+        },
+        updateSpeechRate = {
+            viewModel.updateRateMaximumValue(it)
+        },
+        updateSpeechVolume = {
+            viewModel.updateSpeechVolume(it)
+        },
+        addSpeech = {
+            viewModel.addSpeech(it)
+        },
+        deleteSpeech = {
+            viewModel.deleteSpeech(it)
+        },
+        updateVerticalThreshold = {
+            viewModel.updateVerticalThreshold(it)
+        },
+        updateHorizontalThreshold = {
+            viewModel.updateHorizontalThreshold(it)
+        },
+        updateInitMode = {
+            viewModel.updateInitMode(it)
+        },
+        updateInitFile = {
+            viewModel.updateInitFile(it)
+        },
+        updateWindowAbove = {
+            viewModel.updateWindowAbove(it)
+        },
+        updateWindowBelow = {
+            viewModel.updateWindowBelow(it)
+        },
+        updateDzElev = {
+            viewModel.updateDzElev(it)
+        },
+        addAlarm = {
+            viewModel.addAlarm(it)
+        },
+        deleteAlarm = {
+            viewModel.deleteAlarm(it)
+        },
+        updateAltitudeUnit = {
+            viewModel.updateAltitudeUnit(it)
+        },
+        updateAltitudeStep = {
+            viewModel.updateAltitudeStep(it)
+        },
+        addSilenceWindow = {
+            viewModel.addSilenceWindow(it)
+        },
+        deleteSilenceWindow = {
+            viewModel.deleteSilenceWindow(it)
+        },
+        saveConfigFile = {
+            viewModel.saveConfigFile()
+        },
+        onNavigateUp = onNavigateUp
+    )
+
+}
+
+@Composable
+fun ConfigDetailScreenInternal(
+    state: ConfigDetailState,
+    updateConfigFileName: (String) -> Unit,
+    updateConfigFileDescription: (String) -> Unit,
+    updateConfigFileKind: (String) -> Unit,
+    updateDynamicModel: (DynamicModel) -> Unit,
+    updateSamplePeriod: (Int) -> Unit,
+    updateUseSAS: (Boolean) -> Unit,
+    updateToneMode: (ToneMode) -> Unit,
+    updateToneMinimum: (Int) -> Unit,
+    updateToneMaximum: (Int) -> Unit,
+    updateToneLimitBehaviour: (ToneLimitBehaviour) -> Unit,
+    updateToneVolume: (Volume) -> Unit,
+    updateRateMode: (RateMode) -> Unit,
+    updateRateMaximumValue: (Int) -> Unit,
+    updateRateMinimumValue: (Int) -> Unit,
+    updateRateMaximum: (Int) -> Unit,
+    updateRateMinimum: (Int) -> Unit,
+    updateFlatLineAtMinimumRate: (Boolean) -> Unit,
+    updateSpeechRate: (Int) -> Unit,
+    updateSpeechVolume: (Volume) -> Unit,
+    addSpeech: (Speech) -> Unit,
+    deleteSpeech: (Speech) -> Unit,
+    updateVerticalThreshold: (Int) -> Unit,
+    updateHorizontalThreshold: (Int) -> Unit,
+    updateInitMode: (InitMode) -> Unit,
+    updateInitFile: (String) -> Unit,
+    updateWindowAbove: (Int) -> Unit,
+    updateWindowBelow: (Int) -> Unit,
+    updateDzElev: (Int) -> Unit,
+    addAlarm: (Alarm) -> Unit,
+    deleteAlarm: (Alarm) -> Unit,
+    updateAltitudeUnit: (UnitSystem) -> Unit,
+    updateAltitudeStep: (Int) -> Unit,
+    addSilenceWindow: (SilenceWindow) -> Unit,
+    deleteSilenceWindow: (SilenceWindow) -> Unit,
+    saveConfigFile: () -> Unit,
+    onNavigateUp: () -> Unit
+) {
     Surface(
         modifier = Modifier
             .fillMaxSize(),
@@ -93,6 +326,8 @@ fun ConfigDetailScreen(
             return@Surface
         }
         val configFile = state.configFile
+        val unitSystem = state.unitSystem
+
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(8.dp),
@@ -103,12 +338,37 @@ fun ConfigDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                     value = configFile.name,
                     onValueChange = {
-                        viewModel.updateConfigFileName(it)
+                        updateConfigFileName(it)
                     },
                     label = {
-                        Text(text = "Config file name")
+                        Text(text = "Config name")
                     },
                     isError = !state.hasValidFileName
+                )
+            }
+            item {
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = configFile.description,
+                    onValueChange = {
+                        updateConfigFileDescription(it)
+                    },
+                    label = {
+                        Text(text = "Description")
+                    },
+                    isError = !state.hasValidFileName
+                )
+            }
+            item {
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = configFile.kind,
+                    onValueChange = {
+                        updateConfigFileKind(it)
+                    },
+                    label = {
+                        Text(text = "Kind")
+                    }
                 )
             }
             item {
@@ -117,17 +377,17 @@ fun ConfigDetailScreen(
                         Text("General")
                     }
                 ) {
-                    UnitSystemContainer(
-                        unitSystem = configFile.unitSystem,
-                        onSelectionChanged = {
-                            viewModel.updateUnitSystem(it)
-                        }
-                    )
-                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+//                    UnitSystemContainer(
+//                        unitSystem = configFile.unitSystem,
+//                        onSelectionChanged = {
+//                            updateUnitSystem(it)
+//                        }
+//                    )
+//                    Spacer(modifier = Modifier.requiredHeight(8.dp))
                     DynamicModelContainer(
                         dynamicModel = configFile.dynamicModel,
                         onSelectionChanged = {
-                            viewModel.updateDynamicModel(it)
+                            updateDynamicModel(it)
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
@@ -136,7 +396,9 @@ fun ConfigDetailScreen(
                         label = "Sample period (ms)",
                         intValue = configFile.samplePeriod,
                         onValueChanged = {
-                            viewModel.updateSamplePeriod(it)
+                            if (it != null) {
+                                updateSamplePeriod(it)
+                            }
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
@@ -146,7 +408,7 @@ fun ConfigDetailScreen(
                         Switch(
                             checked = configFile.useSAS,
                             onCheckedChange = {
-                                viewModel.updateUseSAS(it)
+                                updateUseSAS(it)
                             },
                         )
                         Spacer(modifier = Modifier.requiredWidth(8.dp))
@@ -163,39 +425,59 @@ fun ConfigDetailScreen(
                     ToneModeContainer(
                         toneMode = configFile.toneMode,
                         onSelectionChanged = {
-                            viewModel.updateToneMode(it)
+                            updateToneMode(it)
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = toneMinimumLabel(configFile.toneMode, configFile.unitSystem),
-                        intValue = configFile.toneMinimum,
+                        label = toneMinimumLabel(configFile.toneMode, unitSystem),
+                        intValue = configFile.toneMinimum.valueForToneMode(
+                            configFile.toneMode,
+                            unitSystem
+                        ),
                         onValueChanged = {
-                            viewModel.updateToneMinimum(it)
+                            if (it != null) {
+                                updateToneMinimum(
+                                    it.valueFromToneMode(
+                                        configFile.toneMode,
+                                        unitSystem
+                                    )
+                                )
+                            }
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = toneMaximumLabel(configFile.toneMode, configFile.unitSystem),
-                        intValue = configFile.toneMaximum,
+                        label = toneMaximumLabel(configFile.toneMode, unitSystem),
+                        intValue = configFile.toneMaximum.valueForToneMode(
+                            configFile.toneMode,
+                            unitSystem
+                        ),
                         onValueChanged = {
-                            viewModel.updateToneMaximum(it)
+                            if (it != null) {
+                                updateToneMaximum(
+                                    it.valueFromToneMode(
+                                        configFile.toneMode,
+                                        unitSystem
+                                    )
+                                )
+                            }
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     LimitBehaviourContainer(
                         limitBehaviour = configFile.toneLimitBehaviour,
                         onSelectionChanged = {
-                            viewModel.updateToneLimitBehaviour(it)
+                            updateToneLimitBehaviour(it)
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     VolumeContainer(
                         volume = configFile.toneVolume,
                         onSelectionChanged = {
-                            viewModel.updateToneVolume(it)
+                            updateToneVolume(it)
                         }
                     )
                 }
@@ -209,43 +491,67 @@ fun ConfigDetailScreen(
                     RateModeContainer(
                         rateMode = configFile.rateMode,
                         onSelectionChanged = {
-                            viewModel.updateRateMode(it)
+                            updateRateMode(it)
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = rateMinimumLabel(configFile.rateMode, configFile.unitSystem),
-                        intValue = configFile.rateMinimumValue,
+                        label = rateMinimumLabel(configFile.rateMode, unitSystem),
+                        intValue = configFile.rateMinimumValue.valueForRateMode(
+                            configFile.rateMode,
+                            unitSystem
+                        ),
                         onValueChanged = {
-                            viewModel.updateRateMinimumValue(it)
+                            if (it != null) {
+                                updateRateMinimumValue(
+                                    it.valueFromRateMode(
+                                        configFile.rateMode,
+                                        unitSystem
+                                    )
+                                )
+                            }
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = rateMaximumLabel(configFile.rateMode, configFile.unitSystem),
-                        intValue = configFile.rateMaximumValue,
+                        label = rateMaximumLabel(configFile.rateMode, unitSystem),
+                        intValue = configFile.rateMaximumValue.valueForRateMode(
+                            configFile.rateMode,
+                            unitSystem
+                        ),
                         onValueChanged = {
-                            viewModel.updateRateMaximumValue(it)
+                            if (it != null) {
+                                updateRateMaximumValue(
+                                    it.valueFromRateMode(
+                                        configFile.rateMode,
+                                        unitSystem
+                                    )
+                                )
+                            }
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
                         label = "Minimum rate (tone/s)",
-                        intValue = configFile.rateMinimumValue,
+                        intValue = configFile.rateMinimum,
                         onValueChanged = {
-                            viewModel.updateRateMinimumValue(it)
+                            if (it != null) {
+                                updateRateMinimum(it)
+                            }
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
                         label = "Maximum rate (tone/s)",
-                        intValue = configFile.rateMaximumValue,
+                        intValue = configFile.rateMaximum,
                         onValueChanged = {
-                            viewModel.updateRateMaximumValue(it)
+                            if (it != null) {
+                                updateRateMaximum(it)
+                            }
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
@@ -255,7 +561,7 @@ fun ConfigDetailScreen(
                         Switch(
                             checked = configFile.flatLineAtMinimumRate,
                             onCheckedChange = {
-                                viewModel.updateFlatLineAtMinimumRate(it)
+                                updateFlatLineAtMinimumRate(it)
                             },
                         )
                         Spacer(modifier = Modifier.requiredWidth(8.dp))
@@ -272,14 +578,16 @@ fun ConfigDetailScreen(
                         label = "Period (s)",
                         intValue = configFile.speechRate,
                         onValueChanged = {
-                            viewModel.updateSpeechRate(it)
+                            if (it != null) {
+                                updateSpeechRate(it)
+                            }
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     VolumeContainer(
                         volume = configFile.speechVolume,
                         onSelectionChanged = {
-                            viewModel.updateSpeechVolume(it)
+                            updateSpeechVolume(it)
                         }
                     )
                     if (configFile.speeches.isNotEmpty()) {
@@ -288,7 +596,10 @@ fun ConfigDetailScreen(
                     configFile.speeches.forEachIndexed { index, speech ->
                         SpeechItemContainer(
                             index = index + 1,
-                            speech = speech
+                            speech = speech,
+                            onDeleteClicked = {
+                                deleteSpeech(speech)
+                            }
                         )
                         if (index < configFile.speeches.size - 1) {
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
@@ -311,7 +622,7 @@ fun ConfigDetailScreen(
                     if (addSpeechClicked) {
                         AddSpeechDialog(
                             onSpeechAdded = {
-                                viewModel.addSpeech(it)
+                                addSpeech(it)
                                 addSpeechClicked = false
                             },
                             onDismiss = {
@@ -327,19 +638,23 @@ fun ConfigDetailScreen(
                 ) {
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Vertical speed (${hourSpeed(configFile.unitSystem)})",
-                        intValue = configFile.verticalThreshold,
+                        label = "Vertical speed (${unitSystem.speedText})",
+                        intValue = configFile.verticalThreshold.speedInUnit(unitSystem),
                         onValueChanged = {
-                            viewModel.updateVerticalThreshold(it)
+                            if (it != null) {
+                                updateVerticalThreshold(it.fromSpeedUnitToCmPerSec(unitSystem))
+                            }
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Horizontal speed (${hourSpeed(configFile.unitSystem)})",
-                        intValue = configFile.horizontalThreshold,
+                        label = "Horizontal speed (${unitSystem.speedText})",
+                        intValue = configFile.horizontalThreshold.speedInUnit(unitSystem),
                         onValueChanged = {
-                            viewModel.updateHorizontalThreshold(it)
+                            if (it != null) {
+                                updateHorizontalThreshold(it.fromSpeedUnitToCmPerSec(unitSystem))
+                            }
                         }
                     )
                 }
@@ -351,14 +666,15 @@ fun ConfigDetailScreen(
                     InitModeContainer(
                         initMode = configFile.initMode,
                         onSelectionChanged = {
-                            viewModel.updateInitMode(it)
+                            updateInitMode(it)
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
                         value = configFile.initFile ?: "",
                         onValueChange = {
-                            viewModel.updateInitFile(it)
+                            updateInitFile(it)
                         },
                         label = {
                             Text(text = "Filename")
@@ -372,38 +688,49 @@ fun ConfigDetailScreen(
                 ) {
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Window above (${distanceUnit(configFile.unitSystem)})",
-                        intValue = configFile.windowAbove,
+                        label = "Window above (${unitSystem.distanceText})",
+                        intValue = configFile.windowAbove.distanceInUnit(unitSystem),
                         onValueChanged = {
-                            viewModel.updateWindowAbove(it)
+                            if (it != null) {
+                                updateWindowAbove(it.fromDistanceUnitToMeter(unitSystem))
+                            }
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Window below (${distanceUnit(configFile.unitSystem)})",
-                        intValue = configFile.windowBelow,
+                        label = "Window below (${unitSystem.distanceText})",
+                        intValue = configFile.windowBelow.distanceInUnit(unitSystem),
                         onValueChanged = {
-                            viewModel.updateWindowBelow(it)
+                            if (it != null) {
+                                updateWindowBelow(it.fromDistanceUnitToMeter(unitSystem))
+                            }
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Ground elevation (${distanceUnit(configFile.unitSystem)})",
-                        intValue = configFile.dzElev,
+                        label = "Ground elevation (${unitSystem.distanceText})",
+                        intValue = configFile.dzElev.distanceInUnit(unitSystem),
                         onValueChanged = {
-                            viewModel.updateDzElev(it)
+                            if (it != null) {
+                                updateDzElev(it.fromDistanceUnitToMeter(unitSystem))
+                            }
                         }
                     )
                     if (configFile.alarms.isNotEmpty()) {
                         Spacer(modifier = Modifier.requiredHeight(8.dp))
                     }
-                    configFile.alarms.forEachIndexed { index, alarm ->
+                    val sortedAlarms =
+                        remember(configFile.alarms) { configFile.alarms.sortedByDescending { it.alarmElevation } }
+                    sortedAlarms.forEachIndexed { index, alarm ->
                         AlarmItemContainer(
                             index = index + 1,
                             alarm = alarm,
-                            unitSystem = configFile.unitSystem
+                            unitSystem = unitSystem,
+                            onDeleteClicked = {
+                                deleteAlarm(alarm)
+                            }
                         )
                         if (index < configFile.alarms.size - 1) {
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
@@ -425,9 +752,9 @@ fun ConfigDetailScreen(
                     }
                     if (addAlarmClicked) {
                         AddAlarmDialog(
-                            unitSystem = configFile.unitSystem,
+                            unitSystem = unitSystem,
                             onAlarmAdded = {
-                                viewModel.addAlarm(it)
+                                addAlarm(it)
                                 addAlarmClicked = false
                             },
                             onDismiss = {
@@ -441,27 +768,22 @@ fun ConfigDetailScreen(
                         Text("Altitude announcements")
                     }
                 ) {
-                    var enableAnnouncements by remember(configFile.altitudeStep) { mutableStateOf(configFile.altitudeStep > 0) }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Switch(
-                            checked = enableAnnouncements,
-                            onCheckedChange = {
-                                enableAnnouncements = it
-                            },
-                        )
-                        Spacer(modifier = Modifier.requiredWidth(8.dp))
-                        Text("Enable altitude announcements")
-                    }
+                    DistanceUnitContainer(
+                        label = "Units",
+                        unitSystem = configFile.altitudeUnit,
+                        onSelectionChanged = {
+                            updateAltitudeUnit(it)
+                        }
+                    )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = enableAnnouncements,
                         label = "Step",
-                        intValue = configFile.altitudeStep,
+                        intValue = configFile.altitudeStep.distanceInUnit(configFile.altitudeUnit),
                         onValueChanged = {
-                            viewModel.updateAltitudeStep(it)
+                            if (it != null) {
+                                updateAltitudeStep(it.fromDistanceUnitToMeter(configFile.altitudeUnit))
+                            }
                         }
                     )
                 }
@@ -474,7 +796,10 @@ fun ConfigDetailScreen(
                         SilenceItemContainer(
                             index = index + 1,
                             silenceWindow = silenceWindow,
-                            unitSystem = configFile.unitSystem
+                            unitSystem = unitSystem,
+                            onDeleteClicked = {
+                                deleteSilenceWindow(silenceWindow)
+                            }
                         )
                         if (index < configFile.silenceWindows.size - 1) {
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
@@ -496,9 +821,9 @@ fun ConfigDetailScreen(
                     }
                     if (addSilenceClicked) {
                         AddSilenceWindowDialog(
-                            unitSystem = configFile.unitSystem,
+                            unitSystem = unitSystem,
                             onSilenceAdded = {
-                                viewModel.addSilenceWindow(it)
+                                addSilenceWindow(it)
                                 addSilenceClicked = false
                             },
                             onDismiss = {
@@ -512,7 +837,7 @@ fun ConfigDetailScreen(
                 SimpleDialogActionBar(
                     onDismissRequest = onNavigateUp,
                     onValidate = {
-                        viewModel.saveConfigFile()
+                        saveConfigFile()
                     }
                 )
             }
@@ -529,11 +854,11 @@ fun AddSpeechDialog(
         onDismissRequest = onDismiss
     ) {
         var speechMode: SpeechMode by remember { mutableStateOf(SpeechMode.HorizontalSpeed) }
-        var speechUnit: SpeechUnit by remember { mutableStateOf(SpeechUnit.Metric) }
+        var unitSystem: UnitSystem by remember { mutableStateOf(UnitSystem.Metric) }
         var speechValue by remember { mutableIntStateOf(0) }
         Card {
             Column(
-                modifier = Modifier.padding(8.dp)
+                modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
             ) {
                 SpeechModeContainer(
                     speechMode = speechMode,
@@ -542,19 +867,42 @@ fun AddSpeechDialog(
                     }
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
-                SpeechUnitContainer(
-                    speechUnit = speechUnit,
-                    onSelectionChanged = {
-                        speechUnit = it
+                when (speechMode) {
+                    SpeechMode.HorizontalSpeed,
+                    SpeechMode.VerticalSpeed,
+                    SpeechMode.TotalSpeed -> {
+                        SpeedUnitContainer(
+                            label = "Units",
+                            unitSystem = unitSystem,
+                            onSelectionChanged = {
+                                unitSystem = it
+                            }
+                        )
+                        Spacer(modifier = Modifier.requiredHeight(8.dp))
                     }
-                )
-                Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                    SpeechMode.GlideRatio,
+                    SpeechMode.InverseGlideRatio,
+                    SpeechMode.DiveAngle -> {
+                    }
+
+                    SpeechMode.AltitudeAboveDropzone -> {
+                        DistanceUnitContainer(
+                            label = "Units",
+                            unitSystem = unitSystem,
+                            onSelectionChanged = {
+                                unitSystem = it
+                            }
+                        )
+                        Spacer(modifier = Modifier.requiredHeight(8.dp))
+                    }
+                }
                 EmptyIntTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    label = speechValueLabel(speechMode),
-                    intValue = speechValue,
+                    label = speechValueLabel(speechMode, unitSystem),
+                    intValue = speechValue.speechValueForMode(speechMode, unitSystem),
                     onValueChanged = {
-                        speechValue = it ?: 0
+                        speechValue = it?.speechValueFromMode(speechMode, unitSystem) ?: 0
                     }
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
@@ -564,7 +912,7 @@ fun AddSpeechDialog(
                         onSpeechAdded(
                             Speech(
                                 mode = speechMode,
-                                unit = speechUnit,
+                                unit = unitSystem,
                                 value = speechValue
                             )
                         )
@@ -590,7 +938,7 @@ fun AddAlarmDialog(
 
         Card {
             Column(
-                modifier = Modifier.padding(8.dp)
+                modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
             ) {
                 AlarmTypeContainer(
                     alarmType = alarmType,
@@ -601,15 +949,16 @@ fun AddAlarmDialog(
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 EmptyIntTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    label = "Elevation (${distanceUnit(unitSystem)})",
-                    intValue = alarmElevation,
+                    label = "Elevation (${unitSystem.distanceText})",
+                    intValue = alarmElevation.distanceInUnit(unitSystem),
                     onValueChanged = {
-                        alarmElevation = it ?: 0
+                        alarmElevation = it?.fromDistanceUnitToMeter(unitSystem) ?: 0
                     }
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 if (alarmType == AlarmType.PlayFile) {
                     OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
                         value = fileName,
                         onValueChange = {
                             fileName = it
@@ -636,6 +985,7 @@ fun AddAlarmDialog(
         }
     }
 }
+
 @Composable
 fun AddSilenceWindowDialog(
     unitSystem: UnitSystem,
@@ -650,23 +1000,23 @@ fun AddSilenceWindowDialog(
 
         Card {
             Column(
-                modifier = Modifier.padding(8.dp)
+                modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
             ) {
                 EmptyIntTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    label = "Window top (${distanceUnit(unitSystem)})",
-                    intValue = windowTop,
+                    label = "Window top (${unitSystem.distanceText})",
+                    intValue = windowTop.distanceInUnit(unitSystem),
                     onValueChanged = {
-                        windowTop = it ?: 0
+                        windowTop = it?.fromDistanceUnitToMeter(unitSystem) ?: 0
                     }
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 EmptyIntTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    label = "Window bottom (${distanceUnit(unitSystem)})",
-                    intValue = windowBottom,
+                    label = "Window bottom (${unitSystem.distanceText})",
+                    intValue = windowBottom.distanceInUnit(unitSystem),
                     onValueChanged = {
-                        windowBottom = it ?: 0
+                        windowBottom = it?.fromDistanceUnitToMeter(unitSystem) ?: 0
                     }
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
@@ -686,15 +1036,6 @@ fun AddSilenceWindowDialog(
     }
 }
 
-private fun speechValueLabel(speechMode: SpeechMode): String = when (speechMode) {
-    SpeechMode.AltitudeAboveDropzone -> {
-        "Step"
-    }
-
-    else -> {
-        "Decimals"
-    }
-}
 
 @Composable
 fun InitModeContainer(
@@ -718,7 +1059,8 @@ fun InitModeContainer(
 @Composable
 fun SpeechItemContainer(
     index: Int,
-    speech: Speech
+    speech: Speech,
+    onDeleteClicked: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -726,11 +1068,31 @@ fun SpeechItemContainer(
         Column(
             modifier = Modifier.padding(8.dp)
         ) {
-            Text("Speech $index")
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Speech $index")
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(
+                    onClick = onDeleteClicked
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = "Delete speech"
+                    )
+                }
+            }
             Spacer(modifier = Modifier.requiredHeight(8.dp))
             Text(speech.mode.text)
             Spacer(modifier = Modifier.requiredHeight(8.dp))
-            Text("${speechValueLabel(speech.mode)}: ${speech.value}")
+            Text(
+                "${speechValueLabel(speech.mode, speech.unit)}: ${
+                    speech.value.speechValueForMode(
+                        speech.mode,
+                        speech.unit
+                    )
+                }"
+            )
         }
     }
 }
@@ -739,7 +1101,8 @@ fun SpeechItemContainer(
 fun AlarmItemContainer(
     index: Int,
     alarm: Alarm,
-    unitSystem: UnitSystem
+    unitSystem: UnitSystem,
+    onDeleteClicked: ()  -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -747,11 +1110,30 @@ fun AlarmItemContainer(
         Column(
             modifier = Modifier.padding(8.dp)
         ) {
-            Text("Alarm $index")
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Alarm $index")
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(
+                    onClick = onDeleteClicked
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = "Delete alarm"
+                    )
+                }
+            }
             Spacer(modifier = Modifier.requiredHeight(8.dp))
             Text(alarm.alarmType.text)
             Spacer(modifier = Modifier.requiredHeight(8.dp))
-            Text("Alarm elevation (${distanceUnit(unitSystem)}) : ${alarm.alarmElevation}")
+            Text(
+                "Alarm elevation (${unitSystem.distanceText}) : ${
+                    alarm.alarmElevation.distanceInUnit(
+                        unitSystem
+                    )
+                }"
+            )
             if (alarm.alarmType == AlarmType.PlayFile) {
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 Text("Filename: ${alarm.alarmFile}")
@@ -764,7 +1146,8 @@ fun AlarmItemContainer(
 fun SilenceItemContainer(
     index: Int,
     silenceWindow: SilenceWindow,
-    unitSystem: UnitSystem
+    unitSystem: UnitSystem,
+    onDeleteClicked: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -772,11 +1155,30 @@ fun SilenceItemContainer(
         Column(
             modifier = Modifier.padding(8.dp)
         ) {
-            Text("Silence window $index")
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Silence window $index")
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(
+                    onClick = onDeleteClicked
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = "Delete silence"
+                    )
+                }
+            }
             Spacer(modifier = Modifier.requiredHeight(8.dp))
-            Text("Top (${distanceUnit(unitSystem)}) : ${silenceWindow.top}")
+            Text("Top (${unitSystem.distanceText}) : ${silenceWindow.top.distanceInUnit(unitSystem)}")
             Spacer(modifier = Modifier.requiredHeight(8.dp))
-            Text("Bottom (${distanceUnit(unitSystem)}) : ${silenceWindow.bottom}")
+            Text(
+                "Bottom (${unitSystem.distanceText}) : ${
+                    silenceWindow.bottom.distanceInUnit(
+                        unitSystem
+                    )
+                }"
+            )
         }
     }
 }
@@ -801,17 +1203,38 @@ internal fun SpeechModeContainer(
 }
 
 @Composable
-internal fun SpeechUnitContainer(
+internal fun SpeedUnitContainer(
     modifier: Modifier = Modifier,
-    speechUnit: SpeechUnit,
-    onSelectionChanged: (SpeechUnit) -> Unit
+    label: String = "Speed unit",
+    unitSystem: UnitSystem,
+    onSelectionChanged: (UnitSystem) -> Unit
 ) {
     DropdownContainer(
-        label = "Speech unit",
-        selectedValue = speechUnit.text,
-        options = remember { SpeechUnit.entries.map { it.text } },
-        onSelectionChanged = { newSpeechUnit ->
-            SpeechUnit.fromText(newSpeechUnit)?.let {
+        label = label,
+        selectedValue = unitSystem.speedText,
+        options = remember { UnitSystem.entries.map { it.speedText } },
+        onSelectionChanged = { newUnit ->
+            UnitSystem.fromSpeedText(newUnit)?.let {
+                onSelectionChanged(it)
+            }
+        },
+        modifier = modifier
+    )
+}
+
+@Composable
+internal fun DistanceUnitContainer(
+    modifier: Modifier = Modifier,
+    label: String = "Distance unit",
+    unitSystem: UnitSystem,
+    onSelectionChanged: (UnitSystem) -> Unit
+) {
+    DropdownContainer(
+        label = label,
+        selectedValue = unitSystem.distanceText,
+        options = remember { UnitSystem.entries.map { it.distanceText } },
+        onSelectionChanged = { newUnit ->
+            UnitSystem.fromDistanceText(newUnit)?.let {
                 onSelectionChanged(it)
             }
         },
@@ -857,24 +1280,24 @@ internal fun DynamicModelContainer(
     )
 }
 
-@Composable
-internal fun UnitSystemContainer(
-    modifier: Modifier = Modifier,
-    unitSystem: UnitSystem,
-    onSelectionChanged: (UnitSystem) -> Unit
-) {
-    DropdownContainer(
-        modifier = modifier,
-        label = "Unit system",
-        selectedValue = unitSystem.text,
-        options = remember { UnitSystem.entries.map { it.text } },
-        onSelectionChanged = { newUnitSystem ->
-            UnitSystem.fromText(newUnitSystem)?.let {
-                onSelectionChanged(it)
-            }
-        }
-    )
-}
+//@Composable
+//internal fun UnitSystemContainer(
+//    modifier: Modifier = Modifier,
+//    unitSystem: UnitSystem,
+//    onSelectionChanged: (UnitSystem) -> Unit
+//) {
+//    DropdownContainer(
+//        modifier = modifier,
+//        label = "Unit system",
+//        selectedValue = unitSystem.text,
+//        options = remember { UnitSystem.entries.map { it.text } },
+//        onSelectionChanged = { newUnitSystem ->
+//            UnitSystem.fromText(newUnitSystem)?.let {
+//                onSelectionChanged(it)
+//            }
+//        }
+//    )
+//}
 
 @Composable
 internal fun ToneModeContainer(
@@ -950,4 +1373,53 @@ internal fun RateModeContainer(
         },
         modifier = modifier
     )
+}
+
+@Preview
+@Composable
+fun ConfigDetailScreenInternalPreview() {
+    ConfigDetailScreenInternal(
+        state = ConfigDetailState(
+            configFile = defaultConfigFile(),
+            unitSystem = UnitSystem.Metric,
+            configFileFound = true,
+            hasValidFileName = true,
+            fileSaved = false
+        ),
+        updateConfigFileName = {},
+        updateConfigFileDescription = {},
+        updateConfigFileKind = {},
+        updateDynamicModel = {},
+        updateSamplePeriod = {},
+        updateUseSAS = {},
+        updateToneMode = {},
+        updateToneMinimum = {},
+        updateToneMaximum = {},
+        updateToneLimitBehaviour = {},
+        updateToneVolume = {},
+        updateRateMode = {},
+        updateRateMinimumValue = {},
+        updateRateMaximumValue = {},
+        updateRateMinimum = {},
+        updateRateMaximum = {},
+        updateFlatLineAtMinimumRate = {},
+        updateSpeechRate = {},
+        updateSpeechVolume = {},
+        addSpeech = {},
+        deleteSpeech = {},
+        updateVerticalThreshold = {},
+        updateHorizontalThreshold = {},
+        updateInitMode = {},
+        updateInitFile = {},
+        updateWindowAbove = {},
+        updateWindowBelow = {},
+        updateDzElev = {},
+        addAlarm = {},
+        deleteAlarm = {},
+        updateAltitudeUnit = {},
+        updateAltitudeStep = {},
+        addSilenceWindow = {},
+        deleteSilenceWindow = {},
+        saveConfigFile = {},
+    ) { }
 }

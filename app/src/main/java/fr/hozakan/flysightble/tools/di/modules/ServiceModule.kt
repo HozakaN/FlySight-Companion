@@ -4,6 +4,8 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
+import fr.hozakan.flusightble.userpreferencesmodule.DatastoreUserPrefService
+import fr.hozakan.flusightble.userpreferencesmodule.UserPrefService
 import fr.hozakan.flysightble.BaseApplication
 import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightble.bluetoothmodule.DefaultBluetoothService
@@ -59,5 +61,11 @@ class ServiceModule {
     fun provideConfigFileService(
         baseApplication: BaseApplication
     ): ConfigFileService = DefaultConfigFileService(baseApplication.applicationContext)
+
+    @Singleton
+    @Provides
+    fun provideUserPrefService(
+        baseApplication: BaseApplication
+    ): UserPrefService = DatastoreUserPrefService(baseApplication.applicationContext)
 
 }

@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Engineering
 import androidx.compose.material3.BottomAppBar
@@ -41,10 +40,14 @@ import com.google.gson.Gson
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
+import fr.hozakan.flysightble.configfilesmodule.ui.config_detail.ConfigDetailMenuActions
 import fr.hozakan.flysightble.configfilesmodule.ui.config_detail.ConfigDetailScreen
+import fr.hozakan.flysightble.configfilesmodule.ui.list_files.ListConfigFileMenuActions
 import fr.hozakan.flysightble.configfilesmodule.ui.list_files.ListConfigFilesScreen
+import fr.hozakan.flysightble.framework.compose.LocalMenuState
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.framework.dagger.Injectable
+import fr.hozakan.flysightble.framework.menu.rememberActionBarMenuState
 import fr.hozakan.flysightble.fsdevicemodule.ui.device_config.DeviceConfigurationScreen
 import fr.hozakan.flysightble.fsdevicemodule.ui.device_detail.DeviceDetailScreen
 import fr.hozakan.flysightble.fsdevicemodule.ui.file.DeviceFileScreen
@@ -72,8 +75,12 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
         enableEdgeToEdge()
         setContent {
             FlySightBLETheme {
+
+                var menuState = rememberActionBarMenuState()
+
                 CompositionLocalProvider(
-                    LocalViewModelFactory provides viewModelFactory
+                    LocalViewModelFactory provides viewModelFactory,
+                    LocalMenuState provides menuState
                 ) {
                     val navController = rememberNavController()
                     val currentBackStack = navController.currentBackStackEntryAsState()
@@ -82,19 +89,19 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                         topBar = {
                             val currentRoute = currentBackStack.value?.destination?.route
                             val title = when (currentRoute) {
-                                AppScreen.Device.DeviceList.route -> {
+                                AppScreen.DeviceTab.DeviceList.route -> {
                                     "FlySight BLE"
                                 }
 
-                                AppScreen.Device.DeviceDetail.route -> {
+                                AppScreen.DeviceTab.DeviceDetail.route -> {
                                     "Device Detail"
                                 }
 
-                                AppScreen.ConfigFiles.ConfigFileList.route -> {
+                                AppScreen.ConfigTab.ConfigList.route -> {
                                     "Config files"
                                 }
 
-                                AppScreen.Device.DeviceFile.route -> {
+                                AppScreen.DeviceTab.DeviceFile.route -> {
                                     val filePath =
                                         currentBackStack.value?.arguments?.getString("filePath")
                                             ?.split(";")
@@ -109,14 +116,14 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                 title = { Text(title) },
                                 navigationIcon = {
                                     when (currentRoute) {
-                                        AppScreen.Device.DeviceList.route -> {
+                                        AppScreen.DeviceTab.DeviceList.route -> {
                                             Icon(
                                                 imageVector = Icons.Default.Bluetooth,
                                                 contentDescription = "Home"
                                             )
                                         }
 
-                                        AppScreen.Device.DeviceDetail.route -> {
+                                        AppScreen.DeviceTab.DeviceDetail.route -> {
                                             IconButton(
                                                 onClick = {
                                                     navController.popBackStack()
@@ -129,7 +136,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             }
                                         }
 
-                                        AppScreen.Device.DeviceFile.route -> {
+                                        AppScreen.DeviceTab.DeviceFile.route -> {
                                             IconButton(
                                                 onClick = {
                                                     navController.popBackStack()
@@ -142,7 +149,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             }
                                         }
 
-                                        AppScreen.ConfigFiles.ConfigFileDetail.route -> {
+                                        AppScreen.ConfigTab.ConfigDetail.route -> {
                                             IconButton(
                                                 onClick = {
                                                     navController.popBackStack()
@@ -155,7 +162,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             }
                                         }
 
-                                        AppScreen.Device.DeviceConfig.route -> {
+                                        AppScreen.DeviceTab.DeviceConfig.route -> {
                                             IconButton(
                                                 onClick = {
                                                     navController.popBackStack()
@@ -177,28 +184,27 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                     }
                                 },
                                 actions = {
-                                    if (currentRoute == AppScreen.ConfigFiles.ConfigFileList.route) {
-                                        IconButton(
-                                            onClick = {
+                                    when (currentRoute) {
+                                        AppScreen.ConfigTab.ConfigList.route -> {
+                                            ListConfigFileMenuActions {
                                                 navController.navigate(
-                                                    AppScreen.ConfigFiles.ConfigFileDetail.buildRoute(
+                                                    AppScreen.ConfigTab.ConfigDetail.buildRoute(
                                                         ""
                                                     )
                                                 )
                                             }
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.AutoMirrored.Filled.NoteAdd,
-                                                contentDescription = "New config file"
-                                            )
                                         }
+                                        AppScreen.ConfigTab.ConfigDetail.route -> {
+                                            ConfigDetailMenuActions()
+                                        }
+                                        else -> {}
                                     }
                                 }
                             )
                         },
                         bottomBar = {
-                            if (currentBackStack.value?.destination?.route == AppScreen.Device.DeviceList.route ||
-                                currentBackStack.value?.destination?.route == AppScreen.ConfigFiles.ConfigFileList.route
+                            if (currentBackStack.value?.destination?.route == AppScreen.DeviceTab.DeviceList.route ||
+                                currentBackStack.value?.destination?.route == AppScreen.ConfigTab.ConfigList.route
                             ) {
                                 BottomAppBar(
                                     actions = {
@@ -221,7 +227,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                     .fillMaxSize()
                                                     .clip(CircleShape)
                                                     .clickable {
-                                                        navController.navigate(AppScreen.Device.route)
+                                                        navController.navigate(AppScreen.DeviceTab.route)
                                                     }
                                             )
                                         }
@@ -244,7 +250,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                     .fillMaxSize()
                                                     .clip(CircleShape)
                                                     .clickable {
-                                                        navController.navigate(AppScreen.ConfigFiles.route)
+                                                        navController.navigate(AppScreen.ConfigTab.route)
                                                     }
                                             )
                                         }
@@ -256,24 +262,24 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                         Box(modifier = Modifier.padding(paddingValues)) {
                             NavHost(
                                 navController = navController,
-                                startDestination = AppScreen.Device.route
+                                startDestination = AppScreen.DeviceTab.route
                             ) {
                                 navigation(
-                                    route = AppScreen.Device.route,
-                                    startDestination = AppScreen.Device.DeviceList.route
+                                    route = AppScreen.DeviceTab.route,
+                                    startDestination = AppScreen.DeviceTab.DeviceList.route
                                 ) {
-                                    composable(route = AppScreen.Device.DeviceList.route) {
+                                    composable(route = AppScreen.DeviceTab.DeviceList.route) {
                                         ListFlySightDevicesScreen(
                                             onDeviceSelected = {
                                                 navController.navigate(
-                                                    AppScreen.Device.DeviceDetail.buildRoute(
+                                                    AppScreen.DeviceTab.DeviceDetail.buildRoute(
                                                         it.uuid
                                                     )
                                                 )
                                             }
                                         )
                                     }
-                                    composable(route = AppScreen.Device.DeviceDetail.route) { backStackEntry ->
+                                    composable(route = AppScreen.DeviceTab.DeviceDetail.route) { backStackEntry ->
                                         val deviceId =
                                             backStackEntry.arguments?.getString("deviceId")
                                         if (deviceId != null) {
@@ -281,7 +287,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                 deviceId = deviceId,
                                                 onFileClicked = {
                                                     navController.navigate(
-                                                        AppScreen.Device.DeviceFile.buildRoute(
+                                                        AppScreen.DeviceTab.DeviceFile.buildRoute(
                                                             deviceId,
                                                             it
                                                         )
@@ -289,7 +295,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                 },
                                                 onShowDeviceConfigClicked = {
                                                     navController.navigate(
-                                                        AppScreen.Device.DeviceConfig.buildRoute(
+                                                        AppScreen.DeviceTab.DeviceConfig.buildRoute(
 //                                                            json.encodeToString(it)
                                                             json.toJson(it)
                                                         )
@@ -301,7 +307,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             )
                                         }
                                     }
-                                    composable(route = AppScreen.Device.DeviceFile.route) { backStackEntry ->
+                                    composable(route = AppScreen.DeviceTab.DeviceFile.route) { backStackEntry ->
                                         val deviceId =
                                             backStackEntry.arguments?.getString("deviceId")
                                         val filePath =
@@ -318,7 +324,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                         }
 
                                     }
-                                    composable(route = AppScreen.Device.DeviceConfig.route) { backStackEntry ->
+                                    composable(route = AppScreen.DeviceTab.DeviceConfig.route) { backStackEntry ->
                                         val config =
                                             backStackEntry.arguments?.getString("config")
                                         if (config != null) {
@@ -326,39 +332,42 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
 //                                                conf = Json.decodeFromString<ConfigFile>(
 //                                                    config
 //                                                )
-                                                conf = json.fromJson(config, ConfigFile::class.java),
+                                                conf = json.fromJson(
+                                                    config,
+                                                    ConfigFile::class.java
+                                                ),
                                             )
                                         }
                                     }
                                 }
                                 navigation(
-                                    route = AppScreen.ConfigFiles.route,
-                                    startDestination = AppScreen.ConfigFiles.ConfigFileList.route
+                                    route = AppScreen.ConfigTab.route,
+                                    startDestination = AppScreen.ConfigTab.ConfigList.route
                                 ) {
-                                    composable(route = AppScreen.ConfigFiles.ConfigFileList.route) {
+                                    composable(route = AppScreen.ConfigTab.ConfigList.route) {
                                         ListConfigFilesScreen(
                                             onConfigSelected = {
                                                 navController.navigate(
-                                                    AppScreen.ConfigFiles.ConfigFileDetail.buildRoute(
+                                                    AppScreen.ConfigTab.ConfigDetail.buildRoute(
                                                         it.name
                                                     )
                                                 )
                                             },
                                             onCreateConfigFile = {
                                                 navController.navigate(
-                                                    AppScreen.ConfigFiles.ConfigFileDetail.buildRoute(
+                                                    AppScreen.ConfigTab.ConfigDetail.buildRoute(
                                                         ""
                                                     )
                                                 )
                                             }
                                         )
                                     }
-                                    composable(route = AppScreen.ConfigFiles.ConfigFileDetail.route) { backStackEntry ->
-                                        val configFileName =
-                                            backStackEntry.arguments?.getString("configFileName")
+                                    composable(route = AppScreen.ConfigTab.ConfigDetail.route) { backStackEntry ->
+                                        val configName =
+                                            backStackEntry.arguments?.getString("configName")
                                                 ?: return@composable
                                         ConfigDetailScreen(
-                                            configFileName = configFileName,
+                                            configName = configName,
                                             onNavigateUp = {
                                                 navController.popBackStack()
                                             }
@@ -369,7 +378,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
 
                             BackHandler {
                                 val currentRoute = currentBackStack.value?.destination?.route
-                                if (currentRoute == AppScreen.Device.DeviceList.route || currentRoute == AppScreen.ConfigFiles.ConfigFileList.route) {
+                                if (currentRoute == AppScreen.DeviceTab.DeviceList.route || currentRoute == AppScreen.ConfigTab.ConfigList.route) {
                                     finish()
                                 } else {
                                     navController.popBackStack()

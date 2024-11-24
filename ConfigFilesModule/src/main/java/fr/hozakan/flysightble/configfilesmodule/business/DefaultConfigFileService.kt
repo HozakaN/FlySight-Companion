@@ -2,15 +2,8 @@ package fr.hozakan.flysightble.configfilesmodule.business
 
 import android.content.Context
 import fr.hozakan.flysightble.configfilesmodule.business.parser.CONFIG_FILES_FOLDER
-import fr.hozakan.flysightble.configfilesmodule.business.parser.ConfigItemParser
-import fr.hozakan.flysightble.configfilesmodule.business.ConfigParser
-import fr.hozakan.flysightble.configfilesmodule.business.DefaultConfigParser
-import fr.hozakan.flysightble.configfilesmodule.business.parser.DynamicModelParser
-import fr.hozakan.flysightble.configfilesmodule.business.parser.FILENAME_INDICATOR
-import fr.hozakan.flysightble.configfilesmodule.business.parser.MultilineConfigItemParser
-import fr.hozakan.flysightble.configfilesmodule.business.parser.SpeechParser
+import fr.hozakan.flysightble.configfilesmodule.business.parser.CONFIG_NAME_INDICATOR
 import fr.hozakan.flysightble.model.ConfigFile
-import fr.hozakan.flysightble.model.defaultConfigFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -55,7 +48,7 @@ class DefaultConfigFileService(
 
     private fun buildFileContent(configFile: ConfigFile): String {
         return buildString {
-            append("; $FILENAME_INDICATOR${configFile.name}\n")
+            append("; $CONFIG_NAME_INDICATOR${configFile.name}\n")
             configItemsEncoders.forEach { key ->
 //                append("$key=${configFile.data[key]}\n")
             }

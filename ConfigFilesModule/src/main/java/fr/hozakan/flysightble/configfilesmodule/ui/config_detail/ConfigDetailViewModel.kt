@@ -2,6 +2,8 @@ package fr.hozakan.flysightble.configfilesmodule.ui.config_detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import fr.hozakan.flusightble.userpreferencesmodule.UserPrefService
+import fr.hozakan.flusightble.userpreferencesmodule.dataStore
 import fr.hozakan.flysightble.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightble.model.config.Alarm
 import fr.hozakan.flysightble.model.config.DynamicModel
@@ -21,12 +23,28 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class ConfigDetailViewModel @Inject constructor(
-    private val configFileService: ConfigFileService
+    private val configFileService: ConfigFileService,
+    private val userPrefService: UserPrefService
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(ConfigDetailState(defaultConfigFile()))
+    private val _state = MutableStateFlow(ConfigDetailState(
+        configFile = defaultConfigFile(),
+        unitSystem = UnitSystem.Metric
+    ))
 
     val state = _state.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            userPrefService.unitSystem.collect { unitSystem ->
+                _state.update {
+                    it.copy(
+                        unitSystem = unitSystem
+                    )
+                }
+            }
+        }
+    }
 
     fun loadConfigFile(configFileName: String) {
         if (configFileName.isEmpty()) {
@@ -63,6 +81,26 @@ class ConfigDetailViewModel @Inject constructor(
                     name = fileName
                 ),
                 hasValidFileName = fileName.isNotBlank()
+            )
+        }
+    }
+
+    fun updateConfigFileDescription(description: String) {
+        _state.update {
+            it.copy(
+                configFile = it.configFile.copy(
+                    description = description
+                )
+            )
+        }
+    }
+
+    fun updateConfigFileKind(kind: String) {
+        _state.update {
+            it.copy(
+                configFile = it.configFile.copy(
+                    kind = kind
+                )
             )
         }
     }
@@ -167,6 +205,26 @@ class ConfigDetailViewModel @Inject constructor(
         }
     }
 
+    fun updateRateMinimum(rate: Int?) {
+        _state.update {
+            it.copy(
+                configFile = it.configFile.copy(
+                    rateMinimum = rate ?: 0
+                )
+            )
+        }
+    }
+
+    fun updateRateMaximum(rate: Int?) {
+        _state.update {
+            it.copy(
+                configFile = it.configFile.copy(
+                    rateMaximum = rate ?: 0
+                )
+            )
+        }
+    }
+
     fun updateFlatLineAtMinimumRate(value: Boolean) {
         _state.update {
             it.copy(
@@ -178,12 +236,8 @@ class ConfigDetailViewModel @Inject constructor(
     }
 
     fun updateUnitSystem(unitSystem: UnitSystem) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    unitSystem = unitSystem
-                )
-            )
+        viewModelScope.launch {
+            userPrefService.updateUnitSystem(unitSystem)
         }
     }
 
@@ -212,6 +266,16 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     speeches = it.configFile.speeches + speech
+                )
+            )
+        }
+    }
+
+    fun deleteSpeech(speech: Speech) {
+        _state.update {
+            it.copy(
+                configFile = it.configFile.copy(
+                    speeches = it.configFile.speeches - speech
                 )
             )
         }
@@ -267,6 +331,16 @@ class ConfigDetailViewModel @Inject constructor(
         }
     }
 
+    fun updateAltitudeUnit(altitudeUnitSystem: UnitSystem) {
+        _state.update {
+            it.copy(
+                configFile = it.configFile.copy(
+                    altitudeUnit = altitudeUnitSystem
+                )
+            )
+        }
+    }
+
     fun updateAltitudeStep(altitudeStep: Int?) {
         _state.update {
             it.copy(
@@ -317,11 +391,31 @@ class ConfigDetailViewModel @Inject constructor(
         }
     }
 
+    fun deleteAlarm(alarm: Alarm) {
+        _state.update {
+            it.copy(
+                configFile = it.configFile.copy(
+                    alarms = it.configFile.alarms - alarm
+                )
+            )
+        }
+    }
+
     fun addSilenceWindow(silenceWindow: SilenceWindow) {
         _state.update {
             it.copy(
                 configFile = it.configFile.copy(
                     silenceWindows = it.configFile.silenceWindows + silenceWindow
+                )
+            )
+        }
+    }
+
+    fun deleteSilenceWindow(silenceWindow: SilenceWindow) {
+        _state.update {
+            it.copy(
+                configFile = it.configFile.copy(
+                    silenceWindows = it.configFile.silenceWindows - silenceWindow
                 )
             )
         }

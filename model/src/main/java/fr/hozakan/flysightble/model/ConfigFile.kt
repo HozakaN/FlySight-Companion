@@ -1,7 +1,6 @@
 package fr.hozakan.flysightble.model
 
 import fr.hozakan.flysightble.model.config.Alarm
-import fr.hozakan.flysightble.model.config.AltitudeUnit
 import fr.hozakan.flysightble.model.config.DynamicModel
 import fr.hozakan.flysightble.model.config.InitMode
 import fr.hozakan.flysightble.model.config.RateMode
@@ -17,7 +16,8 @@ TODO Pay attention to unit system and Rate value (does it change when changing u
  */
 data class ConfigFile(
     val name: String,
-    val unitSystem: UnitSystem,
+    val description: String,
+    val kind: String,
     //General
     val dynamicModel: DynamicModel,
     val samplePeriod: Int,
@@ -39,8 +39,8 @@ data class ConfigFile(
     val speechVolume: Volume,
     val speeches: List<Speech>,
     //Thresholds
-    val verticalThreshold: Int,
-    val horizontalThreshold: Int,
+    val verticalThreshold: Int, // (cm/s)
+    val horizontalThreshold: Int, // (cm/s)
     //Miscellaneous
     val tzOffset: Int,
     val useSAS: Boolean,
@@ -54,15 +54,16 @@ data class ConfigFile(
     val alarms: List<Alarm>,
     //Altitude
     val altitudeStep: Int, //Altitude between announcements
-    val altitudeUnit: AltitudeUnit,
+    val altitudeUnit: UnitSystem,
     //silence windows
     val silenceWindows: List<SilenceWindow>
 )
 
-val defaultConfigFile = ConfigFile(
+private val defaultConfigFile = ConfigFile(
     name = "",
+    description = "",
+    kind = "",
     dynamicModel = DynamicModel.Airborne2g,
-    unitSystem = UnitSystem.Metric,
     samplePeriod = 200,
     toneMode = ToneMode.GlideRatio,
     toneMinimum = 0,
@@ -88,7 +89,7 @@ val defaultConfigFile = ConfigFile(
     windowBelow = 0,
     dzElev = 0,
     alarms = emptyList(),
-    altitudeUnit = AltitudeUnit.Metric,
+    altitudeUnit = UnitSystem.Metric,
     altitudeStep = 0,
     silenceWindows = emptyList()
 )

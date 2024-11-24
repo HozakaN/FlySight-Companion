@@ -3,12 +3,12 @@ package fr.hozakan.flysightble.configfilesmodule.business.parser
 import fr.hozakan.flysightble.model.ConfigFile
 import fr.hozakan.flysightble.model.config.Speech
 import fr.hozakan.flysightble.model.config.SpeechMode
-import fr.hozakan.flysightble.model.config.SpeechUnit
+import fr.hozakan.flysightble.model.config.UnitSystem
 
 class SpeechParser : MultilineConfigItemParser() {
 
     private var speechMode: SpeechMode? = null
-    private var speechUnit: SpeechUnit? = null
+    private var speechUnit: UnitSystem? = null
     private var speechDecimal: Int? = null
 
     override fun configItemFilled(): Boolean {
@@ -23,7 +23,7 @@ class SpeechParser : MultilineConfigItemParser() {
         if (line.startsWith("Sp_Mode")) {
             speechMode = SpeechMode.fromValue(parseLine("Sp_Mode", line).toIntOrNull() ?: -1)
         } else if (line.startsWith("Sp_Units")) {
-            speechUnit = SpeechUnit.fromValue(parseLine("Sp_Units", line).toIntOrNull() ?: -1)
+            speechUnit = UnitSystem.fromValue(parseLine("Sp_Units", line).toIntOrNull() ?: -1)
         } else if (line.startsWith("Sp_Dec")) {
             speechDecimal = parseLine("Sp_Dec", line).toIntOrNull()
             if (speechMode != null && speechDecimal != null && speechDecimal != null) {
