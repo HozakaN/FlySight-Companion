@@ -47,6 +47,15 @@ class DefaultConfigFileService(
         file.writeText(fileContent)
     }
 
+    override suspend fun deleteConfigFile(configFile: ConfigFile) {
+        val file =
+            File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${configFile.name}.txt")
+        file.delete()
+        _configs.update {
+            it - configFile
+        }
+    }
+
     private fun buildFileContent(configFile: ConfigFile): String {
         return encoder.encodeConfig(configFile)
     }
