@@ -23,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,12 +41,54 @@ import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.model.ConfigFile
 import fr.hozakan.flysightble.model.ConfigFileState
 import fr.hozakan.flysightble.model.FileState
+import timber.log.Timber
+
+@Composable
+fun DeviceDetailMenuActions(
+    deviceId: String,
+    onShowDeviceConfigClicked: (config: ConfigFile) -> Unit
+) {
+
+    val factory = LocalViewModelFactory.current
+
+    val viewModel: DeviceDetailViewModel = viewModel(factory = factory)
+
+    val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(key1 = deviceId) {
+        viewModel.loadDevice(deviceId)
+    }
+
+    var configFileState by remember { mutableStateOf<ConfigFileState?>(null) }
+    LaunchedEffect(key1 = state.device?.configFile) {
+        val configFileStateFlow = state.device?.configFile
+        if (configFileStateFlow == null) {
+            configFileState = null
+        } else {
+            configFileStateFlow.collect {
+                configFileState = it
+            }
+        }
+    }
+
+    when (val immutableConfigFileState = configFileState) {
+        is ConfigFileState.Success -> {
+            TextButton(
+                onClick = {
+                    onShowDeviceConfigClicked(immutableConfigFileState.config)
+                }
+            ) {
+                Text("Show config")
+            }
+        }
+        else -> {}
+    }
+}
 
 @Composable
 fun DeviceDetailScreen(
     deviceId: String,
     onFileClicked: (filePath: List<String>) -> Unit,
-    onShowDeviceConfigClicked: (config: ConfigFile) -> Unit,
     onNavigateUp: () -> Unit
 ) {
     val factory = LocalViewModelFactory.current
@@ -90,48 +133,48 @@ fun DeviceDetailScreen(
         color = MaterialTheme.colorScheme.surface
     ) {
         Column {
-            val configFileStr = state.configFile
-            ExpandableColumn(
-                headerComposable = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Config file")
-                        Spacer(modifier = Modifier.weight(1f))
-                        when (val immutableConfigFileState = configFileState) {
-                            is ConfigFileState.Error -> {}
-                            ConfigFileState.Loading -> {}
-                            ConfigFileState.Nothing -> {}
-                            is ConfigFileState.Success -> {
-                                Button(onClick = {
-                                    onShowDeviceConfigClicked(immutableConfigFileState.config)
-                                }) {
-                                    Text("Show")
-                                }
-                            }
-
-                            null -> {}
-                        }
-                    }
-                },
-                contentComposable = {
-                    val text = when (configFileStr) {
-                        is FileState.Error -> "Error fetching config file"
-                        FileState.Loading -> "Loading config file"
-                        FileState.Nothing -> "No config file"
-                        is FileState.Success -> (configFileStr as FileState.Success).content
-                    }
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        item {
-                            Text(
-                                text = text
-                            )
-                        }
-                    }
-                }
-            )
+//            val configFileStr = state.configFile
+//            ExpandableColumn(
+//                headerComposable = {
+//                    Row(
+//                        verticalAlignment = Alignment.CenterVertically
+//                    ) {
+//                        Text("Config file")
+//                        Spacer(modifier = Modifier.weight(1f))
+//                        when (val immutableConfigFileState = configFileState) {
+//                            is ConfigFileState.Error -> {}
+//                            ConfigFileState.Loading -> {}
+//                            ConfigFileState.Nothing -> {}
+//                            is ConfigFileState.Success -> {
+//                                Button(onClick = {
+//                                    onShowDeviceConfigClicked(immutableConfigFileState.config)
+//                                }) {
+//                                    Text("Show")
+//                                }
+//                            }
+//
+//                            null -> {}
+//                        }
+//                    }
+//                },
+//                contentComposable = {
+//                    val text = when (configFileStr) {
+//                        is FileState.Error -> "Error fetching config file"
+//                        FileState.Loading -> "Loading config file"
+//                        FileState.Nothing -> "No config file"
+//                        is FileState.Success -> configFileStr.content
+//                    }
+//                    LazyColumn(
+//                        modifier = Modifier.fillMaxSize()
+//                    ) {
+//                        item {
+//                            Text(
+//                                text = text
+//                            )
+//                        }
+//                    }
+//                }
+//            )
             BreadCrumb(
                 modifier = Modifier.padding(8.dp),
                 path = state.currentDirectoryPath,

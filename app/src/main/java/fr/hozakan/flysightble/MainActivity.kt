@@ -48,7 +48,9 @@ import fr.hozakan.flysightble.framework.compose.LocalMenuState
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.framework.dagger.Injectable
 import fr.hozakan.flysightble.framework.menu.rememberActionBarMenuState
+import fr.hozakan.flysightble.fsdevicemodule.ui.device_config.DeviceConfigurationMenuActions
 import fr.hozakan.flysightble.fsdevicemodule.ui.device_config.DeviceConfigurationScreen
+import fr.hozakan.flysightble.fsdevicemodule.ui.device_detail.DeviceDetailMenuActions
 import fr.hozakan.flysightble.fsdevicemodule.ui.device_detail.DeviceDetailScreen
 import fr.hozakan.flysightble.fsdevicemodule.ui.file.DeviceFileScreen
 import fr.hozakan.flysightble.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
@@ -194,9 +196,40 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                 )
                                             }
                                         }
+
                                         AppScreen.ConfigTab.ConfigDetail.route -> {
                                             ConfigDetailMenuActions()
                                         }
+
+                                        AppScreen.DeviceTab.DeviceDetail.route -> {
+                                            val deviceId =
+                                                currentBackStack.value?.arguments?.getString("deviceId")
+                                            if (deviceId != null) {
+                                                DeviceDetailMenuActions(
+                                                    deviceId = deviceId
+                                                ) {
+                                                    navController.navigate(
+                                                        AppScreen.DeviceTab.DeviceConfig.buildRoute(
+//                                                            json.encodeToString(it)
+                                                            json.toJson(it)
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        AppScreen.DeviceTab.DeviceConfig.route -> {
+                                            val config =
+                                                currentBackStack.value?.arguments?.getString("config")
+                                            if (config != null) {
+                                                DeviceConfigurationMenuActions(
+                                                    conf = json.fromJson(
+                                                        config,
+                                                        ConfigFile::class.java
+                                                    ),
+                                                )
+                                            }
+                                        }
+
                                         else -> {}
                                     }
                                 }
@@ -290,14 +323,6 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                         AppScreen.DeviceTab.DeviceFile.buildRoute(
                                                             deviceId,
                                                             it
-                                                        )
-                                                    )
-                                                },
-                                                onShowDeviceConfigClicked = {
-                                                    navController.navigate(
-                                                        AppScreen.DeviceTab.DeviceConfig.buildRoute(
-//                                                            json.encodeToString(it)
-                                                            json.toJson(it)
                                                         )
                                                     )
                                                 },

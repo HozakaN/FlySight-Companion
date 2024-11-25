@@ -142,7 +142,7 @@ class FlySightDevice(
             ) {
                 super.onCharacteristicRead(gatt, characteristic, value, status)
                 Timber.d(
-                    "Hoz characteristic read : ${characteristic.uuid} (${
+                    "characteristic read : ${characteristic.uuid} (${
                         FlySightCharacteristic.fromUuid(
                             characteristic.uuid
                         )?.name
@@ -158,7 +158,7 @@ class FlySightDevice(
             ) {
                 super.onCharacteristicWrite(gatt, characteristic, status)
                 Timber.d(
-                    "Hoz characteristic write : ${characteristic?.uuid} (${
+                    "characteristic write : ${characteristic?.uuid} (${
                         FlySightCharacteristic.fromUuid(
                             characteristic?.uuid
                         )?.name
@@ -175,7 +175,7 @@ class FlySightDevice(
                 super.onDescriptorWrite(gatt, descriptor, status)
                 log("[WRITE_DESCRIPTOR] status = $status")
                 Timber.d(
-                    "Hoz descriptor write : ${descriptor?.uuid} , status = $status}"
+                    "descriptor write : ${descriptor?.uuid} , status = $status}"
                 )
             }
 
@@ -183,7 +183,7 @@ class FlySightDevice(
                 super.onMtuChanged(gatt, mtu, status)
                 log("[MTU_CHANGED] mtu = $mtu, status = $status")
                 Timber.d(
-                    "Hoz mtu changed : $mtu, status = $status"
+                    "MTU changed : $mtu, status = $status"
                 )
             }
 
@@ -195,7 +195,7 @@ class FlySightDevice(
                 super.onCharacteristicChanged(gatt, characteristic, value)
                 log("[CHANGED][${FlySightCharacteristic.fromUuid(characteristic.uuid)?.name}] ${value.bytesToHex()}")
                 Timber.d(
-                    "Hoz characteristic changed : ${characteristic.uuid} (${
+                    "Characteristic changed : ${characteristic.uuid} (${
                         FlySightCharacteristic.fromUuid(
                             characteristic.uuid
                         )?.name
@@ -328,7 +328,7 @@ class FlySightDevice(
             }))
 //            loadDirectoryEntries()
             stateUpdater(DeviceConnectionState.Connected)
-//            readCurrentConfigFile()
+            readCurrentConfigFile()
             scope?.launch {
                 startPingSystem()
             }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
 import fr.hozakan.flusightble.userpreferencesmodule.UserPrefService
+import fr.hozakan.flysightble.configfilesmodule.business.DefaultConfigEncoder
 import fr.hozakan.flysightble.configfilesmodule.business.DefaultConfigParser
 import fr.hozakan.flysightble.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightble.fsdevicemodule.business.FsDeviceService
@@ -19,13 +20,17 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class DeviceConfigurationViewModel @Inject constructor(
-    userPrefService: UserPrefService
+    private val userPrefService: UserPrefService
 ) : ViewModel() {
+
+    private val encoder = DefaultConfigEncoder()
 
     private val _state = MutableStateFlow(
         DeviceConfigurationState(
+            rawConfiguration = encoder.encodeConfig(defaultConfigFile()),
             configuration = defaultConfigFile(),
-            unitSystem = userPrefService.unitSystem.value
+            unitSystem = userPrefService.unitSystem.value,
+            showConfigAsRaw = false
         )
     )
 
@@ -42,13 +47,30 @@ class DeviceConfigurationViewModel @Inject constructor(
                     }
                 }
         }
+        viewModelScope.launch {
+            userPrefService.showConfigAsRaw
+                .collect { showConfigAsRaw ->
+                    _state.update {
+                        it.copy(
+                            showConfigAsRaw = showConfigAsRaw
+                        )
+                    }
+                }
+        }
     }
 
     fun loadConfiguration(conf: ConfigFile) {
         _state.update {
             it.copy(
+                rawConfiguration = encoder.encodeConfig(conf),
                 configuration = conf
             )
+        }
+    }
+
+    fun updateShowConfigAsRaw(showConfigAsRaw: Boolean) {
+        viewModelScope.launch {
+            userPrefService.updateShowConfigAsRaw(showConfigAsRaw)
         }
     }
 

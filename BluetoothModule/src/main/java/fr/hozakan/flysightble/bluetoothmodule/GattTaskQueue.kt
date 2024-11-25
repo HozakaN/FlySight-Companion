@@ -78,7 +78,7 @@ class GattTaskQueue(
             status: Int
         ) {
             super.onCharacteristicWrite(gatt, characteristic, status)
-            Timber.d("Hoz2 onCharacteristicWrite characteristic=${characteristic?.uuid} status=$status")
+            Timber.d("onCharacteristicWrite characteristic=${characteristic?.uuid} status=$status")
             gattCallback.onCharacteristicWrite(gatt, characteristic, status)
             val task =
                 tasks.firstOrNull { it.characteristic.uuid == characteristic?.uuid && it.gatt == gatt }
@@ -106,9 +106,7 @@ class GattTaskQueue(
     init {
         scope.launch {
             for (task in taskChannel) {
-                Timber.d("Hoz2 picking task $task")
                 processTask(task)
-                Timber.d("Hoz2 task ended $task")
             }
         }
     }
@@ -157,12 +155,10 @@ class GattTaskQueue(
             command,
             writeType
         )
-        Timber.d("Hoz awaiting completion")
+
         withTimeout(5000) {
             task.completion.await()
-            Timber.d("Hoz completion awaited before timeout")
         }
-        Timber.d("Hoz completion awaited")
     }
 
     private suspend fun handleWriteDescriptorTask(task: GattTask.WriteDescriptorTask) {
@@ -176,10 +172,8 @@ class GattTaskQueue(
 
     fun addTask(task: GattTask) {
         scope.launch {
-            Timber.d("Hoz adding task $task")
             tasks += task
             taskChannel.send(task)
-            Timber.d("Hoz task added $task")
         }
     }
 

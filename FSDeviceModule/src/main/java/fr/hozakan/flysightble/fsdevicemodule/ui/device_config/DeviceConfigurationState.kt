@@ -10,6 +10,8 @@ import fr.hozakan.flysightble.model.config.UnitSystem
 
 @Immutable
 data class DeviceConfigurationState(
+    val rawConfiguration: String,
     val configuration: ConfigFile,
-    val unitSystem: UnitSystem
+    val unitSystem: UnitSystem,
+    val showConfigAsRaw: Boolean
 )

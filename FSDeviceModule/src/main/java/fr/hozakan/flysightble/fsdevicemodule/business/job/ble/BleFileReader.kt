@@ -55,7 +55,6 @@ class BleFileReader(
     private fun handleFileDataPart(value: ByteArray) {
         val dataArray = value.sliceArray(1 until value.size)
         val packetId = value[0].toInt() and 0xFF
-        Timber.d("Hoz2 receiving file data part : $packetId (fileDataPacketNumber is $fileDataPacketNumber); byte array size : ${dataArray.size}")
         if (fileData == null) {
             fileDataPacketNumber = packetId
             fileData = dataArray
@@ -85,7 +84,6 @@ class BleFileReader(
             packetId = packetId,
             commandLogger = {}
         )
-        Timber.d("Hoz2 sending reading ack on packet $packetId : ${(task as GattTask.WriteTask).command.bytesToHex()}")
         gattTaskQueue.addTask(task)
     }
 }

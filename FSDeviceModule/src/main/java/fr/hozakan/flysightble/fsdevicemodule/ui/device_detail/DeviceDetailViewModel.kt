@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 class DeviceDetailViewModel @Inject constructor(
@@ -69,24 +70,24 @@ class DeviceDetailViewModel @Inject constructor(
         deviceDirectoryJob = viewModelScope.launch {
             device.loadDirectory(path)
                 .collect { fileInfos ->
-                _state.update { deviceDetailState ->
-                    deviceDetailState.copy(
-                        directoryContent = fileInfos
-                            .sortedBy { it.fileName }
-                            .sortedByDescending { it.isDirectory }
-                    )
-                }
-                if (fileInfos.isNotEmpty() && _state.value.configFileInfo == null && _state.value.currentDirectoryPath.size == 1) {
-                    val configFileInfo = fileInfos.firstOrNull { it.fileName == "config.txt" }
-                    if (configFileInfo != null) {
-                        _state.update {
-                            it.copy(
-                                configFileInfo = configFileInfo
-                            )
+                    _state.update { deviceDetailState ->
+                        deviceDetailState.copy(
+                            directoryContent = fileInfos
+                                .sortedBy { it.fileName }
+                                .sortedByDescending { it.isDirectory }
+                        )
+                    }
+                    if (fileInfos.isNotEmpty() && _state.value.configFileInfo == null && _state.value.currentDirectoryPath.size == 1) {
+                        val configFileInfo = fileInfos.firstOrNull { it.fileName == "config.txt" }
+                        if (configFileInfo != null) {
+                            _state.update {
+                                it.copy(
+                                    configFileInfo = configFileInfo
+                                )
+                            }
                         }
                     }
                 }
-            }
         }
     }
 
