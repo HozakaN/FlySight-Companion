@@ -71,6 +71,9 @@ class BleFileReader(
                     fileDataPacketNumber = null
                     fileContent.complete(fileState)
                 }
+            } else if (packetId <= fileDataPacketNumber!!) {
+                // Already received this packet. Send ack again
+                sendReadFileAck(packetId)
             }
         }
     }
