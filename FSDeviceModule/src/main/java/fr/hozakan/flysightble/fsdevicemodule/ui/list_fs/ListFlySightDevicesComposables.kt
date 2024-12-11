@@ -38,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -47,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -58,11 +60,13 @@ import fr.hozakan.flysightble.model.ConfigFileState
 import fr.hozakan.flysightble.model.DeviceConnectionState
 import fr.hozakan.flysightble.model.FileInfo
 import fr.hozakan.flysightble.model.FileState
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -336,63 +340,64 @@ private fun ConnectionIndicator(
         modifier = Modifier.requiredSize(8.dp)
     ) {
         if (connectionState == DeviceConnectionState.Connected) {
-            Timber.d(
-                "Hoz2 ping ${
-                    LocalTime.now().format(DateTimeFormatter.ISO_LOCAL_TIME)
-                }, minHeight = ${minHeight.value}"
-            )
             var shouldAnimate by remember { mutableStateOf(false) }
             LaunchedEffect(connectionState, flySightDevice) {
                 flySightDevice.ping
                     .collect {
                         shouldAnimate = true
-                        delay(1_000)
-                        shouldAnimate = false
+//                        delay(1_000)
+//                        shouldAnimate = false
                     }
             }
+            val density = LocalDensity.current.density
+            var circleStrokeWidth by remember { mutableFloatStateOf(0f) }
+            var radius by remember { mutableFloatStateOf((minHeight.value * density) / 4) }
+            var animatedAlpha by remember { mutableFloatStateOf(1f) }
+            with(LocalDensity.current) {
+                LaunchedEffect(shouldAnimate) {
+                    if (shouldAnimate) {
+                        launch {
+                            animate(
+                                initialValue = 0.dp.toPx(),
+                                targetValue = 2.dp.toPx(),
+                                animationSpec = tween(durationMillis = 1_000),
+                            ) { value, _ ->
+                                circleStrokeWidth = value
+                            }
+                        }
+                        launch {
+                            animate(
+                                initialValue = minHeight.toPx() / 4,
+                                targetValue = minHeight.toPx(),
+                                animationSpec = tween(durationMillis = 1_000),
+                            ) { value, _ ->
+                                radius = value
+                            }
+                        }
+                        launch {
+                            animate(
+                                initialValue = 1f,
+                                targetValue = 0f,
+                                animationSpec = tween(durationMillis = 1_000),
+                            ) { value, _ ->
+                                animatedAlpha = value
+                            }
+                        }
+                        delay(1_000)
+                        circleStrokeWidth = 0f
+                        radius = minHeight.toPx() / 4
+                        animatedAlpha = 1f
+
+                        shouldAnimate = false
+                    }
+                }
+            }
             if (shouldAnimate) {
-                val infiniteTransition = rememberInfiniteTransition("my_infinite_transition")
-                val circleStrokeWidth by with(LocalDensity.current) {
-                    infiniteTransition.animateFloat(
-                        initialValue = 0.dp.toPx(),
-                        targetValue = 2.dp.toPx(),
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(durationMillis = 1_000),
-                            repeatMode = RepeatMode.Restart
-                        )
-                    )
-                }
-                val radius by with(LocalDensity.current) {
-                    infiniteTransition.animateFloat(
-                        initialValue = minHeight.toPx() / 4,
-                        targetValue = minHeight.toPx(),
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(durationMillis = 1_000),
-                            repeatMode = RepeatMode.Restart
-                        )
-                    )
-                }
-//                animate(
-//                    initialValue = 0f,
-//                    targetValue = 1f,
-//                    animationSpec = tween(durationMillis = 1_000),
-//                ) { value, velocity ->
-//                    Timber.d("Hoz2 value = $value")
-//
-//                }
-                val animatedAlpha by infiniteTransition.animateFloat(
-                    initialValue = 1f,
-                    targetValue = 0f,
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(durationMillis = 1_000),
-                        repeatMode = RepeatMode.Restart
-                    )
-                )
                 Box(
                     modifier = Modifier.requiredSize(8.dp)
                 ) {
-                    Canvas(modifier = Modifier.requiredSize(8.dp)) {
-                        Timber.d("Hoz2 size.width = ${size.width}, size.height = ${size.height}")
+                    Canvas(modifier = Modifier
+                        .requiredSize(8.dp)) {
                         drawCircle(
                             color = connectionState.connectionColor.copy(alpha = animatedAlpha),
                             center = Offset(size.width / 2, size.height / 2),
