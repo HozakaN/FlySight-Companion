@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -196,16 +197,8 @@ fun FlySightDeviceItem(
             containerColor = MaterialTheme.colorScheme.inverseSurface
         )
     ) {
-        var connectionState by remember {
-            mutableStateOf<DeviceConnectionState>(
-                DeviceConnectionState.Disconnected
-            )
-        }
-        LaunchedEffect(device) {
-            device.connectionState.collect {
-                connectionState = it
-            }
-        }
+        val connectionState by device.connectionState.collectAsState()
+
         val clickableModifier = if (connectionState == DeviceConnectionState.Connected) {
             Modifier.clickable { onDeviceClicked() }
         } else {
@@ -217,115 +210,91 @@ fun FlySightDeviceItem(
                 .requiredHeight(192.dp)
                 .then(clickableModifier)
         ) {
-            Column(
-                modifier = Modifier.padding(8.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(device.name)
-                    if (connectionState != DeviceConnectionState.Connecting) {
-                        Spacer(modifier = Modifier.requiredWidth(8.dp))
-                        ConnectionIndicator(
-                            connectionState = connectionState,
-                            flySightDevice = device
-                        )
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    when (connectionState) {
-                        DeviceConnectionState.Connected -> {
+            when (connectionState) {
+                DeviceConnectionState.Connected -> {
+                    Column(
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = device.name,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Spacer(modifier = Modifier.requiredWidth(8.dp))
+                            ConnectionIndicator(
+                                connectionState = connectionState,
+                                flySightDevice = device
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
                             TextButton(
                                 onClick = onConnectionClicked
                             ) {
                                 Text(connectionText(connectionState))
                             }
                         }
-
-                        DeviceConnectionState.Disconnected -> {
-                            Button(
-                                onClick = onConnectionClicked
-                            ) {
-                                Text(connectionText(connectionState))
-                            }
-                        }
-
-                        DeviceConnectionState.Connecting -> {
+                    }
+                }
+                DeviceConnectionState.Connecting -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                            .padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = device.name,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Spacer(modifier = Modifier.requiredHeight(32.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             CircularProgressIndicator()
                             Spacer(modifier = Modifier.requiredWidth(8.dp))
                             Text(connectionText(connectionState))
                         }
-
-                        DeviceConnectionState.ConnectionError -> {
-                            Text(
-                                text = connectionText(connectionState),
-                                color = Color.Red
-                            )
+                    }
+                }
+                DeviceConnectionState.ConnectionError -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                            .padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = device.name,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Spacer(modifier = Modifier.requiredHeight(32.dp))
+                        Text(
+                            text = connectionText(connectionState),
+                            color = Color.Red
+                        )
+                    }
+                }
+                DeviceConnectionState.Disconnected -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                            .padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = device.name,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Spacer(modifier = Modifier.requiredHeight(32.dp))
+                        Button(
+                            onClick = onConnectionClicked
+                        ) {
+                            Text(connectionText(connectionState))
                         }
                     }
                 }
             }
-            if (connectionState == DeviceConnectionState.Connected) {
-                Spacer(modifier = Modifier.padding(8.dp))
-
-            }
-//            var services by remember { mutableStateOf<List<BluetoothGattService>>(emptyList()) }
-//            var directoryContent by remember { mutableStateOf<List<FileInfo>>(emptyList()) }
-//            LaunchedEffect(device) {
-//                device.services.collect {
-//                    services = it
-//                }
-//            }
-//            LaunchedEffect(device) {
-//                device.directory.collect {
-//                    directoryContent = it
-//                }
-//            }
-//            LaunchedEffect(device) {
-//                device.logs.collect {
-//                    logs = it
-//                }
-//            }
-//            Text("Services:")
-//            Spacer(modifier = Modifier.padding(8.dp))
-//            services.forEach { service ->
-//                Text("Service: ${service.uuid}")
-//                service.characteristics.forEach { characteristic ->
-//                    Text("Characteristic: ${FlySightCharacteristic.fromUuid(characteristic.uuid)?.name}")
-//                }
-//            }
-//            Spacer(modifier = Modifier.padding(8.dp))
-//            Row {
-//                Text("Directory content:")
-//                Spacer(modifier = Modifier.padding(32.dp))
-//                Button(
-//                    onClick = {
-//                        onRefreshDirectoryContentClicked()
-//                    }
-//                ) {
-//                    Text("Refresh")
-//                }
-//            }
-//            Spacer(modifier = Modifier.padding(8.dp))
-//            directoryContent.forEach { entry ->
-//                Text("Entry: ${entry.fileName}")
-//            }
-//            Spacer(modifier = Modifier.padding(8.dp))
-//            Text("Logs:")
-//            Spacer(modifier = Modifier.padding(8.dp))
-//            ExpandableColumn(
-//                headerComposable = { expanded ->
-//                    Text("Logs")
-//                },
-//                contentComposable = {
-//                    Column(
-//                        modifier = Modifier.padding(8.dp)
-//                    ) {
-//                        logs.forEachIndexed { index, log ->
-//                            Text("($index) $log")
-//                        }
-//                    }
-//                }
-//            )
         }
     }
 }
