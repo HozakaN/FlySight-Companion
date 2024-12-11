@@ -40,6 +40,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,15 +49,37 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
 import java.io.IOException
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.coroutines.resume
 
-class FlySightDevice(
+interface FlySightDevice {
+    val uuid: String
+    val name: String
+    val address: String
+    val connectionState: StateFlow<DeviceConnectionState>
+    val configFile: StateFlow<ConfigFileState>
+    val rawConfigFile: StateFlow<FileState>
+    val logs: StateFlow<List<String>>
+    val fileReceived: SharedFlow<FileState>
+    val ping: SharedFlow<Boolean>
+    suspend fun connectGatt(): Boolean
+    suspend fun disconnectGatt(): Boolean
+    fun loadDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>>
+    fun readFile(fileName: String)
+}
+
+class FlySightDeviceImpl(
     val bluetoothDevice: BluetoothDevice,
     private val context: Context
-) {
+) : FlySightDevice {
 
-    val uuid = UUID.randomUUID().toString()
+    override val uuid = UUID.randomUUID().toString()
+
+    override val name: String
+        @SuppressLint("MissingPermission")
+        get() = bluetoothDevice.name ?: "Unknown"
 
     private var gatt: BluetoothGatt? = null
         private set(value) {
@@ -86,10 +109,10 @@ class FlySightDevice(
 
     private val _connectionState =
         MutableStateFlow<DeviceConnectionState>(DeviceConnectionState.Disconnected)
-    val connectionState = _connectionState.asStateFlow()
+    override val connectionState = _connectionState.asStateFlow()
 
     private val _logs = MutableStateFlow<List<String>>(emptyList())
-    val logs = _logs.asStateFlow()
+    override val logs = _logs.asStateFlow()
 
     private val _services = MutableStateFlow<List<BluetoothGattService>>(emptyList())
     val services = _services.asStateFlow()
@@ -98,12 +121,18 @@ class FlySightDevice(
 
     private var connectionContinuation: CancellableContinuation<Boolean>? = null
 
+    override val address: String
+        get() = bluetoothDevice.address
+
     private val _file = MutableSharedFlow<FileState>()
-    private val _configFileStr = MutableStateFlow<FileState>(FileState.Nothing)
+    private val _rawConfigFile = MutableStateFlow<FileState>(FileState.Nothing)
     private val _configFile = MutableStateFlow<ConfigFileState>(ConfigFileState.Nothing)
-    val fileReceived = _file.asSharedFlow()
-    val configFileStr = _configFileStr.asStateFlow()
-    val configFile = _configFile.asStateFlow()
+    override val fileReceived = _file.asSharedFlow()
+    override val rawConfigFile = _rawConfigFile.asStateFlow()
+    override val configFile = _configFile.asStateFlow()
+
+    private val _ping = MutableSharedFlow<Boolean>()
+    override val ping: SharedFlow<Boolean> = _ping.asSharedFlow()
 
     private val gattTaskQueue = GattTaskQueue(
         gattCallback = object : BluetoothGattCallback() {
@@ -340,7 +369,7 @@ class FlySightDevice(
         }
     }
 
-    fun loadDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>> {
+    override fun loadDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>> {
         val gatt = this.gatt ?: return MutableStateFlow<List<FileInfo>>(emptyList()).asStateFlow()
         val rx = this.rxCharacteristic
             ?: return MutableStateFlow<List<FileInfo>>(emptyList()).asStateFlow()
@@ -413,13 +442,14 @@ class FlySightDevice(
 
     private suspend fun startPingSystem() {
         while (_connectionState.value == DeviceConnectionState.Connected)  {
+            delay(14_000)
             val ping = pingDevice()
+            _ping.emit(ping)
             if (!ping) {
                 log("Device not responding to pings")
                 disconnectGatt()
                 return
             }
-            delay(14_000)
         }
     }
 
@@ -442,7 +472,7 @@ class FlySightDevice(
     }
 
     private fun readCurrentConfigFile() {
-        _configFileStr.update {
+        _rawConfigFile.update {
             FileState.Loading
         }
 
@@ -461,8 +491,8 @@ class FlySightDevice(
             try {
                 val fileState = fileReader.readFile(file)
                 _file.emit(fileState)
-                if (_configFileStr.value is FileState.Loading) {
-                    _configFileStr.emit(fileState)
+                if (_rawConfigFile.value is FileState.Loading) {
+                    _rawConfigFile.emit(fileState)
                     if (fileState is FileState.Success) {
                         val configFile = parser.parse(fileState.content.lines())
                         _configFile.emit(ConfigFileState.Success(configFile))
@@ -474,7 +504,7 @@ class FlySightDevice(
         }
     }
 
-    fun readFile(fileName: String) {
+    override fun readFile(fileName: String) {
         _file.tryEmit(FileState.Loading)
         log("Reading file $fileName")
         val gatt = this.gatt ?: return
@@ -545,7 +575,7 @@ class FlySightDevice(
     }
 
     @SuppressLint("MissingPermission")
-    suspend fun connectGatt(): Boolean {
+    override suspend fun connectGatt(): Boolean {
         if (scope != null) {
             return false
         }
@@ -566,7 +596,7 @@ class FlySightDevice(
     }
 
     @SuppressLint("MissingPermission")
-    suspend fun disconnectGatt(): Boolean {
+    override suspend fun disconnectGatt(): Boolean {
         if (scope == null) {
             return false
         }

@@ -2,17 +2,10 @@ package fr.hozakan.flysightble.fsdevicemodule.ui.device_config
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
 import fr.hozakan.flusightble.userpreferencesmodule.UserPrefService
 import fr.hozakan.flysightble.configfilesmodule.business.DefaultConfigEncoder
-import fr.hozakan.flysightble.configfilesmodule.business.DefaultConfigParser
-import fr.hozakan.flysightble.fsdevicemodule.business.FlySightDevice
-import fr.hozakan.flysightble.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightble.model.ConfigFile
-import fr.hozakan.flysightble.model.FileState
-import fr.hozakan.flysightble.model.FileInfo
 import fr.hozakan.flysightble.model.defaultConfigFile
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update

@@ -19,10 +19,10 @@ class DefaultFsDeviceService(
     override suspend fun refreshKnownDevices() {
         val btDevices = bluetoothService.getPairedDevices()
         val btDevicesAddresses = btDevices.map { it.address }
-        val oldDevices = _devices.value.filter { it.bluetoothDevice.address in btDevicesAddresses }
-        val oldDevicesAddresses = oldDevices.map { it.bluetoothDevice.address }
+        val oldDevices = _devices.value.filter { it.address in btDevicesAddresses }
+        val oldDevicesAddresses = oldDevices.map { it.address }
         val newDevices = btDevices.filter { it.address !in oldDevicesAddresses }
-        val devices = oldDevices + newDevices.map { FlySightDevice(it, context) }
+        val devices = oldDevices + newDevices.map { FlySightDeviceImpl(it, context) }
         _devices.update {
             devices
         }

@@ -18,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -28,7 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,12 +34,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import fr.hozakan.flysightble.composablecommons.ExpandableColumn
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.model.ConfigFile
 import fr.hozakan.flysightble.model.ConfigFileState
-import fr.hozakan.flysightble.model.FileState
-import timber.log.Timber
 
 @Composable
 fun DeviceDetailMenuActions(
@@ -133,7 +128,7 @@ fun DeviceDetailScreen(
         color = MaterialTheme.colorScheme.surface
     ) {
         Column {
-//            val configFileStr = state.configFile
+            val configFileStr = state.configFile
 //            ExpandableColumn(
 //                headerComposable = {
 //                    Row(

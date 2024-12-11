@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 class DeviceDetailViewModel @Inject constructor(
@@ -94,7 +93,7 @@ class DeviceDetailViewModel @Inject constructor(
     private fun observeDeviceConfigFile(device: FlySightDevice) {
         deviceConfigFileJob?.cancel()
         deviceConfigFileJob = viewModelScope.launch {
-            device.configFileStr.collect { configFileState ->
+            device.rawConfigFile.collect { configFileState ->
                 _state.update { deviceDetailState ->
                     deviceDetailState.copy(
                         configFile = configFileState
