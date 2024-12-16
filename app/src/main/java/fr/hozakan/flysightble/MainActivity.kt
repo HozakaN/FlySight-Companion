@@ -40,6 +40,10 @@ import com.google.gson.Gson
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
+import fr.hozakan.flusightble.dialog.DialogHandler
+import fr.hozakan.flusightble.dialog.DialogService
+import fr.hozakan.flusightble.dialog.LocalDialogService
+import fr.hozakan.flusightble.dialog.MutableDialogService
 import fr.hozakan.flysightble.configfilesmodule.ui.config_detail.ConfigDetailMenuActions
 import fr.hozakan.flysightble.configfilesmodule.ui.config_detail.ConfigDetailScreen
 import fr.hozakan.flysightble.configfilesmodule.ui.list_files.ListConfigFileMenuActions
@@ -67,6 +71,9 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
     lateinit var viewModelFactory: ViewModelProvider.Factory
 
     @Inject
+    lateinit var dialogService: MutableDialogService
+
+    @Inject
     lateinit var json: Gson
 
     override fun androidInjector(): AndroidInjector<Any> = androidInjector
@@ -82,10 +89,13 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
 
                 CompositionLocalProvider(
                     LocalViewModelFactory provides viewModelFactory,
-                    LocalMenuState provides menuState
+                    LocalMenuState provides menuState,
+                    LocalDialogService provides dialogService
                 ) {
                     val navController = rememberNavController()
                     val currentBackStack = navController.currentBackStackEntryAsState()
+
+                    DialogHandler()
 
                     Scaffold(
                         topBar = {

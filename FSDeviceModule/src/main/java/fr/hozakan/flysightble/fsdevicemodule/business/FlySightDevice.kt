@@ -16,6 +16,7 @@ import fr.hozakan.flysightble.bluetoothmodule.isNotifiable
 import fr.hozakan.flysightble.bluetoothmodule.isReadable
 import fr.hozakan.flysightble.bluetoothmodule.isWritable
 import fr.hozakan.flysightble.bluetoothmodule.isWritableWithoutResponse
+import fr.hozakan.flysightble.configfilesmodule.business.ConfigEncoder
 import fr.hozakan.flysightble.configfilesmodule.business.ConfigParser
 import fr.hozakan.flysightble.configfilesmodule.business.DefaultConfigParser
 import fr.hozakan.flysightble.framework.extension.bytesToHex
@@ -26,6 +27,7 @@ import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BleFileWriter
 import fr.hozakan.flysightble.fsdevicemodule.business.job.DirectoryFetcher
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BlePingJob
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.Command
+import fr.hozakan.flysightble.model.ConfigFile
 import fr.hozakan.flysightble.model.ConfigFileState
 import fr.hozakan.flysightble.model.DeviceConnectionState
 import fr.hozakan.flysightble.model.FileInfo
@@ -49,13 +51,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
 import java.io.IOException
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.coroutines.resume
 
+typealias DeviceId = String
 interface FlySightDevice {
-    val uuid: String
+    val uuid: DeviceId
     val name: String
     val address: String
     val connectionState: StateFlow<DeviceConnectionState>
@@ -68,11 +69,13 @@ interface FlySightDevice {
     suspend fun disconnectGatt(): Boolean
     fun loadDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>>
     fun readFile(fileName: String)
+    fun updateConfigFile(configFile: ConfigFile)
 }
 
 class FlySightDeviceImpl(
     val bluetoothDevice: BluetoothDevice,
-    private val context: Context
+    private val context: Context,
+    private val configEncoder: ConfigEncoder
 ) : FlySightDevice {
 
     override val uuid = UUID.randomUUID().toString()
@@ -526,6 +529,13 @@ class FlySightDeviceImpl(
                 log("Error reading file : $e")
             }
         }
+    }
+
+    override fun updateConfigFile(configFile: ConfigFile) {
+        val configContent = configEncoder.encodeConfig(configFile)
+        writeFile("/config.txt", configContent)
+        _rawConfigFile.value = FileState.Success(configContent)
+        _configFile.value = ConfigFileState.Success(configFile)
     }
 
     private fun logReadCharacteristic(uuid: UUID, value: ByteArray) {

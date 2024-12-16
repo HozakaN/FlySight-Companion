@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,19 +27,22 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 public fun ExpandableColumn(
-    headerComposable: @Composable (Boolean) -> Unit,
+    expanded: Boolean = false,
+    headerComposable: @Composable RowScope.(Boolean) -> Unit,
+    isExpandable: Boolean = true,
     contentComposable: @Composable ColumnScope.() -> Unit
 ) {
-    var contentExpanded by remember { mutableStateOf(true) }
+    var contentExpanded by remember { mutableStateOf(expanded) }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        val clickableModifier = if (isExpandable) Modifier.clickable { contentExpanded = !contentExpanded } else Modifier
         Row(
             modifier = Modifier
                 .requiredHeight(64.dp)
                 .fillMaxWidth()
-                .clickable { contentExpanded = !contentExpanded }
+                .then(clickableModifier)
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
