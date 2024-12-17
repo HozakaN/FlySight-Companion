@@ -24,8 +24,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -50,13 +48,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightble.composablecommons.ExpandableColumn
-import fr.hozakan.flysightble.composablecommons.R
 import fr.hozakan.flysightble.framework.compose.CustomColors
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.fsdevicemodule.business.FlySightDevice
@@ -74,7 +70,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @ExperimentalCoroutinesApi
 @Composable
@@ -183,11 +178,14 @@ fun ListFlySightDevicesScreen(
                             onDeviceClicked = {
                                 onDeviceSelected(device.device)
                             },
+                            onUploadConfigToSystem = {
+                                viewModel.uploadConfigToSystem(device)
+                            },
                             onUpdateSystemConfClicked = {
                                 viewModel.updateSystemConfig(device)
                             },
-                            onUploadConfigToSystem = {
-                                viewModel.uploadConfigToSystem(device)
+                            onPushConfigToDeviceClicked = {
+                                viewModel.pushConfigToDevice(device)
                             }
                         )
                     }
@@ -206,6 +204,7 @@ fun FlySightDeviceItem(
     onDeviceClicked: () -> Unit,
     onUploadConfigToSystem: () -> Unit,
     onUpdateSystemConfClicked: () -> Unit,
+    onPushConfigToDeviceClicked: () -> Unit
 ) {
     Card(
         colors = CardDefaults.cardColors(
@@ -256,7 +255,8 @@ fun FlySightDeviceItem(
                             configFileState = configFileState,
                             unitSystem = unitSystem,
                             onUploadConfigToSystem = onUploadConfigToSystem,
-                            onUpdateSystemConfClicked = onUpdateSystemConfClicked
+                            onUpdateSystemConfClicked = onUpdateSystemConfClicked,
+                            onPushConfigToDeviceClicked = onPushConfigToDeviceClicked
                         )
                     }
                 }
@@ -335,7 +335,8 @@ fun FlySightDeviceItemConfigBody(
     configFileState: ConfigFileState,
     unitSystem: UnitSystem,
     onUploadConfigToSystem: () -> Unit,
-    onUpdateSystemConfClicked: () -> Unit
+    onUpdateSystemConfClicked: () -> Unit,
+    onPushConfigToDeviceClicked: () -> Unit
 ) {
     ExpandableColumn(
         headerComposable = {
@@ -374,14 +375,24 @@ fun FlySightDeviceItemConfigBody(
         } else if (device.hasConfigContentChanged) {
             Spacer(modifier = Modifier.requiredHeight(8.dp))
             Text(
-                text = "Config differs from your config",
+                text = "The FlySight configuration differs from your local config file named ${configFileState.conf?.name}",
                 color = CustomColors.Orange
             )
             Spacer(modifier = Modifier.requiredHeight(8.dp))
-            Button(
-                onClick = onUpdateSystemConfClicked
-            ) {
-                Text("Update your config")
+            Row {
+                Button(
+                    modifier = Modifier.weight(1f),
+                    onClick = onUpdateSystemConfClicked
+                ) {
+                    Text("Update local config")
+                }
+                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                Button(
+                    modifier = Modifier.weight(1f),
+                    onClick = onPushConfigToDeviceClicked
+                ) {
+                    Text("Update FlySight config")
+                }
             }
         } else {
             when (configFileState) {
@@ -546,7 +557,8 @@ fun FlySightDeviceItemDisconnectedPreview() {
         onConnectionClicked = {},
         onDeviceClicked = {},
         onUpdateSystemConfClicked = {},
-        onUploadConfigToSystem = {}
+        onUploadConfigToSystem = {},
+        onPushConfigToDeviceClicked = {}
     )
 }
 
@@ -566,7 +578,8 @@ fun FlySightDeviceItemConnectingPreview() {
         onConnectionClicked = {},
         onDeviceClicked = {},
         onUpdateSystemConfClicked = {},
-        onUploadConfigToSystem = {}
+        onUploadConfigToSystem = {},
+        onPushConfigToDeviceClicked = {}
     )
 }
 
@@ -588,7 +601,8 @@ fun FlySightDeviceItemConnectedAndNominalConfigFilePreview() {
         onConnectionClicked = {},
         onDeviceClicked = {},
         onUpdateSystemConfClicked = {},
-        onUploadConfigToSystem = {}
+        onUploadConfigToSystem = {},
+        onPushConfigToDeviceClicked = {}
     )
 }
 
@@ -608,7 +622,8 @@ fun FlySightDeviceItemConnectedAndConfigFileUnknownPreview() {
         onConnectionClicked = {},
         onDeviceClicked = {},
         onUpdateSystemConfClicked = {},
-        onUploadConfigToSystem = {}
+        onUploadConfigToSystem = {},
+        onPushConfigToDeviceClicked = {}
     )
 }
 
@@ -629,7 +644,8 @@ fun FlySightDeviceItemConnectedAndConfigFileDiffersPreview() {
         onConnectionClicked = {},
         onDeviceClicked = {},
         onUpdateSystemConfClicked = {},
-        onUploadConfigToSystem = {}
+        onUploadConfigToSystem = {},
+        onPushConfigToDeviceClicked = {}
     )
 }
 
@@ -649,7 +665,8 @@ fun FlySightDeviceItemErrorPreview() {
         onConnectionClicked = {},
         onDeviceClicked = {},
         onUpdateSystemConfClicked = {},
-        onUploadConfigToSystem = {}
+        onUploadConfigToSystem = {},
+        onPushConfigToDeviceClicked = {}
     )
 }
 

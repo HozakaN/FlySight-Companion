@@ -175,7 +175,19 @@ class ListFlySightDevicesViewModel @Inject constructor(
     }
 
     fun updateSystemConfig(device: ListFlySightDeviceDisplayData) {
+        device.configFile.value.conf?.let { conf ->
+            viewModelScope.launch {
+                configFileService.updateConfigFile(conf)
+            }
+        }
+    }
 
+    fun pushConfigToDevice(device: FlySightDevice) {
+        configFileService.configFiles.value.firstOrNull { it.name == device.configFile.value.conf?.name }?.let { configFile ->
+            viewModelScope.launch {
+                fsDeviceService.updateDeviceConfig(device, configFile)
+            }
+        }
     }
 
 }

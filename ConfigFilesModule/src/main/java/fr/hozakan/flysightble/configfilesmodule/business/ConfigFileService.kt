@@ -7,4 +7,5 @@ interface ConfigFileService {
     val configFiles: StateFlow<List<ConfigFile>>
     suspend fun saveConfigFile(configFile: ConfigFile): ConfigFile
     suspend fun deleteConfigFile(configFile: ConfigFile)
+    suspend fun updateConfigFile(conf: ConfigFile)
 }

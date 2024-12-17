@@ -42,8 +42,7 @@ class DefaultConfigFileService(
     override suspend fun saveConfigFile(configFile: ConfigFile): ConfigFile {
         var name = configFile.name
         if (name.isBlank()) {
-            val result = dialogService.displayDialog(ConfigFileNameDialog)
-            when (result) {
+            when (val result = dialogService.displayDialog(ConfigFileNameDialog)) {
                 is ConfigFileName -> name = result.name
                 DialogResult.Dismiss -> return configFile
             }
@@ -59,6 +58,21 @@ class DefaultConfigFileService(
             File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${readyConfigFile.name}.txt")
         file.writeText(fileContent)
         return readyConfigFile
+    }
+
+    override suspend fun updateConfigFile(conf: ConfigFile) {
+        _configs.update { configs ->
+            val index = configs.indexOfFirst { it.name == conf.name }
+            (configs - configs.first { it.name == conf.name }).run {
+                toMutableList().also { mutableList -> mutableList.add(index, conf)}
+            }
+        }
+        val fileContent = withContext(Dispatchers.IO) {
+            buildFileContent(conf)
+        }
+        val file =
+            File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${conf.name}.txt")
+        file.writeText(fileContent)
     }
 
     override suspend fun deleteConfigFile(configFile: ConfigFile) {
