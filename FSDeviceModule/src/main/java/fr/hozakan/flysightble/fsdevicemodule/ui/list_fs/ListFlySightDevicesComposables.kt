@@ -55,6 +55,7 @@ import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightble.composablecommons.ExpandableColumn
 import fr.hozakan.flysightble.framework.compose.CustomColors
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
+import fr.hozakan.flysightble.framework.service.loading.LoadingState
 import fr.hozakan.flysightble.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightble.model.ConfigFile
 import fr.hozakan.flysightble.model.ConfigFileState
@@ -63,6 +64,7 @@ import fr.hozakan.flysightble.model.FileInfo
 import fr.hozakan.flysightble.model.FileState
 import fr.hozakan.flysightble.model.config.UnitSystem
 import fr.hozakan.flysightble.model.defaultConfigFile
+import fr.hozakan.flysightble.model.result.ResultFile
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -354,6 +356,52 @@ fun FlySightDeviceItemConfigBody(
     onUploadConfigToSystem: () -> Unit,
     onUpdateSystemConfClicked: () -> Unit,
     onPushConfigToDeviceClicked: () -> Unit
+) {
+    DeviceConfigurationContainer(
+        configFileState,
+        device,
+        onUploadConfigToSystem,
+        onUpdateSystemConfClicked,
+        onPushConfigToDeviceClicked,
+        unitSystem
+    )
+    Spacer(modifier = Modifier.requiredHeight(8.dp))
+    val resultFiles by device.device.resultFiles.collectAsState()
+    ExpandableColumn(
+        headerComposable = {
+            when (val files = resultFiles) {
+                is LoadingState.Error<List<ResultFile>> -> {
+                    Text("Error loading result files")
+                }
+
+                is LoadingState.Loaded<List<ResultFile>> -> {
+                    Text("Result files count : ${files.value.size}")
+                }
+
+                LoadingState.Idle,
+                is LoadingState.Loading<List<ResultFile>> -> {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.requiredWidth(8.dp))
+                        Text("Loading result files...")
+                    }
+                }
+            }
+        },
+        isExpandable = false
+    ) {}
+}
+
+@Composable
+private fun DeviceConfigurationContainer(
+    configFileState: ConfigFileState,
+    device: ListFlySightDeviceDisplayData,
+    onUploadConfigToSystem: () -> Unit,
+    onUpdateSystemConfClicked: () -> Unit,
+    onPushConfigToDeviceClicked: () -> Unit,
+    unitSystem: UnitSystem
 ) {
     ExpandableColumn(
         headerComposable = {
@@ -702,6 +750,8 @@ private class FakeDeviceImpl(
         get() = MutableStateFlow(ConfigFileState.Success(defaultConfigFile().copy(name = configFileName)))
     override val rawConfigFile: StateFlow<FileState>
         get() = MutableStateFlow(FileState.Nothing)
+    override val resultFiles: StateFlow<LoadingState<List<ResultFile>>>
+        get() = MutableStateFlow(LoadingState.Idle)
     override val logs: StateFlow<List<String>>
         get() = MutableStateFlow(emptyList())
     override val fileReceived: SharedFlow<FileState>
@@ -713,8 +763,12 @@ private class FakeDeviceImpl(
 
     override suspend fun disconnectGatt(): Boolean = true
 
-    override fun loadDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>> =
+    override fun flowDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>> =
         MutableStateFlow(emptyList())
+
+    override suspend fun loadDirectory(directoryPath: List<String>): List<FileInfo> {
+        return emptyList()
+    }
 
     override fun readFile(fileName: String) {}
     override fun updateConfigFile(configFile: ConfigFile) {}

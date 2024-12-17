@@ -67,7 +67,7 @@ class DeviceDetailViewModel @Inject constructor(
         val device = _state.value.device ?: return
         deviceDirectoryJob?.cancel()
         deviceDirectoryJob = viewModelScope.launch {
-            device.loadDirectory(path)
+            device.flowDirectory(path)
                 .collect { fileInfos ->
                     _state.update { deviceDetailState ->
                         deviceDetailState.copy(

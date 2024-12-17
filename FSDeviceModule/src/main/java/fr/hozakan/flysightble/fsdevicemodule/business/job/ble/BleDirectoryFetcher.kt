@@ -7,6 +7,7 @@ import fr.hozakan.flysightble.bluetoothmodule.GattTaskQueue
 import fr.hozakan.flysightble.fsdevicemodule.business.job.DirectoryFetcher
 import fr.hozakan.flysightble.model.FileInfo
 import fr.hozakan.flysightble.model.ble.FlySightCharacteristic
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +24,7 @@ class BleDirectoryFetcher(
 ) : DirectoryFetcher {
 
     private val _directory = MutableStateFlow<List<FileInfo>>(emptyList())
+    private var directoryListed: CompletableDeferred<Unit>? = null
 
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onCharacteristicChanged(
@@ -39,8 +41,7 @@ class BleDirectoryFetcher(
         }
     }
 
-
-    override fun listDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>> {
+    override fun flowDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>> {
         val directory = directoryPath.joinToString("/")
 
         gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
@@ -56,14 +57,39 @@ class BleDirectoryFetcher(
         return _directory.asStateFlow()
     }
 
+    override suspend fun listDirectory(directoryPath: List<String>): List<FileInfo> {
+        directoryListed = CompletableDeferred()
+        val directory = directoryPath.joinToString("/")
+
+        gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
+        Timber.i("Getting directory $directory")
+        val task = TaskBuilder.buildGetDirectoryTask(
+            gatt = gatt,
+            characteristic = gattCharacteristic,
+            path = directory,
+            commandLogger = {}
+        )
+        gattTaskQueue.addTask(task)
+
+        directoryListed?.await()
+
+        gattTaskQueue -= gattCallback
+        return _directory.value
+    }
+
     override fun close() {
         gattTaskQueue -= gattCallback
     }
 
     private fun handleFileEntry(value: ByteArray) {
         val fileInfo = decodeFileInfo(value) ?: return
-        _directory.update {
-            it + fileInfo
+        if (fileInfo.fileName.isEmpty()) {
+            directoryListed?.complete(Unit)
+            directoryListed = null
+        } else {
+            _directory.update {
+                it + fileInfo
+            }
         }
     }
 
@@ -114,7 +140,6 @@ class BleDirectoryFetcher(
             fileNameBytes
         }
         val fileName = String(nameDataNullTerminated, Charsets.UTF_8)
-        if (fileName.isBlank()) return null
         return FileInfo(
             packetId,
             fileSize.toLong(),

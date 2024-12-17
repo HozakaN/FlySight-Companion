@@ -7,6 +7,8 @@ package fr.hozakan.flysightble.framework.service.loading
  */
 sealed class LoadingState<out R> {
 
+    data object Idle : LoadingState<Nothing>()
+
     /**
      * Loading state: the operation is actively executing.
      *
