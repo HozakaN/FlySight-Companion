@@ -62,8 +62,6 @@ class BleDirectoryFetcher(
 
     private fun handleFileEntry(value: ByteArray) {
         val fileInfo = decodeFileInfo(value) ?: return
-//        log("File name : ${fileInfo.fileName}")
-//        Timber.d("Hoz directory entry : $fileInfo")
         _directory.update {
             it + fileInfo
         }

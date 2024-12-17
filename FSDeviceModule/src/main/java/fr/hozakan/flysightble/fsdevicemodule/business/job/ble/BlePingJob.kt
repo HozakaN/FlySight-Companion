@@ -65,6 +65,7 @@ class BlePingJob(
             Timber.e(e)
             false
         }
+        gattTaskQueue -= gattCallback
         return returnValue
     }
 }

@@ -60,11 +60,29 @@ class DatastoreUserPrefService(
             }
             .stateIn(dataStoreCoroutineScope, SharingStarted.WhileSubscribed(), UnitSystem.Metric)
 
+    override val showConfigAsRaw: StateFlow<Boolean>
+        get() = dataStore.data
+            .map { preferences ->
+                val key = getKey<Boolean>("show_config_as_raw")
+                val value = preferences[key] ?: false
+                value
+            }
+            .stateIn(dataStoreCoroutineScope, SharingStarted.WhileSubscribed(), false)
+
     override fun updateUnitSystem(unitSystem: UnitSystem) {
         dataStoreCoroutineScope.launch {
             val key = getKey<Int>("unit-system")
             dataStore.edit { preferences ->
                 preferences[key] = unitSystem.value
+            }
+        }
+    }
+
+    override fun updateShowConfigAsRaw(showConfigAsRaw: Boolean) {
+        dataStoreCoroutineScope.launch {
+            val key = getKey<Boolean>("show_config_as_raw")
+            dataStore.edit { preferences ->
+                preferences[key] = showConfigAsRaw
             }
         }
     }

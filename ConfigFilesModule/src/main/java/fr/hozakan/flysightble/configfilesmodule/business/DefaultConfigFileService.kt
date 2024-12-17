@@ -1,6 +1,10 @@
 package fr.hozakan.flysightble.configfilesmodule.business
 
 import android.content.Context
+import fr.hozakan.flusightble.dialog.ConfigFileName
+import fr.hozakan.flusightble.dialog.ConfigFileNameDialog
+import fr.hozakan.flusightble.dialog.DialogResult
+import fr.hozakan.flusightble.dialog.DialogService
 import fr.hozakan.flysightble.configfilesmodule.business.parser.CONFIG_FILES_FOLDER
 import fr.hozakan.flysightble.model.ConfigFile
 import kotlinx.coroutines.CoroutineScope
@@ -14,7 +18,9 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 class DefaultConfigFileService(
-    private val context: Context
+    private val context: Context,
+    private val dialogService: DialogService,
+    private val configEncoder: ConfigEncoder
 ) : ConfigFileService {
 
     private val configSharedPreferences =
@@ -27,24 +33,32 @@ class DefaultConfigFileService(
 
     private val parser: ConfigParser = DefaultConfigParser()
 
-    private val encoder: ConfigEncoder = DefaultConfigEncoder()
-
     init {
         serviceScope.launch {
             loadConfigFiles()
         }
     }
 
-    override suspend fun saveConfigFile(configFile: ConfigFile) {
+    override suspend fun saveConfigFile(configFile: ConfigFile): ConfigFile {
+        var name = configFile.name
+        if (name.isBlank()) {
+            val result = dialogService.displayDialog(ConfigFileNameDialog)
+            when (result) {
+                is ConfigFileName -> name = result.name
+                DialogResult.Dismiss -> return configFile
+            }
+        }
+        val readyConfigFile = configFile.copy(name = name)
         _configs.update {
-            it + configFile
+            it + readyConfigFile
         }
         val fileContent = withContext(Dispatchers.IO) {
-            buildFileContent(configFile)
+            buildFileContent(readyConfigFile)
         }
         val file =
-            File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${configFile.name}.txt")
+            File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${readyConfigFile.name}.txt")
         file.writeText(fileContent)
+        return readyConfigFile
     }
 
     override suspend fun deleteConfigFile(configFile: ConfigFile) {
@@ -57,7 +71,7 @@ class DefaultConfigFileService(
     }
 
     private fun buildFileContent(configFile: ConfigFile): String {
-        return encoder.encodeConfig(configFile)
+        return configEncoder.encodeConfig(configFile)
     }
 
     private fun getOrCreateConfigFilesFolder(): File {

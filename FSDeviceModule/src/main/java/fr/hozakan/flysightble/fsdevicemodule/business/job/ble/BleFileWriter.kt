@@ -7,6 +7,7 @@ import fr.hozakan.flysightble.bluetoothmodule.GattTaskQueue
 import fr.hozakan.flysightble.fsdevicemodule.business.job.FileWriter
 import fr.hozakan.flysightble.model.ble.FlySightCharacteristic
 import kotlinx.coroutines.CompletableDeferred
+import timber.log.Timber
 
 class BleFileWriter(
     private val gatt: BluetoothGatt,

@@ -40,6 +40,10 @@ import com.google.gson.Gson
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
+import fr.hozakan.flusightble.dialog.DialogHandler
+import fr.hozakan.flusightble.dialog.DialogService
+import fr.hozakan.flusightble.dialog.LocalDialogService
+import fr.hozakan.flusightble.dialog.MutableDialogService
 import fr.hozakan.flysightble.configfilesmodule.ui.config_detail.ConfigDetailMenuActions
 import fr.hozakan.flysightble.configfilesmodule.ui.config_detail.ConfigDetailScreen
 import fr.hozakan.flysightble.configfilesmodule.ui.list_files.ListConfigFileMenuActions
@@ -48,7 +52,9 @@ import fr.hozakan.flysightble.framework.compose.LocalMenuState
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.framework.dagger.Injectable
 import fr.hozakan.flysightble.framework.menu.rememberActionBarMenuState
+import fr.hozakan.flysightble.fsdevicemodule.ui.device_config.DeviceConfigurationMenuActions
 import fr.hozakan.flysightble.fsdevicemodule.ui.device_config.DeviceConfigurationScreen
+import fr.hozakan.flysightble.fsdevicemodule.ui.device_detail.DeviceDetailMenuActions
 import fr.hozakan.flysightble.fsdevicemodule.ui.device_detail.DeviceDetailScreen
 import fr.hozakan.flysightble.fsdevicemodule.ui.file.DeviceFileScreen
 import fr.hozakan.flysightble.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
@@ -63,6 +69,9 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
+
+    @Inject
+    lateinit var dialogService: MutableDialogService
 
     @Inject
     lateinit var json: Gson
@@ -80,10 +89,13 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
 
                 CompositionLocalProvider(
                     LocalViewModelFactory provides viewModelFactory,
-                    LocalMenuState provides menuState
+                    LocalMenuState provides menuState,
+                    LocalDialogService provides dialogService
                 ) {
                     val navController = rememberNavController()
                     val currentBackStack = navController.currentBackStackEntryAsState()
+
+                    DialogHandler()
 
                     Scaffold(
                         topBar = {
@@ -194,9 +206,40 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                 )
                                             }
                                         }
+
                                         AppScreen.ConfigTab.ConfigDetail.route -> {
                                             ConfigDetailMenuActions()
                                         }
+
+                                        AppScreen.DeviceTab.DeviceDetail.route -> {
+                                            val deviceId =
+                                                currentBackStack.value?.arguments?.getString("deviceId")
+                                            if (deviceId != null) {
+                                                DeviceDetailMenuActions(
+                                                    deviceId = deviceId
+                                                ) {
+                                                    navController.navigate(
+                                                        AppScreen.DeviceTab.DeviceConfig.buildRoute(
+//                                                            json.encodeToString(it)
+                                                            json.toJson(it)
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        AppScreen.DeviceTab.DeviceConfig.route -> {
+                                            val config =
+                                                currentBackStack.value?.arguments?.getString("config")
+                                            if (config != null) {
+                                                DeviceConfigurationMenuActions(
+                                                    conf = json.fromJson(
+                                                        config,
+                                                        ConfigFile::class.java
+                                                    ),
+                                                )
+                                            }
+                                        }
+
                                         else -> {}
                                     }
                                 }
@@ -290,14 +333,6 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                         AppScreen.DeviceTab.DeviceFile.buildRoute(
                                                             deviceId,
                                                             it
-                                                        )
-                                                    )
-                                                },
-                                                onShowDeviceConfigClicked = {
-                                                    navController.navigate(
-                                                        AppScreen.DeviceTab.DeviceConfig.buildRoute(
-//                                                            json.encodeToString(it)
-                                                            json.toJson(it)
                                                         )
                                                     )
                                                 },

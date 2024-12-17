@@ -33,22 +33,7 @@ enum class Command(val value: Int) {
 
     companion object {
 
-        fun fromValue(value: Int): Command? = when (value) {
-            FS_CRS_COMMAND_CREATE -> CREATE
-            FS_CRS_COMMAND_DELETE -> DELETE
-            FS_CRS_COMMAND_READ -> READ
-            FS_CRS_COMMAND_WRITE -> WRITE
-            FS_CRS_COMMAND_MK_DIR -> MK_DIR
-            FS_CRS_COMMAND_READ_DIR -> READ_DIR
-            FS_CRS_COMMAND_FILE_DATA -> FILE_DATA
-            FS_CRS_COMMAND_FILE_INFO -> FILE_INFO
-            FS_CRS_COMMAND_FILE_ACK -> FILE_ACK
-            FS_CRS_COMMAND_NAK -> NAK
-            FS_CRS_COMMAND_ACK -> ACK
-            FS_CRS_COMMAND_PING -> PING
-            FS_CRS_COMMAND_CANCEL -> CANCEL
-            else -> null
-        }
+        fun fromValue(value: Int): Command? = entries.firstOrNull { it.value == value }
 
     }
 }
