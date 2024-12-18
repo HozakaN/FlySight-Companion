@@ -58,7 +58,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -88,6 +90,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
+import java.time.format.FormatStyle
+import java.util.Locale
 
 @ExperimentalCoroutinesApi
 @Composable
@@ -379,7 +385,10 @@ fun DeviceResultFilesContainer(
     modifier: Modifier,
     device: ListFlySightDeviceDisplayData
 ) {
-    val resultFiles by device.device.resultFiles.collectAsState()
+    val locales = LocalContext.current.resources.configuration.locales
+    val locale = if (locales.isEmpty) Locale.ROOT else locales[0]
+    val dateTimeFormatter = remember(locale) { DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(locale) }
+    val resultFiles by device.resultFiles.collectAsState()
     Column(
         modifier = modifier.padding(8.dp)
     ) {
@@ -400,13 +409,22 @@ fun DeviceResultFilesContainer(
             }
 
             is LoadingState.Loaded<List<ResultFile>> -> {
-                Row(
+                val mostRecentFile = files.value.maxByOrNull { it.dateTime }
+                Column(
                     modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "${files.value.size} result files"
+                        text = "result files",
+                        style = MaterialTheme.typography.titleSmall
                     )
+                    Text(text = "${files.value.size}")
+                    Spacer(modifier = Modifier.requiredHeight(16.dp))
+                    Text(
+                        text = "Most recent run",
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(text = "${mostRecentFile?.dateTime?.format(dateTimeFormatter)}")
                 }
             }
 
