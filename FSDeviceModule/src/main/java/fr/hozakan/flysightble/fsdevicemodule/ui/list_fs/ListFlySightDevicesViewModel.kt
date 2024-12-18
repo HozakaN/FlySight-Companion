@@ -88,6 +88,15 @@ class ListFlySightDevicesViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
 
+        fsDeviceService.isRefreshingDeviceList
+            .onEach { isRefreshing ->
+                _state.update {
+                    it.copy(
+                        refreshingDeviceList = isRefreshing
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun computeDisplayData(

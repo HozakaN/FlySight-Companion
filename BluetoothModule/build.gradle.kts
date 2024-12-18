@@ -34,9 +34,11 @@ android {
 
 dependencies {
 
+    implementation(libs.blessed.kotlin)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+    implementation(project(":model"))
     implementation(project(":framework"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

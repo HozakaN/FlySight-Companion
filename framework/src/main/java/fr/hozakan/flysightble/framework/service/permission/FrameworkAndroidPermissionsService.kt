@@ -115,6 +115,9 @@ class FrameworkAndroidPermissionsService(
         return ContextCompat.checkSelfPermission(
             application.applicationContext,
             Manifest.permission.BLUETOOTH_CONNECT
+        ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+            application.applicationContext,
+            Manifest.permission.BLUETOOTH_SCAN
         ) == PackageManager.PERMISSION_GRANTED
     }
 
@@ -184,7 +187,7 @@ class FrameworkAndroidPermissionsService(
         }
         val hasPermission =
             activityOperationsService.requestPermissions(
-                Manifest.permission.BLUETOOTH_CONNECT
+                Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN
             )
         if (hasPermission) {
             freeBluetoothCoroutines()
