@@ -43,6 +43,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -515,8 +516,7 @@ class FlySightDeviceImpl(
     @FlowPreview
     @ExperimentalCoroutinesApi
     private suspend fun retrieveResultFiles(): List<ResultFile> {
-        val path = "/"
-        val rootDirContent = loadDirectory(listOf(path))
+        val rootDirContent = loadDirectory(listOf("/"))
         val dateFolders = rootDirContent.filter { it.isDirectory }.filter {
             it.fileName.matches(
                 result_directory_date_regex
@@ -693,7 +693,7 @@ class FlySightDeviceImpl(
         if (scope == null) {
             return false
         }
-        return gatt?.let { connection ->
+        val closed = gatt?.let { connection ->
             val job = scope?.async {
                 try {
                     connection.close()
@@ -709,6 +709,17 @@ class FlySightDeviceImpl(
             }
             job?.await() ?: false
         } ?: false
+
+        if (closed) {
+            _resultFiles.value = LoadingState.Idle
+            _configFile.value = ConfigFileState.Nothing
+//        _logs.value = emptyList()
+            _rawConfigFile.value = FileState.Nothing
+            _services.value = emptyList()
+            scope?.cancel()
+            scope = null
+        }
+        return closed
     }
 
     private fun log(message: String) {

@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -241,7 +242,6 @@ fun FlySightDeviceItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = 192.dp)
-//                .requiredHeight(192.dp)
                 .then(clickableModifier)
         ) {
             when (connectionState) {
@@ -283,7 +283,8 @@ fun FlySightDeviceItem(
                 DeviceConnectionState.Connecting -> {
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
+                            .requiredHeight(height = 192.dp)
                             .padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
@@ -306,7 +307,8 @@ fun FlySightDeviceItem(
                 DeviceConnectionState.ConnectionError -> {
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
+                            .requiredHeight(height = 192.dp)
                             .padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
@@ -326,7 +328,8 @@ fun FlySightDeviceItem(
                 DeviceConnectionState.Disconnected -> {
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
+                            .requiredHeight(height = 192.dp)
                             .padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
@@ -383,8 +386,8 @@ fun FlySightDeviceItemConfigBody(
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.requiredWidth(8.dp))
+//                        CircularProgressIndicator()
+//                        Spacer(modifier = Modifier.requiredWidth(8.dp))
                         Text("Loading result files...")
                     }
                 }
