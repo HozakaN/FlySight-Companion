@@ -73,6 +73,8 @@ class DefaultFsDeviceService(
                             devices
                         }
                     }
+
+                    LoadingState.Idle -> error("Refreshing known device should not be in state Idle")
                 }
             }
     }

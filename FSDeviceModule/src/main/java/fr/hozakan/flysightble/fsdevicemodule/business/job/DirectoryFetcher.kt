@@ -4,6 +4,7 @@ import fr.hozakan.flysightble.model.FileInfo
 import kotlinx.coroutines.flow.StateFlow
 
 interface DirectoryFetcher {
-    fun listDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>>
+    fun flowDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>>
+    suspend fun listDirectory(directoryPath: List<String>): List<FileInfo>
     fun close()
 }
