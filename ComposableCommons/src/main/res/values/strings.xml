@@ -4,4 +4,5 @@
     <string name="misc_reduce">Reduce</string>
     <string name="misc_save">Save</string>
     <string name="misc_cancel">Cancel</string>
+    <string name="misc_neutral">Neutral</string>
 </resources>

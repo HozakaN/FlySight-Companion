@@ -13,11 +13,13 @@ import fr.hozakan.flysightble.fsdevicemodule.ui.device_config.DeviceConfiguratio
 import fr.hozakan.flysightble.fsdevicemodule.ui.device_detail.DeviceDetailViewModel
 import fr.hozakan.flysightble.fsdevicemodule.ui.file.FileScreenViewModel
 import fr.hozakan.flysightble.fsdevicemodule.ui.list_fs.ListFlySightDevicesViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 
 @Module
 internal abstract class ViewModelBindings {
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @InternalCoroutinesApi
     @Binds
     @IntoMap

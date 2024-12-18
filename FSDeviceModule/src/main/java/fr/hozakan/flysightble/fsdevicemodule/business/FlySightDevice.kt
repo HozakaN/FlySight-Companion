@@ -54,6 +54,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 import java.io.IOException
@@ -79,8 +80,8 @@ interface FlySightDevice {
     suspend fun disconnectGatt(): Boolean
     fun flowDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>>
     suspend fun loadDirectory(directoryPath: List<String>): List<FileInfo>
-    fun readFile(fileName: String)
-    fun updateConfigFile(configFile: ConfigFile)
+    suspend fun readFile(fileName: String)
+    suspend fun updateConfigFile(configFile: ConfigFile)
 }
 
 private val result_directory_date_regex =
@@ -416,51 +417,20 @@ class FlySightDeviceImpl(
         val rx = this.rxCharacteristic
             ?: return emptyList()
 
-        directoryFetcher?.close()
-        val fetcher = BleDirectoryFetcher(
-            gatt = gatt,
-            gattCharacteristic = rx,
-            gattTaskQueue = gattTaskQueue
-        )
-        directoryFetcher = fetcher
+        return withContext(Dispatchers.IO) {
+            directoryFetcher?.close()
+            val fetcher = BleDirectoryFetcher(
+                gatt = gatt,
+                gattCharacteristic = rx,
+                gattTaskQueue = gattTaskQueue
+            )
+            directoryFetcher = fetcher
 
-        return fetcher.listDirectory(directoryPath)
-    }
-
-    fun createAndWriteFile(
-        fileName: String,
-        fileContent: String
-    ) {
-        log("Writing file $fileName")
-        val gatt = this.gatt ?: return
-        val rx = this.rxCharacteristic ?: return
-
-        val fileCreator = BleFileCreator(
-            gatt = gatt,
-            gattCharacteristic = rx,
-            gattTaskQueue = gattTaskQueue
-        )
-
-        val fileWriter = BleFileWriter(
-            gatt = gatt,
-            gattCharacteristic = rx,
-            gattTaskQueue = gattTaskQueue
-        )
-        scope?.launch {
-            try {
-                fileCreator.createFile(fileName)
-                try {
-                    fileWriter.writeFile(fileName, fileContent)
-                } catch (e: Exception) {
-                    log("Error writing file : $e")
-                }
-            } catch (e: Exception) {
-                log("Error creating file : $e")
-            }
+            fetcher.listDirectory(directoryPath)
         }
     }
 
-    fun writeFile(
+    private suspend fun writeFile(
         fileName: String,
         fileContent: String
     ) {
@@ -468,29 +438,33 @@ class FlySightDeviceImpl(
         val gatt = this.gatt ?: return
         val rx = this.rxCharacteristic ?: return
 
-        val fileWriter = BleFileWriter(
-            gatt = gatt,
-            gattCharacteristic = rx,
-            gattTaskQueue = gattTaskQueue
-        )
-        scope?.launch {
+        withContext(Dispatchers.IO) {
+            val fileWriter = BleFileWriter(
+                gatt = gatt,
+                gattCharacteristic = rx,
+                gattTaskQueue = gattTaskQueue
+            )
+//        scope?.launch {
             try {
                 fileWriter.writeFile(fileName, fileContent)
             } catch (e: Exception) {
                 log("Error writing file : $e")
             }
+//        }
         }
     }
 
     private suspend fun startPingSystem() {
-        while (_connectionState.value == DeviceConnectionState.Connected) {
-            delay(14_000)
-            val ping = pingDevice()
-            _ping.emit(ping)
-            if (!ping) {
-                log("Device not responding to pings")
-                disconnectGatt()
-                return
+        withContext(Dispatchers.IO) {
+            while (_connectionState.value == DeviceConnectionState.Connected) {
+                delay(14_000)
+                val ping = pingDevice()
+                _ping.emit(ping)
+                if (!ping) {
+                    log("Device not responding to pings")
+                    disconnectGatt()
+                    return@withContext
+                }
             }
         }
     }
@@ -569,56 +543,56 @@ class FlySightDeviceImpl(
 
         log("Reading configuration file")
 
-        val fileReader = BleFileReader(
-            gatt = gatt,
-            gattCharacteristic = rx,
-            gattTaskQueue = gattTaskQueue
-        )
-        try {
-            _file.emit(FileState.Loading)
-            val fileState = fileReader.readFile(file)
-            _file.emit(fileState)
-            if (_rawConfigFile.value is FileState.Loading) {
-                _rawConfigFile.value = fileState
-                if (fileState is FileState.Success) {
-                    val configFile = parser.parse(fileState.content.lines())
-                    _configFile.value = ConfigFileState.Success(configFile)
-                }
-            }
-        } catch (e: Exception) {
-            log("Error reading file : $e")
-        }
-    }
-
-    override fun readFile(fileName: String) {
-        _file.tryEmit(FileState.Loading)
-        log("Reading file $fileName")
-        val gatt = this.gatt ?: return
-        val rx = this.rxCharacteristic ?: return
-
-        val fileReader = BleFileReader(
-            gatt = gatt,
-            gattCharacteristic = rx,
-            gattTaskQueue = gattTaskQueue
-        )
-        scope?.launch {
+        withContext(Dispatchers.IO) {
+            val fileReader = BleFileReader(
+                gatt = gatt,
+                gattCharacteristic = rx,
+                gattTaskQueue = gattTaskQueue
+            )
             try {
-                val fileState = fileReader.readFile(fileName)
+                _file.emit(FileState.Loading)
+                val fileState = fileReader.readFile(file)
                 _file.emit(fileState)
-//                if (_configFile.value is FileState.Loading) {
-//                    _configFile.emit(fileState)
-//                }
+                if (_rawConfigFile.value is FileState.Loading) {
+                    _rawConfigFile.value = fileState
+                    if (fileState is FileState.Success) {
+                        val configFile = parser.parse(fileState.content.lines())
+                        _configFile.value = ConfigFileState.Success(configFile)
+                    }
+                }
             } catch (e: Exception) {
                 log("Error reading file : $e")
             }
         }
     }
 
-    override fun updateConfigFile(configFile: ConfigFile) {
+    override suspend fun readFile(fileName: String) {
+        val gatt = this.gatt ?: return
+        val rx = this.rxCharacteristic ?: return
+        withContext(Dispatchers.IO) {
+            _file.tryEmit(FileState.Loading)
+            log("Reading file $fileName")
+
+            val fileReader = BleFileReader(
+                gatt = gatt,
+                gattCharacteristic = rx,
+                gattTaskQueue = gattTaskQueue
+            )
+//        scope?.launch {
+            try {
+                val fileState = fileReader.readFile(fileName)
+                _file.emit(fileState)
+            } catch (e: Exception) {
+                log("Error reading file : $e")
+            }
+//        }
+        }
+    }
+
+    override suspend fun updateConfigFile(configFile: ConfigFile) {
         val configContent = configEncoder.encodeConfig(configFile)
         writeFile("/config.txt", configContent)
-        _rawConfigFile.value = FileState.Success(configContent)
-        _configFile.value = ConfigFileState.Success(configFile)
+        readCurrentConfigFile()
     }
 
     private fun logReadCharacteristic(uuid: UUID, value: ByteArray) {

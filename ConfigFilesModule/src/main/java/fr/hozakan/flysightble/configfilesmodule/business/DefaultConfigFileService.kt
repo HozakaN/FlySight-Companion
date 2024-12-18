@@ -5,6 +5,8 @@ import fr.hozakan.flusightble.dialog.ConfigFileName
 import fr.hozakan.flusightble.dialog.ConfigFileNameDialog
 import fr.hozakan.flusightble.dialog.DialogResult
 import fr.hozakan.flusightble.dialog.DialogService
+import fr.hozakan.flusightble.dialog.PickConfigurationDialog
+import fr.hozakan.flusightble.dialog.PickConfigurationDialogResult
 import fr.hozakan.flysightble.configfilesmodule.business.parser.CONFIG_FILES_FOLDER
 import fr.hozakan.flysightble.model.ConfigFile
 import kotlinx.coroutines.CoroutineScope
@@ -45,6 +47,7 @@ class DefaultConfigFileService(
             when (val result = dialogService.displayDialog(ConfigFileNameDialog)) {
                 is ConfigFileName -> name = result.name
                 DialogResult.Dismiss -> return configFile
+                else -> error("Save config file result should not have another type")
             }
         }
         val readyConfigFile = configFile.copy(name = name)
@@ -81,6 +84,21 @@ class DefaultConfigFileService(
         file.delete()
         _configs.update {
             it - configFile
+        }
+    }
+
+    override suspend fun userPickConfiguration(): ConfigFile? {
+        val configs = _configs.value
+        if (configs.isEmpty()) return null
+        return when (val result = dialogService.displayDialog(PickConfigurationDialog {
+            configs
+        })) {
+            is PickConfigurationDialogResult -> {
+                result.configFile
+            }
+
+            DialogResult.Dismiss -> null
+            else -> error("Pick config file result should not have another type")
         }
     }
 

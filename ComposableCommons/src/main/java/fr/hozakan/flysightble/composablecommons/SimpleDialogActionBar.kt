@@ -53,3 +53,69 @@ fun SimpleDialogActionBar(
         }
     }
 }
+
+@Composable
+fun SimpleDialogActionBar3Button(
+    onDismissRequest: () -> Unit,
+    onNeutral: () -> Unit,
+    onValidate: () -> Unit,
+    modifier: Modifier = Modifier,
+    showValidateButton: Boolean = true,
+    validateEnabled: Boolean = true,
+    validateButtonText: String = stringResource(id = R.string.misc_save).uppercase(),
+    showNeutralButton: Boolean = true,
+    neutralButtonEnabled: Boolean = true,
+    neutralButtonText: String = stringResource(id = R.string.misc_neutral).uppercase(),
+    showCancelButton: Boolean = true,
+    cancelButtonText: String = stringResource(id = R.string.misc_cancel).uppercase()
+) {
+    if (!showNeutralButton) {
+        SimpleDialogActionBar(
+            onDismissRequest = onDismissRequest,
+            onValidate = onValidate,
+            modifier = modifier,
+            showValidateButton = showValidateButton,
+            validateEnabled = validateEnabled,
+            validateButtonText = validateButtonText,
+            showCancelButton = showCancelButton,
+            cancelButtonText = cancelButtonText
+        )
+    } else {
+        Row(
+            modifier = modifier
+                .requiredHeight(64.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            if (showCancelButton) {
+                TextButton(
+                    onClick = onDismissRequest
+                ) {
+                    Text(
+                        text = cancelButtonText,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            TextButton(
+                onClick = onNeutral
+            ) {
+                Text(
+                    text = neutralButtonText,
+                    color = if (neutralButtonEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
+                )
+            }
+            if (showValidateButton) {
+                TextButton(
+                    onClick = onValidate, enabled = validateEnabled
+                ) {
+                    Text(
+                        text = validateButtonText,
+                        color = if (validateEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+        }
+    }
+}

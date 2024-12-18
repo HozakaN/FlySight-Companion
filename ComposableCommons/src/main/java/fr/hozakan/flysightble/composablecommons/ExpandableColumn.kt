@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 public fun ExpandableColumn(
+    modifier: Modifier = Modifier,
     expanded: Boolean = false,
     headerComposable: @Composable RowScope.(Boolean) -> Unit,
     isExpandable: Boolean = true,
@@ -35,6 +36,7 @@ public fun ExpandableColumn(
     var contentExpanded by remember { mutableStateOf(expanded) }
 
     Column(
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         val clickableModifier = if (isExpandable) Modifier.clickable { contentExpanded = !contentExpanded } else Modifier

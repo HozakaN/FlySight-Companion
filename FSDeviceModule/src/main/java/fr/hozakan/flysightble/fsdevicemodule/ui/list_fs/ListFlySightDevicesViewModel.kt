@@ -7,6 +7,7 @@ import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
 import fr.hozakan.flusightble.userpreferencesmodule.UserPrefService
 import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightble.configfilesmodule.business.ConfigFileService
+import fr.hozakan.flysightble.framework.service.loading.LoadingState
 import fr.hozakan.flysightble.framework.service.permission.AndroidPermissionsService
 import fr.hozakan.flysightble.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightble.fsdevicemodule.business.FsDeviceService
@@ -192,11 +193,45 @@ class ListFlySightDevicesViewModel @Inject constructor(
     }
 
     fun pushConfigToDevice(device: FlySightDevice) {
-        configFileService.configFiles.value.firstOrNull { it.name == device.configFile.value.conf?.name }?.let { configFile ->
-            viewModelScope.launch {
-                fsDeviceService.updateDeviceConfig(device, configFile)
+        configFileService.configFiles.value.firstOrNull { it.name == device.configFile.value.conf?.name }
+            ?.let { configFile ->
+                viewModelScope.launch {
+                    fsDeviceService.updateDeviceConfig(device, configFile)
+                }
             }
-        }
     }
 
+    fun changeDeviceConfiguration(device: ListFlySightDeviceDisplayData) {
+        viewModelScope.launch {
+            fsDeviceService.changeDeviceConfiguration(device)
+                .collect {
+                    when (it) {
+                        is LoadingState.Error -> {
+                            _state.update { state ->
+                                state.copy(
+                                    event = it.error.message?.asEvent() ?: "Unknown error".asEvent()
+                                )
+                            }
+                        }
+
+                        is LoadingState.Loading -> {
+                            _state.update { state ->
+                                state.copy(
+                                    updatingConfiguration = device.uuid
+                                )
+                            }
+                        }
+
+                        LoadingState.Idle -> error("Should not get into that state")
+                        is LoadingState.Loaded<*> -> {
+                            _state.update { state ->
+                                state.copy(
+                                    updatingConfiguration = null
+                                )
+                            }
+                        }
+                    }
+                }
+        }
+    }
 }

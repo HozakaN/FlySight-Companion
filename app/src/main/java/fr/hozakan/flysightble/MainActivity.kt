@@ -60,6 +60,7 @@ import fr.hozakan.flysightble.fsdevicemodule.ui.file.DeviceFileScreen
 import fr.hozakan.flysightble.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
 import fr.hozakan.flysightble.model.ConfigFile
 import fr.hozakan.flysightble.ui.theme.FlySightBLETheme
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
 
 class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
@@ -78,7 +79,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
 
     override fun androidInjector(): AndroidInjector<Any> = androidInjector
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
