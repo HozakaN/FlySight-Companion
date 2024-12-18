@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface FsDeviceService {
     val devices: StateFlow<List<FlySightDevice>>
+    val isRefreshingDeviceList: StateFlow<Boolean>
     fun observeDevice(deviceId: String): Flow<FlySightDevice?>
     suspend fun refreshKnownDevices()
     suspend fun connectToDevice(device: FlySightDevice)

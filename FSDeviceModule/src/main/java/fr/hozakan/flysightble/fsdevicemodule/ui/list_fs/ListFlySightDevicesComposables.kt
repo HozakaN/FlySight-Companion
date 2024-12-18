@@ -129,7 +129,24 @@ fun ListFlySightDevicesScreen(
                 }
             }
         } else {
-            if (state.devices.isEmpty()) {
+            if (state.refreshingDeviceList && state.devices.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.requiredHeight(24.dp))
+                        Text(
+                            text = "Refreshing device list...",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+
+                }
+            } else if (state.devices.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,

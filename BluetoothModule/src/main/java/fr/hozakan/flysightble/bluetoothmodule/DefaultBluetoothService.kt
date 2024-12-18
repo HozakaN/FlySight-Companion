@@ -10,14 +10,21 @@ import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
-import androidx.core.util.size
+import com.welie.blessed.BondState
+import fr.hozakan.flysightble.framework.extension.bytesToHex
 import fr.hozakan.flysightble.framework.service.applifecycle.ActivityLifecycleService
 import fr.hozakan.flysightble.framework.service.async.ActivityOperationsService
+import fr.hozakan.flysightble.framework.service.loading.LoadingState
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
-import java.io.IOException
-import java.util.UUID
 import kotlin.coroutines.resume
 
 class DefaultBluetoothService(
@@ -29,6 +36,8 @@ class DefaultBluetoothService(
     private val bluetoothAdapter: BluetoothAdapter?
 
     private val btAvailabilityContinuations = mutableListOf<CancellableContinuation<Unit>>()
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
         val bluetoothManager = context.getSystemService(BluetoothManager::class.java)
@@ -66,20 +75,44 @@ class DefaultBluetoothService(
     }
 
     @SuppressLint("MissingPermission")
-    override suspend fun getPairedDevices(): List<BluetoothDevice> {
-        val adapter = bluetoothAdapter
-        val devices = mutableListOf<BluetoothDevice>()
-        if (adapter != null) {
-            val bondedDevices = adapter.bondedDevices
-            bondedDevices.onEachIndexed { index, device ->
-                device.bondState
-                Timber.d("device $index : $device")
-                if (isFlySightDevice(device)) {
-                    devices.add(device)
+    override fun getPairedDevices(): Flow<LoadingState<List<BluetoothDevice>>> {
+        return channelFlow {
+            send(LoadingState.Loading())
+            val adapter = bluetoothAdapter
+            val devices = mutableListOf<BluetoothDevice>()
+
+            if (adapter != null) {
+                val scanCallback = object : ScanCallback() {
+                    override fun onScanResult(callbackType: Int, result: ScanResult) {
+                        result.scanRecord?.advertisingDataMap?.let { advertisingData ->
+                            val data2 = advertisingData[255] ?: return@let
+                            if (data2.bytesToHex().length != 8) return@let
+                            val manufacturerId = data2.bytesToHex().run {
+                                substring(2, length - 2)
+                            }
+                            if (manufacturerId == "DB09" && result.isConnectable && result.device.bondState == BondState.BONDED.value) {
+                                devices += result.device
+                                scope.launch {
+                                    send(LoadingState.Loading(devices))
+                                }
+                            }
+                        }
+                    }
                 }
+                adapter.bluetoothLeScanner.startScan(scanCallback)
+                delay(5_000)
+                if (devices.isEmpty()) {
+                    delay(5_000)
+                }
+                if (devices.isEmpty()) {
+                    delay(5_000)
+                }
+                adapter.bluetoothLeScanner.stopScan(scanCallback)
+                send(LoadingState.Loaded(devices))
+            } else {
+                send(LoadingState.Error(IllegalStateException("Bluetooth adapter is null")))
             }
         }
-        return devices
     }
 
     override suspend fun awaitBluetoothAvailability() {
@@ -105,22 +138,6 @@ class DefaultBluetoothService(
             activityLifecycleService.awaitNextResume()
         } catch (e: Exception) {
             Timber.e(e)
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun isFlySightDevice(device: BluetoothDevice): Boolean {
-        return device.name?.startsWith("FlySight") ?: false
-    }
-
-    @SuppressLint("MissingPermission")
-    override suspend fun connect(device: BluetoothDevice) {
-        val uuid = UUID.randomUUID()
-        val adapter = bluetoothAdapter ?: return
-        val socket = try {
-            device.createRfcommSocketToServiceRecord(uuid)
-        } catch (ex: IOException)  {
-            null
         }
     }
 }

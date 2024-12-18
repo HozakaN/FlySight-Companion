@@ -16,6 +16,7 @@ data class ListFlySightDevicesState(
     val bluetoothState: BluetoothService.BluetoothState = BluetoothService.BluetoothState.NotAvailable,
     val devices: List<ListFlySightDeviceDisplayData> = emptyList(),
     val unitSystem: UnitSystem = UnitSystem.Metric,
+    val refreshingDeviceList: Boolean = false,
     val event: FlowEvent<String>? = null
 )
 
