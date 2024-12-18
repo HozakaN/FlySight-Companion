@@ -69,6 +69,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightble.composablecommons.SimpleDialogActionBar
 import fr.hozakan.flysightble.composablecommons.SimpleDialogActionBar3Button
+import fr.hozakan.flysightble.composablecommons.SimpleVerticalDialogActionBar
 import fr.hozakan.flysightble.framework.compose.CustomColors
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.framework.service.loading.LoadingState
@@ -387,7 +388,9 @@ fun DeviceResultFilesContainer(
 ) {
     val locales = LocalContext.current.resources.configuration.locales
     val locale = if (locales.isEmpty) Locale.ROOT else locales[0]
-    val dateTimeFormatter = remember(locale) { DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(locale) }
+    val dateTimeFormatter = remember(locale) {
+        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(locale)
+    }
     val resultFiles by device.resultFiles.collectAsState()
     Column(
         modifier = modifier.padding(8.dp)
@@ -496,11 +499,19 @@ private fun DeviceConfigurationContainer(
     unitSystem: UnitSystem
 ) {
 
+    val warning = !device.isConfigFromSystem || device.hasConfigContentChanged
     var warningDialogOpened by remember { mutableStateOf(false) }
     var menuOpened by remember { mutableStateOf(false) }
+    val mod = if (warning && configFileState is ConfigFileState.Success)  {
+        Modifier.clickable {
+            warningDialogOpened = true
+        }.padding(8.dp)
+    } else {
+        Modifier.padding(8.dp)
+    }
     Column(
         modifier = modifier
-            .padding(8.dp)
+            .then(mod)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -538,7 +549,9 @@ private fun DeviceConfigurationContainer(
         }
         if (updatingConfiguration) {
             Box(
-                modifier = Modifier.fillMaxWidth().weight(1f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
                 contentAlignment = Alignment.CenterStart
             ) {
                 Text("Updating configuration...")
@@ -567,23 +580,23 @@ private fun DeviceConfigurationContainer(
             ConfigFileState.Nothing -> {}
             is ConfigFileState.Success -> {
                 Spacer(modifier = Modifier.requiredHeight(16.dp))
-                val warning = !device.isConfigFromSystem || device.hasConfigContentChanged
-                Text(text = configFileState.config.name.ifBlank { "No name" })
                 if (warning) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    IconButton(
-                        onClick = {
-                            warningDialogOpened = true
-                        }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Text(text = configFileState.config.name.ifBlank { "No name" })
+                        Spacer(modifier = Modifier.weight(1f))
                         Icon(
+                            modifier = Modifier.requiredSize(24.dp),
                             imageVector = Icons.Default.Warning,
                             contentDescription = "There is issues with the configuration",
                             tint = CustomColors.Orange
                         )
                     }
+                } else {
+                    Text(text = configFileState.config.name.ifBlank { "No name" })
                 }
-                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                Spacer(modifier = Modifier.requiredHeight(16.dp))
                 Text(
                     "Elevation : ${configFileState.config.dzElev} ${unitSystem.distanceText}",
                 )
@@ -607,10 +620,18 @@ private fun DeviceConfigurationContainer(
             configFileState = configFileState,
             device = device,
             onDismissRequest = { warningDialogOpened = false },
-            onUploadConfigToSystem = onUploadConfigToSystem,
-            onUpdateSystemConfClicked = onUpdateSystemConfClicked,
-            onPushConfigToDeviceClicked = onPushConfigToDeviceClicked,
-            unitSystem = unitSystem
+            onUploadConfigToSystem = {
+                warningDialogOpened = false
+                onUploadConfigToSystem()
+            },
+            onUpdateSystemConfClicked = {
+                warningDialogOpened = false
+                onUpdateSystemConfClicked()
+            },
+            onPushConfigToDeviceClicked = {
+                warningDialogOpened = false
+                onPushConfigToDeviceClicked()
+            }
         )
     }
 }
@@ -622,47 +643,49 @@ private fun DeviceConfigurationMisMatchDialog(
     onDismissRequest: () -> Unit,
     onUploadConfigToSystem: () -> Unit,
     onUpdateSystemConfClicked: () -> Unit,
-    onPushConfigToDeviceClicked: () -> Unit,
-    unitSystem: UnitSystem
+    onPushConfigToDeviceClicked: () -> Unit
 ) {
 
     Dialog(
         onDismissRequest = onDismissRequest
     ) {
-        Column(
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = device.name,
-                style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.requiredHeight(16.dp))
-            if (!device.isConfigFromSystem) {
+        Card {
+            Column(
+                modifier = Modifier.padding(8.dp)
+            ) {
                 Text(
-                    text = "Would you like to upload this device configuration on your phone ?",
-                    color = CustomColors.Orange
+                    modifier = Modifier.fillMaxWidth(),
+                    text = device.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center
                 )
-                Spacer(modifier = Modifier.requiredHeight(8.dp))
-                SimpleDialogActionBar(
-                    onDismissRequest = onDismissRequest,
-                    onValidate = onUploadConfigToSystem,
-                    validateButtonText = "Upload".uppercase()
-                )
-            } else if (device.hasConfigContentChanged) {
-                Text(
-                    text = "The FlySight configuration differs from your local config file named ${configFileState.conf?.name}",
-                    color = CustomColors.Orange
-                )
-                Spacer(modifier = Modifier.requiredHeight(8.dp))
-                SimpleDialogActionBar3Button(
-                    onDismissRequest = onDismissRequest,
-                    onNeutral = onUpdateSystemConfClicked,
-                    onValidate = onPushConfigToDeviceClicked,
-                    validateButtonText = "Update FlySight conf".uppercase(),
-                    neutralButtonText = "Update local conf".uppercase()
-                )
+                Spacer(modifier = Modifier.requiredHeight(16.dp))
+                if (!device.isConfigFromSystem) {
+                    Text(
+                        text = "Would you like to upload this device configuration on your phone ?",
+                        color = CustomColors.Orange
+                    )
+                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+                    SimpleDialogActionBar(
+                        onDismissRequest = onDismissRequest,
+                        onValidate = onUploadConfigToSystem,
+                        validateButtonText = "Upload".uppercase()
+                    )
+                } else if (device.hasConfigContentChanged) {
+                    Text(
+                        text = "The FlySight configuration differs from your local config file named ${configFileState.conf?.name}",
+                        color = CustomColors.Orange
+                    )
+                    Spacer(modifier = Modifier.requiredHeight(16.dp))
+                    SimpleVerticalDialogActionBar(
+                        onDismissRequest = onDismissRequest,
+                        onNeutral = onUpdateSystemConfClicked,
+                        onValidate = onPushConfigToDeviceClicked,
+                        validateButtonText = "Update FlySight conf".uppercase(),
+                        neutralButtonText = "Update local conf".uppercase(),
+                        cancelButtonText = "Don't do anything".uppercase()
+                    )
+                }
             }
         }
     }
@@ -1029,8 +1052,7 @@ fun DeviceConfigurationMisMatchDialogWithConfigContentChangedPreview() {
         onDismissRequest = {},
         onUploadConfigToSystem = {},
         onUpdateSystemConfClicked = {},
-        onPushConfigToDeviceClicked = {},
-        unitSystem = UnitSystem.Metric
+        onPushConfigToDeviceClicked = {}
     )
 }
 
@@ -1051,8 +1073,7 @@ fun DeviceConfigurationMisMatchDialogWithConfigNotFromSystemPreview() {
         onDismissRequest = {},
         onUploadConfigToSystem = {},
         onUpdateSystemConfClicked = {},
-        onPushConfigToDeviceClicked = {},
-        unitSystem = UnitSystem.Metric
+        onPushConfigToDeviceClicked = {}
     )
 }
 
