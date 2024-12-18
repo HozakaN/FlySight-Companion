@@ -17,6 +17,7 @@ data class ListFlySightDevicesState(
     val devices: List<ListFlySightDeviceDisplayData> = emptyList(),
     val unitSystem: UnitSystem = UnitSystem.Metric,
     val refreshingDeviceList: Boolean = false,
+    val updatingConfiguration: DeviceId? = null,
     val event: FlowEvent<String>? = null
 )
 

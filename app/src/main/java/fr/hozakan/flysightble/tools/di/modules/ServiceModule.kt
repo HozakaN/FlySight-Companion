@@ -55,11 +55,13 @@ class ServiceModule {
     fun provideFsDeviceService(
         baseApplication: BaseApplication,
         bluetoothService: BluetoothService,
-        configEncoder: ConfigEncoder
+        configEncoder: ConfigEncoder,
+        configFileService: ConfigFileService
     ): FsDeviceService = DefaultFsDeviceService(
         baseApplication.applicationContext,
         bluetoothService,
-        configEncoder
+        configEncoder,
+        configFileService
     )
 
     @Singleton

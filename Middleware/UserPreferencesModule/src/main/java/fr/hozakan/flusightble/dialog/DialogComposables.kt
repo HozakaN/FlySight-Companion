@@ -41,6 +41,12 @@ fun DialogHandler() {
                     dialItem.second.resume(result)
                 }
             }
+            is PickConfigurationDialog -> {
+                dial.Content { result ->
+                    dialog = null
+                    dialItem.second.resume(result)
+                }
+            }
             else -> {}
         }
     }

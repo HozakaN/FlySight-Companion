@@ -5,17 +5,21 @@ import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredSize
@@ -23,14 +27,20 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -44,15 +54,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.intl.LocaleList
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
-import fr.hozakan.flysightble.composablecommons.ExpandableColumn
+import fr.hozakan.flysightble.composablecommons.SimpleDialogActionBar
+import fr.hozakan.flysightble.composablecommons.SimpleDialogActionBar3Button
 import fr.hozakan.flysightble.framework.compose.CustomColors
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.framework.service.loading.LoadingState
@@ -71,7 +87,13 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
+import java.time.format.FormatStyle
+import java.util.Locale
 
 @ExperimentalCoroutinesApi
 @Composable
@@ -191,6 +213,7 @@ fun ListFlySightDevicesScreen(
                         FlySightDeviceItem(
                             device = device,
                             unitSystem = state.unitSystem,
+                            updatingConfiguration = state.updatingConfiguration == device.uuid,
                             onConnectionClicked = {
                                 viewModel.connectDevice(device)
                             },
@@ -205,6 +228,9 @@ fun ListFlySightDevicesScreen(
                             },
                             onPushConfigToDeviceClicked = {
                                 viewModel.pushConfigToDevice(device)
+                            },
+                            onChangeDeviceConfigurationClicked = {
+                                viewModel.changeDeviceConfiguration(device)
                             }
                         )
                     }
@@ -219,11 +245,13 @@ fun ListFlySightDevicesScreen(
 fun FlySightDeviceItem(
     device: ListFlySightDeviceDisplayData,
     unitSystem: UnitSystem,
+    updatingConfiguration: Boolean,
     onConnectionClicked: () -> Unit,
     onDeviceClicked: () -> Unit,
     onUploadConfigToSystem: () -> Unit,
     onUpdateSystemConfClicked: () -> Unit,
-    onPushConfigToDeviceClicked: () -> Unit
+    onPushConfigToDeviceClicked: () -> Unit,
+    onChangeDeviceConfigurationClicked: () -> Unit
 ) {
     Card(
         colors = CardDefaults.cardColors(
@@ -241,7 +269,6 @@ fun FlySightDeviceItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = 192.dp)
-//                .requiredHeight(192.dp)
                 .then(clickableModifier)
         ) {
             when (connectionState) {
@@ -271,11 +298,13 @@ fun FlySightDeviceItem(
                         val configFileState by device.configFile.collectAsState()
                         FlySightDeviceItemConfigBody(
                             device = device,
+                            updatingConfiguration = updatingConfiguration,
                             configFileState = configFileState,
                             unitSystem = unitSystem,
                             onUploadConfigToSystem = onUploadConfigToSystem,
                             onUpdateSystemConfClicked = onUpdateSystemConfClicked,
-                            onPushConfigToDeviceClicked = onPushConfigToDeviceClicked
+                            onPushConfigToDeviceClicked = onPushConfigToDeviceClicked,
+                            onChangeDeviceConfigurationClicked = onChangeDeviceConfigurationClicked
                         )
                     }
                 }
@@ -283,7 +312,8 @@ fun FlySightDeviceItem(
                 DeviceConnectionState.Connecting -> {
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
+                            .requiredHeight(height = 192.dp)
                             .padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
@@ -306,7 +336,8 @@ fun FlySightDeviceItem(
                 DeviceConnectionState.ConnectionError -> {
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
+                            .requiredHeight(height = 192.dp)
                             .padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
@@ -326,7 +357,8 @@ fun FlySightDeviceItem(
                 DeviceConnectionState.Disconnected -> {
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
+                            .requiredHeight(height = 192.dp)
                             .padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
@@ -349,77 +381,201 @@ fun FlySightDeviceItem(
 }
 
 @Composable
+fun DeviceResultFilesContainer(
+    modifier: Modifier,
+    device: ListFlySightDeviceDisplayData
+) {
+    val locales = LocalContext.current.resources.configuration.locales
+    val locale = if (locales.isEmpty) Locale.ROOT else locales[0]
+    val dateTimeFormatter = remember(locale) { DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(locale) }
+    val resultFiles by device.resultFiles.collectAsState()
+    Column(
+        modifier = modifier.padding(8.dp)
+    ) {
+        Text(
+            text = "Results",
+            style = MaterialTheme.typography.titleMedium
+        )
+        when (val files = resultFiles) {
+            is LoadingState.Error<List<ResultFile>> -> {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Error loading result files"
+                    )
+                }
+            }
+
+            is LoadingState.Loaded<List<ResultFile>> -> {
+                val mostRecentFile = files.value.maxByOrNull { it.dateTime }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "result files",
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(text = "${files.value.size}")
+                    Spacer(modifier = Modifier.requiredHeight(16.dp))
+                    Text(
+                        text = "Most recent run",
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(text = "${mostRecentFile?.dateTime?.format(dateTimeFormatter)}")
+                }
+            }
+
+            LoadingState.Idle,
+            is LoadingState.Loading<List<ResultFile>> -> {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Loading result files...")
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
 fun FlySightDeviceItemConfigBody(
     device: ListFlySightDeviceDisplayData,
+    updatingConfiguration: Boolean,
     configFileState: ConfigFileState,
     unitSystem: UnitSystem,
     onUploadConfigToSystem: () -> Unit,
     onUpdateSystemConfClicked: () -> Unit,
-    onPushConfigToDeviceClicked: () -> Unit
+    onPushConfigToDeviceClicked: () -> Unit,
+    onChangeDeviceConfigurationClicked: () -> Unit
 ) {
-    DeviceConfigurationContainer(
-        configFileState,
-        device,
-        onUploadConfigToSystem,
-        onUpdateSystemConfClicked,
-        onPushConfigToDeviceClicked,
-        unitSystem
-    )
-    Spacer(modifier = Modifier.requiredHeight(8.dp))
-    val resultFiles by device.device.resultFiles.collectAsState()
-    ExpandableColumn(
-        headerComposable = {
-            when (val files = resultFiles) {
-                is LoadingState.Error<List<ResultFile>> -> {
-                    Text("Error loading result files")
-                }
-
-                is LoadingState.Loaded<List<ResultFile>> -> {
-                    Text("Result files count : ${files.value.size}")
-                }
-
-                LoadingState.Idle,
-                is LoadingState.Loading<List<ResultFile>> -> {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.requiredWidth(8.dp))
-                        Text("Loading result files...")
-                    }
-                }
-            }
-        },
-        isExpandable = false
-    ) {}
+    val rows = 2
+    FlowRow(
+        modifier = Modifier.padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        maxItemsInEachRow = rows
+    ) {
+        val itemModifier = Modifier
+            .padding(8.dp)
+            .height(220.dp)
+            .weight(1f)
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.onSurface)
+        DeviceConfigurationContainer(
+            modifier = itemModifier,
+            configFileState = configFileState,
+            updatingConfiguration = updatingConfiguration,
+            device = device,
+            onUploadConfigToSystem = onUploadConfigToSystem,
+            onUpdateSystemConfClicked = onUpdateSystemConfClicked,
+            onPushConfigToDeviceClicked = onPushConfigToDeviceClicked,
+            onChangeDeviceConfigurationClicked = onChangeDeviceConfigurationClicked,
+            unitSystem = unitSystem
+        )
+        DeviceResultFilesContainer(
+            modifier = itemModifier,
+            device = device
+        )
+    }
 }
 
 @Composable
 private fun DeviceConfigurationContainer(
+    modifier: Modifier = Modifier,
     configFileState: ConfigFileState,
+    updatingConfiguration: Boolean,
     device: ListFlySightDeviceDisplayData,
     onUploadConfigToSystem: () -> Unit,
     onUpdateSystemConfClicked: () -> Unit,
     onPushConfigToDeviceClicked: () -> Unit,
+    onChangeDeviceConfigurationClicked: () -> Unit,
     unitSystem: UnitSystem
 ) {
-    ExpandableColumn(
-        headerComposable = {
-            when (configFileState) {
-                is ConfigFileState.Error -> {
+
+    var warningDialogOpened by remember { mutableStateOf(false) }
+    var menuOpened by remember { mutableStateOf(false) }
+    Column(
+        modifier = modifier
+            .padding(8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Configuration",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            if (!updatingConfiguration) {
+                IconButton(
+                    modifier = Modifier.requiredSize(24.dp),
+                    onClick = {
+                        menuOpened = true
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "Device menu"
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuOpened,
+                    onDismissRequest = { menuOpened = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(text = "Change configuration") },
+                        onClick = {
+                            menuOpened = false
+                            onChangeDeviceConfigurationClicked()
+                        }
+                    )
+                }
+            }
+        }
+        if (updatingConfiguration) {
+            Box(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text("Updating configuration...")
+            }
+            return
+        }
+        when (configFileState) {
+            is ConfigFileState.Error -> {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text("Error loading device configuration")
                 }
+            }
 
-                ConfigFileState.Loading -> {
+            ConfigFileState.Loading -> {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text("Configuration loading...")
                 }
+            }
 
-                ConfigFileState.Nothing -> {}
-                is ConfigFileState.Success -> {
-                    val warning = /*!device.isConfigFromSystem ||*/ device.hasConfigContentChanged
-                    Text("Config name: ${configFileState.config.name.ifBlank { "No name" }}")
-                    if (warning) {
-                        Spacer(modifier = Modifier.weight(1f))
+            ConfigFileState.Nothing -> {}
+            is ConfigFileState.Success -> {
+                Spacer(modifier = Modifier.requiredHeight(16.dp))
+                val warning = !device.isConfigFromSystem || device.hasConfigContentChanged
+                Text(text = configFileState.config.name.ifBlank { "No name" })
+                if (warning) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(
+                        onClick = {
+                            warningDialogOpened = true
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Warning,
                             contentDescription = "There is issues with the configuration",
@@ -427,61 +583,86 @@ private fun DeviceConfigurationContainer(
                         )
                     }
                 }
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                Text(
+                    "Elevation : ${configFileState.config.dzElev} ${unitSystem.distanceText}",
+                )
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                Text(
+                    "${configFileState.config.speeches.size} speeches",
+                )
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                Text(
+                    "${configFileState.config.alarms.size} alarms",
+                )
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                Text(
+                    "${configFileState.config.silenceWindows.size} silence windows",
+                )
             }
-        },
-        isExpandable = configFileState is ConfigFileState.Success
+        }
+    }
+    if (warningDialogOpened) {
+        DeviceConfigurationMisMatchDialog(
+            configFileState = configFileState,
+            device = device,
+            onDismissRequest = { warningDialogOpened = false },
+            onUploadConfigToSystem = onUploadConfigToSystem,
+            onUpdateSystemConfClicked = onUpdateSystemConfClicked,
+            onPushConfigToDeviceClicked = onPushConfigToDeviceClicked,
+            unitSystem = unitSystem
+        )
+    }
+}
+
+@Composable
+private fun DeviceConfigurationMisMatchDialog(
+    configFileState: ConfigFileState,
+    device: ListFlySightDeviceDisplayData,
+    onDismissRequest: () -> Unit,
+    onUploadConfigToSystem: () -> Unit,
+    onUpdateSystemConfClicked: () -> Unit,
+    onPushConfigToDeviceClicked: () -> Unit,
+    unitSystem: UnitSystem
+) {
+
+    Dialog(
+        onDismissRequest = onDismissRequest
     ) {
-        if (!device.isConfigFromSystem) {
-            Button(
-                onClick = onUploadConfigToSystem
-            ) {
-                Text("Upload to my config files")
-            }
-        } else if (device.hasConfigContentChanged) {
-            Spacer(modifier = Modifier.requiredHeight(8.dp))
+        Column(
+            modifier = Modifier.padding(8.dp)
+        ) {
             Text(
-                text = "The FlySight configuration differs from your local config file named ${configFileState.conf?.name}",
-                color = CustomColors.Orange
+                modifier = Modifier.fillMaxWidth(),
+                text = device.name,
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.requiredHeight(8.dp))
-            Row {
-                Button(
-                    modifier = Modifier.weight(1f),
-                    onClick = onUpdateSystemConfClicked
-                ) {
-                    Text("Update local config")
-                }
-                Spacer(modifier = Modifier.requiredWidth(8.dp))
-                Button(
-                    modifier = Modifier.weight(1f),
-                    onClick = onPushConfigToDeviceClicked
-                ) {
-                    Text("Update FlySight config")
-                }
-            }
-        } else {
-            when (configFileState) {
-                is ConfigFileState.Error -> {}
-                ConfigFileState.Loading -> {}
-                ConfigFileState.Nothing -> {}
-                is ConfigFileState.Success -> {
-                    Spacer(modifier = Modifier.requiredHeight(8.dp))
-                    Text(
-                        "Dropzone altitude : ${configFileState.config.dzElev} ${unitSystem.distanceText}",
-                    )
-                    Spacer(modifier = Modifier.requiredHeight(8.dp))
-                    Text(
-                        "${configFileState.config.speeches.size} speeches",
-                    )
-                    Spacer(modifier = Modifier.requiredHeight(8.dp))
-                    Text(
-                        "${configFileState.config.alarms.size} alarms",
-                    )
-                    Spacer(modifier = Modifier.requiredHeight(8.dp))
-                    Text(
-                        "${configFileState.config.silenceWindows.size} silence windows",
-                    )
-                }
+            Spacer(modifier = Modifier.requiredHeight(16.dp))
+            if (!device.isConfigFromSystem) {
+                Text(
+                    text = "Would you like to upload this device configuration on your phone ?",
+                    color = CustomColors.Orange
+                )
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                SimpleDialogActionBar(
+                    onDismissRequest = onDismissRequest,
+                    onValidate = onUploadConfigToSystem,
+                    validateButtonText = "Upload".uppercase()
+                )
+            } else if (device.hasConfigContentChanged) {
+                Text(
+                    text = "The FlySight configuration differs from your local config file named ${configFileState.conf?.name}",
+                    color = CustomColors.Orange
+                )
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                SimpleDialogActionBar3Button(
+                    onDismissRequest = onDismissRequest,
+                    onNeutral = onUpdateSystemConfClicked,
+                    onValidate = onPushConfigToDeviceClicked,
+                    validateButtonText = "Update FlySight conf".uppercase(),
+                    neutralButtonText = "Update local conf".uppercase()
+                )
             }
         }
     }
@@ -619,11 +800,13 @@ fun FlySightDeviceItemDisconnectedPreview() {
             deviceConfig = ConfigFileState.Nothing
         ),
         unitSystem = UnitSystem.Metric,
+        updatingConfiguration = false,
         onConnectionClicked = {},
         onDeviceClicked = {},
         onUpdateSystemConfClicked = {},
         onUploadConfigToSystem = {},
-        onPushConfigToDeviceClicked = {}
+        onPushConfigToDeviceClicked = {},
+        onChangeDeviceConfigurationClicked = {}
     )
 }
 
@@ -640,11 +823,13 @@ fun FlySightDeviceItemConnectingPreview() {
             deviceConfig = ConfigFileState.Nothing
         ),
         unitSystem = UnitSystem.Metric,
+        updatingConfiguration = false,
         onConnectionClicked = {},
         onDeviceClicked = {},
         onUpdateSystemConfClicked = {},
         onUploadConfigToSystem = {},
-        onPushConfigToDeviceClicked = {}
+        onPushConfigToDeviceClicked = {},
+        onChangeDeviceConfigurationClicked = {}
     )
 }
 
@@ -655,19 +840,21 @@ fun FlySightDeviceItemConnectedAndNominalConfigFilePreview() {
         device = ListFlySightDeviceDisplayData(
             device = FakeDeviceImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
-                configFileName = "Distance Le Puy"
-
+                configFileName = "Distance Le Puy",
+                initialConfigFileState = ConfigFileState.Success(defaultConfigFile().copy(name = "Distance Le Puy"))
             ),
             isConfigFromSystem = true,
             hasConfigContentChanged = false,
             deviceConfig = ConfigFileState.Nothing
         ),
         unitSystem = UnitSystem.Metric,
+        updatingConfiguration = false,
         onConnectionClicked = {},
         onDeviceClicked = {},
         onUpdateSystemConfClicked = {},
         onUploadConfigToSystem = {},
-        onPushConfigToDeviceClicked = {}
+        onPushConfigToDeviceClicked = {},
+        onChangeDeviceConfigurationClicked = {}
     )
 }
 
@@ -677,18 +864,21 @@ fun FlySightDeviceItemConnectedAndConfigFileUnknownPreview() {
     FlySightDeviceItem(
         device = ListFlySightDeviceDisplayData(
             device = FakeDeviceImpl(
-                initialConnectionState = DeviceConnectionState.Connected
+                initialConnectionState = DeviceConnectionState.Connected,
+                initialConfigFileState = ConfigFileState.Success(defaultConfigFile().copy(name = "Distance Le Puy"))
             ),
             isConfigFromSystem = false,
             hasConfigContentChanged = false,
             deviceConfig = ConfigFileState.Nothing
         ),
         unitSystem = UnitSystem.Metric,
+        updatingConfiguration = false,
         onConnectionClicked = {},
         onDeviceClicked = {},
         onUpdateSystemConfClicked = {},
         onUploadConfigToSystem = {},
-        onPushConfigToDeviceClicked = {}
+        onPushConfigToDeviceClicked = {},
+        onChangeDeviceConfigurationClicked = {}
     )
 }
 
@@ -699,18 +889,95 @@ fun FlySightDeviceItemConnectedAndConfigFileDiffersPreview() {
         device = ListFlySightDeviceDisplayData(
             device = FakeDeviceImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
-                configFileName = "Speed Corbas"
+                initialResultFileState = LoadingState.Loaded(
+                    listOf(
+                        ResultFile(
+                            "result1",
+                            LocalDateTime.now()
+                        )
+                    )
+                ),
+                configFileName = "Speed Corbas",
+                initialConfigFileState = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas"))
             ),
             isConfigFromSystem = true,
             hasConfigContentChanged = true,
-            deviceConfig = ConfigFileState.Nothing
+            deviceConfig = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas"))
         ),
         unitSystem = UnitSystem.Metric,
+        updatingConfiguration = false,
         onConnectionClicked = {},
         onDeviceClicked = {},
         onUpdateSystemConfClicked = {},
         onUploadConfigToSystem = {},
-        onPushConfigToDeviceClicked = {}
+        onPushConfigToDeviceClicked = {},
+        onChangeDeviceConfigurationClicked = {}
+    )
+}
+
+@Preview
+@Composable
+fun FlySightDeviceItemConnectedAndConfigFileLoadingPreview() {
+    FlySightDeviceItem(
+        device = ListFlySightDeviceDisplayData(
+            device = FakeDeviceImpl(
+                initialConnectionState = DeviceConnectionState.Connected,
+                initialResultFileState = LoadingState.Loaded(
+                    listOf(
+                        ResultFile(
+                            "result1",
+                            LocalDateTime.now()
+                        )
+                    )
+                ),
+                initialConfigFileState = ConfigFileState.Loading,
+                configFileName = "Speed Corbas"
+            ),
+            isConfigFromSystem = true,
+            hasConfigContentChanged = true,
+            deviceConfig = ConfigFileState.Loading
+        ),
+        unitSystem = UnitSystem.Metric,
+        updatingConfiguration = false,
+        onConnectionClicked = {},
+        onDeviceClicked = {},
+        onUpdateSystemConfClicked = {},
+        onUploadConfigToSystem = {},
+        onPushConfigToDeviceClicked = {},
+        onChangeDeviceConfigurationClicked = {}
+    )
+}
+
+@Preview
+@Composable
+fun FlySightDeviceItemConnectedAndUpdatingConfigurationPreview() {
+    FlySightDeviceItem(
+        device = ListFlySightDeviceDisplayData(
+            device = FakeDeviceImpl(
+                initialConnectionState = DeviceConnectionState.Connected,
+                initialResultFileState = LoadingState.Loaded(
+                    listOf(
+                        ResultFile(
+                            "result1",
+                            LocalDateTime.now()
+                        )
+                    )
+                ),
+                initialConfigFileState = ConfigFileState.Loading,
+                configFileName = "Speed Corbas"
+            ),
+            isConfigFromSystem = true,
+            hasConfigContentChanged = true,
+            deviceConfig = ConfigFileState.Loading
+        ),
+        unitSystem = UnitSystem.Metric,
+        updatingConfiguration = true,
+        onConnectionClicked = {},
+        onDeviceClicked = {},
+        onUpdateSystemConfClicked = {},
+        onUploadConfigToSystem = {},
+        onPushConfigToDeviceClicked = {},
+        onChangeDeviceConfigurationClicked = {}
     )
 }
 
@@ -727,16 +994,72 @@ fun FlySightDeviceItemErrorPreview() {
             deviceConfig = ConfigFileState.Nothing
         ),
         unitSystem = UnitSystem.Metric,
+        updatingConfiguration = false,
         onConnectionClicked = {},
         onDeviceClicked = {},
         onUpdateSystemConfClicked = {},
         onUploadConfigToSystem = {},
-        onPushConfigToDeviceClicked = {}
+        onPushConfigToDeviceClicked = {},
+        onChangeDeviceConfigurationClicked = {}
+    )
+}
+
+@Preview
+@Composable
+fun DeviceConfigurationMisMatchDialogWithConfigContentChangedPreview() {
+    DeviceConfigurationMisMatchDialog(
+        configFileState = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas")),
+        device = ListFlySightDeviceDisplayData(
+            device = FakeDeviceImpl(
+                initialConnectionState = DeviceConnectionState.Connected,
+                initialResultFileState = LoadingState.Loaded(
+                    listOf(
+                        ResultFile(
+                            "result1",
+                            LocalDateTime.now()
+                        )
+                    )
+                ),
+                configFileName = "Speed Corbas"
+            ),
+            isConfigFromSystem = true,
+            hasConfigContentChanged = true,
+            deviceConfig = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas"))
+        ),
+        onDismissRequest = {},
+        onUploadConfigToSystem = {},
+        onUpdateSystemConfClicked = {},
+        onPushConfigToDeviceClicked = {},
+        unitSystem = UnitSystem.Metric
+    )
+}
+
+@Preview
+@Composable
+fun DeviceConfigurationMisMatchDialogWithConfigNotFromSystemPreview() {
+    DeviceConfigurationMisMatchDialog(
+        configFileState = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas")),
+        device = ListFlySightDeviceDisplayData(
+            device = FakeDeviceImpl(
+                initialConnectionState = DeviceConnectionState.Connected,
+                configFileName = "Speed Corbas"
+            ),
+            isConfigFromSystem = false,
+            hasConfigContentChanged = false,
+            deviceConfig = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas"))
+        ),
+        onDismissRequest = {},
+        onUploadConfigToSystem = {},
+        onUpdateSystemConfClicked = {},
+        onPushConfigToDeviceClicked = {},
+        unitSystem = UnitSystem.Metric
     )
 }
 
 private class FakeDeviceImpl(
     initialConnectionState: DeviceConnectionState = DeviceConnectionState.Disconnected,
+    initialResultFileState: LoadingState<List<ResultFile>> = LoadingState.Idle,
+    initialConfigFileState: ConfigFileState = ConfigFileState.Nothing,
     private val configFileName: String = "",
     override val name: String = "Fake device"
 ) : FlySightDevice {
@@ -746,12 +1069,11 @@ private class FakeDeviceImpl(
         get() = "address"
     override val connectionState: StateFlow<DeviceConnectionState> =
         MutableStateFlow(initialConnectionState)
-    override val configFile: StateFlow<ConfigFileState>
-        get() = MutableStateFlow(ConfigFileState.Success(defaultConfigFile().copy(name = configFileName)))
+    override val configFile: StateFlow<ConfigFileState> = MutableStateFlow(initialConfigFileState)
     override val rawConfigFile: StateFlow<FileState>
         get() = MutableStateFlow(FileState.Nothing)
-    override val resultFiles: StateFlow<LoadingState<List<ResultFile>>>
-        get() = MutableStateFlow(LoadingState.Idle)
+    override val resultFiles: StateFlow<LoadingState<List<ResultFile>>> =
+        MutableStateFlow(initialResultFileState).asStateFlow()
     override val logs: StateFlow<List<String>>
         get() = MutableStateFlow(emptyList())
     override val fileReceived: SharedFlow<FileState>
@@ -770,7 +1092,7 @@ private class FakeDeviceImpl(
         return emptyList()
     }
 
-    override fun readFile(fileName: String) {}
-    override fun updateConfigFile(configFile: ConfigFile) {}
+    override suspend fun readFile(fileName: String) {}
+    override suspend fun updateConfigFile(configFile: ConfigFile) {}
 
 }
