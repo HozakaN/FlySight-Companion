@@ -13,7 +13,7 @@ sealed class LoadingState<out R> {
      * Loading state: the operation is actively executing.
      *
      */
-    data class Loading<out T>(val currentLoad: T? = null) : LoadingState<T>()
+    data class Loading<out T>(val currentLoad: T? = null, val increment: Int = 0) : LoadingState<T>()
 
     /**
      * Loaded state: the operation succeeded, holding its value

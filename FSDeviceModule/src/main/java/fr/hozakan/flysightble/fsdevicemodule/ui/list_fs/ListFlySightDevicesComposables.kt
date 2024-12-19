@@ -154,7 +154,8 @@ fun ListFlySightDevicesScreen(
                 }
             }
         } else {
-            if (state.refreshingDeviceList && state.devices.isEmpty()) {
+            val refreshingDeviceList = state.refreshingDeviceList
+            if (refreshingDeviceList is LoadingState.Loading && state.devices.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -162,12 +163,37 @@ fun ListFlySightDevicesScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        Spacer(modifier = Modifier.weight(3f))
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.requiredHeight(24.dp))
+
+                        val text = when (refreshingDeviceList.increment) {
+                            1 -> { """Refreshing device list...
+                                |Taking a bit longer than expected...
+                            """.trimMargin()
+                            }
+                            2 -> {
+                                """Refreshing device list...
+                                    |
+                                    |Try putting your FlySight in pairing mode
+                                    |by short pressing the power button twice
+                                """.trimMargin()
+                            }
+                            else -> { "Refreshing device list..." }
+                        }
                         Text(
-                            text = "Refreshing device list...",
+                            text = text,
                             style = MaterialTheme.typography.titleMedium
                         )
+                        Spacer(modifier = Modifier.weight(3f))
+                        TextButton(
+                            onClick = {
+                                viewModel.onCancelScanClicked()
+                            }
+                        ) {
+                            Text("Cancel")
+                        }
+                        Spacer(modifier = Modifier.weight(2f))
                     }
 
                 }
@@ -503,9 +529,11 @@ private fun DeviceConfigurationContainer(
     var warningDialogOpened by remember { mutableStateOf(false) }
     var menuOpened by remember { mutableStateOf(false) }
     val mod = if (warning && configFileState is ConfigFileState.Success)  {
-        Modifier.clickable {
-            warningDialogOpened = true
-        }.padding(8.dp)
+        Modifier
+            .clickable {
+                warningDialogOpened = true
+            }
+            .padding(8.dp)
     } else {
         Modifier.padding(8.dp)
     }
