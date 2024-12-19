@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import fr.hozakan.flysightble.bluetoothmodule.GattTaskQueue
 import fr.hozakan.flysightble.fsdevicemodule.business.job.DirectoryFetcher
+import fr.hozakan.flysightble.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightble.model.FileInfo
 import fr.hozakan.flysightble.model.ble.FlySightCharacteristic
 import kotlinx.coroutines.CompletableDeferred
@@ -20,7 +21,8 @@ import java.util.GregorianCalendar
 class BleDirectoryFetcher(
     private val gatt: BluetoothGatt,
     private val gattCharacteristic: BluetoothGattCharacteristic,
-    private val gattTaskQueue: GattTaskQueue
+    private val gattTaskQueue: GattTaskQueue,
+    private val scheduler: FlySightJobScheduler
 ) : DirectoryFetcher {
 
     private val _directory = MutableStateFlow<List<FileInfo>>(emptyList())
@@ -57,25 +59,26 @@ class BleDirectoryFetcher(
         return _directory.asStateFlow()
     }
 
-    override suspend fun listDirectory(directoryPath: List<String>): List<FileInfo> {
-        directoryListed = CompletableDeferred()
-        val directory = directoryPath.joinToString("/")
+    override suspend fun listDirectory(directoryPath: List<String>): List<FileInfo> =
+        scheduler.schedule {
+            directoryListed = CompletableDeferred()
+            val directory = directoryPath.joinToString("/")
 
-        gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
-        Timber.i("Getting directory $directory")
-        val task = TaskBuilder.buildGetDirectoryTask(
-            gatt = gatt,
-            characteristic = gattCharacteristic,
-            path = directory,
-            commandLogger = {}
-        )
-        gattTaskQueue.addTask(task)
+            gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
+            Timber.i("Getting directory $directory")
+            val task = TaskBuilder.buildGetDirectoryTask(
+                gatt = gatt,
+                characteristic = gattCharacteristic,
+                path = directory,
+                commandLogger = {}
+            )
+            gattTaskQueue.addTask(task)
 
-        directoryListed?.await()
+            directoryListed?.await()
 
-        gattTaskQueue -= gattCallback
-        return _directory.value
-    }
+            gattTaskQueue -= gattCallback
+            _directory.value
+        }
 
     override fun close() {
         gattTaskQueue -= gattCallback

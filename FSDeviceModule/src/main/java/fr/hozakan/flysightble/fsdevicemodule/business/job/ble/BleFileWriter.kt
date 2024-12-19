@@ -5,14 +5,15 @@ import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import fr.hozakan.flysightble.bluetoothmodule.GattTaskQueue
 import fr.hozakan.flysightble.fsdevicemodule.business.job.FileWriter
+import fr.hozakan.flysightble.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightble.model.ble.FlySightCharacteristic
 import kotlinx.coroutines.CompletableDeferred
-import timber.log.Timber
 
 class BleFileWriter(
     private val gatt: BluetoothGatt,
     private val gattCharacteristic: BluetoothGattCharacteristic,
-    private val gattTaskQueue: GattTaskQueue
+    private val gattTaskQueue: GattTaskQueue,
+    private val scheduler: FlySightJobScheduler
 ) : FileWriter {
 
     private val writeAck = CompletableDeferred<Unit>()
@@ -24,64 +25,65 @@ class BleFileWriter(
         filePath: String,
         fileContent: String
     ) {
-
-        val gattCallback = object : BluetoothGattCallback() {
-            override fun onCharacteristicChanged(
-                gatt: BluetoothGatt,
-                characteristic: BluetoothGattCharacteristic,
-                value: ByteArray
-            ) {
-                super.onCharacteristicChanged(gatt, characteristic, value)
-                val cmdCode = value[0].toInt() and 0xFF
-                val cmd = Command.fromValue(cmdCode)
-                if (cmd == Command.ACK) {
-                    val cmdAckedCode = value[1].toInt() and 0xFF
-                    val cmdAcked = Command.fromValue(cmdAckedCode)
-                    if (cmdAcked == Command.WRITE) {
-                        writeAck.complete(Unit)
-                    }
-                } else if (cmd == Command.NAK) {
-                    val cmdAckedCode = value[1].toInt() and 0xFF
-                    val cmdAcked = Command.fromValue(cmdAckedCode)
-                    if (cmdAcked == Command.WRITE) {
-                        writeAck.completeExceptionally(Exception("NAK received"))
-                    }
-                } else if (cmd == Command.FILE_ACK) {
-                    val ackNum = value[1].toInt() and 0xFF
-                    if (ackNum == currentPacket) {
-                        currentPacket++
-                        if (currentPacket > dataPackets.size) {
-                            fileDataSent.complete(Unit)
-                        } else {
-                            sendNextDataPacket()
+        scheduler.schedule {
+            val gattCallback = object : BluetoothGattCallback() {
+                override fun onCharacteristicChanged(
+                    gatt: BluetoothGatt,
+                    characteristic: BluetoothGattCharacteristic,
+                    value: ByteArray
+                ) {
+                    super.onCharacteristicChanged(gatt, characteristic, value)
+                    val cmdCode = value[0].toInt() and 0xFF
+                    val cmd = Command.fromValue(cmdCode)
+                    if (cmd == Command.ACK) {
+                        val cmdAckedCode = value[1].toInt() and 0xFF
+                        val cmdAcked = Command.fromValue(cmdAckedCode)
+                        if (cmdAcked == Command.WRITE) {
+                            writeAck.complete(Unit)
+                        }
+                    } else if (cmd == Command.NAK) {
+                        val cmdAckedCode = value[1].toInt() and 0xFF
+                        val cmdAcked = Command.fromValue(cmdAckedCode)
+                        if (cmdAcked == Command.WRITE) {
+                            writeAck.completeExceptionally(Exception("NAK received"))
+                        }
+                    } else if (cmd == Command.FILE_ACK) {
+                        val ackNum = value[1].toInt() and 0xFF
+                        if (ackNum == currentPacket) {
+                            currentPacket++
+                            if (currentPacket > dataPackets.size) {
+                                fileDataSent.complete(Unit)
+                            } else {
+                                sendNextDataPacket()
+                            }
                         }
                     }
                 }
             }
-        }
 
-        gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
-        val writeTask = TaskBuilder.buildWriteFileTask(
-            gatt,
-            gattCharacteristic,
-            filePath
-        ) {}
-        gattTaskQueue.addTask(writeTask)
-        try {
-            writeAck.await()
-        } catch (e: Exception) {
+            gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
+            val writeTask = TaskBuilder.buildWriteFileTask(
+                gatt,
+                gattCharacteristic,
+                filePath
+            ) {}
+            gattTaskQueue.addTask(writeTask)
+            try {
+                writeAck.await()
+            } catch (e: Exception) {
+                gattTaskQueue -= gattCallback
+                throw e
+            }
+            prepareDataPackets(fileContent)
+            sendNextDataPacket()
+            try {
+                fileDataSent.await()
+            } catch (e: Exception) {
+                gattTaskQueue -= gattCallback
+                throw e
+            }
             gattTaskQueue -= gattCallback
-            throw e
         }
-        prepareDataPackets(fileContent)
-        sendNextDataPacket()
-        try {
-            fileDataSent.await()
-        } catch (e: Exception) {
-            gattTaskQueue -= gattCallback
-            throw e
-        }
-        gattTaskQueue -= gattCallback
     }
 
     private fun prepareDataPackets(fileContent: String) {

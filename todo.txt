@@ -8,7 +8,7 @@ TODO release/1.0.0
 
 - DONE bug duplicate config sur une update de config
 
-- ajouter un méchanisme d'attente sur les jobs du FlySightDeviceImpl afin de ne pas avoir de jobs concurrents
+- DONE ajouter un méchanisme d'attente sur les jobs du FlySightDeviceImpl afin de ne pas avoir de jobs concurrents
 + Possibilité de donner une importance supérieure au job de ping. scheduler
 
 - améliorer l'interface de list des devices en :
@@ -17,4 +17,4 @@ TODO release/1.0.0
 
 - Design system
 
-
+- Improve config file picking dialog spacing between elements

@@ -26,6 +26,7 @@ import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BleFileCreator
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BleFileReader
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BleFileWriter
 import fr.hozakan.flysightble.fsdevicemodule.business.job.DirectoryFetcher
+import fr.hozakan.flysightble.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BlePingJob
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.Command
 import fr.hozakan.flysightble.model.ConfigFile
@@ -156,6 +157,8 @@ class FlySightDeviceImpl(
 
     private val _ping = MutableSharedFlow<Boolean>()
     override val ping: SharedFlow<Boolean> = _ping.asSharedFlow()
+
+    private val scheduler = FlySightJobScheduler()
 
     private val gattTaskQueue = GattTaskQueue(
         gattCallback = object : BluetoothGattCallback() {
@@ -405,7 +408,8 @@ class FlySightDeviceImpl(
         val fetcher = BleDirectoryFetcher(
             gatt = gatt,
             gattCharacteristic = rx,
-            gattTaskQueue = gattTaskQueue
+            gattTaskQueue = gattTaskQueue,
+            scheduler = scheduler
         )
         directoryFetcher = fetcher
 
@@ -422,7 +426,8 @@ class FlySightDeviceImpl(
             val fetcher = BleDirectoryFetcher(
                 gatt = gatt,
                 gattCharacteristic = rx,
-                gattTaskQueue = gattTaskQueue
+                gattTaskQueue = gattTaskQueue,
+                scheduler = scheduler
             )
             directoryFetcher = fetcher
 
@@ -442,7 +447,8 @@ class FlySightDeviceImpl(
             val fileWriter = BleFileWriter(
                 gatt = gatt,
                 gattCharacteristic = rx,
-                gattTaskQueue = gattTaskQueue
+                gattTaskQueue = gattTaskQueue,
+                scheduler = scheduler
             )
 //        scope?.launch {
             try {
@@ -477,7 +483,8 @@ class FlySightDeviceImpl(
         val pingJob = BlePingJob(
             gatt = gatt,
             gattCharacteristic = rx,
-            gattTaskQueue = gattTaskQueue
+            gattTaskQueue = gattTaskQueue,
+            scheduler = scheduler
         )
         return try {
             pingJob.ping()
@@ -547,7 +554,8 @@ class FlySightDeviceImpl(
             val fileReader = BleFileReader(
                 gatt = gatt,
                 gattCharacteristic = rx,
-                gattTaskQueue = gattTaskQueue
+                gattTaskQueue = gattTaskQueue,
+                scheduler = scheduler
             )
             try {
                 _file.emit(FileState.Loading)
@@ -576,7 +584,8 @@ class FlySightDeviceImpl(
             val fileReader = BleFileReader(
                 gatt = gatt,
                 gattCharacteristic = rx,
-                gattTaskQueue = gattTaskQueue
+                gattTaskQueue = gattTaskQueue,
+                scheduler = scheduler
             )
 //        scope?.launch {
             try {
