@@ -100,12 +100,14 @@ class DefaultBluetoothService(
                     }
                 }
                 adapter.bluetoothLeScanner.startScan(scanCallback)
-                delay(5_000)
+                delay(10_000)
                 if (devices.isEmpty()) {
-                    delay(5_000)
+                    send(LoadingState.Loading(currentLoad = devices, increment = 1))
+                    delay(10_000)
                 }
                 if (devices.isEmpty()) {
-                    delay(5_000)
+                    send(LoadingState.Loading(currentLoad = devices, increment = 2))
+                    delay(20_000)
                 }
                 adapter.bluetoothLeScanner.stopScan(scanCallback)
                 send(LoadingState.Loaded(devices))

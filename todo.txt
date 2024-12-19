@@ -1,11 +1,12 @@
 TODO release/1.0.0
 
-- Scan devices :
-ajouter un méchanisme de "increment: Int" dans le LoadingState.Loading
-premier delay, second et troisième delay increment ce nombre
-UI : changer le texte en fonction de increment. Au dernier, Indiquer de mettre le FlySight en pairing mode pour aider
+- DONE Scan devices :
++ ajouter un méchanisme de "increment: Int" dans le LoadingState.Loading
++ premier delay, second et troisième delay increment ce nombre
++ UI : changer le texte en fonction de increment. Au dernier, Indiquer de mettre le FlySight en pairing mode pour aider
++ ajouter un bouton pour cancel le scan
 
-- bug duplicate config sur une update de config
+- DONE bug duplicate config sur une update de config
 
 - ajouter un méchanisme d'attente sur les jobs du FlySightDeviceImpl afin de ne pas avoir de jobs concurrents
 + Possibilité de donner une importance supérieure au job de ping. scheduler
@@ -13,5 +14,7 @@ UI : changer le texte en fonction de increment. Au dernier, Indiquer de mettre l
 - améliorer l'interface de list des devices en :
  + changeant la position du boutton "add device" quand il y a déjà des devices
  + ajoutant un spinner dans l'action bar quand un scan est en cours avec des devices déjà trouvés
+
+- Design system
 
 

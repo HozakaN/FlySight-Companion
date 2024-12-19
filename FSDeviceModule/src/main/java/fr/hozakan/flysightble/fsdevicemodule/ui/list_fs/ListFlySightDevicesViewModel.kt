@@ -100,6 +100,12 @@ class ListFlySightDevicesViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    fun onCancelScanClicked() {
+        viewModelScope.launch {
+            fsDeviceService.cancelScan()
+        }
+    }
+
     private fun computeDisplayData(
         device: FlySightDevice,
         deviceConfigFileState: ConfigFileState,
