@@ -63,19 +63,25 @@ class DefaultConfigFileService(
         return readyConfigFile
     }
 
-    override suspend fun updateConfigFile(conf: ConfigFile) {
+    override suspend fun updateConfigFile(oldConf: ConfigFile, newConf: ConfigFile) {
         _configs.update { configs ->
-            val index = configs.indexOfFirst { it.name == conf.name }
-            (configs - configs.first { it.name == conf.name }).run {
-                toMutableList().also { mutableList -> mutableList.add(index, conf)}
+            val index = configs.indexOfFirst { it.name == oldConf.name }
+            (configs - configs.first { it.name == oldConf.name }).run {
+                toMutableList().also { mutableList -> mutableList.add(index, newConf)}
             }
         }
         val fileContent = withContext(Dispatchers.IO) {
-            buildFileContent(conf)
+            buildFileContent(newConf)
         }
         val file =
-            File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${conf.name}.txt")
+            File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${newConf.name}.txt")
         file.writeText(fileContent)
+
+        if (oldConf.name != newConf.name) {
+            val oldFile =
+                File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${oldConf.name}.txt")
+            oldFile.delete()
+        }
     }
 
     override suspend fun deleteConfigFile(configFile: ConfigFile) {

@@ -1,6 +1,5 @@
 package fr.hozakan.flysightble.configfilesmodule.ui.config_detail
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -152,10 +151,8 @@ fun ConfigDetailScreen(
         viewModel.loadConfigFile(configName)
     }
 
-    LaunchedEffect(state.fileSaved) {
-        if (state.fileSaved) {
-            onNavigateUp()
-        }
+    if (state.fileSaved?.getContentIfNotHandled() == true) {
+        onNavigateUp()
     }
 
     ConfigDetailScreenInternal(
@@ -1381,8 +1378,7 @@ fun ConfigDetailScreenInternalPreview() {
             configFile = defaultConfigFile(),
             unitSystem = UnitSystem.Metric,
             configFileFound = true,
-            hasValidFileName = true,
-            fileSaved = false
+            hasValidFileName = true
         ),
         updateConfigFileName = {},
         updateConfigFileDescription = {},

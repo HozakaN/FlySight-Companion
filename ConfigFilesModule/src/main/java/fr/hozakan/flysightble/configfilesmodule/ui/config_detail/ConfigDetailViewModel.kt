@@ -2,6 +2,7 @@ package fr.hozakan.flysightble.configfilesmodule.ui.config_detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
 import fr.hozakan.flusightble.userpreferencesmodule.UserPrefService
 import fr.hozakan.flusightble.userpreferencesmodule.dataStore
 import fr.hozakan.flysightble.configfilesmodule.business.ConfigFileService
@@ -34,6 +35,11 @@ class ConfigDetailViewModel @Inject constructor(
 
     val state = _state.asStateFlow()
 
+    /**
+     * Wether we are creating or editing a configuration
+     */
+    private var isCreatingConf = false
+
     init {
         viewModelScope.launch {
             userPrefService.unitSystem.collect { unitSystem ->
@@ -48,6 +54,7 @@ class ConfigDetailViewModel @Inject constructor(
 
     fun loadConfigFile(configFileName: String) {
         if (configFileName.isEmpty()) {
+            isCreatingConf = true
             _state.update {
                 it.copy(
                     configFile = defaultConfigFile(),
@@ -60,7 +67,8 @@ class ConfigDetailViewModel @Inject constructor(
             if (configFile != null) {
                 _state.update {
                     it.copy(
-                        configFile = configFile,
+                        editedConfiguration = configFile,
+                        configFile = configFile.copy(),
                         configFileFound = true
                     )
                 }
@@ -425,15 +433,22 @@ class ConfigDetailViewModel @Inject constructor(
         if (_state.value.configFile.name.isBlank()) {
             _state.update {
                 it.copy(
-                    hasValidFileName = false
+                    hasValidFileName = false,
+                    fileSaved = false.asEvent()
                 )
             }
         } else {
             viewModelScope.launch {
-                configFileService.saveConfigFile(state.value.configFile)
+                val oldConf = _state.value.editedConfiguration
+                if (oldConf != null) {
+                    configFileService.updateConfigFile(oldConf,_state.value.configFile)
+                } else {
+                    configFileService.saveConfigFile(state.value.configFile)
+                }
                 _state.update {
                     it.copy(
-                        fileSaved = true
+                        hasValidFileName = true,
+                        fileSaved = true.asEvent()
                     )
                 }
             }

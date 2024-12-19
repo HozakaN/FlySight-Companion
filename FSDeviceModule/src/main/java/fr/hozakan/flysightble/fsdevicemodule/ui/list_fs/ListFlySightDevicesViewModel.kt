@@ -21,13 +21,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
@@ -186,9 +186,12 @@ class ListFlySightDevicesViewModel @Inject constructor(
 
     fun updateSystemConfig(device: ListFlySightDeviceDisplayData) {
         device.configFile.value.conf?.let { conf ->
-            viewModelScope.launch {
-                configFileService.updateConfigFile(conf)
-            }
+            configFileService.configFiles.value.firstOrNull { it.name == conf.name }
+                ?.let { oldConf ->
+                    viewModelScope.launch {
+                        configFileService.updateConfigFile(oldConf, conf)
+                    }
+                }
         }
     }
 
