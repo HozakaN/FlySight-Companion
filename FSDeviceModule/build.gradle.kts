@@ -41,6 +41,8 @@ dependencies {
     implementation(project(":model"))
     implementation(project(":framework"))
     implementation(project(":Middleware:UserPreferencesModule"))
+    implementation(project(":ComposableCommons"))
+    implementation(project(":ConfigFilesModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -59,8 +61,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.activity.compose)
-    implementation(project(":ComposableCommons"))
-    implementation(project(":ConfigFilesModule"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

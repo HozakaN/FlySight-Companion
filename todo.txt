@@ -15,8 +15,14 @@ TODO release/1.0.0
  + changeant la position du boutton "add device" quand il y a déjà des devices
  + ajoutant un spinner dans l'action bar quand un scan est en cours avec des devices déjà trouvés
 
-- Design system
+- DONE Design system
 
-- Improve config file picking dialog spacing between elements
+- DONE Improve config file picking dialog spacing between elements
 
 - Package and app naming
+
+- Possible issue de button de connexion qui fonctionne mal après une déconnexion sur de la navigation user rapide
+
+- Localisation fr
+
+- Logo

@@ -2,6 +2,7 @@ package fr.hozakan.flusightble.dialog
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,7 +19,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -88,20 +91,28 @@ data class PickConfigurationDialog(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
+                        modifier = Modifier.fillMaxWidth(),
                         text = "Pick a new configuration for your FlySight",
-                        style = MaterialTheme.typography.titleSmall
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.requiredHeight(16.dp))
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(configProvider()) { configFile ->
-                            Text(
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { onResult(PickConfigurationDialogResult(configFile)) },
-                                text = configFile.name
-                            )
+                                    .requiredHeight(40.dp)
+                                    .clickable { onResult(PickConfigurationDialogResult(configFile)) }
+                                    .padding(start = 8.dp),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Text(
+                                    text = configFile.name
+                                )
+                            }
                         }
                     }
                 }

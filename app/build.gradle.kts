@@ -47,6 +47,7 @@ dependencies {
     implementation(project(":BluetoothModule"))
     implementation(project(":FSDeviceModule"))
     implementation(project(":ConfigFilesModule"))
+    implementation(project(":ComposableCommons"))
     implementation(project(":Middleware:UserPreferencesModule"))
 
     implementation(libs.androidx.core.ktx)
