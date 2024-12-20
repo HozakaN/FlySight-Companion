@@ -39,19 +39,23 @@ class BleFileReader(
         }
     }
 
-    override suspend fun readFile(filePath: String): FileState = scheduler.schedule {
-        val task = TaskBuilder.buildReadFileTask(
-            gatt = gatt,
-            characteristic = gattCharacteristic,
-            path = filePath,
-            commandLogger = {}
-        )
-        gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
-        gattTaskQueue.addTask(task)
+    override suspend fun readFile(filePath: String): FileState {
+        return scheduler.schedule(
+            labelProvider = { "read file $filePath" }
+        ) {
+            val task = TaskBuilder.buildReadFileTask(
+                gatt = gatt,
+                characteristic = gattCharacteristic,
+                path = filePath,
+                commandLogger = {}
+            )
+            gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
+            gattTaskQueue.addTask(task)
 
-        val fileState = fileContent.await()
-        gattTaskQueue -= gattCallback
-        fileState
+            val fileState = fileContent.await()
+            gattTaskQueue -= gattCallback
+            fileState
+        }
     }
 
     private fun handleFileDataPart(value: ByteArray) {

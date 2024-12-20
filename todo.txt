@@ -18,3 +18,5 @@ TODO release/1.0.0
 - Design system
 
 - Improve config file picking dialog spacing between elements
+
+- Package and app naming

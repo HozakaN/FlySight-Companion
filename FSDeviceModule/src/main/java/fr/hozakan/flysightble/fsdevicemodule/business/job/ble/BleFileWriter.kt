@@ -25,7 +25,9 @@ class BleFileWriter(
         filePath: String,
         fileContent: String
     ) {
-        scheduler.schedule {
+        scheduler.schedule(
+            labelProvider = { "Write file $filePath" }
+        ) {
             val gattCallback = object : BluetoothGattCallback() {
                 override fun onCharacteristicChanged(
                     gatt: BluetoothGatt,

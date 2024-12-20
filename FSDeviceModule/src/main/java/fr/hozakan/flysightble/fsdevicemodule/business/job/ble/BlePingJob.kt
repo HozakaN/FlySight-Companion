@@ -22,7 +22,9 @@ class BlePingJob(
     private val resultDeferred = CompletableDeferred<Boolean>()
 
     override suspend fun ping(timeout: Long): Boolean {
-        return scheduler.schedule(priority = 1) {
+        return scheduler.schedule(
+            priority = 1,
+            labelProvider = { "Ping" }) {
             val gattCallback = object : BluetoothGattCallback() {
                 override fun onCharacteristicChanged(
                     gatt: BluetoothGatt,

@@ -1,6 +1,7 @@
 package fr.hozakan.flysightble.fsdevicemodule.business.job
 
 import kotlinx.coroutines.CompletableDeferred
+import timber.log.Timber
 
 /**
  * Schedule jobs so that they are executed one after another.
@@ -10,12 +11,14 @@ class FlySightJobScheduler {
     private var isRunning = false
     private val requestQueue = mutableListOf<Request>()
 
+    private var counter = 0
     /**
      * @param priority the highest the soonest executed
      */
     suspend fun <T> schedule(
         priority: Int = 0,
-        block: suspend () -> T
+        labelProvider: (() -> String)? = null,
+        block: suspend (jobId: Int) -> T
     ): T {
         val deferred = CompletableDeferred<Unit>()
         synchronized(this)  {
@@ -29,13 +32,25 @@ class FlySightJobScheduler {
                 requestQueue.add(position, request)
             }
         }
+        val label = labelProvider?.invoke()
+        val tag = label?.let { "$it [$counter]" }
+        if (label != null) {
+            Timber.d("Job $tag scheduled")
+        }
         deferred.await()
-        val result = block()
+        if (label != null)  {
+            Timber.d("Job $tag started")
+        }
+        val result = block(counter)
+        if (label != null)  {
+            Timber.d("Job $tag finished")
+        }
         onJobFinished()
         return result
     }
 
     private fun onJobFinished() {
+        counter++
         synchronized(this) {
             if (requestQueue.isNotEmpty()) {
                 val request = requestQueue.removeAt(0)
