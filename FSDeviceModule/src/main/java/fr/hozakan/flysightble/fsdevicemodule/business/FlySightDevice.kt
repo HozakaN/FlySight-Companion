@@ -22,10 +22,10 @@ import fr.hozakan.flysightble.configfilesmodule.business.DefaultConfigParser
 import fr.hozakan.flysightble.framework.extension.bytesToHex
 import fr.hozakan.flysightble.framework.service.loading.LoadingState
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BleDirectoryFetcher
-import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BleFileCreator
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BleFileReader
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BleFileWriter
 import fr.hozakan.flysightble.fsdevicemodule.business.job.DirectoryFetcher
+import fr.hozakan.flysightble.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.BlePingJob
 import fr.hozakan.flysightble.fsdevicemodule.business.job.ble.Command
 import fr.hozakan.flysightble.model.ConfigFile
@@ -45,6 +45,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -125,8 +126,6 @@ class FlySightDeviceImpl(
     private var controlCharacteristic: BluetoothGattCharacteristic? = null
     private var resultCharacteristic: BluetoothGattCharacteristic? = null
 
-    private var directoryFetcher: DirectoryFetcher? = null
-
     private val _connectionState =
         MutableStateFlow<DeviceConnectionState>(DeviceConnectionState.Disconnected)
     override val connectionState = _connectionState.asStateFlow()
@@ -156,6 +155,8 @@ class FlySightDeviceImpl(
 
     private val _ping = MutableSharedFlow<Boolean>()
     override val ping: SharedFlow<Boolean> = _ping.asSharedFlow()
+
+    private val scheduler = FlySightJobScheduler()
 
     private val gattTaskQueue = GattTaskQueue(
         gattCallback = object : BluetoothGattCallback() {
@@ -370,18 +371,21 @@ class FlySightDeviceImpl(
         }
         gatt.requestMtu(250)
         if (txCharacteristic != null && rxCharacteristic != null) {
-            gattTaskQueue.addTask(GattTask.ReadTask(gatt, rxCharacteristic!!, {
-                log(
-                    "[COMMAND] [READ] [${
-                        FlySightCharacteristic.fromUuid(
-                            rxCharacteristic!!.uuid
-                        )?.name
-                    }]"
-                )
-            }))
-//            loadDirectoryEntries()
-            stateUpdater(DeviceConnectionState.Connected)
             scope?.launch {
+                scheduler.schedule(
+                    labelProvider = { "init device" }
+                ) {
+                    gattTaskQueue.addTask(GattTask.ReadTask(gatt, rxCharacteristic!!, {
+                        log(
+                            "[COMMAND] [READ] [${
+                                FlySightCharacteristic.fromUuid(
+                                    rxCharacteristic!!.uuid
+                                )?.name
+                            }]"
+                        )
+                    }))
+                }
+                stateUpdater(DeviceConnectionState.Connected)
                 readCurrentConfigFile()
                 _resultFiles.value = LoadingState.Loading(emptyList())
                 val resultFiles = retrieveResultFiles()
@@ -401,13 +405,12 @@ class FlySightDeviceImpl(
         val rx = this.rxCharacteristic
             ?: return MutableStateFlow<List<FileInfo>>(emptyList()).asStateFlow()
 
-        directoryFetcher?.close()
         val fetcher = BleDirectoryFetcher(
             gatt = gatt,
             gattCharacteristic = rx,
-            gattTaskQueue = gattTaskQueue
+            gattTaskQueue = gattTaskQueue,
+            scheduler = scheduler
         )
-        directoryFetcher = fetcher
 
         return fetcher.flowDirectory(directoryPath)
     }
@@ -418,13 +421,12 @@ class FlySightDeviceImpl(
             ?: return emptyList()
 
         return withContext(Dispatchers.IO) {
-            directoryFetcher?.close()
             val fetcher = BleDirectoryFetcher(
                 gatt = gatt,
                 gattCharacteristic = rx,
-                gattTaskQueue = gattTaskQueue
+                gattTaskQueue = gattTaskQueue,
+                scheduler = scheduler
             )
-            directoryFetcher = fetcher
 
             fetcher.listDirectory(directoryPath)
         }
@@ -442,7 +444,8 @@ class FlySightDeviceImpl(
             val fileWriter = BleFileWriter(
                 gatt = gatt,
                 gattCharacteristic = rx,
-                gattTaskQueue = gattTaskQueue
+                gattTaskQueue = gattTaskQueue,
+                scheduler = scheduler
             )
 //        scope?.launch {
             try {
@@ -461,7 +464,7 @@ class FlySightDeviceImpl(
                 val ping = pingDevice()
                 _ping.emit(ping)
                 if (!ping) {
-                    log("Device not responding to pings")
+                    log("Device $name not responding to pings")
                     disconnectGatt()
                     return@withContext
                 }
@@ -477,7 +480,8 @@ class FlySightDeviceImpl(
         val pingJob = BlePingJob(
             gatt = gatt,
             gattCharacteristic = rx,
-            gattTaskQueue = gattTaskQueue
+            gattTaskQueue = gattTaskQueue,
+            scheduler = scheduler
         )
         return try {
             pingJob.ping()
@@ -547,7 +551,8 @@ class FlySightDeviceImpl(
             val fileReader = BleFileReader(
                 gatt = gatt,
                 gattCharacteristic = rx,
-                gattTaskQueue = gattTaskQueue
+                gattTaskQueue = gattTaskQueue,
+                scheduler = scheduler
             )
             try {
                 _file.emit(FileState.Loading)
@@ -576,7 +581,8 @@ class FlySightDeviceImpl(
             val fileReader = BleFileReader(
                 gatt = gatt,
                 gattCharacteristic = rx,
-                gattTaskQueue = gattTaskQueue
+                gattTaskQueue = gattTaskQueue,
+                scheduler = scheduler
             )
 //        scope?.launch {
             try {

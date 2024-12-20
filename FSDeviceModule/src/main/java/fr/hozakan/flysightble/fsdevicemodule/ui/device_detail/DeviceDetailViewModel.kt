@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
 import fr.hozakan.flysightble.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightble.fsdevicemodule.business.FsDeviceService
-import fr.hozakan.flysightble.model.FileState
 import fr.hozakan.flysightble.model.FileInfo
+import fr.hozakan.flysightble.model.FileState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -245,7 +245,7 @@ fun ListFlySightDevicesScreen(
                                 viewModel.connectDevice(device)
                             },
                             onDeviceClicked = {
-                                onDeviceSelected(device.device)
+                                onDeviceSelected(device)
                             },
                             onUploadConfigToSystem = {
                                 viewModel.uploadConfigToSystem(device)
@@ -287,7 +287,8 @@ fun FlySightDeviceItem(
     ) {
         val connectionState by device.connectionState.collectAsState()
 
-        val clickableModifier = if (connectionState == DeviceConnectionState.Connected) {
+        val resultFilesState by device.resultFiles.collectAsState()
+        val clickableModifier = if (connectionState == DeviceConnectionState.Connected && resultFilesState is LoadingState.Loaded ) {
             Modifier.clickable { onDeviceClicked() }
         } else {
             Modifier

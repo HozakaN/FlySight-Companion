@@ -7,6 +7,7 @@ import fr.hozakan.flysightble.bluetoothmodule.GattTask
 import fr.hozakan.flysightble.bluetoothmodule.GattTaskQueue
 import fr.hozakan.flysightble.framework.extension.bytesToHex
 import fr.hozakan.flysightble.fsdevicemodule.business.job.FileReader
+import fr.hozakan.flysightble.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightble.model.FileState
 import fr.hozakan.flysightble.model.ble.FlySightCharacteristic
 import kotlinx.coroutines.CompletableDeferred
@@ -15,7 +16,8 @@ import timber.log.Timber
 class BleFileReader(
     private val gatt: BluetoothGatt,
     private val gattCharacteristic: BluetoothGattCharacteristic,
-    private val gattTaskQueue: GattTaskQueue
+    private val gattTaskQueue: GattTaskQueue,
+    private val scheduler: FlySightJobScheduler
 ) : FileReader {
 
     private var fileData: ByteArray? = null
@@ -38,18 +40,22 @@ class BleFileReader(
     }
 
     override suspend fun readFile(filePath: String): FileState {
-        val task = TaskBuilder.buildReadFileTask(
-            gatt = gatt,
-            characteristic = gattCharacteristic,
-            path = filePath,
-            commandLogger = {}
-        )
-        gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
-        gattTaskQueue.addTask(task)
+        return scheduler.schedule(
+            labelProvider = { "read file $filePath" }
+        ) {
+            val task = TaskBuilder.buildReadFileTask(
+                gatt = gatt,
+                characteristic = gattCharacteristic,
+                path = filePath,
+                commandLogger = {}
+            )
+            gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
+            gattTaskQueue.addTask(task)
 
-        val fileState = fileContent.await()
-        gattTaskQueue -= gattCallback
-        return fileState
+            val fileState = fileContent.await()
+            gattTaskQueue -= gattCallback
+            fileState
+        }
     }
 
     private fun handleFileDataPart(value: ByteArray) {
