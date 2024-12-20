@@ -41,7 +41,6 @@ import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
 import fr.hozakan.flusightble.dialog.DialogHandler
-import fr.hozakan.flusightble.dialog.DialogService
 import fr.hozakan.flusightble.dialog.LocalDialogService
 import fr.hozakan.flusightble.dialog.MutableDialogService
 import fr.hozakan.flysightble.configfilesmodule.ui.config_detail.ConfigDetailMenuActions
@@ -59,7 +58,7 @@ import fr.hozakan.flysightble.fsdevicemodule.ui.device_detail.DeviceDetailScreen
 import fr.hozakan.flysightble.fsdevicemodule.ui.file.DeviceFileScreen
 import fr.hozakan.flysightble.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
 import fr.hozakan.flysightble.model.ConfigFile
-import fr.hozakan.flysightble.ui.theme.FlySightBLETheme
+import fr.hozakan.flysightble.composablecommons.theme.FlySightBLETheme
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
 
@@ -86,7 +85,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
         setContent {
             FlySightBLETheme {
 
-                var menuState = rememberActionBarMenuState()
+                val menuState = rememberActionBarMenuState()
 
                 CompositionLocalProvider(
                     LocalViewModelFactory provides viewModelFactory,
@@ -228,6 +227,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                 }
                                             }
                                         }
+
                                         AppScreen.DeviceTab.DeviceConfig.route -> {
                                             val config =
                                                 currentBackStack.value?.arguments?.getString("config")

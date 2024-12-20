@@ -70,6 +70,7 @@ import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightble.composablecommons.SimpleDialogActionBar
 import fr.hozakan.flysightble.composablecommons.SimpleDialogActionBar3Button
 import fr.hozakan.flysightble.composablecommons.SimpleVerticalDialogActionBar
+import fr.hozakan.flysightble.composablecommons.theme.FlySightBLETheme
 import fr.hozakan.flysightble.framework.compose.CustomColors
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.framework.service.loading.LoadingState
@@ -168,10 +169,12 @@ fun ListFlySightDevicesScreen(
                         Spacer(modifier = Modifier.requiredHeight(24.dp))
 
                         val text = when (refreshingDeviceList.increment) {
-                            1 -> { """Refreshing device list...
+                            1 -> {
+                                """Refreshing device list...
                                 |Taking a bit longer than expected...
                             """.trimMargin()
                             }
+
                             2 -> {
                                 """Refreshing device list...
                                     |
@@ -179,7 +182,10 @@ fun ListFlySightDevicesScreen(
                                     |by short pressing the power button twice
                                 """.trimMargin()
                             }
-                            else -> { "Refreshing device list..." }
+
+                            else -> {
+                                "Refreshing device list..."
+                            }
                         }
                         Text(
                             text = text,
@@ -288,11 +294,12 @@ fun FlySightDeviceItem(
         val connectionState by device.connectionState.collectAsState()
 
         val resultFilesState by device.resultFiles.collectAsState()
-        val clickableModifier = if (connectionState == DeviceConnectionState.Connected && resultFilesState is LoadingState.Loaded ) {
-            Modifier.clickable { onDeviceClicked() }
-        } else {
-            Modifier
-        }
+        val clickableModifier =
+            if (connectionState == DeviceConnectionState.Connected && resultFilesState is LoadingState.Loaded) {
+                Modifier.clickable { onDeviceClicked() }
+            } else {
+                Modifier
+            }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -494,7 +501,7 @@ fun FlySightDeviceItemConfigBody(
             .height(220.dp)
             .weight(1f)
             .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.onSurface)
+            .background(MaterialTheme.colorScheme.tertiary)
         DeviceConfigurationContainer(
             modifier = itemModifier,
             configFileState = configFileState,
@@ -529,7 +536,7 @@ private fun DeviceConfigurationContainer(
     val warning = !device.isConfigFromSystem || device.hasConfigContentChanged
     var warningDialogOpened by remember { mutableStateOf(false) }
     var menuOpened by remember { mutableStateOf(false) }
-    val mod = if (warning && configFileState is ConfigFileState.Success)  {
+    val mod = if (warning && configFileState is ConfigFileState.Success) {
         Modifier
             .clickable {
                 warningDialogOpened = true
@@ -1003,34 +1010,38 @@ fun FlySightDeviceItemConnectedAndConfigFileLoadingPreview() {
 @Preview
 @Composable
 fun FlySightDeviceItemConnectedAndUpdatingConfigurationPreview() {
-    FlySightDeviceItem(
-        device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
-                initialConnectionState = DeviceConnectionState.Connected,
-                initialResultFileState = LoadingState.Loaded(
-                    listOf(
-                        ResultFile(
-                            "result1",
-                            LocalDateTime.now()
+    FlySightBLETheme(
+        darkTheme = true
+    ) {
+        FlySightDeviceItem(
+            device = ListFlySightDeviceDisplayData(
+                device = FakeDeviceImpl(
+                    initialConnectionState = DeviceConnectionState.Connected,
+                    initialResultFileState = LoadingState.Loaded(
+                        listOf(
+                            ResultFile(
+                                "result1",
+                                LocalDateTime.now()
+                            )
                         )
-                    )
+                    ),
+                    initialConfigFileState = ConfigFileState.Loading,
+                    configFileName = "Speed Corbas"
                 ),
-                initialConfigFileState = ConfigFileState.Loading,
-                configFileName = "Speed Corbas"
+                isConfigFromSystem = true,
+                hasConfigContentChanged = true,
+                deviceConfig = ConfigFileState.Loading
             ),
-            isConfigFromSystem = true,
-            hasConfigContentChanged = true,
-            deviceConfig = ConfigFileState.Loading
-        ),
-        unitSystem = UnitSystem.Metric,
-        updatingConfiguration = true,
-        onConnectionClicked = {},
-        onDeviceClicked = {},
-        onUpdateSystemConfClicked = {},
-        onUploadConfigToSystem = {},
-        onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
-    )
+            unitSystem = UnitSystem.Metric,
+            updatingConfiguration = true,
+            onConnectionClicked = {},
+            onDeviceClicked = {},
+            onUpdateSystemConfClicked = {},
+            onUploadConfigToSystem = {},
+            onPushConfigToDeviceClicked = {},
+            onChangeDeviceConfigurationClicked = {}
+        )
+    }
 }
 
 @Preview
