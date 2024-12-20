@@ -32,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -152,7 +153,13 @@ fun ConfigFileItem(
                         }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Delete") },
+                            text = {
+                                Text(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    text = "Delete",
+                                    textAlign = TextAlign.Center
+                                )
+                            },
                             onClick = {
                                 menuExpanded = false
                                 deleteDialogOpened = true
@@ -175,7 +182,7 @@ fun ConfigFileItem(
                 }
             }
             Spacer(modifier = Modifier.requiredHeight(8.dp))
-            if (configFile.description.isNotBlank())  {
+            if (configFile.description.isNotBlank()) {
                 Text(
                     configFile.description,
                     style = MaterialTheme.typography.bodyMedium
@@ -183,7 +190,7 @@ fun ConfigFileItem(
             }
             Spacer(modifier = Modifier.requiredHeight(8.dp))
             Text(
-                "Dropzone altitude : ${configFile.dzElev} ${unitSystem.distanceText}",
+                "Elevation : ${configFile.dzElev} ${unitSystem.distanceText}",
             )
             Spacer(modifier = Modifier.requiredHeight(8.dp))
             Text(

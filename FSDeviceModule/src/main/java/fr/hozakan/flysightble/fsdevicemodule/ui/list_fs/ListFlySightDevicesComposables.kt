@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,14 +32,12 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -60,15 +57,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.intl.LocaleList
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightble.composablecommons.SimpleDialogActionBar
-import fr.hozakan.flysightble.composablecommons.SimpleDialogActionBar3Button
 import fr.hozakan.flysightble.composablecommons.SimpleVerticalDialogActionBar
 import fr.hozakan.flysightble.composablecommons.theme.FlySightBLETheme
 import fr.hozakan.flysightble.framework.compose.CustomColors
@@ -93,7 +90,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeFormatterBuilder
 import java.time.format.FormatStyle
 import java.util.Locale
 
@@ -286,11 +282,7 @@ fun FlySightDeviceItem(
     onPushConfigToDeviceClicked: () -> Unit,
     onChangeDeviceConfigurationClicked: () -> Unit
 ) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.inverseSurface
-        )
-    ) {
+    Card {
         val connectionState by device.connectionState.collectAsState()
 
         val resultFilesState by device.resultFiles.collectAsState()
@@ -417,7 +409,7 @@ fun FlySightDeviceItem(
 
 @Composable
 fun DeviceResultFilesContainer(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     device: ListFlySightDeviceDisplayData
 ) {
     val locales = LocalContext.current.resources.configuration.locales
@@ -431,7 +423,9 @@ fun DeviceResultFilesContainer(
     ) {
         Text(
             text = "Results",
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp
         )
         when (val files = resultFiles) {
             is LoadingState.Error<List<ResultFile>> -> {
@@ -501,22 +495,29 @@ fun FlySightDeviceItemConfigBody(
             .height(220.dp)
             .weight(1f)
             .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.tertiary)
-        DeviceConfigurationContainer(
-            modifier = itemModifier,
-            configFileState = configFileState,
-            updatingConfiguration = updatingConfiguration,
-            device = device,
-            onUploadConfigToSystem = onUploadConfigToSystem,
-            onUpdateSystemConfClicked = onUpdateSystemConfClicked,
-            onPushConfigToDeviceClicked = onPushConfigToDeviceClicked,
-            onChangeDeviceConfigurationClicked = onChangeDeviceConfigurationClicked,
-            unitSystem = unitSystem
-        )
-        DeviceResultFilesContainer(
-            modifier = itemModifier,
-            device = device
-        )
+
+        Surface(
+            modifier = itemModifier
+        ) {
+            DeviceConfigurationContainer(
+                configFileState = configFileState,
+                updatingConfiguration = updatingConfiguration,
+                device = device,
+                onUploadConfigToSystem = onUploadConfigToSystem,
+                onUpdateSystemConfClicked = onUpdateSystemConfClicked,
+                onPushConfigToDeviceClicked = onPushConfigToDeviceClicked,
+                onChangeDeviceConfigurationClicked = onChangeDeviceConfigurationClicked,
+                unitSystem = unitSystem
+            )
+        }
+        Surface(
+            modifier = itemModifier
+        ) {
+            DeviceResultFilesContainer(
+//                modifier = itemModifier,
+                device = device
+            )
+        }
     }
 }
 
@@ -554,7 +555,9 @@ private fun DeviceConfigurationContainer(
         ) {
             Text(
                 text = "Configuration",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
             )
             Spacer(modifier = Modifier.weight(1f))
             if (!updatingConfiguration) {
@@ -574,7 +577,13 @@ private fun DeviceConfigurationContainer(
                     onDismissRequest = { menuOpened = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text(text = "Change configuration") },
+                        text = {
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = "Change configuration",
+                                textAlign = TextAlign.Center
+                            )
+                        },
                         onClick = {
                             menuOpened = false
                             onChangeDeviceConfigurationClicked()
