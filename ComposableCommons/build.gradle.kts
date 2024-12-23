@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "fr.hozakan.flysightble.composablecommons"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 33
@@ -39,6 +39,7 @@ android {
 dependencies {
     implementation(project(":model"))
     implementation(project(":framework"))
+    implementation(project(":DesignSystem"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

@@ -2,7 +2,7 @@ package fr.hozakan.flysightble.configfilesmodule.ui.list_files
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import fr.hozakan.flusightble.userpreferencesmodule.UserPrefService
+import fr.hozakan.flysightble.userpreferencesmodule.UserPrefService
 import fr.hozakan.flysightble.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightble.model.ConfigFile
 import kotlinx.coroutines.flow.MutableStateFlow

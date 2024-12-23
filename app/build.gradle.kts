@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "fr.hozakan.flysightble"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "fr.hozakan.flysightble"
         minSdk = 33
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -42,13 +42,16 @@ android {
 }
 
 dependencies {
+
     implementation(project(":model"))
     implementation(project(":framework"))
     implementation(project(":BluetoothModule"))
     implementation(project(":FSDeviceModule"))
     implementation(project(":ConfigFilesModule"))
     implementation(project(":ComposableCommons"))
+    implementation(project(":DesignSystem"))
     implementation(project(":Middleware:UserPreferencesModule"))
+    implementation(project(":Middleware:DialogModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

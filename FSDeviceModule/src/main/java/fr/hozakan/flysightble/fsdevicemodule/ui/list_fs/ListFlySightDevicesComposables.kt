@@ -57,9 +57,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -67,31 +67,60 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightble.composablecommons.SimpleDialogActionBar
 import fr.hozakan.flysightble.composablecommons.SimpleVerticalDialogActionBar
-import fr.hozakan.flysightble.composablecommons.theme.FlySightBLETheme
-import fr.hozakan.flysightble.framework.compose.CustomColors
+import fr.hozakan.flysightble.designsystem.theme.CustomColors
+import fr.hozakan.flysightble.designsystem.theme.TextConfiguration
+import fr.hozakan.flysightble.designsystem.widget.FText
+import fr.hozakan.flysightble.fsdevicemodule.R
 import fr.hozakan.flysightble.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightble.framework.service.loading.LoadingState
 import fr.hozakan.flysightble.fsdevicemodule.business.FlySightDevice
-import fr.hozakan.flysightble.model.ConfigFile
 import fr.hozakan.flysightble.model.ConfigFileState
 import fr.hozakan.flysightble.model.DeviceConnectionState
-import fr.hozakan.flysightble.model.FileInfo
-import fr.hozakan.flysightble.model.FileState
 import fr.hozakan.flysightble.model.config.UnitSystem
-import fr.hozakan.flysightble.model.defaultConfigFile
 import fr.hozakan.flysightble.model.result.ResultFile
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
+
+@OptIn(ExperimentalCoroutinesApi::class)
+@Composable
+fun ListFlySightDevicesMenuActions() {
+
+    val factory = LocalViewModelFactory.current
+
+    val viewModel: ListFlySightDevicesViewModel = viewModel(factory = factory)
+
+    val state by viewModel.state.collectAsState()
+
+    if (state.hasBluetoothPermission
+        && state.bluetoothState == BluetoothService.BluetoothState.Available
+        && state.devices.isNotEmpty()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (state.refreshingDeviceList is LoadingState.Loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.requiredSize(24.dp),
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.requiredWidth(8.dp))
+            }
+            IconButton(
+                onClick = {
+                    viewModel.addDevice()
+                },
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.new_window),
+                    contentDescription = "Add a FlySight"
+                )
+            }
+        }
+    }
+}
 
 @ExperimentalCoroutinesApi
 @Composable
@@ -103,6 +132,58 @@ fun ListFlySightDevicesScreen(
     val viewModel: ListFlySightDevicesViewModel = viewModel(factory = factory)
 
     val state by viewModel.state.collectAsState()
+
+    ListFlySightDevicesScreenInternal(
+        state = state,
+        onDeviceSelected = onDeviceSelected,
+        onRequestBluetoothPermissionClicked = {
+            viewModel.requestBluetoothPermission()
+        },
+        onEnableBluetoothClicked = {
+            viewModel.enableBluetooth()
+        },
+        onCancelScanClicked = {
+            viewModel.onCancelScanClicked()
+        },
+        refreshBluetoothDeviceListClicked = {
+            viewModel.refreshBluetoothDeviceList()
+        },
+        onAddDeviceClicked = {
+            viewModel.addDevice()
+        },
+        onConnectDeviceClicked = {
+            viewModel.connectDevice(it)
+        },
+        onUploadConfigToSystemClicked = {
+            viewModel.uploadConfigToSystem(it)
+        },
+        onUpdateSystemConfigClicked = {
+            viewModel.updateSystemConfig(it)
+        },
+        onPushConfigToDeviceClicked = {
+            viewModel.pushConfigToDevice(it)
+        },
+        onChangeDeviceConfigurationClicked = {
+            viewModel.changeDeviceConfiguration(it)
+        }
+    )
+}
+
+@Composable
+internal fun ListFlySightDevicesScreenInternal(
+    state: ListFlySightDevicesState,
+    onDeviceSelected: (FlySightDevice) -> Unit,
+    onRequestBluetoothPermissionClicked: () -> Unit,
+    onEnableBluetoothClicked: () -> Unit,
+    onCancelScanClicked: () -> Unit,
+    refreshBluetoothDeviceListClicked: () -> Unit,
+    onAddDeviceClicked: () -> Unit,
+    onConnectDeviceClicked: (ListFlySightDeviceDisplayData) -> Unit,
+    onUploadConfigToSystemClicked: (ListFlySightDeviceDisplayData) -> Unit,
+    onUpdateSystemConfigClicked: (ListFlySightDeviceDisplayData) -> Unit,
+    onPushConfigToDeviceClicked: (FlySightDevice) -> Unit,
+    onChangeDeviceConfigurationClicked: (ListFlySightDeviceDisplayData) -> Unit
+) {
 
     Surface(
         modifier = Modifier
@@ -119,7 +200,7 @@ fun ListFlySightDevicesScreen(
                 Spacer(modifier = Modifier.padding(8.dp))
                 Button(
                     onClick = {
-                        viewModel.requestBluetoothPermission()
+                        onRequestBluetoothPermissionClicked()
                     }
                 ) {
                     Text("Request permission")
@@ -143,7 +224,7 @@ fun ListFlySightDevicesScreen(
                     Spacer(modifier = Modifier.padding(8.dp))
                     Button(
                         onClick = {
-                            viewModel.enableBluetooth()
+                            onEnableBluetoothClicked()
                         }
                     ) {
                         Text("Enable bluetooth")
@@ -160,42 +241,50 @@ fun ListFlySightDevicesScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Spacer(modifier = Modifier.weight(3f))
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.requiredHeight(24.dp))
-
-                        val text = when (refreshingDeviceList.increment) {
-                            1 -> {
-                                """Refreshing device list...
+                        Box(
+                            modifier = Modifier.weight(2f).padding(bottom = 16.dp),
+                            contentAlignment = Alignment.BottomCenter
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                        Box(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            val text = when (refreshingDeviceList.increment) {
+                                1 -> {
+                                    """Refreshing device list...
                                 |Taking a bit longer than expected...
                             """.trimMargin()
-                            }
+                                }
 
-                            2 -> {
-                                """Refreshing device list...
+                                2 -> {
+                                    """Refreshing device list...
                                     |
                                     |Try putting your FlySight in pairing mode
                                     |by short pressing the power button twice
                                 """.trimMargin()
-                            }
+                                }
 
-                            else -> {
-                                "Refreshing device list..."
+                                else -> {
+                                    "Refreshing device list..."
+                                }
                             }
+                            Text(
+                                text = text,
+                                style = MaterialTheme.typography.titleMedium
+                            )
                         }
-                        Text(
-                            text = text,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Spacer(modifier = Modifier.weight(3f))
-                        TextButton(
-                            onClick = {
-                                viewModel.onCancelScanClicked()
-                            }
+                        Box(
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Text("Cancel")
+                            TextButton(
+                                onClick = {
+                                    onCancelScanClicked()
+                                }
+                            ) {
+                                Text("Cancel")
+                            }
                         }
-                        Spacer(modifier = Modifier.weight(2f))
                     }
 
                 }
@@ -205,22 +294,31 @@ fun ListFlySightDevicesScreen(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("No devices found")
-                    Spacer(modifier = Modifier.padding(8.dp))
+                    FText(
+                        text = "No devices found",
+                        configuration = TextConfiguration.PlainScreenTextLarge
+                    )
+                    Spacer(modifier = Modifier.padding(16.dp))
                     Button(
                         onClick = {
-                            viewModel.refreshBluetoothDeviceList()
+                            refreshBluetoothDeviceListClicked()
                         }
                     ) {
-                        Text("Refresh list")
+                        FText(
+                            text = "Refresh list",
+                            configuration = TextConfiguration.PlainScreenButtonText
+                        )
                     }
                     Spacer(modifier = Modifier.padding(8.dp))
                     Button(
                         onClick = {
-                            viewModel.addDevice()
+                            onAddDeviceClicked()
                         }
                     ) {
-                        Text("Add device")
+                        FText(
+                            text = "Add device",
+                            configuration = TextConfiguration.PlainScreenButtonText
+                        )
                     }
                 }
             } else {
@@ -229,37 +327,28 @@ fun ListFlySightDevicesScreen(
                     contentPadding = PaddingValues(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    item {
-                        Button(
-                            onClick = {
-                                viewModel.addDevice()
-                            }
-                        ) {
-                            Text("Add device")
-                        }
-                    }
                     items(state.devices) { device ->
                         FlySightDeviceItem(
                             device = device,
                             unitSystem = state.unitSystem,
                             updatingConfiguration = state.updatingConfiguration == device.uuid,
                             onConnectionClicked = {
-                                viewModel.connectDevice(device)
+                                onConnectDeviceClicked(device)
                             },
                             onDeviceClicked = {
                                 onDeviceSelected(device)
                             },
                             onUploadConfigToSystem = {
-                                viewModel.uploadConfigToSystem(device)
+                                onUploadConfigToSystemClicked(device)
                             },
                             onUpdateSystemConfClicked = {
-                                viewModel.updateSystemConfig(device)
+                                onUpdateSystemConfigClicked(device)
                             },
                             onPushConfigToDeviceClicked = {
-                                viewModel.pushConfigToDevice(device)
+                                onPushConfigToDeviceClicked(device)
                             },
                             onChangeDeviceConfigurationClicked = {
-                                viewModel.changeDeviceConfiguration(device)
+                                onChangeDeviceConfigurationClicked(device)
                             }
                         )
                     }
@@ -682,7 +771,7 @@ private fun DeviceConfigurationContainer(
 }
 
 @Composable
-private fun DeviceConfigurationMisMatchDialog(
+internal fun DeviceConfigurationMisMatchDialog(
     configFileState: ConfigFileState,
     device: ListFlySightDeviceDisplayData,
     onDismissRequest: () -> Unit,
@@ -690,7 +779,6 @@ private fun DeviceConfigurationMisMatchDialog(
     onUpdateSystemConfClicked: () -> Unit,
     onPushConfigToDeviceClicked: () -> Unit
 ) {
-
     Dialog(
         onDismissRequest = onDismissRequest
     ) {
@@ -853,316 +941,4 @@ fun connectionText(connectionState: DeviceConnectionState): String = when (conne
     DeviceConnectionState.ConnectionError -> {
         "Error"
     }
-}
-
-@Preview
-@Composable
-fun FlySightDeviceItemDisconnectedPreview() {
-    FlySightDeviceItem(
-        device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
-                initialConnectionState = DeviceConnectionState.Disconnected
-            ),
-            isConfigFromSystem = true,
-            hasConfigContentChanged = false,
-            deviceConfig = ConfigFileState.Nothing
-        ),
-        unitSystem = UnitSystem.Metric,
-        updatingConfiguration = false,
-        onConnectionClicked = {},
-        onDeviceClicked = {},
-        onUpdateSystemConfClicked = {},
-        onUploadConfigToSystem = {},
-        onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
-    )
-}
-
-@Preview
-@Composable
-fun FlySightDeviceItemConnectingPreview() {
-    FlySightDeviceItem(
-        device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
-                initialConnectionState = DeviceConnectionState.Connecting
-            ),
-            isConfigFromSystem = true,
-            hasConfigContentChanged = false,
-            deviceConfig = ConfigFileState.Nothing
-        ),
-        unitSystem = UnitSystem.Metric,
-        updatingConfiguration = false,
-        onConnectionClicked = {},
-        onDeviceClicked = {},
-        onUpdateSystemConfClicked = {},
-        onUploadConfigToSystem = {},
-        onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
-    )
-}
-
-@Preview
-@Composable
-fun FlySightDeviceItemConnectedAndNominalConfigFilePreview() {
-    FlySightDeviceItem(
-        device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
-                initialConnectionState = DeviceConnectionState.Connected,
-                configFileName = "Distance Le Puy",
-                initialConfigFileState = ConfigFileState.Success(defaultConfigFile().copy(name = "Distance Le Puy"))
-            ),
-            isConfigFromSystem = true,
-            hasConfigContentChanged = false,
-            deviceConfig = ConfigFileState.Nothing
-        ),
-        unitSystem = UnitSystem.Metric,
-        updatingConfiguration = false,
-        onConnectionClicked = {},
-        onDeviceClicked = {},
-        onUpdateSystemConfClicked = {},
-        onUploadConfigToSystem = {},
-        onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
-    )
-}
-
-@Preview
-@Composable
-fun FlySightDeviceItemConnectedAndConfigFileUnknownPreview() {
-    FlySightDeviceItem(
-        device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
-                initialConnectionState = DeviceConnectionState.Connected,
-                initialConfigFileState = ConfigFileState.Success(defaultConfigFile().copy(name = "Distance Le Puy"))
-            ),
-            isConfigFromSystem = false,
-            hasConfigContentChanged = false,
-            deviceConfig = ConfigFileState.Nothing
-        ),
-        unitSystem = UnitSystem.Metric,
-        updatingConfiguration = false,
-        onConnectionClicked = {},
-        onDeviceClicked = {},
-        onUpdateSystemConfClicked = {},
-        onUploadConfigToSystem = {},
-        onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
-    )
-}
-
-@Preview
-@Composable
-fun FlySightDeviceItemConnectedAndConfigFileDiffersPreview() {
-    FlySightDeviceItem(
-        device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
-                initialConnectionState = DeviceConnectionState.Connected,
-                initialResultFileState = LoadingState.Loaded(
-                    listOf(
-                        ResultFile(
-                            "result1",
-                            LocalDateTime.now()
-                        )
-                    )
-                ),
-                configFileName = "Speed Corbas",
-                initialConfigFileState = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas"))
-            ),
-            isConfigFromSystem = true,
-            hasConfigContentChanged = true,
-            deviceConfig = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas"))
-        ),
-        unitSystem = UnitSystem.Metric,
-        updatingConfiguration = false,
-        onConnectionClicked = {},
-        onDeviceClicked = {},
-        onUpdateSystemConfClicked = {},
-        onUploadConfigToSystem = {},
-        onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
-    )
-}
-
-@Preview
-@Composable
-fun FlySightDeviceItemConnectedAndConfigFileLoadingPreview() {
-    FlySightDeviceItem(
-        device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
-                initialConnectionState = DeviceConnectionState.Connected,
-                initialResultFileState = LoadingState.Loaded(
-                    listOf(
-                        ResultFile(
-                            "result1",
-                            LocalDateTime.now()
-                        )
-                    )
-                ),
-                initialConfigFileState = ConfigFileState.Loading,
-                configFileName = "Speed Corbas"
-            ),
-            isConfigFromSystem = true,
-            hasConfigContentChanged = true,
-            deviceConfig = ConfigFileState.Loading
-        ),
-        unitSystem = UnitSystem.Metric,
-        updatingConfiguration = false,
-        onConnectionClicked = {},
-        onDeviceClicked = {},
-        onUpdateSystemConfClicked = {},
-        onUploadConfigToSystem = {},
-        onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
-    )
-}
-
-@Preview
-@Composable
-fun FlySightDeviceItemConnectedAndUpdatingConfigurationPreview() {
-    FlySightBLETheme(
-        darkTheme = true
-    ) {
-        FlySightDeviceItem(
-            device = ListFlySightDeviceDisplayData(
-                device = FakeDeviceImpl(
-                    initialConnectionState = DeviceConnectionState.Connected,
-                    initialResultFileState = LoadingState.Loaded(
-                        listOf(
-                            ResultFile(
-                                "result1",
-                                LocalDateTime.now()
-                            )
-                        )
-                    ),
-                    initialConfigFileState = ConfigFileState.Loading,
-                    configFileName = "Speed Corbas"
-                ),
-                isConfigFromSystem = true,
-                hasConfigContentChanged = true,
-                deviceConfig = ConfigFileState.Loading
-            ),
-            unitSystem = UnitSystem.Metric,
-            updatingConfiguration = true,
-            onConnectionClicked = {},
-            onDeviceClicked = {},
-            onUpdateSystemConfClicked = {},
-            onUploadConfigToSystem = {},
-            onPushConfigToDeviceClicked = {},
-            onChangeDeviceConfigurationClicked = {}
-        )
-    }
-}
-
-@Preview
-@Composable
-fun FlySightDeviceItemErrorPreview() {
-    FlySightDeviceItem(
-        device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
-                initialConnectionState = DeviceConnectionState.ConnectionError
-            ),
-            isConfigFromSystem = true,
-            hasConfigContentChanged = false,
-            deviceConfig = ConfigFileState.Nothing
-        ),
-        unitSystem = UnitSystem.Metric,
-        updatingConfiguration = false,
-        onConnectionClicked = {},
-        onDeviceClicked = {},
-        onUpdateSystemConfClicked = {},
-        onUploadConfigToSystem = {},
-        onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
-    )
-}
-
-@Preview
-@Composable
-fun DeviceConfigurationMisMatchDialogWithConfigContentChangedPreview() {
-    DeviceConfigurationMisMatchDialog(
-        configFileState = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas")),
-        device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
-                initialConnectionState = DeviceConnectionState.Connected,
-                initialResultFileState = LoadingState.Loaded(
-                    listOf(
-                        ResultFile(
-                            "result1",
-                            LocalDateTime.now()
-                        )
-                    )
-                ),
-                configFileName = "Speed Corbas"
-            ),
-            isConfigFromSystem = true,
-            hasConfigContentChanged = true,
-            deviceConfig = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas"))
-        ),
-        onDismissRequest = {},
-        onUploadConfigToSystem = {},
-        onUpdateSystemConfClicked = {},
-        onPushConfigToDeviceClicked = {}
-    )
-}
-
-@Preview
-@Composable
-fun DeviceConfigurationMisMatchDialogWithConfigNotFromSystemPreview() {
-    DeviceConfigurationMisMatchDialog(
-        configFileState = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas")),
-        device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
-                initialConnectionState = DeviceConnectionState.Connected,
-                configFileName = "Speed Corbas"
-            ),
-            isConfigFromSystem = false,
-            hasConfigContentChanged = false,
-            deviceConfig = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas"))
-        ),
-        onDismissRequest = {},
-        onUploadConfigToSystem = {},
-        onUpdateSystemConfClicked = {},
-        onPushConfigToDeviceClicked = {}
-    )
-}
-
-private class FakeDeviceImpl(
-    initialConnectionState: DeviceConnectionState = DeviceConnectionState.Disconnected,
-    initialResultFileState: LoadingState<List<ResultFile>> = LoadingState.Idle,
-    initialConfigFileState: ConfigFileState = ConfigFileState.Nothing,
-    private val configFileName: String = "",
-    override val name: String = "Fake device"
-) : FlySightDevice {
-    override val uuid: String
-        get() = "uuid"
-    override val address: String
-        get() = "address"
-    override val connectionState: StateFlow<DeviceConnectionState> =
-        MutableStateFlow(initialConnectionState)
-    override val configFile: StateFlow<ConfigFileState> = MutableStateFlow(initialConfigFileState)
-    override val rawConfigFile: StateFlow<FileState>
-        get() = MutableStateFlow(FileState.Nothing)
-    override val resultFiles: StateFlow<LoadingState<List<ResultFile>>> =
-        MutableStateFlow(initialResultFileState).asStateFlow()
-    override val logs: StateFlow<List<String>>
-        get() = MutableStateFlow(emptyList())
-    override val fileReceived: SharedFlow<FileState>
-        get() = MutableSharedFlow()
-    override val ping: SharedFlow<Boolean>
-        get() = MutableSharedFlow()
-
-    override suspend fun connectGatt(): Boolean = true
-
-    override suspend fun disconnectGatt(): Boolean = true
-
-    override fun flowDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>> =
-        MutableStateFlow(emptyList())
-
-    override suspend fun loadDirectory(directoryPath: List<String>): List<FileInfo> {
-        return emptyList()
-    }
-
-    override suspend fun readFile(fileName: String) {}
-    override suspend fun updateConfigFile(configFile: ConfigFile) {}
-
 }

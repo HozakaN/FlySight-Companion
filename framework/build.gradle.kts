@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "fr.hozakan.flysightble.framework"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 33

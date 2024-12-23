@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "fr.hozakan.flysightble.configfilesmodule"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 33
@@ -39,6 +39,7 @@ android {
 dependencies {
     implementation(project(":model"))
     implementation(project(":Middleware:UserPreferencesModule"))
+    implementation(project(":Middleware:DialogModule"))
     implementation(project(":framework"))
 
     implementation(libs.androidx.core.ktx)

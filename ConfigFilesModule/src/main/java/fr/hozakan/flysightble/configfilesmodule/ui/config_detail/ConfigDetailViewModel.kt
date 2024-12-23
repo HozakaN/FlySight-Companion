@@ -3,8 +3,7 @@ package fr.hozakan.flysightble.configfilesmodule.ui.config_detail
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
-import fr.hozakan.flusightble.userpreferencesmodule.UserPrefService
-import fr.hozakan.flusightble.userpreferencesmodule.dataStore
+import fr.hozakan.flysightble.userpreferencesmodule.UserPrefService
 import fr.hozakan.flysightble.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightble.model.config.Alarm
 import fr.hozakan.flysightble.model.config.DynamicModel
@@ -36,7 +35,7 @@ class ConfigDetailViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     /**
-     * Wether we are creating or editing a configuration
+     * Whether we are creating or editing a configuration
      */
     private var isCreatingConf = false
 

@@ -1,0 +1,72 @@
+TODO release/1.0.0 RC1
+
+- DONE Scan devices :
++ ajouter un méchanisme de "increment: Int" dans le LoadingState.Loading
++ premier delay, second et troisième delay increment ce nombre
++ UI : changer le texte en fonction de increment. Au dernier, Indiquer de mettre le FlySight en pairing mode pour aider
++ ajouter un bouton pour cancel le scan
+
+- DONE bug duplicate config sur une update de config
+
+- DONE ajouter un méchanisme d'attente sur les jobs du FlySightDeviceImpl afin de ne pas avoir de jobs concurrents
++ Possibilité de donner une importance supérieure au job de ping. scheduler
+
+- DONE améliorer l'interface de list des devices en :
+ + changeant la position du boutton "add device" quand il y a déjà des devices (Icons.Default.NewWindow)
+ + ajoutant un spinner dans l'action bar quand un scan est en cours avec des devices déjà trouvés
+
+- DONE Design system
+
+- DONE Improve config file picking dialog spacing between elements
+
+- Package and app naming
+
+- Possible issue de button de connexion qui fonctionne mal après une déconnexion sur de la navigation user rapide
+
+- TO FINISH in RC2 FlySight design system
+
+- Logo
+
+-Lower Android api level requirement
+
+TODO release/1.0.0 RC2
+
+-list devices screen
++ no device
+++ revoir le positionnement vertical des items (espacement entre bloc texte et bloc buttons)
++ no device refreshing
+++ revoir le positionnement vertical des items (chargement bloc au centre, cancel button aux 3.4)
+
+- mettre des DropDownMenu dans une Box avec l'icon MoreVert correspondant
+
+- Localisation fr
+
+- UI of config file edition
+
+- app versioning indication in-app
+
+TODO [nice to have] release/1.0.0 RC3
+
+- Help on config file edition and display ?
+
+- gradle modules organization and clean up
+
+TODO release/2.0.0
+
+- big feature : record analyses
+
+- Help on config file edition and display (if not in 1.0.0)
+
+- How to update FlySight 2 Firmware + firmware updater
+
+TODO release/3.0.0
+
+- big feature : Live GNSS data and HUD
+
+TODO release/4.0.0
+
+- big feature : iOS
+
+TODO release/5.0.0
+
+- big feature : Desktop
