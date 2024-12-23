@@ -2,7 +2,7 @@ package fr.hozakan.flysightble.fsdevicemodule.ui.device_config
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import fr.hozakan.flusightble.userpreferencesmodule.UserPrefService
+import fr.hozakan.flysightble.userpreferencesmodule.UserPrefService
 import fr.hozakan.flysightble.configfilesmodule.business.DefaultConfigEncoder
 import fr.hozakan.flysightble.model.ConfigFile
 import fr.hozakan.flysightble.model.defaultConfigFile

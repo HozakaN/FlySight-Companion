@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
-import fr.hozakan.flusightble.userpreferencesmodule.UserPrefService
+import fr.hozakan.flysightble.userpreferencesmodule.UserPrefService
 import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightble.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightble.framework.service.loading.LoadingState
@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map

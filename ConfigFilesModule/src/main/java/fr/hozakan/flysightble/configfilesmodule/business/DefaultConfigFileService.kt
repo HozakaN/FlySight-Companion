@@ -1,12 +1,12 @@
 package fr.hozakan.flysightble.configfilesmodule.business
 
 import android.content.Context
-import fr.hozakan.flusightble.dialog.ConfigFileName
-import fr.hozakan.flusightble.dialog.ConfigFileNameDialog
-import fr.hozakan.flusightble.dialog.DialogResult
-import fr.hozakan.flusightble.dialog.DialogService
-import fr.hozakan.flusightble.dialog.PickConfigurationDialog
-import fr.hozakan.flusightble.dialog.PickConfigurationDialogResult
+import fr.hozakan.flysightble.dialogmodule.ConfigFileName
+import fr.hozakan.flysightble.dialogmodule.ConfigFileNameDialog
+import fr.hozakan.flysightble.dialogmodule.DialogResult
+import fr.hozakan.flysightble.dialogmodule.DialogService
+import fr.hozakan.flysightble.dialogmodule.PickConfigurationDialog
+import fr.hozakan.flysightble.dialogmodule.PickConfigurationDialogResult
 import fr.hozakan.flysightble.configfilesmodule.business.parser.CONFIG_FILES_FOLDER
 import fr.hozakan.flysightble.model.ConfigFile
 import kotlinx.coroutines.CoroutineScope
@@ -24,9 +24,6 @@ class DefaultConfigFileService(
     private val dialogService: DialogService,
     private val configEncoder: ConfigEncoder
 ) : ConfigFileService {
-
-    private val configSharedPreferences =
-        context.getSharedPreferences("config_files", Context.MODE_PRIVATE)
 
     private val _configs = MutableStateFlow<List<ConfigFile>>(emptyList())
     override val configFiles = _configs.asStateFlow()
@@ -67,7 +64,7 @@ class DefaultConfigFileService(
         _configs.update { configs ->
             val index = configs.indexOfFirst { it.name == oldConf.name }
             (configs - configs.first { it.name == oldConf.name }).run {
-                toMutableList().also { mutableList -> mutableList.add(index, newConf)}
+                toMutableList().also { mutableList -> mutableList.add(index, newConf) }
             }
         }
         val fileContent = withContext(Dispatchers.IO) {
@@ -131,16 +128,6 @@ class DefaultConfigFileService(
         }
     }
 
-    //    private fun parseConfiguration(configFile: File): ConfigFile? {
-    private fun parseConfiguration(fileLines: List<String>): ConfigFile? {
-        val configFile = parser.parse(fileLines)
-        return configFile
-    }
+    private fun parseConfiguration(fileLines: List<String>): ConfigFile = parser.parse(fileLines)
 
 }
-
-
-
-private val configItemsEncoders = listOf(
-    "Model",
-)

@@ -40,9 +40,9 @@ import com.google.gson.Gson
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
-import fr.hozakan.flusightble.dialog.DialogHandler
-import fr.hozakan.flusightble.dialog.LocalDialogService
-import fr.hozakan.flusightble.dialog.MutableDialogService
+import fr.hozakan.flysightble.dialogmodule.DialogHandler
+import fr.hozakan.flysightble.dialogmodule.LocalDialogService
+import fr.hozakan.flysightble.dialogmodule.MutableDialogService
 import fr.hozakan.flysightble.configfilesmodule.ui.config_detail.ConfigDetailMenuActions
 import fr.hozakan.flysightble.configfilesmodule.ui.config_detail.ConfigDetailScreen
 import fr.hozakan.flysightble.configfilesmodule.ui.list_files.ListConfigFileMenuActions
@@ -58,7 +58,10 @@ import fr.hozakan.flysightble.fsdevicemodule.ui.device_detail.DeviceDetailScreen
 import fr.hozakan.flysightble.fsdevicemodule.ui.file.DeviceFileScreen
 import fr.hozakan.flysightble.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
 import fr.hozakan.flysightble.model.ConfigFile
-import fr.hozakan.flysightble.composablecommons.theme.FlySightBLETheme
+import fr.hozakan.flysightble.designsystem.theme.FlySightBLETheme
+import fr.hozakan.flysightble.designsystem.theme.TextConfiguration
+import fr.hozakan.flysightble.designsystem.widget.FText
+import fr.hozakan.flysightble.fsdevicemodule.ui.list_fs.ListFlySightDevicesMenuActions
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
 
@@ -71,7 +74,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
     lateinit var viewModelFactory: ViewModelProvider.Factory
 
     @Inject
-    lateinit var dialogService: MutableDialogService
+    lateinit var dialogService: fr.hozakan.flysightble.dialogmodule.MutableDialogService
 
     @Inject
     lateinit var json: Gson
@@ -90,12 +93,12 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                 CompositionLocalProvider(
                     LocalViewModelFactory provides viewModelFactory,
                     LocalMenuState provides menuState,
-                    LocalDialogService provides dialogService
+                    fr.hozakan.flysightble.dialogmodule.LocalDialogService provides dialogService
                 ) {
                     val navController = rememberNavController()
                     val currentBackStack = navController.currentBackStackEntryAsState()
 
-                    DialogHandler()
+                    fr.hozakan.flysightble.dialogmodule.DialogHandler()
 
                     Scaffold(
                         topBar = {
@@ -220,7 +223,6 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                 ) {
                                                     navController.navigate(
                                                         AppScreen.DeviceTab.DeviceConfig.buildRoute(
-//                                                            json.encodeToString(it)
                                                             json.toJson(it)
                                                         )
                                                     )
@@ -239,6 +241,10 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                     ),
                                                 )
                                             }
+                                        }
+
+                                        AppScreen.DeviceTab.DeviceList.route -> {
+                                            ListFlySightDevicesMenuActions()
                                         }
 
                                         else -> {}
@@ -264,7 +270,10 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                     contentDescription = "Devices"
                                                 )
                                                 Spacer(modifier = Modifier.requiredHeight(8.dp))
-                                                Text("Devices")
+                                                FText(
+                                                    text = "Devices",
+                                                    configuration = TextConfiguration.TabTitle
+                                                )
                                             }
                                             Box(
                                                 modifier = Modifier
@@ -287,7 +296,10 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                     contentDescription = "Config files"
                                                 )
                                                 Spacer(modifier = Modifier.requiredHeight(8.dp))
-                                                Text("Config files")
+                                                FText(
+                                                    text = "Config files",
+                                                    configuration = TextConfiguration.TabTitle
+                                                )
                                             }
                                             Box(
                                                 modifier = Modifier

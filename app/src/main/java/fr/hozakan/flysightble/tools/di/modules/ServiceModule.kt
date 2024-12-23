@@ -3,11 +3,11 @@ package fr.hozakan.flysightble.tools.di.modules
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
-import fr.hozakan.flusightble.dialog.DefaultDialogService
-import fr.hozakan.flusightble.dialog.DialogService
-import fr.hozakan.flusightble.dialog.MutableDialogService
-import fr.hozakan.flusightble.userpreferencesmodule.DatastoreUserPrefService
-import fr.hozakan.flusightble.userpreferencesmodule.UserPrefService
+import fr.hozakan.flysightble.dialogmodule.DefaultDialogService
+import fr.hozakan.flysightble.dialogmodule.DialogService
+import fr.hozakan.flysightble.dialogmodule.MutableDialogService
+import fr.hozakan.flysightble.userpreferencesmodule.DatastoreUserPrefService
+import fr.hozakan.flysightble.userpreferencesmodule.UserPrefService
 import fr.hozakan.flysightble.BaseApplication
 import fr.hozakan.flysightble.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightble.bluetoothmodule.DefaultBluetoothService
@@ -90,7 +90,8 @@ class ServiceModule {
 
     @Singleton
     @Provides
-    fun provideMutableDialogService(): MutableDialogService = DefaultDialogService()
+    fun provideMutableDialogService(): MutableDialogService =
+        DefaultDialogService()
 
     @Singleton
     @Provides
