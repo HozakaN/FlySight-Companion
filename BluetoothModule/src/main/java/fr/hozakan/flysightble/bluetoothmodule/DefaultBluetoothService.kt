@@ -6,11 +6,11 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanRecord
 import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
-import com.welie.blessed.BondState
 import fr.hozakan.flysightble.framework.extension.bytesToHex
 import fr.hozakan.flysightble.framework.service.applifecycle.ActivityLifecycleService
 import fr.hozakan.flysightble.framework.service.async.ActivityOperationsService
@@ -55,13 +55,13 @@ class DefaultBluetoothService(
 
     override suspend fun enableBluetooth(): Boolean {
         val state = checkBluetoothState()
-        if (state == BluetoothService.BluetoothState.Available)  {
+        if (state == BluetoothService.BluetoothState.Available) {
             freeAwaitingBluetoothAvailabilityCoroutines()
             return true
         }
         val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
         val result = activityOperationsService.requestActivityResult(enableBtIntent)
-        if (result.first == Activity.RESULT_OK)  {
+        if (result.first == Activity.RESULT_OK) {
             freeAwaitingBluetoothAvailabilityCoroutines()
             return true
         }
@@ -84,18 +84,19 @@ class DefaultBluetoothService(
             if (adapter != null) {
                 val scanCallback = object : ScanCallback() {
                     override fun onScanResult(callbackType: Int, result: ScanResult) {
-                        result.scanRecord?.advertisingDataMap?.let { advertisingData ->
-                            val data2 = advertisingData[255] ?: return@let
-                            if (data2.bytesToHex().length != 8) return@let
-                            val manufacturerId = data2.bytesToHex().run {
-                                substring(2, length - 2)
-                            }
-                            if (manufacturerId == "DB09" && result.isConnectable && result.device.bondState == BondState.BONDED.value) {
-                                devices += result.device
-                                scope.launch {
-                                    send(LoadingState.Loading(devices))
+                        scope.launch {
+                            result.scanRecord?.customAdvertisementDataMap()
+                                ?.let { advertisingData ->
+                                    val data2 = advertisingData[255] ?: return@let
+                                    if (data2.bytesToHex().length != 8) return@let
+                                    val manufacturerId = data2.bytesToHex().run {
+                                        substring(2, length - 2)
+                                    }
+                                    if (manufacturerId == "DB09" && result.isConnectable && result.device.bondState == BluetoothDevice.BOND_BONDED) {
+                                        devices += result.device
+                                        send(LoadingState.Loading(devices))
+                                    }
                                 }
-                            }
                         }
                     }
                 }
@@ -119,7 +120,7 @@ class DefaultBluetoothService(
 
     override suspend fun awaitBluetoothAvailability() {
         val brState = checkBluetoothState()
-        if (brState == BluetoothService.BluetoothState.Available)  {
+        if (brState == BluetoothService.BluetoothState.Available) {
             freeAwaitingBluetoothAvailabilityCoroutines()
             return
         }
@@ -142,4 +143,13 @@ class DefaultBluetoothService(
             Timber.e(e)
         }
     }
+}
+
+private fun ScanRecord.customAdvertisementDataMap(): Map<Int, ByteArray>? {
+    return ScanRecordParser.parseFromBytes(this.bytes)
+//    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//        this.advertisingDataMap //[DATA_TYPE_MANUFACTURER_SPECIFIC_DATA]
+//    } else {
+//        parseFromBytes(this.bytes)
+//    }
 }
