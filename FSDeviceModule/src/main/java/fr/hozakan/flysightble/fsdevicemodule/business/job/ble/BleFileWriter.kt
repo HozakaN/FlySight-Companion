@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import fr.hozakan.flysightble.bluetoothmodule.GattTaskQueue
+import fr.hozakan.flysightble.bluetoothmodule.SimpleBluetoothGattCallback
 import fr.hozakan.flysightble.fsdevicemodule.business.job.FileWriter
 import fr.hozakan.flysightble.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightble.model.ble.FlySightCharacteristic
@@ -28,7 +29,7 @@ class BleFileWriter(
         scheduler.schedule(
             labelProvider = { "Write file $filePath" }
         ) {
-            val gattCallback = object : BluetoothGattCallback() {
+            val gattCallback = object : SimpleBluetoothGattCallback() {
                 override fun onCharacteristicChanged(
                     gatt: BluetoothGatt,
                     characteristic: BluetoothGattCharacteristic,

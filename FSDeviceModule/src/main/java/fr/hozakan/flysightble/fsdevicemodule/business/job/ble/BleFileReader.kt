@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import fr.hozakan.flysightble.bluetoothmodule.GattTask
 import fr.hozakan.flysightble.bluetoothmodule.GattTaskQueue
+import fr.hozakan.flysightble.bluetoothmodule.SimpleBluetoothGattCallback
 import fr.hozakan.flysightble.framework.extension.bytesToHex
 import fr.hozakan.flysightble.fsdevicemodule.business.job.FileReader
 import fr.hozakan.flysightble.fsdevicemodule.business.job.FlySightJobScheduler
@@ -24,7 +25,7 @@ class BleFileReader(
     private var fileDataPacketNumber: Int? = null
     private val fileContent = CompletableDeferred<FileState>()
 
-    private val gattCallback = object : BluetoothGattCallback() {
+    private val gattCallback = object : SimpleBluetoothGattCallback() {
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic,

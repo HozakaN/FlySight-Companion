@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import fr.hozakan.flysightble.bluetoothmodule.GattTaskQueue
+import fr.hozakan.flysightble.bluetoothmodule.SimpleBluetoothGattCallback
 import fr.hozakan.flysightble.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightble.fsdevicemodule.business.job.PingJob
 import fr.hozakan.flysightble.model.ble.FlySightCharacteristic
@@ -25,7 +26,7 @@ class BlePingJob(
         return scheduler.schedule(
             priority = 1,
             labelProvider = { "Ping" }) {
-            val gattCallback = object : BluetoothGattCallback() {
+            val gattCallback = object : SimpleBluetoothGattCallback() {
                 override fun onCharacteristicChanged(
                     gatt: BluetoothGatt,
                     characteristic: BluetoothGattCharacteristic,

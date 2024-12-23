@@ -17,6 +17,7 @@ import fr.hozakan.flysightble.framework.service.async.ActivityOperationsService
 import fr.hozakan.flysightble.framework.service.loading.LoadingState
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
@@ -74,6 +75,7 @@ class DefaultBluetoothService(
         continuations.onEach { it.resume(Unit) }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     @SuppressLint("MissingPermission")
     override fun getPairedDevices(): Flow<LoadingState<List<BluetoothDevice>>> {
         return channelFlow {
@@ -84,17 +86,24 @@ class DefaultBluetoothService(
             if (adapter != null) {
                 val scanCallback = object : ScanCallback() {
                     override fun onScanResult(callbackType: Int, result: ScanResult) {
+                        Timber.d("Hoz2 scan result : $result")
                         scope.launch {
                             result.scanRecord?.customAdvertisementDataMap()
                                 ?.let { advertisingData ->
+                                    Timber.d("Hoz2 1")
                                     val data2 = advertisingData[255] ?: return@let
+                                    Timber.d("Hoz2 2 : ${data2.bytesToHex().length} ${data2.bytesToHex()}")
                                     if (data2.bytesToHex().length != 8) return@let
+                                    Timber.d("Hoz2 3")
                                     val manufacturerId = data2.bytesToHex().run {
                                         substring(2, length - 2)
                                     }
+                                    Timber.d("Hoz2 4 manufacturerId = $manufacturerId")
                                     if (manufacturerId == "DB09" && result.isConnectable && result.device.bondState == BluetoothDevice.BOND_BONDED) {
                                         devices += result.device
-                                        send(LoadingState.Loading(devices))
+                                        if (!isClosedForSend) {
+                                            send(LoadingState.Loading(devices))
+                                        }
                                     }
                                 }
                         }

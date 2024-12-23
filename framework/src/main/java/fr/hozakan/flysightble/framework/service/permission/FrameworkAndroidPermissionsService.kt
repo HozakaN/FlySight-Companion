@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.app.Application
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.content.ContextCompat
 import fr.hozakan.flysightble.framework.service.ListenableService
 import fr.hozakan.flysightble.framework.service.MonitorableService
@@ -114,8 +115,14 @@ class FrameworkAndroidPermissionsService(
     override fun hasBluetoothPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             application.applicationContext,
-            Manifest.permission.BLUETOOTH_CONNECT
-        ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                Manifest.permission.BLUETOOTH_CONNECT
+            } else {
+                Manifest.permission.BLUETOOTH
+            },
+        ) == PackageManager.PERMISSION_GRANTED &&
+                (Build.VERSION.SDK_INT < Build.VERSION_CODES.S &&
+                        hasForegroundLocationPermission()) || ContextCompat.checkSelfPermission(
             application.applicationContext,
             Manifest.permission.BLUETOOTH_SCAN
         ) == PackageManager.PERMISSION_GRANTED
@@ -185,10 +192,50 @@ class FrameworkAndroidPermissionsService(
         if (hasBluetoothPermission()) {
             return true
         }
-        val hasPermission =
+        val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             activityOperationsService.requestPermissions(
-                Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN
             )
+        } else {
+            activityOperationsService.requestPermissions(
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+        }
+//        activityOperationsService.requestPermissions(
+//            Manifest.permission.BLUETOOTH_CONNECT,
+//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+//                Manifest.permission.BLUETOOTH_SCAN
+//            } else {
+//                Manifest.permission.ACCESS_FINE_LOCATION
+//            },
+//            Manifest.permission.BLUETOOTH
+//        )
+//        if (hasPermission && Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+//            hasPermission = requestForegroundLocationPermission()
+
+        /*
+
+override fun hasBluetoothPermission(): Boolean {
+    return ContextCompat.checkSelfPermission(
+        application.applicationContext,
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Manifest.permission.BLUETOOTH_CONNECT
+        } else {
+            Manifest.permission.BLUETOOTH
+        },
+    ) == PackageManager.PERMISSION_GRANTED &&
+            (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || (ContextCompat.checkSelfPermission(
+                application.applicationContext,
+                Manifest.permission.BLUETOOTH_SCAN
+            ) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(
+                        application.applicationContext,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED))
+         */
+//        }
         if (hasPermission) {
             freeBluetoothCoroutines()
             delegate(PermissionEvent.BluetoothPermissionChanged(true))

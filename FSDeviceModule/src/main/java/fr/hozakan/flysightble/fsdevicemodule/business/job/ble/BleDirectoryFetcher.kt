@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import fr.hozakan.flysightble.bluetoothmodule.GattTaskQueue
+import fr.hozakan.flysightble.bluetoothmodule.SimpleBluetoothGattCallback
 import fr.hozakan.flysightble.fsdevicemodule.business.job.DirectoryFetcher
 import fr.hozakan.flysightble.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightble.model.FileInfo
@@ -36,7 +37,7 @@ class BleDirectoryFetcher(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private val gattCallback = object : BluetoothGattCallback() {
+    private val gattCallback = object : SimpleBluetoothGattCallback() {
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic,
@@ -60,7 +61,7 @@ class BleDirectoryFetcher(
 
                 directoryListed = CompletableDeferred()
                 gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
-                Timber.i("Getting directory $directory")
+                Timber.i("Hoz2 Getting directory $directory")
                 val task = TaskBuilder.buildGetDirectoryTask(
                     gatt = gatt,
                     characteristic = gattCharacteristic,

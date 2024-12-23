@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
+import android.os.Build
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -17,7 +18,7 @@ import java.util.concurrent.Executors
 
 @SuppressLint("MissingPermission")
 class GattTaskQueue(
-    private val gattCallback: BluetoothGattCallback
+    private val gattCallback: SimpleBluetoothGattCallback
 ) {
 
     private val tasks = mutableListOf<GattTask>()
@@ -29,9 +30,9 @@ class GattTaskQueue(
 
     fun gattCallback() = _gattCallback
 
-    private val characteristicChangeCallbacks = mutableMapOf<UUID, List<BluetoothGattCallback>>()
+    private val characteristicChangeCallbacks = mutableMapOf<UUID, List<SimpleBluetoothGattCallback>>()
 
-    private val _gattCallback = object : BluetoothGattCallback() {
+    private val _gattCallback = object : SimpleBluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
             super.onConnectionStateChange(gatt, status, newState)
             gattCallback.onConnectionStateChange(gatt, status, newState)
@@ -63,7 +64,12 @@ class GattTaskQueue(
             status: Int
         ) {
             super.onCharacteristicRead(gatt, characteristic, value, status)
-            gattCallback.onCharacteristicRead(gatt, characteristic, value, status)
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                gattCallback.onCharacteristicRead(gatt, characteristic, value, status)
+//            } else {
+//                characteristic.value = value
+//                gattCallback.onCharacteristicRead(gatt, characteristic, status)
+//            }
             val task =
                 tasks.firstOrNull { it.characteristic.uuid == characteristic.uuid && it.gatt == gatt }
             if (task != null) {
@@ -101,7 +107,7 @@ class GattTaskQueue(
                 }
             }
         }
-    }
+    }.asBluetoothGattCallback()
 
     init {
         scope.launch {
@@ -111,7 +117,7 @@ class GattTaskQueue(
         }
     }
 
-    operator fun plusAssign(callback: Pair<UUID, BluetoothGattCallback>) {
+    operator fun plusAssign(callback: Pair<UUID, SimpleBluetoothGattCallback>) {
         val list = characteristicChangeCallbacks[callback.first]
         if (list != null) {
             characteristicChangeCallbacks[callback.first] = list + callback.second
@@ -120,7 +126,7 @@ class GattTaskQueue(
         }
     }
 
-    operator fun minusAssign(callback: BluetoothGattCallback) {
+    operator fun minusAssign(callback: SimpleBluetoothGattCallback) {
         characteristicChangeCallbacks.forEach { (uuid, callbacks) ->
             characteristicChangeCallbacks[uuid] = callbacks.filter { it != callback }
         }
@@ -150,11 +156,16 @@ class GattTaskQueue(
         val command = task.command
         val writeType = task.writeType
         task.commandLogger()
-        gatt.writeCharacteristic(
-            characteristic,
-            command,
-            writeType
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            gatt.writeCharacteristic(
+                characteristic,
+                command,
+                writeType
+            )
+        } else {
+            characteristic.value = command
+            gatt.writeCharacteristic(characteristic)
+        }
 
         withTimeout(5000) {
             task.completion.await()
@@ -166,7 +177,12 @@ class GattTaskQueue(
         val descriptor = task.descriptor
         val command = task.command
         task.commandLogger()
-        gatt.writeDescriptor(descriptor, command)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            gatt.writeDescriptor(descriptor, command)
+        } else {
+            descriptor.value = command
+            gatt.writeDescriptor(descriptor)
+        }
         task.completion.await()
     }
 

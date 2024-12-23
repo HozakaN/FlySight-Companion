@@ -9,8 +9,11 @@ import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothProfile
 import android.content.Context
+import android.os.Build
 import fr.hozakan.flysightble.bluetoothmodule.GattTask
 import fr.hozakan.flysightble.bluetoothmodule.GattTaskQueue
+import fr.hozakan.flysightble.bluetoothmodule.SimpleBluetoothGattCallback
+import fr.hozakan.flysightble.bluetoothmodule.asBluetoothGattCallback
 import fr.hozakan.flysightble.bluetoothmodule.isIndicatable
 import fr.hozakan.flysightble.bluetoothmodule.isNotifiable
 import fr.hozakan.flysightble.bluetoothmodule.isReadable
@@ -159,9 +162,10 @@ class FlySightDeviceImpl(
     private val scheduler = FlySightJobScheduler()
 
     private val gattTaskQueue = GattTaskQueue(
-        gattCallback = object : BluetoothGattCallback() {
+        gattCallback = object : SimpleBluetoothGattCallback() {
             override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
                 super.onConnectionStateChange(gatt, status, newState)
+                Timber.d("Hoz2 connection state changed : $newState (connected = ${BluetoothProfile.STATE_CONNECTED}), (connecting = ${BluetoothProfile.STATE_CONNECTING}), (disconnected = ${BluetoothProfile.STATE_DISCONNECTED})")
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     log("Gatt connected")
                     increaseMtuSize()
@@ -649,14 +653,22 @@ class FlySightDeviceImpl(
 
     @SuppressLint("MissingPermission")
     override suspend fun connectGatt(): Boolean {
+        Timber.d("Hoz2 connectGatt called")
         if (scope != null) {
+            Timber.e("attempting to connect while already connected")
             return false
         }
         scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         stateUpdater(DeviceConnectionState.Connecting)
         scope?.launch {
             isNewConnection = true
-            gatt = bluetoothDevice.connectGatt(context, true, gattTaskQueue.gattCallback())
+            Timber.d("Hoz2 connecting 1 to gatt")
+            gatt = bluetoothDevice.connectGatt(
+                context,
+                true,
+                gattTaskQueue.gattCallback()
+            )
+            Timber.d("Hoz2 connecting 2 to gatt")
             log("Connecting to gatt")
         }
 
@@ -714,7 +726,12 @@ class FlySightDeviceImpl(
         descriptor: BluetoothGattDescriptor,
         payload: ByteArray
     ) {
-        gatt.writeDescriptor(descriptor, payload)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            gatt.writeDescriptor(descriptor, payload)
+        } else {
+            descriptor.value = payload
+            gatt.writeDescriptor(descriptor)
+        }
     }
 
     @SuppressLint("MissingPermission")

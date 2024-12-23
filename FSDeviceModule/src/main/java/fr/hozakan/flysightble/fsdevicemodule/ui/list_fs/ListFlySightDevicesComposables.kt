@@ -245,7 +245,7 @@ internal fun ListFlySightDevicesScreenInternal(
                         Box(
                             modifier = Modifier
                                 .weight(2f)
-                                .padding(bottom = 16.dp),
+                                .padding(bottom = 24.dp),
                             contentAlignment = Alignment.BottomCenter
                         ) {
                             CircularProgressIndicator()
