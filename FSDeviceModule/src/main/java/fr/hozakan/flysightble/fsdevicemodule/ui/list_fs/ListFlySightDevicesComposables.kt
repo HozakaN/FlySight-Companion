@@ -97,7 +97,8 @@ fun ListFlySightDevicesMenuActions() {
 
     if (state.hasBluetoothPermission
         && state.bluetoothState == BluetoothService.BluetoothState.Available
-        && state.devices.isNotEmpty()) {
+        && state.devices.isNotEmpty()
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -242,7 +243,9 @@ internal fun ListFlySightDevicesScreenInternal(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Box(
-                            modifier = Modifier.weight(2f).padding(bottom = 16.dp),
+                            modifier = Modifier
+                                .weight(2f)
+                                .padding(bottom = 16.dp),
                             contentAlignment = Alignment.BottomCenter
                         ) {
                             CircularProgressIndicator()
@@ -650,34 +653,36 @@ private fun DeviceConfigurationContainer(
             )
             Spacer(modifier = Modifier.weight(1f))
             if (!updatingConfiguration) {
-                IconButton(
-                    modifier = Modifier.requiredSize(24.dp),
-                    onClick = {
-                        menuOpened = true
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Device menu"
-                    )
-                }
-                DropdownMenu(
-                    expanded = menuOpened,
-                    onDismissRequest = { menuOpened = false }
-                ) {
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                modifier = Modifier.fillMaxWidth(),
-                                text = "Change configuration",
-                                textAlign = TextAlign.Center
-                            )
-                        },
+                Box {
+                    IconButton(
+                        modifier = Modifier.requiredSize(24.dp),
                         onClick = {
-                            menuOpened = false
-                            onChangeDeviceConfigurationClicked()
+                            menuOpened = true
                         }
-                    )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Device menu"
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuOpened,
+                        onDismissRequest = { menuOpened = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    text = "Change configuration",
+                                    textAlign = TextAlign.Center
+                                )
+                            },
+                            onClick = {
+                                menuOpened = false
+                                onChangeDeviceConfigurationClicked()
+                            }
+                        )
+                    }
                 }
             }
         }

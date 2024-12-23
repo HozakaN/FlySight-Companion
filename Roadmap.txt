@@ -27,17 +27,17 @@ TODO release/1.0.0 RC1
 
 - Logo
 
--Lower Android api level requirement
+- Lower Android api level requirement
 
 TODO release/1.0.0 RC2
 
--list devices screen
+- DONE list devices screen
 + no device
 ++ revoir le positionnement vertical des items (espacement entre bloc texte et bloc buttons)
 + no device refreshing
 ++ revoir le positionnement vertical des items (chargement bloc au centre, cancel button aux 3.4)
 
-- mettre des DropDownMenu dans une Box avec l'icon MoreVert correspondant
+- DONE mettre des DropDownMenu dans une Box avec l'icon MoreVert correspondant
 
 - Localisation fr
 
