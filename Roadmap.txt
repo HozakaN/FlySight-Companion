@@ -25,9 +25,9 @@ TODO release/1.0.0 RC1
 
 - TO FINISH in RC2 FlySight design system
 
-- Logo
+- DONE Logo
 
-- Lower Android api level requirement
+- [Check what's up with connection callback not being called on Nexus 6P (Api 28 ?)] Lower Android api level requirement
 
 TODO release/1.0.0 RC2
 

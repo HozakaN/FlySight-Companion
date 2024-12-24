@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.NavHost
@@ -93,19 +94,19 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                 CompositionLocalProvider(
                     LocalViewModelFactory provides viewModelFactory,
                     LocalMenuState provides menuState,
-                    fr.hozakan.flysightble.dialogmodule.LocalDialogService provides dialogService
+                    LocalDialogService provides dialogService
                 ) {
                     val navController = rememberNavController()
                     val currentBackStack = navController.currentBackStackEntryAsState()
 
-                    fr.hozakan.flysightble.dialogmodule.DialogHandler()
+                    DialogHandler()
 
                     Scaffold(
                         topBar = {
                             val currentRoute = currentBackStack.value?.destination?.route
                             val title = when (currentRoute) {
                                 AppScreen.DeviceTab.DeviceList.route -> {
-                                    "FlySight BLE"
+                                    stringResource(R.string.app_name)
                                 }
 
                                 AppScreen.DeviceTab.DeviceDetail.route -> {
@@ -133,7 +134,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                     when (currentRoute) {
                                         AppScreen.DeviceTab.DeviceList.route -> {
                                             Icon(
-                                                imageVector = Icons.Default.Bluetooth,
+                                                painter = painterResource(R.drawable.flysight_icon),
                                                 contentDescription = "Home"
                                             )
                                         }
