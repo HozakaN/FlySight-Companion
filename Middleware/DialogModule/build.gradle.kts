@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "fr.hozakan.flysightble.dialogmodule"
+    namespace = "fr.hozakan.flysightcompanion.dialogmodule"
     compileSdk = 35
 
     defaultConfig {

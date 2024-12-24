@@ -1,11 +1,11 @@
-package fr.hozakan.flysightble.configfilesmodule.business.encoder
+package fr.hozakan.flysightcompanion.configfilesmodule.business.encoder
 
-import fr.hozakan.flysightble.configfilesmodule.business.DefaultConfigEncoder
-import fr.hozakan.flysightble.configfilesmodule.business.parser.CONFIG_NAME_INDICATOR
-import fr.hozakan.flysightble.model.config.Speech
-import fr.hozakan.flysightble.model.config.SpeechMode
-import fr.hozakan.flysightble.model.config.UnitSystem
-import fr.hozakan.flysightble.model.defaultConfigFile
+import fr.hozakan.flysightcompanion.configfilesmodule.business.DefaultConfigEncoder
+import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.CONFIG_NAME_INDICATOR
+import fr.hozakan.flysightcompanion.model.config.Speech
+import fr.hozakan.flysightcompanion.model.config.SpeechMode
+import fr.hozakan.flysightcompanion.model.config.UnitSystem
+import fr.hozakan.flysightcompanion.model.defaultConfigFile
 import org.junit.Assert
 import org.junit.Test
 

@@ -19,7 +19,7 @@ TODO release/1.0.0 RC1
 
 - DONE Improve config file picking dialog spacing between elements
 
-- Package and app naming
+- DONE Package and app naming
 
 - Possible issue de button de connexion qui fonctionne mal après une déconnexion sur de la navigation user rapide
 

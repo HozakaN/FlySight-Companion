@@ -1,4 +1,4 @@
-package fr.hozakan.flysightble.configfilesmodule
+package fr.hozakan.flysightcompanion.configfilesmodule
 
 import org.junit.Test
 

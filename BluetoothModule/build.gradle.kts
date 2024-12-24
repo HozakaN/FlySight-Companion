@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "fr.hozakan.flysightble.bluetoothmodule"
+    namespace = "fr.hozakan.flysightcompanion.bluetoothmodule"
     compileSdk = 35
 
     defaultConfig {

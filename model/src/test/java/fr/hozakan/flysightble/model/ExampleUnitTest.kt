@@ -1,4 +1,4 @@
-package fr.hozakan.flysightble.model
+package fr.hozakan.flysightcompanion.model
 
 import org.junit.Test
 

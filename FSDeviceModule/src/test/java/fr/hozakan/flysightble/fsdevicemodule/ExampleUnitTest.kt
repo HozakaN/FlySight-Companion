@@ -1,4 +1,4 @@
-package fr.hozakan.flysightble.fsdevicemodule
+package fr.hozakan.flysightcompanion.fsdevicemodule
 
 import org.junit.Test
 

@@ -1,4 +1,4 @@
-package fr.hozakan.flysightble.bluetoothmodule
+package fr.hozakan.flysightcompanion.bluetoothmodule
 
 import org.junit.Test
 

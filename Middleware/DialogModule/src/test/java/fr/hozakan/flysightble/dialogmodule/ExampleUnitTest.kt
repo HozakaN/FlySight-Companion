@@ -1,4 +1,4 @@
-package fr.hozakan.flysightble.dialogmodule
+package fr.hozakan.flysightcompanion.dialogmodule
 
 import org.junit.Test
 

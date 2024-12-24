@@ -1,4 +1,4 @@
-package fr.hozakan.flysightble.bluetoothmodule
+package fr.hozakan.flysightcompanion.bluetoothmodule
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("fr.hozakan.flysightble.bluetoothmodule.test", appContext.packageName)
+        assertEquals("fr.hozakan.flysightcompanion.bluetoothmodule.test", appContext.packageName)
     }
 }

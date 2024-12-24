@@ -1,4 +1,4 @@
-package fr.hozakan.flysightble.composablecommons
+package fr.hozakan.flysightcompanion.composablecommons
 
 import org.junit.Test
 

@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "fr.hozakan.flysightble.fsdevicemodule"
+    namespace = "fr.hozakan.flysightcompanion.fsdevicemodule"
     compileSdk = 35
 
     defaultConfig {

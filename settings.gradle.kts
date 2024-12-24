@@ -20,7 +20,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FlySightBLE"
+rootProject.name = "FlySightCompanion"
 include(":app")
 include(":framework")
 include(":BluetoothModule")

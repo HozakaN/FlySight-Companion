@@ -1,14 +1,14 @@
-package fr.hozakan.flysightble.configfilesmodule.business.parser
+package fr.hozakan.flysightcompanion.configfilesmodule.business.parser
 
-import fr.hozakan.flysightble.configfilesmodule.business.DefaultConfigParser
-import fr.hozakan.flysightble.model.config.AlarmType
-import fr.hozakan.flysightble.model.config.DynamicModel
-import fr.hozakan.flysightble.model.config.InitMode
-import fr.hozakan.flysightble.model.config.RateMode
-import fr.hozakan.flysightble.model.config.SpeechMode
-import fr.hozakan.flysightble.model.config.ToneLimitBehaviour
-import fr.hozakan.flysightble.model.config.ToneMode
-import fr.hozakan.flysightble.model.config.Volume
+import fr.hozakan.flysightcompanion.configfilesmodule.business.DefaultConfigParser
+import fr.hozakan.flysightcompanion.model.config.AlarmType
+import fr.hozakan.flysightcompanion.model.config.DynamicModel
+import fr.hozakan.flysightcompanion.model.config.InitMode
+import fr.hozakan.flysightcompanion.model.config.RateMode
+import fr.hozakan.flysightcompanion.model.config.SpeechMode
+import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
+import fr.hozakan.flysightcompanion.model.config.ToneMode
+import fr.hozakan.flysightcompanion.model.config.Volume
 import org.junit.Assert
 import org.junit.Test
 

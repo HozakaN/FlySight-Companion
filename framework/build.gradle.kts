@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "fr.hozakan.flysightble.framework"
+    namespace = "fr.hozakan.flysightcompanion.framework"
     compileSdk = 35
 
     defaultConfig {
