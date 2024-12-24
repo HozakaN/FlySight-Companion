@@ -3,7 +3,6 @@ package fr.hozakan.flysightcompanion.fsdevicemodule.business
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
@@ -13,7 +12,6 @@ import android.os.Build
 import fr.hozakan.flysightcompanion.bluetoothmodule.GattTask
 import fr.hozakan.flysightcompanion.bluetoothmodule.GattTaskQueue
 import fr.hozakan.flysightcompanion.bluetoothmodule.SimpleBluetoothGattCallback
-import fr.hozakan.flysightcompanion.bluetoothmodule.asBluetoothGattCallback
 import fr.hozakan.flysightcompanion.bluetoothmodule.isIndicatable
 import fr.hozakan.flysightcompanion.bluetoothmodule.isNotifiable
 import fr.hozakan.flysightcompanion.bluetoothmodule.isReadable
@@ -24,11 +22,10 @@ import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigParser
 import fr.hozakan.flysightcompanion.configfilesmodule.business.DefaultConfigParser
 import fr.hozakan.flysightcompanion.framework.extension.bytesToHex
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
+import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleDirectoryFetcher
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleFileReader
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleFileWriter
-import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.DirectoryFetcher
-import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BlePingJob
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.Command
 import fr.hozakan.flysightcompanion.model.ConfigFile
@@ -48,7 +45,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -177,6 +173,7 @@ class FlySightDeviceImpl(
                     log("Gatt disconnected")
                     if (_connectionState.value != DeviceConnectionState.ConnectionError) {
                         stateUpdater(DeviceConnectionState.Disconnected)
+                        resetFlySight()
                     }
                 }
             }
@@ -660,7 +657,7 @@ class FlySightDeviceImpl(
             isNewConnection = true
             gatt = bluetoothDevice.connectGatt(
                 context,
-                true,
+                false,
                 gattTaskQueue.gattCallback()
             )
             log("Connecting to gatt")
@@ -683,8 +680,6 @@ class FlySightDeviceImpl(
             val job = scope?.async {
                 try {
                     connection.close()
-                    gatt = null
-                    scope = null
                     _connectionState.update {
                         DeviceConnectionState.Disconnected
                     }
@@ -697,15 +692,20 @@ class FlySightDeviceImpl(
         } ?: false
 
         if (closed) {
-            _resultFiles.value = LoadingState.Idle
-            _configFile.value = ConfigFileState.Nothing
-//        _logs.value = emptyList()
-            _rawConfigFile.value = FileState.Nothing
-            _services.value = emptyList()
-            scope?.cancel()
-            scope = null
+            resetFlySight()
         }
         return closed
+    }
+
+    private fun resetFlySight() {
+        _resultFiles.value = LoadingState.Idle
+        _configFile.value = ConfigFileState.Nothing
+//        _logs.value = emptyList()
+        _rawConfigFile.value = FileState.Nothing
+        _services.value = emptyList()
+        scope?.cancel()
+        scope = null
+        gatt = null
     }
 
     private fun log(message: String) {
