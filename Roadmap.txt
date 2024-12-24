@@ -21,7 +21,7 @@ TODO release/1.0.0 RC1
 
 - DONE Package and app naming
 
-- Possible issue de button de connexion qui fonctionne mal après une déconnexion sur de la navigation user rapide
+- DONE Possible issue de button de connexion qui fonctionne mal après une déconnexion sur de la navigation user rapide
 
 - TO FINISH in RC2 FlySight design system
 
