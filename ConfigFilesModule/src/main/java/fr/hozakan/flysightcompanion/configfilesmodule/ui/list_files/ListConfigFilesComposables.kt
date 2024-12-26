@@ -32,11 +32,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightcompanion.composablecommons.SimpleDialogActionBar
+import fr.hozakan.flysightcompanion.designsystem.extension.distanceTextResource
+import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
@@ -50,7 +53,7 @@ fun ListConfigFileMenuActions(
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Filled.NoteAdd,
-            contentDescription = "New config file"
+            contentDescription = stringResource(R.string.list_config_file_menu_action_new_config_file_content_description)
         )
     }
 }
@@ -80,12 +83,12 @@ fun ListConfigFilesScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("No config file yet")
+                Text(text = stringResource(R.string.list_config_file_no_config_file))
                 Spacer(modifier = Modifier.requiredHeight(16.dp))
                 Button(
                     onClick = onCreateConfigFile
                 ) {
-                    Text("Create a config file")
+                    Text(text = stringResource(R.string.list_config_file_create_config_file))
                 }
             }
         } else {
@@ -143,7 +146,7 @@ fun ConfigFileItem(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.MoreVert,
-                            contentDescription = "Config file actions"
+                            contentDescription = stringResource(R.string.list_config_file_item_menu_action_content_description)
                         )
                     }
                     DropdownMenu(
@@ -156,7 +159,7 @@ fun ConfigFileItem(
                             text = {
                                 Text(
                                     modifier = Modifier.fillMaxWidth(),
-                                    text = "Delete",
+                                    text = stringResource(R.string.misc_delete),
                                     textAlign = TextAlign.Center
                                 )
                             },
@@ -190,19 +193,32 @@ fun ConfigFileItem(
             }
             Spacer(modifier = Modifier.requiredHeight(8.dp))
             Text(
-                "Elevation : ${configFile.dzElev} ${unitSystem.distanceText}",
+                text = stringResource(
+                    R.string.list_config_file_dz_elev_info,
+                    configFile.dzElev,
+                    stringResource(unitSystem.distanceTextResource)
+                )
             )
             Spacer(modifier = Modifier.requiredHeight(8.dp))
             Text(
-                "${configFile.speeches.size} speeches",
+                text = stringResource(
+                    R.string.list_config_file_speech_count,
+                    configFile.speeches.size
+                )
             )
             Spacer(modifier = Modifier.requiredHeight(8.dp))
             Text(
-                "${configFile.alarms.size} alarms",
+                text = stringResource(
+                    R.string.list_config_file_alarm_count,
+                    configFile.alarms.size
+                )
             )
             Spacer(modifier = Modifier.requiredHeight(8.dp))
             Text(
-                "${configFile.silenceWindows.size} silence windows",
+                text = stringResource(
+                    R.string.list_config_file_silence_window_count,
+                    configFile.silenceWindows.size
+                )
             )
         }
     }
@@ -221,11 +237,16 @@ fun DeleteConfigFileDialog(
             Column(
                 modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
             ) {
-                Text("Delete config file ${configFile.name} ?")
+                Text(
+                    text = stringResource(
+                        R.string.list_config_file_delete_file_dialog,
+                        configFile.name
+                    )
+                )
                 SimpleDialogActionBar(
                     onDismissRequest = onCancel,
                     onValidate = onConfirm,
-                    validateButtonText = "CONFIRM"
+                    validateButtonText = stringResource(R.string.misc_confirm).uppercase()
                 )
             }
         }

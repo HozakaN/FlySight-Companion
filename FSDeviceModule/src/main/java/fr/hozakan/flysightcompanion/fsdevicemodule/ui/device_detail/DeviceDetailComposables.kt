@@ -32,9 +32,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
+import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.ConfigFileState
 
@@ -73,7 +75,7 @@ fun DeviceDetailMenuActions(
                     onShowDeviceConfigClicked(immutableConfigFileState.config)
                 }
             ) {
-                Text("Show config")
+                Text(text = stringResource(R.string.device_detail_show_config))
             }
         }
         else -> {}
@@ -192,12 +194,18 @@ fun DeviceDetailScreen(
                         if (fileInfo.isDirectory) {
                             Icon(
                                 imageVector = Icons.Default.Folder,
-                                contentDescription = "Folder ${fileInfo.fileName}"
+                                contentDescription = stringResource(
+                                    R.string.device_detail_folder,
+                                    fileInfo.fileName
+                                )
                             )
                         } else {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.InsertDriveFile,
-                                contentDescription = "File ${fileInfo.fileName}"
+                                contentDescription = stringResource(
+                                    R.string.device_detail_file,
+                                    fileInfo.fileName
+                                )
                             )
                         }
                         Spacer(modifier = Modifier.requiredWidth(8.dp))
@@ -234,7 +242,7 @@ fun BreadCrumb(
                 if (index > 0) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowRight,
-                        contentDescription = "path separator",
+                        contentDescription = stringResource(R.string.device_detail_path_separator),
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                 }

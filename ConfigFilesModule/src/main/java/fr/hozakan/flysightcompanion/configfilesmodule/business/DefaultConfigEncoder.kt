@@ -16,7 +16,7 @@ class DefaultConfigEncoder : ConfigEncoder {
                 
                 $CONFIG_NAME_INDICATOR:           ${configFile.name}
                 $DESCRIPTION_INDICATOR:           ${configFile.description}
-                $KIND_INDICATOR:                  ${configFile.kind}
+                $KIND_INDICATOR:                  ${configFile.group}
 
                 ; GPS settings
 

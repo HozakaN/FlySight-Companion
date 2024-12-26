@@ -24,9 +24,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import fr.hozakan.flysightcompanion.designsystem.R
 
 @Composable
-public fun ExpandableColumn(
+fun ExpandableColumn(
     modifier: Modifier = Modifier,
     expanded: Boolean = false,
     headerComposable: @Composable RowScope.(Boolean) -> Unit,

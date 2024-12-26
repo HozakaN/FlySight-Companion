@@ -61,6 +61,8 @@ import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightCompanionTheme
 import fr.hozakan.flysightcompanion.designsystem.theme.TextConfiguration
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
+import fr.hozakan.flysightcompanion.R as LocalR
+import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesMenuActions
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
@@ -105,26 +107,30 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                             val currentRoute = currentBackStack.value?.destination?.route
                             val title = when (currentRoute) {
                                 AppScreen.DeviceTab.DeviceList.route -> {
-                                    stringResource(R.string.app_name)
+                                    stringResource(LocalR.string.app_name)
                                 }
 
                                 AppScreen.DeviceTab.DeviceDetail.route -> {
-                                    "Device Detail"
+                                    stringResource(R.string.screen_title_device_detail)
                                 }
 
                                 AppScreen.ConfigTab.ConfigList.route -> {
-                                    "Config files"
+                                    stringResource(R.string.screen_title_config_list)
                                 }
 
                                 AppScreen.DeviceTab.DeviceFile.route -> {
                                     val filePath =
                                         currentBackStack.value?.arguments?.getString("filePath")
                                             ?.split(";")
-                                    "File ${filePath?.lastOrNull()}"
+                                    stringResource(
+                                        R.string.screen_title_file,
+                                        filePath?.lastOrNull()
+                                            ?: stringResource(R.string.misc_unknown)
+                                    )
                                 }
 
                                 else -> {
-                                    "FlySight BLE"
+                                    stringResource(LocalR.string.app_name)
                                 }
                             }
                             TopAppBar(
@@ -133,8 +139,8 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                     when (currentRoute) {
                                         AppScreen.DeviceTab.DeviceList.route -> {
                                             Icon(
-                                                painter = painterResource(R.drawable.flysight_icon),
-                                                contentDescription = "Home"
+                                                painter = painterResource(LocalR.drawable.flysight_icon),
+                                                contentDescription = stringResource(R.string.misc_home)
                                             )
                                         }
 
@@ -146,7 +152,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                    contentDescription = "Navigate up"
+                                                    contentDescription = stringResource(R.string.misc_navigate_up)
                                                 )
                                             }
                                         }
@@ -159,7 +165,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                    contentDescription = "Navigate up"
+                                                    contentDescription = stringResource(R.string.misc_navigate_up)
                                                 )
                                             }
                                         }
@@ -172,7 +178,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                    contentDescription = "Navigate up"
+                                                    contentDescription = stringResource(R.string.misc_navigate_up)
                                                 )
                                             }
                                         }
@@ -185,7 +191,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                    contentDescription = "Navigate up"
+                                                    contentDescription = stringResource(R.string.misc_navigate_up)
                                                 )
                                             }
                                         }
@@ -193,7 +199,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                         else -> {
                                             Icon(
                                                 imageVector = Icons.Default.Bluetooth,
-                                                contentDescription = "Home"
+                                                contentDescription = stringResource(R.string.misc_home)
                                             )
                                         }
                                     }
@@ -266,12 +272,12 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                 horizontalAlignment = Alignment.CenterHorizontally
                                             ) {
                                                 Icon(
-                                                    painter = painterResource(R.drawable.flysight_icon),
-                                                    contentDescription = "Devices"
+                                                    painter = painterResource(LocalR.drawable.flysight_icon),
+                                                    contentDescription = stringResource(R.string.misc_devices)
                                                 )
                                                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                                                 FText(
-                                                    text = "Devices",
+                                                    text = stringResource(R.string.misc_devices),
                                                     configuration = TextConfiguration.TabTitle
                                                 )
                                             }
@@ -293,11 +299,11 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.Engineering,
-                                                    contentDescription = "Config files"
+                                                    contentDescription = stringResource(R.string.screen_title_config_list)
                                                 )
                                                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                                                 FText(
-                                                    text = "Config files",
+                                                    text = stringResource(R.string.screen_title_config_list),
                                                     configuration = TextConfiguration.TabTitle
                                                 )
                                             }
@@ -377,9 +383,6 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             backStackEntry.arguments?.getString("config")
                                         if (config != null) {
                                             DeviceConfigurationScreen(
-//                                                conf = Json.decodeFromString<ConfigFile>(
-//                                                    config
-//                                                )
                                                 conf = json.fromJson(
                                                     config,
                                                     ConfigFile::class.java

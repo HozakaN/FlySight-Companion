@@ -1,18 +1,14 @@
 package fr.hozakan.flysightcompanion.model.config
 
 enum class ToneLimitBehaviour(
-    val value: Int,
-    val text: String
+    val value: Int
 ) {
-    NoTone(0, "No tone"),
-    MinMaxTone(1, "Min/max tone"),
-    ChirpUpDown(2, "Chirp up/down"),
-    ChirpDownUp(2, "Chirp down/up");
+    NoTone(0),
+    MinMaxTone(1),
+    ChirpUpDown(2),
+    ChirpDownUp(2);
 
     companion object {
-        fun fromText(text: String): ToneLimitBehaviour? {
-            return entries.firstOrNull { it.text == text }
-        }
         fun fromValue(value: Int): ToneLimitBehaviour? {
             return entries.firstOrNull { it.value == value }
         }

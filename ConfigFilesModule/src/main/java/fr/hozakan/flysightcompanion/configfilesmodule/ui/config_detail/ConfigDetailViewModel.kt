@@ -106,7 +106,7 @@ class ConfigDetailViewModel @Inject constructor(
         _state.update {
             it.copy(
                 configFile = it.configFile.copy(
-                    kind = kind
+                    group = kind
                 )
             )
         }

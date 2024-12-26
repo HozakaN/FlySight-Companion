@@ -1,22 +1,18 @@
 package fr.hozakan.flysightcompanion.model.config
 
 enum class RateMode(
-    val value: Int,
-    val text: String
+    val value: Int
 ) {
-    HorizontalSpeed(0, "Horizontal speed"),
-    VerticalSpeed(1, "Vertical speed"),
-    GlideRatio(2, "Glide ratio"),
-    InverseGlideRatio(3, "Inverse glide ratio"),
-    TotalSpeed(4, "Total speed"),
-    MagnitudeOf1(8, "Magnitude of tone value"),
-    ChangeInValue1(9, "Change in tone value"),
-    DiveAngle(11, "Dive angle");
+    HorizontalSpeed(0),
+    VerticalSpeed(1),
+    GlideRatio(2),
+    InverseGlideRatio(3),
+    TotalSpeed(4),
+    MagnitudeOf1(8),
+    ChangeInValue1(9),
+    DiveAngle(11);
 
     companion object {
-        fun fromText(text: String): RateMode? {
-            return entries.firstOrNull { it.text == text }
-        }
         fun fromValue(value: Int): RateMode? {
             return entries.firstOrNull { it.value == value }
         }

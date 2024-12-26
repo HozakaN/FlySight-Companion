@@ -22,6 +22,7 @@ import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigParser
 import fr.hozakan.flysightcompanion.configfilesmodule.business.DefaultConfigParser
 import fr.hozakan.flysightcompanion.framework.extension.bytesToHex
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
+import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleDirectoryFetcher
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleFileReader
@@ -90,7 +91,7 @@ private val result_directory_time_regex =
     "^(0[0-9]|1[0-9]|2[0-3])-(0[0-9]|[1-5][0-9])-(0[0-9]|[1-5][0-9])$".toRegex()
 
 class FlySightDeviceImpl(
-    val bluetoothDevice: BluetoothDevice,
+    private val bluetoothDevice: BluetoothDevice,
     private val context: Context,
     private val configEncoder: ConfigEncoder
 ) : FlySightDevice {
@@ -99,7 +100,7 @@ class FlySightDeviceImpl(
 
     override val name: String
         @SuppressLint("MissingPermission")
-        get() = bluetoothDevice.name ?: "Unknown"
+        get() = bluetoothDevice.name ?: context.resources.getString(R.string.misc_unknown)
 
     private var gatt: BluetoothGatt? = null
         private set(value) {

@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -67,10 +68,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightcompanion.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightcompanion.composablecommons.SimpleDialogActionBar
 import fr.hozakan.flysightcompanion.composablecommons.SimpleVerticalDialogActionBar
+import fr.hozakan.flysightcompanion.designsystem.extension.distanceTextResource
 import fr.hozakan.flysightcompanion.designsystem.theme.CustomColors
 import fr.hozakan.flysightcompanion.designsystem.theme.TextConfiguration
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
-import fr.hozakan.flysightcompanion.fsdevicemodule.R
+import fr.hozakan.flysightcompanion.fsdevicemodule.R as LocalR
+import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
@@ -115,8 +118,8 @@ fun ListFlySightDevicesMenuActions() {
                 },
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.new_window),
-                    contentDescription = "Add a FlySight"
+                    painter = painterResource(LocalR.drawable.new_window),
+                    contentDescription = stringResource(R.string.list_device_add_new)
                 )
             }
         }
@@ -197,14 +200,14 @@ internal fun ListFlySightDevicesScreenInternal(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("No bluetooth permission")
+                Text(text = stringResource(R.string.list_device_missing_ble_permission))
                 Spacer(modifier = Modifier.padding(8.dp))
                 Button(
                     onClick = {
                         onRequestBluetoothPermissionClicked()
                     }
                 ) {
-                    Text("Request permission")
+                    Text(text = stringResource(R.string.misc_request_permission))
                 }
             }
         } else if (state.bluetoothState != BluetoothService.BluetoothState.Available) {
@@ -213,7 +216,7 @@ internal fun ListFlySightDevicesScreenInternal(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Bluetooth is not available")
+                    Text(text = stringResource(R.string.list_device_ble_not_available))
                 }
             } else {
                 Column(
@@ -221,14 +224,14 @@ internal fun ListFlySightDevicesScreenInternal(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Bluetooth is disabled")
+                    Text(text = stringResource(R.string.list_device_ble_disabled))
                     Spacer(modifier = Modifier.padding(8.dp))
                     Button(
                         onClick = {
                             onEnableBluetoothClicked()
                         }
                     ) {
-                        Text("Enable bluetooth")
+                        Text(text = stringResource(R.string.misc_enable_bluetooth))
                     }
                 }
             }
@@ -253,27 +256,21 @@ internal fun ListFlySightDevicesScreenInternal(
                         Box(
                             modifier = Modifier.weight(1f)
                         ) {
-                            val text = when (refreshingDeviceList.increment) {
+                            val textResource = when (refreshingDeviceList.increment) {
                                 1 -> {
-                                    """Refreshing device list...
-                                |Taking a bit longer than expected...
-                            """.trimMargin()
+                                    R.string.list_device_refresh_info_2
                                 }
 
                                 2 -> {
-                                    """Refreshing device list...
-                                    |
-                                    |Try putting your FlySight in pairing mode
-                                    |by short pressing the power button twice
-                                """.trimMargin()
+                                    R.string.list_device_refresh_info_3
                                 }
 
                                 else -> {
-                                    "Refreshing device list..."
+                                    R.string.list_device_refresh_info_1
                                 }
                             }
                             Text(
-                                text = text,
+                                text = stringResource(textResource),
                                 style = MaterialTheme.typography.titleMedium
                             )
                         }
@@ -285,7 +282,7 @@ internal fun ListFlySightDevicesScreenInternal(
                                     onCancelScanClicked()
                                 }
                             ) {
-                                Text("Cancel")
+                                Text(text = stringResource(R.string.misc_cancel))
                             }
                         }
                     }
@@ -298,7 +295,7 @@ internal fun ListFlySightDevicesScreenInternal(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     FText(
-                        text = "No devices found",
+                        text = stringResource(R.string.list_devices_no_device_found),
                         configuration = TextConfiguration.PlainScreenTextLarge
                     )
                     Spacer(modifier = Modifier.padding(16.dp))
@@ -308,7 +305,7 @@ internal fun ListFlySightDevicesScreenInternal(
                         }
                     ) {
                         FText(
-                            text = "Refresh list",
+                            text = stringResource(R.string.list_devices_refresh_list),
                             configuration = TextConfiguration.PlainScreenButtonText
                         )
                     }
@@ -319,7 +316,7 @@ internal fun ListFlySightDevicesScreenInternal(
                         }
                     ) {
                         FText(
-                            text = "Add device",
+                            text = stringResource(R.string.list_device_add_new),
                             configuration = TextConfiguration.PlainScreenButtonText
                         )
                     }
@@ -514,7 +511,7 @@ fun DeviceResultFilesContainer(
         modifier = modifier.padding(8.dp)
     ) {
         Text(
-            text = "Results",
+            text = stringResource(R.string.list_device_result_files_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp
@@ -526,7 +523,7 @@ fun DeviceResultFilesContainer(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Error loading result files"
+                        text = stringResource(R.string.list_device_error_loading_result_files),
                     )
                 }
             }
@@ -538,13 +535,13 @@ fun DeviceResultFilesContainer(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "result files",
+                        text = stringResource(R.string.list_device_result_files_count),
                         style = MaterialTheme.typography.titleSmall
                     )
                     Text(text = "${files.value.size}")
                     Spacer(modifier = Modifier.requiredHeight(16.dp))
                     Text(
-                        text = "Most recent run",
+                        text = stringResource(R.string.list_device_result_files_most_recent),
                         style = MaterialTheme.typography.titleSmall
                     )
                     Text(text = "${mostRecentFile?.dateTime?.format(dateTimeFormatter)}")
@@ -557,7 +554,7 @@ fun DeviceResultFilesContainer(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Loading result files...")
+                    Text(text = stringResource(R.string.list_device_loading_result_files))
                 }
             }
         }
@@ -606,7 +603,6 @@ fun FlySightDeviceItemConfigBody(
             modifier = itemModifier
         ) {
             DeviceResultFilesContainer(
-//                modifier = itemModifier,
                 device = device
             )
         }
@@ -646,7 +642,7 @@ private fun DeviceConfigurationContainer(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Configuration",
+                text = stringResource(R.string.list_device_configuration_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
@@ -662,7 +658,9 @@ private fun DeviceConfigurationContainer(
                     ) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Device menu"
+                            contentDescription = stringResource(
+                                R.string.list_device_item_configuration_menu_content_description
+                            )
                         )
                     }
                     DropdownMenu(
@@ -673,7 +671,9 @@ private fun DeviceConfigurationContainer(
                             text = {
                                 Text(
                                     modifier = Modifier.fillMaxWidth(),
-                                    text = "Change configuration",
+                                    text = stringResource(
+                                        R.string.list_device_item_configuration_menu_change
+                                    ),
                                     textAlign = TextAlign.Center
                                 )
                             },
@@ -693,7 +693,7 @@ private fun DeviceConfigurationContainer(
                     .weight(1f),
                 contentAlignment = Alignment.CenterStart
             ) {
-                Text("Updating configuration...")
+                Text(stringResource(R.string.list_device_item_configuration_updating))
             }
             return
         }
@@ -703,7 +703,7 @@ private fun DeviceConfigurationContainer(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Error loading device configuration")
+                    Text(text = stringResource(R.string.list_device_item_load_configuration_error))
                 }
             }
 
@@ -712,7 +712,7 @@ private fun DeviceConfigurationContainer(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Configuration loading...")
+                    Text(text = stringResource(R.string.list_device_item_loading_configuration))
                 }
             }
 
@@ -723,33 +723,46 @@ private fun DeviceConfigurationContainer(
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = configFileState.config.name.ifBlank { "No name" })
+                        Text(text = configFileState.config.name.ifBlank { stringResource(R.string.list_device_item_configuration_no_name) })
                         Spacer(modifier = Modifier.weight(1f))
                         Icon(
                             modifier = Modifier.requiredSize(24.dp),
                             imageVector = Icons.Default.Warning,
-                            contentDescription = "There is issues with the configuration",
+                            contentDescription = stringResource(R.string.list_device_item_configuration_warning_content_description),
                             tint = CustomColors.Orange
                         )
                     }
                 } else {
-                    Text(text = configFileState.config.name.ifBlank { "No name" })
+                    Text(text = configFileState.config.name.ifBlank { stringResource(R.string.list_device_item_configuration_no_name) })
                 }
                 Spacer(modifier = Modifier.requiredHeight(16.dp))
                 Text(
-                    "Elevation : ${configFileState.config.dzElev} ${unitSystem.distanceText}",
+                    text = stringResource(
+                        R.string.list_config_file_dz_elev_info,
+                        configFileState.config.dzElev,
+                        stringResource(unitSystem.distanceTextResource)
+                    ),
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 Text(
-                    "${configFileState.config.speeches.size} speeches",
+                    text = stringResource(
+                        R.string.list_config_file_speech_count,
+                        configFileState.config.speeches.size
+                    ),
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 Text(
-                    "${configFileState.config.alarms.size} alarms",
+                    text = stringResource(
+                        R.string.list_config_file_alarm_count,
+                        configFileState.config.alarms.size
+                    ),
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 Text(
-                    "${configFileState.config.silenceWindows.size} silence windows",
+                    text = stringResource(
+                        R.string.list_config_file_silence_window_count,
+                        configFileState.config.silenceWindows.size
+                    ),
                 )
             }
         }
@@ -800,18 +813,21 @@ internal fun DeviceConfigurationMisMatchDialog(
                 Spacer(modifier = Modifier.requiredHeight(16.dp))
                 if (!device.isConfigFromSystem) {
                     Text(
-                        text = "Would you like to upload this device configuration on your phone ?",
+                        text = stringResource(R.string.list_device_dialog_upload_config),
                         color = CustomColors.Orange
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     SimpleDialogActionBar(
                         onDismissRequest = onDismissRequest,
                         onValidate = onUploadConfigToSystem,
-                        validateButtonText = "Upload".uppercase()
+                        validateButtonText = stringResource(R.string.misc_upload).uppercase()
                     )
                 } else if (device.hasConfigContentChanged) {
                     Text(
-                        text = "The FlySight configuration differs from your local config file named ${configFileState.conf?.name}",
+                        text = stringResource(
+                            R.string.list_device_dialog_config_content_changed,
+                            configFileState.conf?.name ?: stringResource(R.string.misc_unknown)
+                        ),
                         color = CustomColors.Orange
                     )
                     Spacer(modifier = Modifier.requiredHeight(16.dp))
@@ -819,9 +835,9 @@ internal fun DeviceConfigurationMisMatchDialog(
                         onDismissRequest = onDismissRequest,
                         onNeutral = onUpdateSystemConfClicked,
                         onValidate = onPushConfigToDeviceClicked,
-                        validateButtonText = "Update FlySight conf".uppercase(),
-                        neutralButtonText = "Update local conf".uppercase(),
-                        cancelButtonText = "Don't do anything".uppercase()
+                        validateButtonText = stringResource(R.string.list_device_dialog_update_device_conf).uppercase(),
+                        neutralButtonText = stringResource(R.string.list_device_dialog_update_local_conf).uppercase(),
+                        cancelButtonText = stringResource(R.string.list_device_dialog_do_nothing).uppercase()
                     )
                 }
             }
@@ -930,20 +946,21 @@ private val DeviceConnectionState.connectionColor: Color
         DeviceConnectionState.ConnectionError -> Color.Red
     }
 
+@Composable
 fun connectionText(connectionState: DeviceConnectionState): String = when (connectionState) {
     DeviceConnectionState.Connected -> {
-        "Disconnect"
+        stringResource(R.string.device_connection_button_disconnect)
     }
 
     DeviceConnectionState.Disconnected -> {
-        "Connect"
+        stringResource(R.string.device_connection_button_connect)
     }
 
     DeviceConnectionState.Connecting -> {
-        "Connecting..."
+        stringResource(R.string.device_connection_button_connecting)
     }
 
     DeviceConnectionState.ConnectionError -> {
-        "Error"
+        stringResource(R.string.misc_error)
     }
 }
