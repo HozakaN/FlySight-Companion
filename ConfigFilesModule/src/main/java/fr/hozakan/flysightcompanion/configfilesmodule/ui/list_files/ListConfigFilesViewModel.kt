@@ -47,4 +47,10 @@ class ListConfigFilesViewModel @Inject constructor(
         }
     }
 
+    fun duplicateConfigFile(configFile: ConfigFile) {
+        viewModelScope.launch {
+            configFileService.duplicateConfigFile(configFile)
+        }
+    }
+
 }

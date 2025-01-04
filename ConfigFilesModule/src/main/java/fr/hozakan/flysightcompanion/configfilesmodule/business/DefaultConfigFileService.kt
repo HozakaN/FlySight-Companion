@@ -41,10 +41,10 @@ class DefaultConfigFileService(
     override suspend fun saveConfigFile(configFile: ConfigFile): ConfigFile {
         var name = configFile.name
         if (name.isBlank()) {
-            when (val result = dialogService.displayDialog(ConfigFileNameDialog)) {
+            when (val result = dialogService.displayDialog(ConfigFileNameDialog())) {
                 is ConfigFileName -> name = result.name
                 DialogResult.Dismiss -> return configFile
-                else -> error("Save config file result should not have another type")
+                else -> error("Save config file result should not have another type (${result::class.java})")
             }
         }
         val readyConfigFile = configFile.copy(name = name)
@@ -103,6 +103,25 @@ class DefaultConfigFileService(
             DialogResult.Dismiss -> null
             else -> error("Pick config file result should not have another type")
         }
+    }
+
+    override suspend fun duplicateConfigFile(configFile: ConfigFile) {
+        var index = 1
+        var name = "${configFile.name} ($index)"
+        while (_configs.value.any { it.name == name }) {
+            index++
+            name = "${configFile.name} ($index)"
+        }
+        when (val result = dialogService.displayDialog(ConfigFileNameDialog(name))) {
+            is ConfigFileName -> name = result.name
+            DialogResult.Dismiss -> return
+            else -> error("Duplicate config file should not have another output")
+        }
+        saveConfigFile(
+            configFile.copy(
+                name = name
+            )
+        )
     }
 
     private fun buildFileContent(configFile: ConfigFile): String {
