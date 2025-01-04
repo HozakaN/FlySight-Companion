@@ -49,7 +49,7 @@ TODO release/1.0.0 RC2
 
 - Fix text color on some dialogs/dropdowns
 
-- Hide "File" textfield in Initialization section of config file edition
+- DONE Hide "File" textfield in Initialization section of config file edition
 
 - for PlayStore app, a Feedback screen, with Name, contact, message and allowing to pass the logs from a devices
 

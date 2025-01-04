@@ -698,21 +698,23 @@ fun ConfigDetailScreenInternal(
                             updateInitMode(it)
                         }
                     )
-                    Spacer(modifier = Modifier.requiredHeight(8.dp))
-                    OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = configFile.initFile ?: "",
-                        onValueChange = {
-                            updateInitFile(it)
-                        },
-                        label = {
-                            Text(
-                                text = stringResource(
-                                    R.string.config_detail_configuration_alarm_filename_label
+                    if (configFile.initMode == InitMode.PlayFile) {
+                        Spacer(modifier = Modifier.requiredHeight(8.dp))
+                        OutlinedTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = configFile.initFile ?: "",
+                            onValueChange = {
+                                updateInitFile(it)
+                            },
+                            label = {
+                                Text(
+                                    text = stringResource(
+                                        R.string.config_detail_configuration_alarm_filename_label
+                                    )
                                 )
-                            )
-                        }
-                    )
+                            }
+                        )
+                    }
                 }
                 ExpandableColumn(
                     headerComposable = {
