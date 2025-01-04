@@ -17,7 +17,7 @@ TODO Pay attention to unit system and Rate value (does it change when changing u
 data class ConfigFile(
     val name: String,
     val description: String,
-    val kind: String,
+    val group: String,
     //General
     val dynamicModel: DynamicModel,
     val samplePeriod: Int,
@@ -62,7 +62,7 @@ data class ConfigFile(
 private val defaultConfigFile = ConfigFile(
     name = "",
     description = "",
-    kind = "",
+    group = "",
     dynamicModel = DynamicModel.Airborne2g,
     samplePeriod = 200,
     toneMode = ToneMode.GlideRatio,

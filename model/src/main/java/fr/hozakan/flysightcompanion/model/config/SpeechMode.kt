@@ -1,21 +1,17 @@
 package fr.hozakan.flysightcompanion.model.config
 
 enum class SpeechMode(
-    val value: Int,
-    val text: String
+    val value: Int
 ) {
-    HorizontalSpeed(0, "Horizontal speed"),
-    VerticalSpeed(1, "Vertical speed"),
-    GlideRatio(2, "Glide ratio"),
-    InverseGlideRatio(3, "Inverse glide ratio"),
-    TotalSpeed(4, "Total speed"),
-    AltitudeAboveDropzone(5, "Altitude above dropzone"),
-    DiveAngle(11, "Dive angle");
+    HorizontalSpeed(0),
+    VerticalSpeed(1),
+    GlideRatio(2),
+    InverseGlideRatio(3),
+    TotalSpeed(4),
+    AltitudeAboveDropzone(5),
+    DiveAngle(11);
 
     companion object {
-        fun fromText(text: String): SpeechMode? {
-            return entries.firstOrNull { it.text == text }
-        }
         fun fromValue(value: Int): SpeechMode? {
             return entries.firstOrNull { it.value == value }
         }

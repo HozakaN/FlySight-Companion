@@ -20,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -27,8 +28,12 @@ import fr.hozakan.flysightcompanion.composablecommons.rateMaximumLabel
 import fr.hozakan.flysightcompanion.composablecommons.rateMinimumLabel
 import fr.hozakan.flysightcompanion.composablecommons.toneMaximumLabel
 import fr.hozakan.flysightcompanion.composablecommons.toneMinimumLabel
+import fr.hozakan.flysightcompanion.designsystem.extension.distanceTextResource
+import fr.hozakan.flysightcompanion.designsystem.extension.speedTextResource
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.extension.speedInUnit
+import fr.hozakan.flysightcompanion.designsystem.R
+import fr.hozakan.flysightcompanion.designsystem.extension.textResource
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.defaultConfigFile
@@ -55,7 +60,7 @@ fun DeviceConfigurationMenuActions(
         }
     ) {
         Text(
-            text = if (showConfigAsRaw) "Formatted" else "Raw"
+            text = stringResource(if (showConfigAsRaw) R.string.device_configuration_formatted else R.string.device_configuration_raw)
         )
     }
 
@@ -124,7 +129,7 @@ private fun FormattedConfiguration(
             item {
                 Column {
                     Text(
-                        text = "General",
+                        text = stringResource(R.string.config_detail_configuration_section_general),
                         style = MaterialTheme.typography.titleLarge
                     )
                     HorizontalDivider(modifier = Modifier.fillMaxSize())
@@ -133,7 +138,7 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Configuration name :"
+                        text = stringResource(R.string.device_configuration_conf_name)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -144,7 +149,7 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Configuration description :"
+                        text = stringResource(R.string.device_configuration_conf_desc)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -155,29 +160,29 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Configuration kind :"
+                        text = stringResource(R.string.device_configuration_conf_group)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
-                        text = config.kind
+                        text = config.group
                     )
                 }
             }
             item {
                 Row {
                     Text(
-                        text = "Dynamic model :"
+                        text = stringResource(R.string.device_configuration_dynamic_model)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
-                        text = config.dynamicModel.text
+                        text = stringResource(config.dynamicModel.textResource)
                     )
                 }
             }
             item {
                 Row {
                     Text(
-                        text = "Sample period (ms) :"
+                        text = stringResource(R.string.device_configuration_sample_period)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -188,7 +193,7 @@ private fun FormattedConfiguration(
             item {
                 Column {
                     Text(
-                        text = "Tone",
+                        text = stringResource(R.string.config_detail_configuration_section_tone),
                         style = MaterialTheme.typography.titleLarge
                     )
                     HorizontalDivider(modifier = Modifier.fillMaxSize())
@@ -197,11 +202,11 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Mode :"
+                        text = stringResource(R.string.device_configuration_mode)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
-                        text = config.toneMode.text
+                        text = stringResource(config.toneMode.textResource)
                     )
                 }
             }
@@ -230,18 +235,18 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Limit behaviour :"
+                        text = stringResource(R.string.device_configuration_limit_behaviour)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
-                        text = config.toneLimitBehaviour.text
+                        text = stringResource(config.toneLimitBehaviour.textResource)
                     )
                 }
             }
             item {
                 Row {
                     Text(
-                        text = "Volume :"
+                        text = stringResource(R.string.device_configuration_volume)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -252,7 +257,7 @@ private fun FormattedConfiguration(
             item {
                 Column {
                     Text(
-                        text = "Rate",
+                        text = stringResource(R.string.config_detail_configuration_section_rate),
                         style = MaterialTheme.typography.titleLarge
                     )
                     HorizontalDivider(modifier = Modifier.fillMaxSize())
@@ -261,11 +266,11 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Mode :"
+                        text = stringResource(R.string.device_configuration_mode)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
-                        text = config.rateMode.text
+                        text = stringResource(config.rateMode.textResource)
                     )
                 }
             }
@@ -294,7 +299,7 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Minimum rate (tone/s) :"
+                        text = stringResource(R.string.device_configuration_minimum_rate)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -305,7 +310,7 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Maximum rate (tone/s) :"
+                        text = stringResource(R.string.device_configuration_maximum_rate)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -316,18 +321,27 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Flat line at minimum rate :"
+                        text = stringResource(R.string.device_configuration_flatline)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
-                        text = if (config.flatLineAtMinimumRate) "Yes" else "No"
+                        text = stringResource(
+                            if (config.flatLineAtMinimumRate) {
+                                R.string.misc_yes
+                            } else {
+                                R.string.misc_no
+                            }
+                        )
                     )
                 }
             }
             item {
                 Column {
                     Text(
-                        text = "Speech (${config.speeches.size})",
+                        text = stringResource(
+                            R.string.device_configuration_speech,
+                            config.speeches.size
+                        ),
                         style = MaterialTheme.typography.titleLarge
                     )
                     HorizontalDivider(modifier = Modifier.fillMaxSize())
@@ -336,7 +350,7 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Period (s) :"
+                        text = stringResource(R.string.device_configuration_period)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -347,7 +361,7 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Volume :"
+                        text = stringResource(R.string.device_configuration_volume)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -358,18 +372,21 @@ private fun FormattedConfiguration(
             itemsIndexed(config.speeches) { index, speech ->
                 Row {
                     Text(
-                        text = "Speech ${index + 1} :"
+                        text = stringResource(
+                            R.string.config_detail_configuration_speech_label,
+                            index + 1
+                        )
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
-                        text = "${speech.mode.text} ${speech.unit.speedText} ${speech.value}"
+                        text = "${stringResource(speech.mode.textResource)} ${stringResource(speech.unit.speedTextResource)} ${speech.value}"
                     )
                 }
             }
             item {
                 Column {
                     Text(
-                        text = "Thresholds",
+                        text = stringResource(R.string.config_detail_configuration_section_thresholds),
                         style = MaterialTheme.typography.titleLarge
                     )
                     HorizontalDivider(modifier = Modifier.fillMaxSize())
@@ -378,7 +395,12 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Vertical speed (${unitSystem.speedText}) :"
+                        text = "${
+                            stringResource(
+                                R.string.config_detail_configuration_vertical_speed,
+                                stringResource(unitSystem.speedTextResource)
+                            )
+                        } :"
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -389,7 +411,12 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Horizontal speed (${unitSystem.speedText}) :"
+                        text = "${
+                            stringResource(
+                                R.string.config_detail_configuration_horizontal_speed,
+                                stringResource(unitSystem.speedTextResource)
+                            )
+                        } :"
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -400,7 +427,7 @@ private fun FormattedConfiguration(
             item {
                 Column {
                     Text(
-                        text = "Miscellaneous",
+                        text = stringResource(R.string.config_detail_configuration_section_miscellaneous),
                         style = MaterialTheme.typography.titleLarge
                     )
                     HorizontalDivider(modifier = Modifier.fillMaxSize())
@@ -409,7 +436,7 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Timezone offset (s) :"
+                        text = stringResource(R.string.device_configuration_timezone_offset)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -420,18 +447,24 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Use SAS :"
+                        text = stringResource(R.string.device_configuration_use_sas)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
-                        text = if (config.useSAS) "Yes" else "No"
+                        text = stringResource(
+                            if (config.useSAS) {
+                                R.string.misc_yes
+                            } else {
+                                R.string.misc_no
+                            }
+                        )
                     )
                 }
             }
             item {
                 Column {
                     Text(
-                        text = "Initialization",
+                        text = stringResource(R.string.config_detail_configuration_section_initialization),
                         style = MaterialTheme.typography.titleLarge
                     )
                     HorizontalDivider(modifier = Modifier.fillMaxSize())
@@ -440,18 +473,18 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Mode :"
+                        text = stringResource(R.string.device_configuration_mode)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
-                        text = config.initMode.text
+                        text = stringResource(config.initMode.textResource)
                     )
                 }
             }
             item {
                 Row {
                     Text(
-                        text = "Filename :"
+                        text = stringResource(R.string.device_configuration_filename)
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -462,7 +495,10 @@ private fun FormattedConfiguration(
             item {
                 Column {
                     Text(
-                        text = "Alarm (${config.alarms.size}",
+                        text = stringResource(
+                            R.string.device_configuration_alarm,
+                            config.alarms.size
+                        ),
                         style = MaterialTheme.typography.titleLarge
                     )
                     HorizontalDivider(modifier = Modifier.fillMaxSize())
@@ -471,7 +507,12 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Window above (${unitSystem.distanceText}) :"
+                        text = "${
+                            stringResource(
+                                R.string.config_detail_configuration_window_above,
+                                stringResource(unitSystem.distanceTextResource)
+                            )
+                        } :"
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -482,7 +523,12 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Window below (${unitSystem.distanceText}) :"
+                        text = "${
+                            stringResource(
+                                R.string.config_detail_configuration_window_below,
+                                stringResource(unitSystem.distanceTextResource)
+                            )
+                        } :"
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -493,7 +539,12 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Ground elevation (${unitSystem.distanceText}) :"
+                        text = "${
+                            stringResource(
+                                R.string.config_detail_configuration_ground_elevation,
+                                stringResource(unitSystem.distanceTextResource)
+                            )
+                        } :"
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -504,18 +555,23 @@ private fun FormattedConfiguration(
             itemsIndexed(config.alarms) { index, alarm ->
                 Row {
                     Text(
-                        text = "Alarm ${index + 1} :"
+                        text = "${
+                            stringResource(
+                                R.string.device_configuration_alarm,
+                                index + 1
+                            )
+                        } :"
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
-                        text = "${alarm.alarmType.text} ${alarm.alarmElevation} ${alarm.alarmFile}"
+                        text = "${stringResource(alarm.alarmType.textResource)} ${alarm.alarmElevation} ${alarm.alarmFile}"
                     )
                 }
             }
             item {
                 Column {
                     Text(
-                        text = "Altitude",
+                        text = stringResource(R.string.config_detail_configuration_section_altitude),
                         style = MaterialTheme.typography.titleLarge
                     )
                     HorizontalDivider(modifier = Modifier.fillMaxSize())
@@ -524,18 +580,18 @@ private fun FormattedConfiguration(
             item {
                 Row {
                     Text(
-                        text = "Units :"
+                        text = "${stringResource(R.string.config_detail_configuration_units)} :"
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
-                        text = config.altitudeUnit.distanceText
+                        text = stringResource(config.altitudeUnit.distanceTextResource)
                     )
                 }
             }
             item {
                 Row {
                     Text(
-                        text = "Step :"
+                        text = "${stringResource(R.string.config_detail_configuration_step)} :"
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(
@@ -546,7 +602,10 @@ private fun FormattedConfiguration(
             item {
                 Column {
                     Text(
-                        text = "Silence (${config.silenceWindows.size})",
+                        text = stringResource(
+                            R.string.device_configuration_silence_label,
+                            config.silenceWindows.size
+                        ),
                         style = MaterialTheme.typography.titleLarge
                     )
                     HorizontalDivider(modifier = Modifier.fillMaxSize())
@@ -555,7 +614,10 @@ private fun FormattedConfiguration(
             itemsIndexed(config.silenceWindows) { index, silence ->
                 Row {
                     Text(
-                        text = "Silence ${index + 1} :"
+                        text = stringResource(
+                            R.string.device_configuration_silence,
+                            index + 1
+                        )
                     )
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Text(

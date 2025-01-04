@@ -1,6 +1,7 @@
 package fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs
 
 import android.annotation.SuppressLint
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
@@ -9,6 +10,7 @@ import fr.hozakan.flysightcompanion.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.framework.service.permission.AndroidPermissionsService
+import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.model.ConfigFile
@@ -29,9 +31,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@SuppressLint("StaticFieldLeak")
 @ExperimentalCoroutinesApi
 class ListFlySightDevicesViewModel @Inject constructor(
     userPrefService: UserPrefService,
+    private val context: Context,
     private val bluetoothService: BluetoothService,
     private val fsDeviceService: FsDeviceService,
     private val configFileService: ConfigFileService,
@@ -174,7 +178,8 @@ class ListFlySightDevicesViewModel @Inject constructor(
                     } else if (state is ConfigFileState.Nothing) {
                         _state.update {
                             it.copy(
-                                event = "Device config is empty".asEvent()
+                                event = context.getString(R.string.list_devices_event_device_config_empty)
+                                    .asEvent()
                             )
                         }
                         job?.cancel()
@@ -217,7 +222,8 @@ class ListFlySightDevicesViewModel @Inject constructor(
                         is LoadingState.Error -> {
                             _state.update { state ->
                                 state.copy(
-                                    event = it.error.message?.asEvent() ?: "Unknown error".asEvent()
+                                    event = it.error.message?.asEvent()
+                                        ?: context.getString(R.string.misc_unknown_error).asEvent()
                                 )
                             }
                         }
@@ -230,7 +236,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
                             }
                         }
 
-                        LoadingState.Idle -> error("Should not get into that state")
+                        LoadingState.Idle -> error("Should not get into state Idle")
                         is LoadingState.Loaded<*> -> {
                             _state.update { state ->
                                 state.copy(

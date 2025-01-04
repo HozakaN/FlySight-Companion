@@ -41,6 +41,7 @@ dependencies {
     implementation(project(":Middleware:UserPreferencesModule"))
     implementation(project(":Middleware:DialogModule"))
     implementation(project(":framework"))
+    implementation(project(":DesignSystem"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

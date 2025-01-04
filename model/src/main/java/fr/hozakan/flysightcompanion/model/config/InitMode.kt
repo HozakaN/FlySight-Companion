@@ -1,17 +1,14 @@
 package fr.hozakan.flysightcompanion.model.config
 
 enum class InitMode(
-    val value: Int,
-    val text: String
+    val value: Int
 ) {
-    DoNothing(0, "Do nothing"),
-    TestSpeechMode(1, "Test speech mode"),
-    PlayFile(2, "Play file");
+    DoNothing(0),
+    TestSpeechMode(1),
+    PlayFile(2);
 
     companion object {
-        fun fromText(text: String): InitMode? {
-            return entries.firstOrNull { it.text == text }
-        }
+
         fun fromValue(value: Int): InitMode? {
             return entries.firstOrNull { it.value == value }
         }

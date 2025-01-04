@@ -37,6 +37,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -56,6 +58,12 @@ import fr.hozakan.flysightcompanion.composablecommons.valueForRateMode
 import fr.hozakan.flysightcompanion.composablecommons.valueForToneMode
 import fr.hozakan.flysightcompanion.composablecommons.valueFromRateMode
 import fr.hozakan.flysightcompanion.composablecommons.valueFromToneMode
+import fr.hozakan.flysightcompanion.designsystem.R
+import fr.hozakan.flysightcompanion.designsystem.extension.distanceTextResource
+import fr.hozakan.flysightcompanion.designsystem.extension.fromText
+import fr.hozakan.flysightcompanion.designsystem.extension.speedTextResource
+import fr.hozakan.flysightcompanion.designsystem.extension.textResource
+import fr.hozakan.flysightcompanion.designsystem.extension.unitNameResource
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.extension.distanceInUnit
 import fr.hozakan.flysightcompanion.framework.extension.fromDistanceUnitToMeter
@@ -93,7 +101,9 @@ fun ConfigDetailMenuActions() {
     ) {
         Icon(
             imageVector = Icons.Filled.MoreVert,
-            contentDescription = "Unit system picker"
+            contentDescription = stringResource(
+                R.string.config_detail_menu_action_unit_system_picker_content_description
+            )
         )
     }
 
@@ -102,7 +112,7 @@ fun ConfigDetailMenuActions() {
         onDismissRequest = { expanded = false }
     ) {
         DropdownMenuItem(
-            text = { Text(text = UnitSystem.Metric.unitName) },
+            text = { Text(text = stringResource(UnitSystem.Metric.unitNameResource)) },
             leadingIcon = {
                 RadioButton(
                     selected = unitSystem == UnitSystem.Metric,
@@ -118,7 +128,7 @@ fun ConfigDetailMenuActions() {
             }
         )
         DropdownMenuItem(
-            text = { Text(text = UnitSystem.Imperial.unitName) },
+            text = { Text(text = stringResource(UnitSystem.Imperial.unitNameResource)) },
             leadingIcon = {
                 RadioButton(
                     selected = unitSystem == UnitSystem.Imperial,
@@ -317,7 +327,7 @@ fun ConfigDetailScreenInternal(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Config file not found")
+                Text(text = stringResource(R.string.config_detail_config_file_not_found))
             }
             return@Surface
         }
@@ -337,7 +347,7 @@ fun ConfigDetailScreenInternal(
                         updateConfigFileName(it)
                     },
                     label = {
-                        Text(text = "Config name")
+                        Text(text = stringResource(R.string.config_detail_configuration_name))
                     },
                     isError = !state.hasValidFileName
                 )
@@ -350,35 +360,28 @@ fun ConfigDetailScreenInternal(
                         updateConfigFileDescription(it)
                     },
                     label = {
-                        Text(text = "Description")
+                        Text(text = stringResource(R.string.config_detail_configuration_description))
                     }
                 )
             }
             item {
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    value = configFile.kind,
+                    value = configFile.group,
                     onValueChange = {
                         updateConfigFileKind(it)
                     },
                     label = {
-                        Text(text = "Kind")
+                        Text(text = stringResource(R.string.config_detail_configuration_group))
                     }
                 )
             }
             item {
                 ExpandableColumn(
                     headerComposable = {
-                        Text("General")
+                        Text(text = stringResource(R.string.config_detail_configuration_section_general))
                     }
                 ) {
-//                    UnitSystemContainer(
-//                        unitSystem = configFile.unitSystem,
-//                        onSelectionChanged = {
-//                            updateUnitSystem(it)
-//                        }
-//                    )
-//                    Spacer(modifier = Modifier.requiredHeight(8.dp))
                     DynamicModelContainer(
                         dynamicModel = configFile.dynamicModel,
                         onSelectionChanged = {
@@ -388,7 +391,7 @@ fun ConfigDetailScreenInternal(
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Sample period (ms)",
+                        label = stringResource(R.string.config_detail_configuration_section_general_sample_period),
                         intValue = configFile.samplePeriod,
                         onValueChanged = {
                             if (it != null) {
@@ -407,14 +410,14 @@ fun ConfigDetailScreenInternal(
                             },
                         )
                         Spacer(modifier = Modifier.requiredWidth(8.dp))
-                        Text("Adjust speeds to sea level")
+                        Text(text = stringResource(R.string.config_detail_configuration_section_general_use_sas))
                     }
                 }
             }
             item {
                 ExpandableColumn(
                     headerComposable = {
-                        Text("Tone")
+                        Text(text = stringResource(R.string.config_detail_configuration_section_tone))
                     }
                 ) {
                     ToneModeContainer(
@@ -479,8 +482,9 @@ fun ConfigDetailScreenInternal(
             }
             item {
                 ExpandableColumn(
+                    expanded = false,
                     headerComposable = {
-                        Text("Rate")
+                        Text(text = stringResource(R.string.config_detail_configuration_section_rate))
                     }
                 ) {
                     RateModeContainer(
@@ -530,7 +534,9 @@ fun ConfigDetailScreenInternal(
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Minimum rate (tone/s)",
+                        label = stringResource(
+                            R.string.config_detail_configuration_minimum_rate
+                        ),
                         intValue = configFile.rateMinimum,
                         onValueChanged = {
                             if (it != null) {
@@ -541,7 +547,9 @@ fun ConfigDetailScreenInternal(
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Maximum rate (tone/s)",
+                        label = stringResource(
+                            R.string.config_detail_configuration_maximum_rate
+                        ),
                         intValue = configFile.rateMaximum,
                         onValueChanged = {
                             if (it != null) {
@@ -560,17 +568,25 @@ fun ConfigDetailScreenInternal(
                             },
                         )
                         Spacer(modifier = Modifier.requiredWidth(8.dp))
-                        Text("Flat line at minimum rate")
+                        Text(
+                            text = stringResource(
+                                R.string.config_detail_configuration_flatline_at_minimum_rate
+                            )
+                        )
                     }
                 }
                 ExpandableColumn(
                     headerComposable = {
-                        Text("Speech")
+                        Text(
+                            text = stringResource(
+                                R.string.config_detail_configuration_section_speech
+                            )
+                        )
                     }
                 ) {
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Period (s)",
+                        label = stringResource(R.string.config_detail_configuration_period),
                         intValue = configFile.speechRate,
                         onValueChanged = {
                             if (it != null) {
@@ -611,7 +627,11 @@ fun ConfigDetailScreenInternal(
                                 addSpeechClicked = true
                             }
                         ) {
-                            Text("Add speech")
+                            Text(
+                                text = stringResource(
+                                    R.string.config_detail_configuration_add_speech
+                                )
+                            )
                         }
                     }
                     if (addSpeechClicked) {
@@ -628,12 +648,19 @@ fun ConfigDetailScreenInternal(
                 }
                 ExpandableColumn(
                     headerComposable = {
-                        Text("Thresholds")
+                        Text(
+                            text = stringResource(
+                                R.string.config_detail_configuration_section_thresholds
+                            )
+                        )
                     }
                 ) {
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Vertical speed (${unitSystem.speedText})",
+                        label = stringResource(
+                            R.string.config_detail_configuration_vertical_speed,
+                            stringResource(unitSystem.speedTextResource)
+                        ),
                         intValue = configFile.verticalThreshold.speedInUnit(unitSystem),
                         onValueChanged = {
                             if (it != null) {
@@ -644,7 +671,10 @@ fun ConfigDetailScreenInternal(
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Horizontal speed (${unitSystem.speedText})",
+                        label = stringResource(
+                            R.string.config_detail_configuration_horizontal_speed,
+                            stringResource(unitSystem.speedTextResource)
+                        ),
                         intValue = configFile.horizontalThreshold.speedInUnit(unitSystem),
                         onValueChanged = {
                             if (it != null) {
@@ -655,7 +685,11 @@ fun ConfigDetailScreenInternal(
                 }
                 ExpandableColumn(
                     headerComposable = {
-                        Text("Initialization")
+                        Text(
+                            text = stringResource(
+                                R.string.config_detail_configuration_section_initialization
+                            )
+                        )
                     }
                 ) {
                     InitModeContainer(
@@ -672,18 +706,29 @@ fun ConfigDetailScreenInternal(
                             updateInitFile(it)
                         },
                         label = {
-                            Text(text = "Filename")
+                            Text(
+                                text = stringResource(
+                                    R.string.config_detail_configuration_alarm_filename_label
+                                )
+                            )
                         }
                     )
                 }
                 ExpandableColumn(
                     headerComposable = {
-                        Text("Alarms")
+                        Text(
+                            text = stringResource(
+                                R.string.config_detail_configuration_section_alarms
+                            )
+                        )
                     }
                 ) {
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Window above (${unitSystem.distanceText})",
+                        label = stringResource(
+                            R.string.config_detail_configuration_window_above,
+                            stringResource(unitSystem.distanceTextResource)
+                        ),
                         intValue = configFile.windowAbove.distanceInUnit(unitSystem),
                         onValueChanged = {
                             if (it != null) {
@@ -694,7 +739,10 @@ fun ConfigDetailScreenInternal(
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Window below (${unitSystem.distanceText})",
+                        label = stringResource(
+                            R.string.config_detail_configuration_window_below,
+                            stringResource(unitSystem.distanceTextResource)
+                        ),
                         intValue = configFile.windowBelow.distanceInUnit(unitSystem),
                         onValueChanged = {
                             if (it != null) {
@@ -705,7 +753,10 @@ fun ConfigDetailScreenInternal(
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Ground elevation (${unitSystem.distanceText})",
+                        label = stringResource(
+                            R.string.config_detail_configuration_ground_elevation,
+                            stringResource(unitSystem.distanceTextResource)
+                        ),
                         intValue = configFile.dzElev.distanceInUnit(unitSystem),
                         onValueChanged = {
                             if (it != null) {
@@ -742,7 +793,11 @@ fun ConfigDetailScreenInternal(
                                 addAlarmClicked = true
                             }
                         ) {
-                            Text("Add alarm")
+                            Text(
+                                text = stringResource(
+                                    R.string.config_detail_configuration_add_alarm
+                                )
+                            )
                         }
                     }
                     if (addAlarmClicked) {
@@ -760,11 +815,15 @@ fun ConfigDetailScreenInternal(
                 }
                 ExpandableColumn(
                     headerComposable = {
-                        Text("Altitude announcements")
+                        Text(
+                            text = stringResource(
+                                R.string.config_detail_configuration_section_altitude
+                            )
+                        )
                     }
                 ) {
                     DistanceUnitContainer(
-                        label = "Units",
+                        label = stringResource(R.string.config_detail_configuration_units),
                         unitSystem = configFile.altitudeUnit,
                         onSelectionChanged = {
                             updateAltitudeUnit(it)
@@ -773,7 +832,7 @@ fun ConfigDetailScreenInternal(
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     EmptyIntTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Step",
+                        label = stringResource(R.string.config_detail_configuration_step),
                         intValue = configFile.altitudeStep.distanceInUnit(configFile.altitudeUnit),
                         onValueChanged = {
                             if (it != null) {
@@ -784,7 +843,11 @@ fun ConfigDetailScreenInternal(
                 }
                 ExpandableColumn(
                     headerComposable = {
-                        Text("Silence")
+                        Text(
+                            text = stringResource(
+                                R.string.config_detail_configuration_section_silence
+                            )
+                        )
                     }
                 ) {
                     configFile.silenceWindows.forEachIndexed { index, silenceWindow ->
@@ -811,7 +874,11 @@ fun ConfigDetailScreenInternal(
                                 addSilenceClicked = true
                             }
                         ) {
-                            Text("Add Silence window")
+                            Text(
+                                text = stringResource(
+                                    R.string.config_detail_configuration_add_silence_window
+                                )
+                            )
                         }
                     }
                     if (addSilenceClicked) {
@@ -867,7 +934,7 @@ fun AddSpeechDialog(
                     SpeechMode.VerticalSpeed,
                     SpeechMode.TotalSpeed -> {
                         SpeedUnitContainer(
-                            label = "Units",
+                            label = stringResource(R.string.config_detail_configuration_units),
                             unitSystem = unitSystem,
                             onSelectionChanged = {
                                 unitSystem = it
@@ -883,7 +950,7 @@ fun AddSpeechDialog(
 
                     SpeechMode.AltitudeAboveDropzone -> {
                         DistanceUnitContainer(
-                            label = "Units",
+                            label = stringResource(R.string.config_detail_configuration_units),
                             unitSystem = unitSystem,
                             onSelectionChanged = {
                                 unitSystem = it
@@ -944,7 +1011,10 @@ fun AddAlarmDialog(
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 EmptyIntTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    label = "Elevation (${unitSystem.distanceText})",
+                    label = stringResource(
+                        R.string.config_detail_configuration_alarm_elevation_label,
+                        stringResource(unitSystem.distanceTextResource)
+                    ),
                     intValue = alarmElevation.distanceInUnit(unitSystem),
                     onValueChanged = {
                         alarmElevation = it?.fromDistanceUnitToMeter(unitSystem) ?: 0
@@ -959,7 +1029,11 @@ fun AddAlarmDialog(
                             fileName = it
                         },
                         label = {
-                            Text(text = "Filename")
+                            Text(
+                                text = stringResource(
+                                    R.string.config_detail_configuration_alarm_filename_label
+                                )
+                            )
                         }
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
@@ -999,7 +1073,10 @@ fun AddSilenceWindowDialog(
             ) {
                 EmptyIntTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    label = "Window top (${unitSystem.distanceText})",
+                    label = stringResource(
+                        R.string.config_detail_configuration_silence_window_top_label,
+                        stringResource(unitSystem.distanceTextResource)
+                    ),
                     intValue = windowTop.distanceInUnit(unitSystem),
                     onValueChanged = {
                         windowTop = it?.fromDistanceUnitToMeter(unitSystem) ?: 0
@@ -1008,7 +1085,10 @@ fun AddSilenceWindowDialog(
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 EmptyIntTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    label = "Window bottom (${unitSystem.distanceText})",
+                    label = stringResource(
+                        R.string.config_detail_configuration_silence_window_bottom_label,
+                        stringResource(unitSystem.distanceTextResource)
+                    ),
                     intValue = windowBottom.distanceInUnit(unitSystem),
                     onValueChanged = {
                         windowBottom = it?.fromDistanceUnitToMeter(unitSystem) ?: 0
@@ -1038,13 +1118,14 @@ fun InitModeContainer(
     initMode: InitMode,
     onSelectionChanged: (InitMode) -> Unit,
 ) {
+    val context = LocalContext.current
     DropdownContainer(
         modifier = modifier,
-        label = "Init mode",
-        selectedValue = initMode.text,
-        options = remember { InitMode.entries.map { it.text } },
+        label = stringResource(R.string.config_detail_configuration_init_mode),
+        selectedValue = stringResource(initMode.textResource),
+        options = remember { InitMode.entries.map { context.getString(it.textResource) } },
         onSelectionChanged = { newInitMode ->
-            InitMode.fromText(newInitMode)?.let {
+            InitMode.fromText(context, newInitMode)?.let {
                 onSelectionChanged(it)
             }
         }
@@ -1066,19 +1147,28 @@ fun SpeechItemContainer(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Speech $index")
+                Text(
+                    text = stringResource(
+                        R.string.config_detail_configuration_speech_label,
+                        index
+                    )
+                )
                 Spacer(modifier = Modifier.weight(1f))
                 IconButton(
                     onClick = onDeleteClicked
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Delete,
-                        contentDescription = "Delete speech"
+                        contentDescription = stringResource(
+                            R.string.config_detail_configuration_delete_speech
+                        )
                     )
                 }
             }
             Spacer(modifier = Modifier.requiredHeight(8.dp))
-            Text(speech.mode.text)
+            Text(
+                text = stringResource(speech.mode.textResource)
+            )
             Spacer(modifier = Modifier.requiredHeight(8.dp))
             Text(
                 "${speechValueLabel(speech.mode, speech.unit)}: ${
@@ -1097,7 +1187,7 @@ fun AlarmItemContainer(
     index: Int,
     alarm: Alarm,
     unitSystem: UnitSystem,
-    onDeleteClicked: ()  -> Unit
+    onDeleteClicked: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -1108,30 +1198,46 @@ fun AlarmItemContainer(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Alarm $index")
+                Text(
+                    text = stringResource(
+                        R.string.config_detail_configuration_alarm_label,
+                        index
+                    )
+                )
                 Spacer(modifier = Modifier.weight(1f))
                 IconButton(
                     onClick = onDeleteClicked
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Delete,
-                        contentDescription = "Delete alarm"
+                        contentDescription = stringResource(
+                            R.string.config_detail_configuration_delete_alarm
+                        )
                     )
                 }
             }
             Spacer(modifier = Modifier.requiredHeight(8.dp))
-            Text(alarm.alarmType.text)
+            Text(
+                text = stringResource(alarm.alarmType.textResource)
+            )
             Spacer(modifier = Modifier.requiredHeight(8.dp))
             Text(
-                "Alarm elevation (${unitSystem.distanceText}) : ${
+                text = stringResource(
+                    R.string.config_detail_configuration_alarm_elevation,
+                    stringResource(unitSystem.distanceTextResource),
                     alarm.alarmElevation.distanceInUnit(
                         unitSystem
                     )
-                }"
+                )
             )
             if (alarm.alarmType == AlarmType.PlayFile) {
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
-                Text("Filename: ${alarm.alarmFile}")
+                Text(
+                    text = stringResource(
+                        R.string.config_detail_configuration_alarm_filename,
+                        alarm.alarmFile
+                    )
+                )
             }
         }
     }
@@ -1153,26 +1259,39 @@ fun SilenceItemContainer(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Silence window $index")
+                Text(
+                    text = stringResource(
+                        R.string.config_detail_configuration_silence_window_label,
+                        index
+                    )
+                )
                 Spacer(modifier = Modifier.weight(1f))
                 IconButton(
                     onClick = onDeleteClicked
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Delete,
-                        contentDescription = "Delete silence"
+                        contentDescription = stringResource(
+                            R.string.config_detail_configuration_delete_silence
+                        )
                     )
                 }
             }
             Spacer(modifier = Modifier.requiredHeight(8.dp))
-            Text("Top (${unitSystem.distanceText}) : ${silenceWindow.top.distanceInUnit(unitSystem)}")
+            Text(
+                text = stringResource(
+                    R.string.config_detail_configuration_silence_window_top,
+                    stringResource(unitSystem.distanceTextResource),
+                    silenceWindow.top.distanceInUnit(unitSystem)
+                )
+            )
             Spacer(modifier = Modifier.requiredHeight(8.dp))
             Text(
-                "Bottom (${unitSystem.distanceText}) : ${
-                    silenceWindow.bottom.distanceInUnit(
-                        unitSystem
-                    )
-                }"
+                text = stringResource(
+                    R.string.config_detail_configuration_silence_window_bottom,
+                    stringResource(unitSystem.distanceTextResource),
+                    silenceWindow.bottom.distanceInUnit(unitSystem)
+                )
             )
         }
     }
@@ -1184,12 +1303,13 @@ internal fun SpeechModeContainer(
     speechMode: SpeechMode,
     onSelectionChanged: (SpeechMode) -> Unit
 ) {
+    val context = LocalContext.current
     DropdownContainer(
-        label = "Speech mode",
-        selectedValue = speechMode.text,
-        options = remember { SpeechMode.entries.map { it.text } },
+        label = stringResource(R.string.config_detail_configuration_speech_mode),
+        selectedValue = stringResource(speechMode.textResource),
+        options = remember { SpeechMode.entries.map { context.getString(it.textResource) } },
         onSelectionChanged = { newSpeechMode ->
-            SpeechMode.fromText(newSpeechMode)?.let {
+            SpeechMode.fromText(context, newSpeechMode)?.let {
                 onSelectionChanged(it)
             }
         },
@@ -1200,16 +1320,19 @@ internal fun SpeechModeContainer(
 @Composable
 internal fun SpeedUnitContainer(
     modifier: Modifier = Modifier,
-    label: String = "Speed unit",
+    label: String = stringResource(R.string.config_detail_configuration_speed_unit),
     unitSystem: UnitSystem,
     onSelectionChanged: (UnitSystem) -> Unit
 ) {
+    val resources = LocalContext.current.resources
+    val options = remember { UnitSystem.entries.map { resources.getString(it.speedTextResource) } }
+
     DropdownContainer(
         label = label,
-        selectedValue = unitSystem.speedText,
-        options = remember { UnitSystem.entries.map { it.speedText } },
+        selectedValue = stringResource(unitSystem.speedTextResource),
+        options = options,
         onSelectionChanged = { newUnit ->
-            UnitSystem.fromSpeedText(newUnit)?.let {
+            UnitSystem.fromValue(options.indexOf(newUnit) + 1)?.let {
                 onSelectionChanged(it)
             }
         },
@@ -1220,16 +1343,19 @@ internal fun SpeedUnitContainer(
 @Composable
 internal fun DistanceUnitContainer(
     modifier: Modifier = Modifier,
-    label: String = "Distance unit",
+    label: String = stringResource(R.string.config_detail_configuration_distance_unit),
     unitSystem: UnitSystem,
     onSelectionChanged: (UnitSystem) -> Unit
 ) {
+    val resources = LocalContext.current.resources
+    val options =
+        remember { UnitSystem.entries.map { resources.getString(it.distanceTextResource) } }
     DropdownContainer(
         label = label,
-        selectedValue = unitSystem.distanceText,
-        options = remember { UnitSystem.entries.map { it.distanceText } },
+        selectedValue = stringResource(unitSystem.distanceTextResource),
+        options = options,
         onSelectionChanged = { newUnit ->
-            UnitSystem.fromDistanceText(newUnit)?.let {
+            UnitSystem.fromValue(options.indexOf(newUnit) + 1)?.let {
                 onSelectionChanged(it)
             }
         },
@@ -1243,12 +1369,13 @@ internal fun AlarmTypeContainer(
     alarmType: AlarmType,
     onSelectionChanged: (AlarmType) -> Unit
 ) {
+    val context = LocalContext.current
     DropdownContainer(
-        label = "Alarm type",
-        selectedValue = alarmType.text,
-        options = remember { AlarmType.entries.map { it.text } },
+        label = stringResource(R.string.config_detail_configuration_alarm_type),
+        selectedValue = stringResource(alarmType.textResource),
+        options = remember { AlarmType.entries.map { context.getString(it.textResource) } },
         onSelectionChanged = { newAlarmType ->
-            AlarmType.fromText(newAlarmType)?.let {
+            AlarmType.fromText(context, newAlarmType)?.let {
                 onSelectionChanged(it)
             }
         },
@@ -1262,12 +1389,13 @@ internal fun DynamicModelContainer(
     dynamicModel: DynamicModel,
     onSelectionChanged: (DynamicModel) -> Unit
 ) {
+    val context = LocalContext.current
     DropdownContainer(
-        label = "Dynamic model",
-        selectedValue = dynamicModel.text,
-        options = remember { DynamicModel.entries.map { it.text } },
+        label = stringResource(R.string.config_detail_configuration_dynamic_model),
+        selectedValue = stringResource(dynamicModel.textResource),
+        options = remember { DynamicModel.entries.map { context.getString(it.textResource) } },
         onSelectionChanged = { newModel ->
-            DynamicModel.fromText(newModel)?.let {
+            DynamicModel.fromText(context, newModel)?.let {
                 onSelectionChanged(it)
             }
         },
@@ -1275,37 +1403,19 @@ internal fun DynamicModelContainer(
     )
 }
 
-//@Composable
-//internal fun UnitSystemContainer(
-//    modifier: Modifier = Modifier,
-//    unitSystem: UnitSystem,
-//    onSelectionChanged: (UnitSystem) -> Unit
-//) {
-//    DropdownContainer(
-//        modifier = modifier,
-//        label = "Unit system",
-//        selectedValue = unitSystem.text,
-//        options = remember { UnitSystem.entries.map { it.text } },
-//        onSelectionChanged = { newUnitSystem ->
-//            UnitSystem.fromText(newUnitSystem)?.let {
-//                onSelectionChanged(it)
-//            }
-//        }
-//    )
-//}
-
 @Composable
 internal fun ToneModeContainer(
     modifier: Modifier = Modifier,
     toneMode: ToneMode,
     onSelectionChanged: (ToneMode) -> Unit
 ) {
+    val context = LocalContext.current
     DropdownContainer(
-        label = "Tone mode",
-        selectedValue = toneMode.text,
-        options = remember { ToneMode.entries.map { it.text } },
+        label = stringResource(R.string.config_detail_configuration_tone_mode),
+        selectedValue = stringResource(toneMode.textResource),
+        options = remember { ToneMode.entries.map { context.getString(it.textResource) } },
         onSelectionChanged = { newMode ->
-            ToneMode.fromText(newMode)?.let {
+            ToneMode.fromText(context, newMode)?.let {
                 onSelectionChanged(it)
             }
         },
@@ -1319,12 +1429,13 @@ internal fun LimitBehaviourContainer(
     limitBehaviour: ToneLimitBehaviour,
     onSelectionChanged: (ToneLimitBehaviour) -> Unit
 ) {
+    val context = LocalContext.current
     DropdownContainer(
-        label = "Limit behaviour",
-        selectedValue = limitBehaviour.text,
-        options = remember { ToneLimitBehaviour.entries.map { it.text } },
+        label = stringResource(R.string.config_detail_configuration_limit_behavior),
+        selectedValue = stringResource(limitBehaviour.textResource),
+        options = remember { ToneLimitBehaviour.entries.map { context.getString(it.textResource) } },
         onSelectionChanged = { newMode ->
-            ToneLimitBehaviour.fromText(newMode)?.let {
+            ToneLimitBehaviour.fromText(context, newMode)?.let {
                 onSelectionChanged(it)
             }
         },
@@ -1339,7 +1450,7 @@ internal fun VolumeContainer(
     onSelectionChanged: (Volume) -> Unit
 ) {
     DropdownContainer(
-        label = "Volume",
+        label = stringResource(R.string.config_detail_configuration_volume),
         selectedValue = volume.text,
         options = remember { Volume.entries.map { it.text } },
         onSelectionChanged = { newMode ->
@@ -1357,12 +1468,13 @@ internal fun RateModeContainer(
     rateMode: RateMode,
     onSelectionChanged: (RateMode) -> Unit
 ) {
+    val context = LocalContext.current
     DropdownContainer(
-        label = "Rate mode",
-        selectedValue = rateMode.text,
-        options = remember { RateMode.entries.map { it.text } },
+        label = stringResource(R.string.config_detail_configuration_rate_mode),
+        selectedValue = stringResource(rateMode.textResource),
+        options = remember { RateMode.entries.map { context.getString(it.textResource) } },
         onSelectionChanged = { newMode ->
-            RateMode.fromText(newMode)?.let {
+            RateMode.fromText(context, newMode)?.let {
                 onSelectionChanged(it)
             }
         },

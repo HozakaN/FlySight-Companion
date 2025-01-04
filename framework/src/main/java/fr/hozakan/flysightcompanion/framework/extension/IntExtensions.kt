@@ -15,7 +15,9 @@ fun Int.speedInUnit(unitSystem: UnitSystem): Int {
 
 fun Int.fromSpeedUnitToCmPerSec(unitSystem: UnitSystem): Int {
     return when (unitSystem) {
+        //we are in km/h
         UnitSystem.Metric -> this.div(0.036).toInt()
+        //we are in mph
         UnitSystem.Imperial -> ((this / 0.621371) / 0.036).toInt()
     }
 }
@@ -29,7 +31,9 @@ fun Int.distanceInUnit(unitSystem: UnitSystem): Int {
 
 fun Int.fromDistanceUnitToMeter(unitSystem: UnitSystem): Int {
     return when (unitSystem) {
+        //we are in meters
         UnitSystem.Metric -> this
+        //we are in feet
         UnitSystem.Imperial -> (this / 3.28084).toInt()
     }
 }

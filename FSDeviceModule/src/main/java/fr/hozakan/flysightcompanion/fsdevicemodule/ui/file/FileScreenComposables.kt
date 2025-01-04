@@ -11,8 +11,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
+import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.model.FileState
 
 @Composable
@@ -41,11 +43,11 @@ fun DeviceFileScreen(
         color = MaterialTheme.colorScheme.surface
     ) {
 
-        val content = when (state.fileContent) {
-            is FileState.Error -> "Error"
-            FileState.Loading -> "Loading"
-            FileState.Nothing -> "Unknown"
-            is FileState.Success -> (state.fileContent as FileState.Success).content
+        val content = when (val fileContent = state.fileContent) {
+            is FileState.Error -> stringResource(R.string.misc_error)
+            FileState.Loading -> stringResource(R.string.misc_loading)
+            FileState.Nothing -> stringResource(R.string.misc_unknown)
+            is FileState.Success -> fileContent.content
         }
         LazyColumn {
             item {
