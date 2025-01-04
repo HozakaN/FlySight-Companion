@@ -1,0 +1,24 @@
+Politique de confidentialité
+Dernière mise à jour : Samedi 4 Janvier 2025
+
+Introduction
+FlySight Companion respecte votre vie privée et s'engage à protéger vos informations personnelles. Cette politique de confidentialité décrit la manière dont nous gérons vos données lorsque vous utilisez notre application.
+
+Aucune collecte de données personnelles
+Nous ne collectons, ne stockons ni ne partageons aucune donnée personnelle identifiable ou non identifiable via FlySight Companion. Vous pouvez utiliser cette application en toute tranquillité d'esprit, car elle ne demande aucun accès à vos informations personnelles, telles que votre nom, votre adresse e-mail, votre localisation ou vos fichiers.
+
+Permissions requises
+Bien que nous ne collectons pas vos données, FlySight Companion peut demander certaines permissions pour fonctionner correctement (par exemple, l'accès au Bluetooth). Ces permissions sont strictement utilisées pour fournir les fonctionnalités de l'application et ne sont pas utilisées pour collecter des informations personnelles.
+
+Services tiers
+Cette application ne s'intègre à aucun service tiers susceptible de collecter ou de traiter vos données personnelles.
+
+Sécurité des données
+Même si nous ne collectons pas vos données, nous accordons une grande importance à la sécurité. Les fonctionnalités de l'application sont conçues pour garantir que vos informations restent privées sur votre appareil.
+
+Modifications de cette politique
+Nous nous réservons le droit de mettre à jour cette politique de confidentialité. Toute modification sera publiée ici et prendra effet immédiatement après sa mise en ligne. Nous vous encourageons à consulter cette politique régulièrement.
+
+Contact
+Si vous avez des questions ou des préoccupations concernant cette politique de confidentialité, veuillez nous contacter à flysight.companion@gmail.com.
+
