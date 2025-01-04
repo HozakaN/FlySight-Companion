@@ -25,7 +25,7 @@ fun versionName(): String {
     return output
 }
 
-// format on 6 characters following pattern Major/Minor/Patch/Patch/Release/Release
+// format on 7 characters following pattern Major/Minor/Patch/Patch/Release/Release/Playstore
 fun versionCode(): Int {
     val versionName = versionName()
     val major = versionName.first().toString().toInt()
@@ -36,7 +36,12 @@ fun versionCode(): Int {
     } else {
         0
     }
-    return String.format("%d%d%02d%02d", major, minor, patch, release).toInt()
+    val playstore = if (versionName.contains("playstore")) {
+        1
+    } else {
+        0
+    }
+    return String.format("%d%d%02d%02d%d", major, minor, patch, release, playstore).toInt()
 }
 
 android {
