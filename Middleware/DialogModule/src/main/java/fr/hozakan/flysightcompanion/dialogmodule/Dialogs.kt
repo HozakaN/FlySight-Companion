@@ -34,7 +34,9 @@ import fr.hozakan.flysightcompanion.designsystem.R
 data class ConfigFileName(val name: String) : DialogResult
 data class PickConfigurationDialogResult(val configFile: ConfigFile) : DialogResult
 
-data object ConfigFileNameDialog : DialogItem {
+data class ConfigFileNameDialog(
+    private val name: String? = null
+) : DialogItem {
 
     @Composable
     override fun Content(onResult: (DialogResult) -> Unit) {
@@ -43,7 +45,7 @@ data object ConfigFileNameDialog : DialogItem {
                 onResult(DialogResult.Dismiss)
             }
         ) {
-            var configFileName by remember { mutableStateOf("") }
+            var configFileName by remember { mutableStateOf(name ?: "") }
             var isDirty by remember { mutableStateOf(false) }
             Card {
                 Column(

@@ -106,6 +106,9 @@ fun ListConfigFilesScreen(
                         },
                         deleteConfigFileClicked = {
                             viewModel.deleteConfigFile(configFile)
+                        },
+                        onDuplicateClicked = {
+                            viewModel.duplicateConfigFile(configFile)
                         }
                     )
                 }
@@ -119,7 +122,8 @@ fun ConfigFileItem(
     configFile: ConfigFile,
     unitSystem: UnitSystem,
     onConfigSelected: () -> Unit,
-    deleteConfigFileClicked: () -> Unit
+    deleteConfigFileClicked: () -> Unit,
+    onDuplicateClicked: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -166,6 +170,19 @@ fun ConfigFileItem(
                             onClick = {
                                 menuExpanded = false
                                 deleteDialogOpened = true
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    text = stringResource(R.string.misc_duplicate),
+                                    textAlign = TextAlign.Center
+                                )
+                            },
+                            onClick = {
+                                menuExpanded = false
+                                onDuplicateClicked()
                             }
                         )
                     }

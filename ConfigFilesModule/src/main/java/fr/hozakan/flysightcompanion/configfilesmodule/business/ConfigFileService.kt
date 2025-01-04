@@ -9,4 +9,5 @@ interface ConfigFileService {
     suspend fun deleteConfigFile(configFile: ConfigFile)
     suspend fun updateConfigFile(oldConf: ConfigFile, newConf: ConfigFile)
     suspend fun userPickConfiguration(): ConfigFile?
+    suspend fun duplicateConfigFile(configFile: ConfigFile)
 }

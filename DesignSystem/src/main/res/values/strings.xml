@@ -18,6 +18,7 @@
     <string name="misc_upload">Upload</string>
 
     <string name="misc_delete">Delete</string>
+    <string name="misc_duplicate">Duplicate</string>
     <string name="misc_confirm">Confirm</string>
 
     <string name="misc_unit_name_metric">Metric</string>
