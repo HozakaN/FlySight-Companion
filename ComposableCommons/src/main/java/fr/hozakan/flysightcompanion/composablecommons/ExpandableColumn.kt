@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -30,22 +31,23 @@ import fr.hozakan.flysightcompanion.designsystem.R
 fun ExpandableColumn(
     modifier: Modifier = Modifier,
     expanded: Boolean = false,
+    contentPaddingValues: PaddingValues = PaddingValues(0.dp),
     headerComposable: @Composable RowScope.(Boolean) -> Unit,
     isExpandable: Boolean = true,
     contentComposable: @Composable ColumnScope.() -> Unit
 ) {
     var contentExpanded by remember { mutableStateOf(expanded) }
 
+    val clickableModifier = if (isExpandable) Modifier.clickable { contentExpanded = !contentExpanded } else Modifier
     Column(
-        modifier = modifier,
+        modifier = modifier
+            .then(clickableModifier),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        val clickableModifier = if (isExpandable) Modifier.clickable { contentExpanded = !contentExpanded } else Modifier
         Row(
             modifier = Modifier
                 .requiredHeight(64.dp)
                 .fillMaxWidth()
-                .then(clickableModifier)
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -57,7 +59,9 @@ fun ExpandableColumn(
             headerComposable(contentExpanded)
         }
         if (contentExpanded) {
-            Column {
+            Column(
+                modifier.padding(contentPaddingValues)
+            ) {
                 contentComposable()
             }
         }

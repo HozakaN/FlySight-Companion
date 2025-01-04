@@ -68,7 +68,8 @@ class ConfigDetailViewModel @Inject constructor(
                     it.copy(
                         editedConfiguration = configFile,
                         configFile = configFile.copy(),
-                        configFileFound = true
+                        configFileFound = true,
+                        isDirty = false
                     )
                 }
             } else {
@@ -87,7 +88,8 @@ class ConfigDetailViewModel @Inject constructor(
                 configFile = it.configFile.copy(
                     name = fileName
                 ),
-                hasValidFileName = fileName.isNotBlank()
+                hasValidFileName = fileName.isNotBlank(),
+                isDirty = true
             )
         }
     }
@@ -97,7 +99,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     description = description
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -107,7 +110,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     group = kind
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -117,7 +121,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     dynamicModel = dynamicModel
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -127,7 +132,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     samplePeriod = samplePeriod ?: 0
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -137,7 +143,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     toneMode = toneMode
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -147,7 +154,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     toneMinimum = toneMinimum ?: 0
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -157,7 +165,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     toneMaximum = toneMaximum ?: 0
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -167,7 +176,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     toneLimitBehaviour = toneLimitBehaviour
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -177,7 +187,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     toneVolume = toneVolume
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -187,7 +198,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     rateMode = rateMode
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -197,7 +209,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     rateMinimumValue = rateValue ?: 0
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -207,7 +220,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     rateMaximumValue = rateValue ?: 0
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -217,7 +231,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     rateMinimum = rate ?: 0
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -227,7 +242,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     rateMaximum = rate ?: 0
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -237,7 +253,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     flatLineAtMinimumRate = value
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -263,7 +280,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     speechVolume = volume
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -273,7 +291,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     speeches = it.configFile.speeches + speech
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -283,7 +302,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     speeches = it.configFile.speeches - speech
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -293,7 +313,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     verticalThreshold = verticalThreshold ?: 0
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -303,7 +324,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     horizontalThreshold = horizontalThreshold ?: 0
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -313,7 +335,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     useSAS = useSAS
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -323,7 +346,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     initMode = initMode
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -333,7 +357,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     initFile = initFile
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -343,7 +368,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     altitudeUnit = altitudeUnitSystem
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -353,7 +379,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     altitudeStep = altitudeStep ?: 1
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -363,7 +390,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     windowAbove = windowAbove ?: 0
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -373,7 +401,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     windowBelow = windowBelow ?: 0
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -383,7 +412,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     dzElev = dzElev ?: 0
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -393,7 +423,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     alarms = it.configFile.alarms + alarm
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -403,7 +434,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     alarms = it.configFile.alarms - alarm
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -413,7 +445,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     silenceWindows = it.configFile.silenceWindows + silenceWindow
-                )
+                ),
+                isDirty = true
             )
         }
     }
@@ -423,7 +456,8 @@ class ConfigDetailViewModel @Inject constructor(
             it.copy(
                 configFile = it.configFile.copy(
                     silenceWindows = it.configFile.silenceWindows - silenceWindow
-                )
+                ),
+                isDirty = true
             )
         }
     }

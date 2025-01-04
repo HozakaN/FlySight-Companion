@@ -39,23 +39,27 @@ TODO release/1.0.0 RC2
 
 - DONE mettre des DropDownMenu dans une Box avec l'icon MoreVert correspondant
 
-- Localisation fr
+- DONE Localisation fr
 
-- UI of config file edition
+- DONE UI of config file edition
 
 - DONE app versioning indication in-app
 
 - DONE Ability to duplicate a config
 
-- Fix text color on some dialogs/dropdowns
+- DONE Fix text color on some dialogs/dropdowns
 
-- Hide "File" textfield in Initialization section of config file edition
+- DONE Hide "File" textfield in Initialization section of config file edition
+
+- for PlayStore app, a Feedback screen, with Name, contact, message and allowing to pass the logs from a devices
 
 TODO [nice to have] release/1.0.0 RC3
 
 - Help on config file edition and display ?
 
 - gradle modules organization and clean up
+
+- Fix textfield issues (0 staying when clearing field)
 
 TODO release/2.0.0
 
