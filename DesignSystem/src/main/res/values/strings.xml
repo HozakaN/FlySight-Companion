@@ -25,11 +25,6 @@
 
     <string name="misc_request_permission">Request permission</string>
 
-    <string name="misc_speed_text_metric">km/h</string>
-    <string name="misc_distance_text_metric">m</string>
-    <string name="misc_speed_text_imperial">"mph</string>
-    <string name="misc_distance_text_imperial">ft</string>
-
     <string name="misc_enable_bluetooth">Enable bluetooth</string>
 
     <string name="misc_decimals">Decimals</string>
@@ -67,8 +62,6 @@
     <string name="tone_limit_behaviour_min_max_tone">Min/max tone</string>
     <string name="tone_limit_behaviour_chirp_up_down">Chirp up/down</string>
     <string name="tone_limit_behaviour_chirp_down_up">Chirp down/up</string>
-
-
 
     <string name="text_horizontal_speed">Horizontal speed</string>
     <string name="text_vertical_speed">Vertical speed</string>
@@ -136,10 +129,10 @@
     <string name="list_device_item_configuration_no_name">No name</string>
     <string name="list_device_item_configuration_warning_content_description">There is issues with the configuration</string>
 
-    <string name="list_device_dialog_upload_config">Would you like to upload this device configuration on your phone ?</string>
-    <string name="list_device_dialog_config_content_changed">The FlySight configuration differs from your local config file named %1$s</string>
+    <string name="list_device_dialog_upload_config">Would you like to upload this configuration on your phone ?</string>
+    <string name="list_device_dialog_config_content_changed">The FlySight configuration differs from your phone config file named %1$s</string>
     <string name="list_device_dialog_update_device_conf">Update FlySight conf</string>
-    <string name="list_device_dialog_update_local_conf">Update local conf</string>
+    <string name="list_device_dialog_update_local_conf">Update phone conf</string>
     <string name="list_device_dialog_do_nothing">Don\'t do anything</string>
 
     <string name="device_connection_button_connect">Connect</string>
