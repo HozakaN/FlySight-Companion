@@ -12,5 +12,6 @@ data class ConfigDetailState(
     val editedConfiguration: ConfigFile? = null,
     val configFileFound: Boolean = true,
     val hasValidFileName: Boolean = true,
-    val fileSaved: FlowEvent<Boolean>? = null
+    val fileSaved: FlowEvent<Boolean>? = null,
+    val isDirty: Boolean = false
 )

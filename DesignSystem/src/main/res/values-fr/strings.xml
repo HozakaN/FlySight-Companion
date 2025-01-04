@@ -9,6 +9,8 @@
     <string name="misc_yes">Oui</string>
     <string name="misc_no">Non</string>
     <string name="misc_ok">Ok</string>
+    <string name="misc_discard">Annuler les changements</string>
+    <string name="misc_do_not_discard">Ne rien faire</string>
 
     <string name="misc_expand_more">Plus</string>
     <string name="misc_reduce">Réduire</string>
@@ -152,7 +154,7 @@
     <string name="config_detail_configuration_group">Groupe</string>
     <string name="config_detail_configuration_section_general">Général</string>
     <string name="config_detail_configuration_section_general_sample_period">Période d\'échantillonage (ms)</string>
-    <string name="config_detail_configuration_section_general_use_sas">Ajuster les niveau avec le niveau de la mer</string>
+    <string name="config_detail_configuration_section_general_use_sas">Ajuster avec le niveau de la mer</string>
     <string name="config_detail_configuration_section_tone">Tonalité</string>
     <string name="config_detail_configuration_section_rate">Fréquence</string>
     <string name="config_detail_configuration_section_speech">Speech</string>
@@ -200,6 +202,7 @@
     <string name="config_detail_configuration_limit_behavior">Comportement aux limites</string>
     <string name="config_detail_configuration_volume">Volume</string>
     <string name="config_detail_configuration_rate_mode">Mode de fréquence</string>
+    <string name="config_detail_cancel_changes">Annulez les changements ?</string>
 
     <string name="list_devices_no_device_found">Aucun appareil trouvé</string>
     <string name="list_devices_refresh_list">Rafraîchir la liste</string>

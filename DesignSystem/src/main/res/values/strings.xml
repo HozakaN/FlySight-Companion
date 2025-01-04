@@ -8,7 +8,9 @@
     <string name="misc_unknown_error">Unknown error</string>
     <string name="misc_yes">Yes</string>
     <string name="misc_no">No</string>
-    <string name="misc_ok">Ok</string>
+    <string name="misc_ok">OK</string>
+    <string name="misc_discard">Discard</string>
+    <string name="misc_do_not_discard">Do not discard</string>
 
     <string name="misc_expand_more">More</string>
     <string name="misc_reduce">Reduce</string>
@@ -198,6 +200,7 @@
     <string name="config_detail_configuration_limit_behavior">Limit behaviour</string>
     <string name="config_detail_configuration_volume">Volume</string>
     <string name="config_detail_configuration_rate_mode">Rate mode</string>
+    <string name="config_detail_cancel_changes">Discard changes ?</string>
 
     <string name="list_devices_no_device_found">No devices found</string>
     <string name="list_devices_refresh_list">Refresh list</string>

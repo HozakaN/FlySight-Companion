@@ -41,7 +41,7 @@ TODO release/1.0.0 RC2
 
 - DONE Localisation fr
 
-- UI of config file edition
+- DONE UI of config file edition
 
 - DONE app versioning indication in-app
 
@@ -58,6 +58,8 @@ TODO [nice to have] release/1.0.0 RC3
 - Help on config file edition and display ?
 
 - gradle modules organization and clean up
+
+- Fix textfield issues (0 staying when clearing field)
 
 TODO release/2.0.0
 
