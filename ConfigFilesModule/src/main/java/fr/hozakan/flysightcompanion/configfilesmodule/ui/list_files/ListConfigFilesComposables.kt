@@ -261,7 +261,7 @@ fun DeleteConfigFileDialog(
                     )
                 )
                 SimpleDialogActionBar(
-                    onDismissRequest = onCancel,
+                    onCancel = onCancel,
                     onValidate = onConfirm,
                     validateButtonText = stringResource(R.string.misc_confirm).uppercase()
                 )

@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +29,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
@@ -98,12 +100,12 @@ fun ListFlySightDevicesMenuActions() {
 
     val state by viewModel.state.collectAsState()
 
-    if (state.hasBluetoothPermission
-        && state.bluetoothState == BluetoothService.BluetoothState.Available
-        && state.devices.isNotEmpty()
+    Row(
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
+        if (state.hasBluetoothPermission
+            && state.bluetoothState == BluetoothService.BluetoothState.Available
+            && state.devices.isNotEmpty()
         ) {
             if (state.refreshingDeviceList is LoadingState.Loading) {
                 CircularProgressIndicator(
@@ -121,6 +123,53 @@ fun ListFlySightDevicesMenuActions() {
                     painter = painterResource(LocalR.drawable.new_window),
                     contentDescription = stringResource(R.string.list_device_add_new)
                 )
+            }
+            Spacer(modifier = Modifier.requiredWidth(8.dp))
+        }
+    }
+    var showInfoDialog by remember { mutableStateOf(false) }
+    IconButton(
+        onClick = {
+            showInfoDialog = true
+        },
+    ) {
+        Icon(
+            imageVector = Icons.Default.Info,
+            contentDescription = stringResource(R.string.list_device_info)
+        )
+    }
+    if (showInfoDialog) {
+        Dialog(
+            onDismissRequest = {
+                showInfoDialog = false
+            }
+        ) {
+            Card {
+                Column(
+                    modifier = Modifier.requiredHeight(120.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "Version ${state.versionName}")
+                    }
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.BottomEnd
+                    ) {
+                        TextButton(
+                            onClick = {
+                                showInfoDialog = false
+                            }
+                        ) {
+                            Text(
+                                text = stringResource(R.string.misc_ok).uppercase(),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -818,7 +867,7 @@ internal fun DeviceConfigurationMisMatchDialog(
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     SimpleDialogActionBar(
-                        onDismissRequest = onDismissRequest,
+                        onCancel = onDismissRequest,
                         onValidate = onUploadConfigToSystem,
                         validateButtonText = stringResource(R.string.misc_upload).uppercase()
                     )

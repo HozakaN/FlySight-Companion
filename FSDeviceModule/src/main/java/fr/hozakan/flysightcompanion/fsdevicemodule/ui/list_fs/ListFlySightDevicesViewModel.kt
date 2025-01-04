@@ -11,6 +11,7 @@ import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.framework.service.permission.AndroidPermissionsService
 import fr.hozakan.flysightcompanion.designsystem.R
+import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.model.ConfigFile
@@ -35,6 +36,7 @@ import javax.inject.Inject
 @ExperimentalCoroutinesApi
 class ListFlySightDevicesViewModel @Inject constructor(
     userPrefService: UserPrefService,
+    appVersionService: AppVersionService,
     private val context: Context,
     private val bluetoothService: BluetoothService,
     private val fsDeviceService: FsDeviceService,
@@ -42,7 +44,10 @@ class ListFlySightDevicesViewModel @Inject constructor(
     private val permissionsService: AndroidPermissionsService
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(ListFlySightDevicesState())
+    private val _state = MutableStateFlow(ListFlySightDevicesState(
+        versionName = appVersionService.appVersion,
+        versionCode = appVersionService.appCode
+    ))
 
     val state = _state.asStateFlow()
 

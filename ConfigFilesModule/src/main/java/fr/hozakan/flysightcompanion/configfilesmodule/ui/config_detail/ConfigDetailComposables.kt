@@ -897,7 +897,7 @@ fun ConfigDetailScreenInternal(
             }
             item {
                 SimpleDialogActionBar(
-                    onDismissRequest = onNavigateUp,
+                    onCancel = onNavigateUp,
                     onValidate = {
                         saveConfigFile()
                     }
@@ -969,7 +969,7 @@ fun AddSpeechDialog(
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 SimpleDialogActionBar(
-                    onDismissRequest = onDismiss,
+                    onCancel = onDismiss,
                     onValidate = {
                         onSpeechAdded(
                             Speech(
@@ -1039,7 +1039,7 @@ fun AddAlarmDialog(
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                 }
                 SimpleDialogActionBar(
-                    onDismissRequest = onDismiss,
+                    onCancel = onDismiss,
                     onValidate = {
                         onAlarmAdded(
                             Alarm(
@@ -1096,7 +1096,7 @@ fun AddSilenceWindowDialog(
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 SimpleDialogActionBar(
-                    onDismissRequest = onDismiss,
+                    onCancel = onDismiss,
                     onValidate = {
                         onSilenceAdded(
                             SilenceWindow(

@@ -17,9 +17,9 @@ import fr.hozakan.flysightcompanion.designsystem.R
 
 @Composable
 fun SimpleDialogActionBar(
-    onDismissRequest: () -> Unit,
-    onValidate: () -> Unit,
     modifier: Modifier = Modifier,
+    onCancel: () -> Unit = {},
+    onValidate: () -> Unit = {},
     showValidateButton: Boolean = true,
     validateEnabled: Boolean = true,
     validateButtonText: String = stringResource(id = R.string.misc_save).uppercase(),
@@ -35,7 +35,7 @@ fun SimpleDialogActionBar(
     ) {
         if (showCancelButton) {
             TextButton(
-                onClick = onDismissRequest
+                onClick = onCancel
             ) {
                 Text(
                     text = cancelButtonText,
@@ -73,7 +73,7 @@ fun SimpleDialogActionBar3Button(
 ) {
     if (!showNeutralButton) {
         SimpleDialogActionBar(
-            onDismissRequest = onDismissRequest,
+            onCancel = onDismissRequest,
             onValidate = onValidate,
             modifier = modifier,
             showValidateButton = showValidateButton,
