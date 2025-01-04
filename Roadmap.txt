@@ -61,6 +61,8 @@ TODO [nice to have] release/1.0.0 RC3
 
 - Fix textfield issues (0 staying when clearing field)
 
+- Fix FlySight tab logo on devices with density < my phone density
+
 TODO release/2.0.0
 
 - big feature : record analyses

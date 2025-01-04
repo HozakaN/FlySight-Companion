@@ -118,10 +118,10 @@
 
     <string name="list_device_refresh_info_1">Rafraîchissement de la liste des appareils…</string>
     <string name="list_device_refresh_info_2">Rafraîchissement de la liste des appareils…\n
-                                L\'attente est un peu plus longue que prévue…</string>
-    <string name="list_device_refresh_info_3">Rafraîchissement de la liste des appareils…\
-                                    Essayez de mettre votre FlySight en appairage\n
-                                    en pressant brièvement le boutton d\'allumage deux fois</string>
+                                    L\'attente est un peu plus longue que prévue…</string>
+    <string name="list_device_refresh_info_3">Rafraîchissement de la liste des appareils…\n
+                                        Essayez de mettre votre FlySight en appairage\n
+                                        en pressant brièvement le boutton d\'allumage deux fois</string>
 
     <string name="list_device_result_files_title">Résultats</string>
     <string name="list_device_result_files_count">Nombre de fichiers</string>
