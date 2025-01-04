@@ -8,6 +8,7 @@
     <string name="misc_unknown_error">Erreur inconnue</string>
     <string name="misc_yes">Oui</string>
     <string name="misc_no">Non</string>
+    <string name="misc_ok">Ok</string>
 
     <string name="misc_expand_more">Plus</string>
     <string name="misc_reduce">Réduire</string>
@@ -106,6 +107,7 @@
     <string name="list_config_file_silence_window_count">%1$d silences</string>
     <string name="list_config_file_delete_file_dialog">Effacer la conf %1$s ?</string>
 
+    <string name="list_device_info">Info</string>
     <string name="list_device_add_new">Ajouter un FlySight</string>
     <string name="list_device_missing_ble_permission">Permission bluetooth non accordée</string>
     <string name="list_device_ble_not_available">Le bluetooth est disponible</string>

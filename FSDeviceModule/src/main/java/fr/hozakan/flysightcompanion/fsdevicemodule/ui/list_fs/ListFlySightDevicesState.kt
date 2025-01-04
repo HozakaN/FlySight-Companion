@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 
 @Immutable
 data class ListFlySightDevicesState(
+    val versionName: String = "",
+    val versionCode: Int = 0,
     val hasBluetoothPermission: Boolean = false,
     val bluetoothState: BluetoothService.BluetoothState = BluetoothService.BluetoothState.NotAvailable,
     val devices: List<ListFlySightDeviceDisplayData> = emptyList(),

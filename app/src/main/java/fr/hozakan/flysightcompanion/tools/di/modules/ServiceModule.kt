@@ -9,6 +9,7 @@ import fr.hozakan.flysightcompanion.dialogmodule.MutableDialogService
 import fr.hozakan.flysightcompanion.userpreferencesmodule.DatastoreUserPrefService
 import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import fr.hozakan.flysightcompanion.BaseApplication
+import fr.hozakan.flysightcompanion.BuildConfig
 import fr.hozakan.flysightcompanion.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightcompanion.bluetoothmodule.DefaultBluetoothService
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigEncoder
@@ -17,9 +18,14 @@ import fr.hozakan.flysightcompanion.configfilesmodule.business.DefaultConfigEnco
 import fr.hozakan.flysightcompanion.configfilesmodule.business.DefaultConfigFileService
 import fr.hozakan.flysightcompanion.framework.service.applifecycle.ActivityLifecycleService
 import fr.hozakan.flysightcompanion.framework.service.async.ActivityOperationsService
+import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
+import fr.hozakan.flysightcompanion.framework.service.versionning.DefaultAppVersionService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.DefaultFsDeviceService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import kotlinx.coroutines.InternalCoroutinesApi
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import javax.inject.Named
@@ -96,5 +102,12 @@ class ServiceModule {
     @Singleton
     @Provides
     fun provideConfigEncoder(): ConfigEncoder = DefaultConfigEncoder()
+
+    @Singleton
+    @Provides
+    fun provideAppVersionService(): AppVersionService = DefaultAppVersionService(
+        BuildConfig.VERSION_NAME,
+        BuildConfig.VERSION_CODE
+    )
 
 }

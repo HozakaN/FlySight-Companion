@@ -31,7 +31,7 @@ fun ListFlySightDevicesScreenInternalRefreshingWithoutDevicePreview() {
             devices = emptyList(),
             refreshingDeviceList = LoadingState.Loading(Unit),
             unitSystem = UnitSystem.Metric,
-            updatingConfiguration = null
+            updatingConfiguration = null,
         ),
         onDeviceSelected = {},
         onRequestBluetoothPermissionClicked = {},

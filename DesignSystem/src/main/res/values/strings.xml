@@ -8,6 +8,7 @@
     <string name="misc_unknown_error">Unknown error</string>
     <string name="misc_yes">Yes</string>
     <string name="misc_no">No</string>
+    <string name="misc_ok">Ok</string>
 
     <string name="misc_expand_more">More</string>
     <string name="misc_reduce">Reduce</string>
@@ -104,6 +105,7 @@
     <string name="list_config_file_silence_window_count">%1$d silence windows</string>
     <string name="list_config_file_delete_file_dialog">Delete config file %1$s ?</string>
 
+    <string name="list_device_info">Info</string>
     <string name="list_device_add_new">Add a FlySight</string>
     <string name="list_device_missing_ble_permission">No bluetooth permission</string>
     <string name="list_device_ble_not_available">Bluetooth is not available</string>

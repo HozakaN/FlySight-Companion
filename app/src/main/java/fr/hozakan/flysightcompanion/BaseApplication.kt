@@ -7,6 +7,7 @@ import dagger.android.HasAndroidInjector
 import fr.hozakan.flysightcompanion.framework.service.applifecycle.ActivityLifecycleService
 import fr.hozakan.flysightcompanion.tools.di.injectApp
 import fr.hozakan.flysightcompanion.userpreferencesmodule.DataStoreService
+import fr.hozakan.flysightcompanion.BuildConfig
 import kotlinx.coroutines.InternalCoroutinesApi
 import timber.log.Timber
 import javax.inject.Inject
@@ -27,6 +28,8 @@ class BaseApplication : Application() , HasAndroidInjector {
         super.onCreate()
         initTimber()
         DataStoreService.init(applicationContext)
+
+        Timber.d("Hoz2 ${BuildConfig.VERSION_NAME}")
     }
 
     private fun initTimber() {

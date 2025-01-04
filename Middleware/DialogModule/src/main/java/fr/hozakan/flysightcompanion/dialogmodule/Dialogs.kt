@@ -65,7 +65,7 @@ data class ConfigFileNameDialog(
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     SimpleDialogActionBar(
-                        onDismissRequest = {
+                        onCancel = {
                             onResult(DialogResult.Dismiss)
                         },
                         validateEnabled = configFileName.isNotBlank(),

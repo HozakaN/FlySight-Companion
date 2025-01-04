@@ -1,9 +1,42 @@
+import java.io.ByteArrayOutputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 //    alias(libs.plugins.kotlin.serialization)
     id("kotlin-kapt")
+}
+
+fun List<String>.removeAfter(nbElement: Int = 1): List<String> {
+    return if (this.size <= nbElement) this else this.subList(0, nbElement)
+}
+
+fun versionName(): String {
+    val outputStream = ByteArrayOutputStream()
+    // release/1.0.0-RC1-7-ga2f6cd1
+    project.exec {
+        commandLine("git", "describe", "--tags")
+        standardOutput = outputStream
+    }
+    val intermediate = outputStream.toString().trim().split("/")[1] // possible outputs are 1.0.0-RC1-7-ga2f6cd1, 1.0.0-7-ga2f6cd1, 1.0.0-RC1-ga2f6cd1, 1.0.0-ga2f6cd1
+    val output =
+        intermediate.split("-").removeAfter(if (intermediate.contains("RC")) 2 else 1).joinToString("-") // possible outputs are 1.0.0-RC1, 1.0.0
+    return output
+}
+
+// format on 6 characters following pattern Major/Minor/Patch/Patch/Release/Release
+fun versionCode(): Int {
+    val versionName = versionName()
+    val major = versionName.first().toString().toInt()
+    val minor = versionName.substring(2 until 3).toInt()
+    val patch = versionName.substring(4 until 5).toInt()
+    val release = if (versionName.contains("RC")) {
+        versionName.substring(versionName.indexOf("RC") + 2).toInt()
+    } else {
+        0
+    }
+    return String.format("%d%d%02d%02d", major, minor, patch, release).toInt()
 }
 
 android {
@@ -14,8 +47,8 @@ android {
         applicationId = "fr.hozakan.flysightcompanion"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0-RC1"
+        versionCode = versionCode()
+        versionName = versionName() //"1.0.0-RC1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -37,6 +70,7 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 }

@@ -43,9 +43,9 @@ TODO release/1.0.0 RC2
 
 - UI of config file edition
 
-- app versioning indication in-app
+- DONE app versioning indication in-app
 
-- Ability to duplicate a config
+- DONE Ability to duplicate a config
 
 - Fix text color on some dialogs/dropdowns
 
