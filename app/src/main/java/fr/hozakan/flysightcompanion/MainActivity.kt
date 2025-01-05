@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Engineering
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,12 +40,16 @@ import com.google.gson.Gson
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
-import fr.hozakan.flysightcompanion.dialogmodule.DialogHandler
-import fr.hozakan.flysightcompanion.dialogmodule.LocalDialogService
 import fr.hozakan.flysightcompanion.configfilesmodule.ui.config_detail.ConfigDetailMenuActions
 import fr.hozakan.flysightcompanion.configfilesmodule.ui.config_detail.ConfigDetailScreen
 import fr.hozakan.flysightcompanion.configfilesmodule.ui.list_files.ListConfigFileMenuActions
 import fr.hozakan.flysightcompanion.configfilesmodule.ui.list_files.ListConfigFilesScreen
+import fr.hozakan.flysightcompanion.designsystem.R
+import fr.hozakan.flysightcompanion.designsystem.theme.FlySightCompanionTheme
+import fr.hozakan.flysightcompanion.designsystem.theme.TextConfiguration
+import fr.hozakan.flysightcompanion.designsystem.widget.FText
+import fr.hozakan.flysightcompanion.dialogmodule.DialogHandler
+import fr.hozakan.flysightcompanion.dialogmodule.LocalDialogService
 import fr.hozakan.flysightcompanion.framework.compose.LocalMenuState
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.dagger.Injectable
@@ -56,16 +59,12 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_config.DeviceConfig
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail.DeviceDetailMenuActions
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail.DeviceDetailScreen
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.file.DeviceFileScreen
+import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesMenuActions
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
 import fr.hozakan.flysightcompanion.model.ConfigFile
-import fr.hozakan.flysightcompanion.designsystem.theme.FlySightCompanionTheme
-import fr.hozakan.flysightcompanion.designsystem.theme.TextConfiguration
-import fr.hozakan.flysightcompanion.designsystem.widget.FText
-import fr.hozakan.flysightcompanion.R as LocalR
-import fr.hozakan.flysightcompanion.designsystem.R
-import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesMenuActions
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
+import fr.hozakan.flysightcompanion.R as LocalR
 
 class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
 
@@ -137,12 +136,6 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                 title = { Text(title) },
                                 navigationIcon = {
                                     when (currentRoute) {
-                                        AppScreen.DeviceTab.DeviceList.route -> {
-                                            Icon(
-                                                painter = painterResource(LocalR.drawable.flysight_icon),
-                                                contentDescription = stringResource(R.string.misc_home)
-                                            )
-                                        }
 
                                         AppScreen.DeviceTab.DeviceDetail.route -> {
                                             IconButton(
@@ -198,7 +191,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
 
                                         else -> {
                                             Icon(
-                                                imageVector = Icons.Default.Bluetooth,
+                                                painter = painterResource(LocalR.drawable.flysight_icon),
                                                 contentDescription = stringResource(R.string.misc_home)
                                             )
                                         }
