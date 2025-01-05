@@ -61,9 +61,9 @@
 
 # TODO release/1.0.0 RC4
 
-- Help on config file edition and display ?
+- NOPE Help on config file edition and display ?
 
-- Fix textfield issues (0 staying when clearing field)
+- DONE Fix textfield issues (0 staying when clearing field)
 
 - DONE Fix FlySight tab logo on devices with density < my phone density
 

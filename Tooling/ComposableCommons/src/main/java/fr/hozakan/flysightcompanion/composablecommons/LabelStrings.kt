@@ -164,7 +164,7 @@ fun rateMaximumLabel(rateMode: RateMode, unitSystem: UnitSystem): String = when 
     }
 }
 
-fun Int.valueForRateMode(rateMode: RateMode, unitSystem: UnitSystem): Int = when (rateMode) {
+fun Int.displayableRateValueFromRealOne(rateMode: RateMode, unitSystem: UnitSystem): Int = when (rateMode) {
     RateMode.HorizontalSpeed,
     RateMode.VerticalSpeed,
     RateMode.TotalSpeed -> {
@@ -173,13 +173,15 @@ fun Int.valueForRateMode(rateMode: RateMode, unitSystem: UnitSystem): Int = when
     RateMode.GlideRatio,
     RateMode.InverseGlideRatio,
     RateMode.MagnitudeOf1,
-    RateMode.ChangeInValue1,
+    RateMode.ChangeInValue1 -> {
+        this / 100
+    }
     RateMode.DiveAngle -> {
         this
     }
 }
 
-fun Int.valueFromRateMode(rateMode: RateMode, unitSystem: UnitSystem): Int = when (rateMode) {
+fun Int.realRateValueFromDisplayableOne(rateMode: RateMode, unitSystem: UnitSystem): Int = when (rateMode) {
     RateMode.HorizontalSpeed,
     RateMode.VerticalSpeed,
     RateMode.TotalSpeed -> {
@@ -188,7 +190,9 @@ fun Int.valueFromRateMode(rateMode: RateMode, unitSystem: UnitSystem): Int = whe
     RateMode.GlideRatio,
     RateMode.InverseGlideRatio,
     RateMode.MagnitudeOf1,
-    RateMode.ChangeInValue1,
+    RateMode.ChangeInValue1 -> {
+        this * 100
+    }
     RateMode.DiveAngle -> {
         this
     }
