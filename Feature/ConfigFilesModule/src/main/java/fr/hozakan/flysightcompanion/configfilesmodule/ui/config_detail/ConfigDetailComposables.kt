@@ -56,9 +56,9 @@ import fr.hozakan.flysightcompanion.composablecommons.speechValueFromMode
 import fr.hozakan.flysightcompanion.composablecommons.speechValueLabel
 import fr.hozakan.flysightcompanion.composablecommons.toneMaximumLabel
 import fr.hozakan.flysightcompanion.composablecommons.toneMinimumLabel
-import fr.hozakan.flysightcompanion.composablecommons.valueForRateMode
+import fr.hozakan.flysightcompanion.composablecommons.displayableRateValueFromRealOne
 import fr.hozakan.flysightcompanion.composablecommons.valueForToneMode
-import fr.hozakan.flysightcompanion.composablecommons.valueFromRateMode
+import fr.hozakan.flysightcompanion.composablecommons.realRateValueFromDisplayableOne
 import fr.hozakan.flysightcompanion.composablecommons.valueFromToneMode
 import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.designsystem.extension.distanceTextResource
@@ -437,13 +437,13 @@ fun ConfigDetailScreenInternal(
                                         }
                                     },
                                 label = rateMinimumLabel(form.rateMode, unitSystem),
-                                intValue = form.rateMinimumValue?.valueForRateMode(
+                                intValue = form.rateMinimumValue?.displayableRateValueFromRealOne(
                                     form.rateMode,
                                     unitSystem
                                 ),
                                 onValueChanged = {
                                     form.updateRateMinimumValue(
-                                        it?.valueFromRateMode(
+                                        it?.realRateValueFromDisplayableOne(
                                             form.rateMode,
                                             unitSystem
                                         )
@@ -459,13 +459,13 @@ fun ConfigDetailScreenInternal(
                                         }
                                     },
                                 label = rateMaximumLabel(form.rateMode, unitSystem),
-                                intValue = form.rateMaximumValue?.valueForRateMode(
+                                intValue = form.rateMaximumValue?.displayableRateValueFromRealOne(
                                     form.rateMode,
                                     unitSystem
                                 ),
                                 onValueChanged = {
                                     form.updateRateMaximumValue(
-                                        it?.valueFromRateMode(
+                                        it?.realRateValueFromDisplayableOne(
                                             form.rateMode,
                                             unitSystem
                                         )
@@ -483,9 +483,9 @@ fun ConfigDetailScreenInternal(
                                 label = stringResource(
                                     R.string.config_detail_configuration_minimum_rate
                                 ),
-                                intValue = form.rateMinimum,
+                                intValue = form.rateMinimum?.div(100),
                                 onValueChanged = {
-                                    form.updateRateMinimum(it)
+                                    form.updateRateMinimum(it?.times(100))
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
@@ -499,9 +499,9 @@ fun ConfigDetailScreenInternal(
                                 label = stringResource(
                                     R.string.config_detail_configuration_maximum_rate
                                 ),
-                                intValue = form.rateMaximum,
+                                intValue = form.rateMaximum?.div(100),
                                 onValueChanged = {
-                                    form.updateRateMaximum(it)
+                                    form.updateRateMaximum(it?.times(100))
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
