@@ -43,11 +43,11 @@
 
     <string name="dialog_pick_config_title">Choisissez une nouvelle configuration pour votre FlySight</string>
 
-    <string name="dynamic_model_text_Portable">Portable</string>
-    <string name="dynamic_model_text_Stationary">Stationnaire</string>
-    <string name="dynamic_model_text_Pedestrian">Piéton</string>
-    <string name="dynamic_model_text_Automotive">Véhicule à moteur</string>
-    <string name="dynamic_model_text_Sea">Mer</string>
+    <string name="dynamic_model_text_portable">Portable</string>
+    <string name="dynamic_model_text_stationary">Stationnaire</string>
+    <string name="dynamic_model_text_pedestrian">Piéton</string>
+    <string name="dynamic_model_text_automotive">Véhicule à moteur</string>
+    <string name="dynamic_model_text_sea">Mer</string>
     <string name="dynamic_model_text_airborne_with_1G_acceleration">Vol avec accéleration &lt; à 1G</string>
     <string name="dynamic_model_text_airborne_with_2G_acceleration">Vol avec accéleration &lt; à 2G</string>
     <string name="dynamic_model_text_airborne_with_4G_acceleration">Vol avec accéleration &lt; à 4G</string>

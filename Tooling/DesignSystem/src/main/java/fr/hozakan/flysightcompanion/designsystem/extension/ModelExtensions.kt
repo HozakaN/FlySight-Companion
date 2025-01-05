@@ -8,7 +8,6 @@ import fr.hozakan.flysightcompanion.model.config.InitMode
 import fr.hozakan.flysightcompanion.model.config.RateMode
 import fr.hozakan.flysightcompanion.model.config.SpeechMode
 import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
-import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour.entries
 import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 
@@ -32,11 +31,11 @@ val UnitSystem.distanceTextResource: Int
 
 val DynamicModel.textResource: Int
     get() = when (this) {
-        DynamicModel.Portable -> R.string.dynamic_model_text_Portable
-        DynamicModel.Stationary -> R.string.dynamic_model_text_Stationary
-        DynamicModel.Pedestrian -> R.string.dynamic_model_text_Pedestrian
-        DynamicModel.Automotive -> R.string.dynamic_model_text_Automotive
-        DynamicModel.Sea -> R.string.dynamic_model_text_Sea
+        DynamicModel.Portable -> R.string.dynamic_model_text_portable
+        DynamicModel.Stationary -> R.string.dynamic_model_text_stationary
+        DynamicModel.Pedestrian -> R.string.dynamic_model_text_pedestrian
+        DynamicModel.Automotive -> R.string.dynamic_model_text_automotive
+        DynamicModel.Sea -> R.string.dynamic_model_text_sea
         DynamicModel.Airborne1g -> R.string.dynamic_model_text_airborne_with_1G_acceleration
         DynamicModel.Airborne2g -> R.string.dynamic_model_text_airborne_with_2G_acceleration
         DynamicModel.Airborne4g -> R.string.dynamic_model_text_airborne_with_4G_acceleration
