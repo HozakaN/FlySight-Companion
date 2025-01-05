@@ -38,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -168,112 +169,15 @@ fun ConfigDetailScreen(
         onNavigateUp()
     }
 
+    val form = rememberConfigDetailForm(state.editedConfiguration)
+
     ConfigDetailScreenInternal(
         state = state,
-        updateConfigFileName = {
-            viewModel.updateConfigFileName(it)
-        },
-        updateConfigFileDescription = {
-            viewModel.updateConfigFileDescription(it)
-        },
-        updateConfigFileKind = {
-            viewModel.updateConfigFileKind(it)
-        },
-        updateDynamicModel = {
-            viewModel.updateDynamicModel(it)
-        },
-        updateSamplePeriod = {
-            viewModel.updateSamplePeriod(it)
-        },
-        updateUseSAS = {
-            viewModel.updateUseSAS(it)
-        },
-        updateToneMode = {
-            viewModel.updateToneMode(it)
-        },
-        updateToneMinimum = {
-            viewModel.updateToneMinimum(it)
-        },
-        updateToneMaximum = {
-            viewModel.updateToneMaximum(it)
-        },
-        updateToneLimitBehaviour = {
-            viewModel.updateToneLimitBehaviour(it)
-        },
-        updateToneVolume = {
-            viewModel.updateToneVolume(it)
-        },
-        updateRateMode = {
-            viewModel.updateRateMode(it)
-        },
-        updateRateMinimumValue = {
-            viewModel.updateRateMinimumValue(it)
-        },
-        updateRateMaximumValue = {
-            viewModel.updateRateMaximumValue(it)
-        },
-        updateRateMinimum = {
-            viewModel.updateRateMinimum(it)
-        },
-        updateRateMaximum = {
-            viewModel.updateRateMaximum(it)
-        },
-        updateFlatLineAtMinimumRate = {
-            viewModel.updateFlatLineAtMinimumRate(it)
-        },
-        updateSpeechRate = {
-            viewModel.updateRateMaximumValue(it)
-        },
-        updateSpeechVolume = {
-            viewModel.updateSpeechVolume(it)
-        },
-        addSpeech = {
-            viewModel.addSpeech(it)
-        },
-        deleteSpeech = {
-            viewModel.deleteSpeech(it)
-        },
-        updateVerticalThreshold = {
-            viewModel.updateVerticalThreshold(it)
-        },
-        updateHorizontalThreshold = {
-            viewModel.updateHorizontalThreshold(it)
-        },
-        updateInitMode = {
-            viewModel.updateInitMode(it)
-        },
-        updateInitFile = {
-            viewModel.updateInitFile(it)
-        },
-        updateWindowAbove = {
-            viewModel.updateWindowAbove(it)
-        },
-        updateWindowBelow = {
-            viewModel.updateWindowBelow(it)
-        },
-        updateDzElev = {
-            viewModel.updateDzElev(it)
-        },
-        addAlarm = {
-            viewModel.addAlarm(it)
-        },
-        deleteAlarm = {
-            viewModel.deleteAlarm(it)
-        },
-        updateAltitudeUnit = {
-            viewModel.updateAltitudeUnit(it)
-        },
-        updateAltitudeStep = {
-            viewModel.updateAltitudeStep(it)
-        },
-        addSilenceWindow = {
-            viewModel.addSilenceWindow(it)
-        },
-        deleteSilenceWindow = {
-            viewModel.deleteSilenceWindow(it)
-        },
-        saveConfigFile = {
-            viewModel.saveConfigFile()
+        form = form,
+        saveConfigFileClicked = {
+            form.toConfigFile()?.let { config ->
+                viewModel.saveConfigFile(config)
+            }
         },
         onNavigateUp = onNavigateUp
     )
@@ -283,41 +187,8 @@ fun ConfigDetailScreen(
 @Composable
 fun ConfigDetailScreenInternal(
     state: ConfigDetailState,
-    updateConfigFileName: (String) -> Unit,
-    updateConfigFileDescription: (String) -> Unit,
-    updateConfigFileKind: (String) -> Unit,
-    updateDynamicModel: (DynamicModel) -> Unit,
-    updateSamplePeriod: (Int) -> Unit,
-    updateUseSAS: (Boolean) -> Unit,
-    updateToneMode: (ToneMode) -> Unit,
-    updateToneMinimum: (Int) -> Unit,
-    updateToneMaximum: (Int) -> Unit,
-    updateToneLimitBehaviour: (ToneLimitBehaviour) -> Unit,
-    updateToneVolume: (Volume) -> Unit,
-    updateRateMode: (RateMode) -> Unit,
-    updateRateMaximumValue: (Int) -> Unit,
-    updateRateMinimumValue: (Int) -> Unit,
-    updateRateMaximum: (Int) -> Unit,
-    updateRateMinimum: (Int) -> Unit,
-    updateFlatLineAtMinimumRate: (Boolean) -> Unit,
-    updateSpeechRate: (Int) -> Unit,
-    updateSpeechVolume: (Volume) -> Unit,
-    addSpeech: (Speech) -> Unit,
-    deleteSpeech: (Speech) -> Unit,
-    updateVerticalThreshold: (Int) -> Unit,
-    updateHorizontalThreshold: (Int) -> Unit,
-    updateInitMode: (InitMode) -> Unit,
-    updateInitFile: (String) -> Unit,
-    updateWindowAbove: (Int) -> Unit,
-    updateWindowBelow: (Int) -> Unit,
-    updateDzElev: (Int) -> Unit,
-    addAlarm: (Alarm) -> Unit,
-    deleteAlarm: (Alarm) -> Unit,
-    updateAltitudeUnit: (UnitSystem) -> Unit,
-    updateAltitudeStep: (Int) -> Unit,
-    addSilenceWindow: (SilenceWindow) -> Unit,
-    deleteSilenceWindow: (SilenceWindow) -> Unit,
-    saveConfigFile: () -> Unit,
+    form: ConfigDetailForm = rememberConfigDetailForm(),
+    saveConfigFileClicked: () -> Unit,
     onNavigateUp: () -> Unit
 ) {
     Surface(
@@ -334,12 +205,11 @@ fun ConfigDetailScreenInternal(
             }
             return@Surface
         }
-        val configFile = state.configFile
+//        val configFile = state.configFile
         val unitSystem = state.unitSystem
 
         Column {
             LazyColumn(
-//                modifier = Modifier.fillMaxSize(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
@@ -348,23 +218,43 @@ fun ConfigDetailScreenInternal(
             ) {
                 item {
                     OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = configFile.name,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { focusState ->
+                                if (!focusState.hasFocus && form.name == null) {
+                                    form.updateConfigFileName("")
+                                }
+                            },
+                        value = form.name ?: "",
                         onValueChange = {
-                            updateConfigFileName(it)
+                            form.updateConfigFileName(it)
                         },
                         label = {
-                            Text(text = stringResource(R.string.config_detail_configuration_name))
+                            Text(
+                                text = stringResource(
+                                    if (form.hasValidFileName) {
+                                        R.string.config_detail_configuration_name
+                                    } else {
+                                        R.string.config_detail_configuration_name_invalid
+                                    }
+                                )
+                            )
                         },
-                        isError = !state.hasValidFileName
+                        isError = !form.hasValidFileName
                     )
                 }
                 item {
                     OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = configFile.description,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { focusState ->
+                                if (!focusState.hasFocus && form.description == null) {
+                                    form.updateConfigFileDescription("")
+                                }
+                            },
+                        value = form.description ?: "",
                         onValueChange = {
-                            updateConfigFileDescription(it)
+                            form.updateConfigFileDescription(it)
                         },
                         label = {
                             Text(text = stringResource(R.string.config_detail_configuration_description))
@@ -374,10 +264,16 @@ fun ConfigDetailScreenInternal(
                 item {
                     Column {
                         OutlinedTextField(
-                            modifier = Modifier.fillMaxWidth(),
-                            value = configFile.group,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onFocusChanged { focusState ->
+                                    if (!focusState.hasFocus && form.group == null) {
+                                        form.updateConfigFileGroup("")
+                                    }
+                                },
+                            value = form.group ?: "",
                             onValueChange = {
-                                updateConfigFileKind(it)
+                                form.updateConfigFileGroup(it)
                             },
                             label = {
                                 Text(text = stringResource(R.string.config_detail_configuration_group))
@@ -399,20 +295,23 @@ fun ConfigDetailScreenInternal(
                             )
                         ) {
                             DynamicModelContainer(
-                                dynamicModel = configFile.dynamicModel,
+                                dynamicModel = form.dynamicModel,
                                 onSelectionChanged = {
-                                    updateDynamicModel(it)
+                                    form.updateDynamicModel(it)
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.samplePeriod == null) {
+                                            form.updateSamplePeriodToDefaultValue()
+                                        }
+                                    },
                                 label = stringResource(R.string.config_detail_configuration_section_general_sample_period),
-                                intValue = configFile.samplePeriod,
+                                intValue = form.samplePeriod,
                                 onValueChanged = {
-                                    if (it != null) {
-                                        updateSamplePeriod(it)
-                                    }
+                                    form.updateSamplePeriod(it)
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
@@ -420,9 +319,9 @@ fun ConfigDetailScreenInternal(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Switch(
-                                    checked = configFile.useSAS,
+                                    checked = form.useSAS,
                                     onCheckedChange = {
-                                        updateUseSAS(it)
+                                        form.updateUseSAS(it)
                                     },
                                 )
                                 Spacer(modifier = Modifier.requiredWidth(8.dp))
@@ -444,61 +343,67 @@ fun ConfigDetailScreenInternal(
                             )
                         ) {
                             ToneModeContainer(
-                                toneMode = configFile.toneMode,
+                                toneMode = form.toneMode,
                                 onSelectionChanged = {
-                                    updateToneMode(it)
+                                    form.updateToneMode(it)
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth(),
-                                label = toneMinimumLabel(configFile.toneMode, unitSystem),
-                                intValue = configFile.toneMinimum.valueForToneMode(
-                                    configFile.toneMode,
+                                modifier = Modifier.fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.toneMinimum == null) {
+                                            form.updateToneMinimumToDefaultValue()
+                                        }
+                                    },
+                                label = toneMinimumLabel(form.toneMode, unitSystem),
+                                intValue = form.toneMinimum?.valueForToneMode(
+                                    form.toneMode,
                                     unitSystem
                                 ),
                                 onValueChanged = {
-                                    if (it != null) {
-                                        updateToneMinimum(
-                                            it.valueFromToneMode(
-                                                configFile.toneMode,
-                                                unitSystem
-                                            )
+                                    form.updateToneMinimum(
+                                        it?.valueFromToneMode(
+                                            form.toneMode,
+                                            unitSystem
                                         )
-                                    }
+                                    )
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth(),
-                                label = toneMaximumLabel(configFile.toneMode, unitSystem),
-                                intValue = configFile.toneMaximum.valueForToneMode(
-                                    configFile.toneMode,
+                                modifier = Modifier.fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.toneMaximum == null) {
+                                            form.updateToneMaximumToDefaultValue()
+                                        }
+                                    },
+                                label = toneMaximumLabel(form.toneMode, unitSystem),
+                                intValue = form.toneMaximum?.valueForToneMode(
+                                    form.toneMode,
                                     unitSystem
                                 ),
                                 onValueChanged = {
-                                    if (it != null) {
-                                        updateToneMaximum(
-                                            it.valueFromToneMode(
-                                                configFile.toneMode,
-                                                unitSystem
-                                            )
+                                    form.updateToneMaximum(
+                                        it?.valueFromToneMode(
+                                            form.toneMode,
+                                            unitSystem
                                         )
-                                    }
+                                    )
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             LimitBehaviourContainer(
-                                limitBehaviour = configFile.toneLimitBehaviour,
+                                limitBehaviour = form.toneLimitBehaviour,
                                 onSelectionChanged = {
-                                    updateToneLimitBehaviour(it)
+                                    form.updateToneLimitBehaviour(it)
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             VolumeContainer(
-                                volume = configFile.toneVolume,
+                                volume = form.toneVolume,
                                 onSelectionChanged = {
-                                    updateToneVolume(it)
+                                    form.updateToneVolume(it)
                                 }
                             )
                         }
@@ -518,73 +423,85 @@ fun ConfigDetailScreenInternal(
                             )
                         ) {
                             RateModeContainer(
-                                rateMode = configFile.rateMode,
+                                rateMode = form.rateMode,
                                 onSelectionChanged = {
-                                    updateRateMode(it)
+                                    form.updateRateMode(it)
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth(),
-                                label = rateMinimumLabel(configFile.rateMode, unitSystem),
-                                intValue = configFile.rateMinimumValue.valueForRateMode(
-                                    configFile.rateMode,
+                                modifier = Modifier.fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.rateMinimumValue == null) {
+                                            form.updateRateMinimumValueToDefaultValue()
+                                        }
+                                    },
+                                label = rateMinimumLabel(form.rateMode, unitSystem),
+                                intValue = form.rateMinimumValue?.valueForRateMode(
+                                    form.rateMode,
                                     unitSystem
                                 ),
                                 onValueChanged = {
-                                    if (it != null) {
-                                        updateRateMinimumValue(
-                                            it.valueFromRateMode(
-                                                configFile.rateMode,
-                                                unitSystem
-                                            )
+                                    form.updateRateMinimumValue(
+                                        it?.valueFromRateMode(
+                                            form.rateMode,
+                                            unitSystem
                                         )
-                                    }
+                                    )
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth(),
-                                label = rateMaximumLabel(configFile.rateMode, unitSystem),
-                                intValue = configFile.rateMaximumValue.valueForRateMode(
-                                    configFile.rateMode,
+                                modifier = Modifier.fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.rateMaximumValue == null) {
+                                            form.updateRateMaximumValueToDefaultValue()
+                                        }
+                                    },
+                                label = rateMaximumLabel(form.rateMode, unitSystem),
+                                intValue = form.rateMaximumValue?.valueForRateMode(
+                                    form.rateMode,
                                     unitSystem
                                 ),
                                 onValueChanged = {
-                                    if (it != null) {
-                                        updateRateMaximumValue(
-                                            it.valueFromRateMode(
-                                                configFile.rateMode,
-                                                unitSystem
-                                            )
+                                    form.updateRateMaximumValue(
+                                        it?.valueFromRateMode(
+                                            form.rateMode,
+                                            unitSystem
                                         )
-                                    }
+                                    )
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.rateMinimum == null) {
+                                            form.updateRateMinimumToDefaultValue()
+                                        }
+                                    },
                                 label = stringResource(
                                     R.string.config_detail_configuration_minimum_rate
                                 ),
-                                intValue = configFile.rateMinimum,
+                                intValue = form.rateMinimum,
                                 onValueChanged = {
-                                    if (it != null) {
-                                        updateRateMinimum(it)
-                                    }
+                                    form.updateRateMinimum(it)
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.rateMaximum == null) {
+                                            form.updateRateMaximumToDefaultValue()
+                                        }
+                                    },
                                 label = stringResource(
                                     R.string.config_detail_configuration_maximum_rate
                                 ),
-                                intValue = configFile.rateMaximum,
+                                intValue = form.rateMaximum,
                                 onValueChanged = {
-                                    if (it != null) {
-                                        updateRateMaximum(it)
-                                    }
+                                    form.updateRateMaximum(it)
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
@@ -592,9 +509,9 @@ fun ConfigDetailScreenInternal(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Switch(
-                                    checked = configFile.flatLineAtMinimumRate,
+                                    checked = form.flatLineAtMinimumRate,
                                     onCheckedChange = {
-                                        updateFlatLineAtMinimumRate(it)
+                                        form.updateFlatLineAtMinimumRate(it)
                                     },
                                 )
                                 Spacer(modifier = Modifier.requiredWidth(8.dp))
@@ -624,34 +541,37 @@ fun ConfigDetailScreenInternal(
                             )
                         ) {
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.speechRate == null) {
+                                            form.updateSpeechRateToDefaultValue()
+                                        }
+                                    },
                                 label = stringResource(R.string.config_detail_configuration_period),
-                                intValue = configFile.speechRate,
+                                intValue = form.speechRate,
                                 onValueChanged = {
-                                    if (it != null) {
-                                        updateSpeechRate(it)
-                                    }
+                                    form.updateSpeechRate(it)
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             VolumeContainer(
-                                volume = configFile.speechVolume,
+                                volume = form.speechVolume,
                                 onSelectionChanged = {
-                                    updateSpeechVolume(it)
+                                    form.updateSpeechVolume(it)
                                 }
                             )
-                            if (configFile.speeches.isNotEmpty()) {
+                            if (form.speeches.isNotEmpty()) {
                                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                             }
-                            configFile.speeches.forEachIndexed { index, speech ->
+                            form.speeches.forEachIndexed { index, speech ->
                                 SpeechItemContainer(
                                     index = index + 1,
                                     speech = speech,
                                     onDeleteClicked = {
-                                        deleteSpeech(speech)
+                                        form.deleteSpeech(speech)
                                     }
                                 )
-                                if (index < configFile.speeches.size - 1) {
+                                if (index < form.speeches.size - 1) {
                                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                                 }
                             }
@@ -676,7 +596,7 @@ fun ConfigDetailScreenInternal(
                             if (addSpeechClicked) {
                                 AddSpeechDialog(
                                     onSpeechAdded = {
-                                        addSpeech(it)
+                                        form.addSpeech(it)
                                         addSpeechClicked = false
                                     },
                                     onDismiss = {
@@ -704,38 +624,44 @@ fun ConfigDetailScreenInternal(
                             )
                         ) {
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.verticalThreshold == null) {
+                                            form.updateVerticalThresholdToDefaultValue()
+                                        }
+                                    },
                                 label = stringResource(
                                     R.string.config_detail_configuration_vertical_speed,
                                     stringResource(unitSystem.speedTextResource)
                                 ),
-                                intValue = configFile.verticalThreshold.speedInUnit(unitSystem),
+                                intValue = form.verticalThreshold?.speedInUnit(unitSystem),
                                 onValueChanged = {
-                                    if (it != null) {
-                                        updateVerticalThreshold(
-                                            it.fromSpeedUnitToCmPerSec(
-                                                unitSystem
-                                            )
+                                    form.updateVerticalThreshold(
+                                        it?.fromSpeedUnitToCmPerSec(
+                                            unitSystem
                                         )
-                                    }
+                                    )
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.horizontalThreshold == null) {
+                                            form.updateHorizontalThresholdToDefaultValue()
+                                        }
+                                    },
                                 label = stringResource(
                                     R.string.config_detail_configuration_horizontal_speed,
                                     stringResource(unitSystem.speedTextResource)
                                 ),
-                                intValue = configFile.horizontalThreshold.speedInUnit(unitSystem),
+                                intValue = form.horizontalThreshold?.speedInUnit(unitSystem),
                                 onValueChanged = {
-                                    if (it != null) {
-                                        updateHorizontalThreshold(
-                                            it.fromSpeedUnitToCmPerSec(
-                                                unitSystem
-                                            )
+                                    form.updateHorizontalThreshold(
+                                        it?.fromSpeedUnitToCmPerSec(
+                                            unitSystem
                                         )
-                                    }
+                                    )
                                 }
                             )
                         }
@@ -758,18 +684,23 @@ fun ConfigDetailScreenInternal(
                             )
                         ) {
                             InitModeContainer(
-                                initMode = configFile.initMode,
+                                initMode = form.initMode,
                                 onSelectionChanged = {
-                                    updateInitMode(it)
+                                    form.updateInitMode(it)
                                 }
                             )
-                            if (configFile.initMode == InitMode.PlayFile) {
+                            if (form.initMode == InitMode.PlayFile) {
                                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                                 OutlinedTextField(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    value = configFile.initFile ?: "",
+                                    modifier = Modifier.fillMaxWidth()
+                                        .onFocusChanged { focusState ->
+                                            if (!focusState.hasFocus && form.initFile == null) {
+                                                form.updateInitFile("")
+                                            }
+                                        },
+                                    value = form.initFile ?: "",
                                     onValueChange = {
-                                        updateInitFile(it)
+                                        form.updateInitFile(it)
                                     },
                                     label = {
                                         Text(
@@ -800,61 +731,70 @@ fun ConfigDetailScreenInternal(
                             )
                         ) {
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.windowAbove == null) {
+                                            form.updateWindowAbove(0)
+                                        }
+                                    },
                                 label = stringResource(
                                     R.string.config_detail_configuration_window_above,
                                     stringResource(unitSystem.distanceTextResource)
                                 ),
-                                intValue = configFile.windowAbove.distanceInUnit(unitSystem),
+                                intValue = form.windowAbove?.distanceInUnit(unitSystem),
                                 onValueChanged = {
-                                    if (it != null) {
-                                        updateWindowAbove(it.fromDistanceUnitToMeter(unitSystem))
-                                    }
+                                    form.updateWindowAbove(it?.fromDistanceUnitToMeter(unitSystem))
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.windowBelow == null) {
+                                            form.updateWindowBelow(0)
+                                        }
+                                    },
                                 label = stringResource(
                                     R.string.config_detail_configuration_window_below,
                                     stringResource(unitSystem.distanceTextResource)
                                 ),
-                                intValue = configFile.windowBelow.distanceInUnit(unitSystem),
+                                intValue = form.windowBelow?.distanceInUnit(unitSystem),
                                 onValueChanged = {
-                                    if (it != null) {
-                                        updateWindowBelow(it.fromDistanceUnitToMeter(unitSystem))
-                                    }
+                                    form.updateWindowBelow(it?.fromDistanceUnitToMeter(unitSystem))
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.dzElev == null) {
+                                            form.updateDzElev(0)
+                                        }
+                                    },
                                 label = stringResource(
                                     R.string.config_detail_configuration_ground_elevation,
                                     stringResource(unitSystem.distanceTextResource)
                                 ),
-                                intValue = configFile.dzElev.distanceInUnit(unitSystem),
+                                intValue = form.dzElev?.distanceInUnit(unitSystem),
                                 onValueChanged = {
-                                    if (it != null) {
-                                        updateDzElev(it.fromDistanceUnitToMeter(unitSystem))
-                                    }
+                                    form.updateDzElev(it?.fromDistanceUnitToMeter(unitSystem))
                                 }
                             )
-                            if (configFile.alarms.isNotEmpty()) {
+                            if (form.alarms.isNotEmpty()) {
                                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                             }
                             val sortedAlarms =
-                                remember(configFile.alarms) { configFile.alarms.sortedByDescending { it.alarmElevation } }
+                                remember(form.alarms) { form.alarms.sortedByDescending { it.alarmElevation } }
                             sortedAlarms.forEachIndexed { index, alarm ->
                                 AlarmItemContainer(
                                     index = index + 1,
                                     alarm = alarm,
                                     unitSystem = unitSystem,
                                     onDeleteClicked = {
-                                        deleteAlarm(alarm)
+                                        form.deleteAlarm(alarm)
                                     }
                                 )
-                                if (index < configFile.alarms.size - 1) {
+                                if (index < form.alarms.size - 1) {
                                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                                 }
                             }
@@ -880,7 +820,7 @@ fun ConfigDetailScreenInternal(
                                 AddAlarmDialog(
                                     unitSystem = unitSystem,
                                     onAlarmAdded = {
-                                        addAlarm(it)
+                                        form.addAlarm(it)
                                         addAlarmClicked = false
                                     },
                                     onDismiss = {
@@ -909,20 +849,23 @@ fun ConfigDetailScreenInternal(
                         ) {
                             DistanceUnitContainer(
                                 label = stringResource(R.string.config_detail_configuration_units),
-                                unitSystem = configFile.altitudeUnit,
+                                unitSystem = form.altitudeUnit,
                                 onSelectionChanged = {
-                                    updateAltitudeUnit(it)
+                                    form.updateAltitudeUnit(it)
                                 }
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.altitudeStep == null) {
+                                            form.updateAltitudeStep(0)
+                                        }
+                                    },
                                 label = stringResource(R.string.config_detail_configuration_step),
-                                intValue = configFile.altitudeStep.distanceInUnit(configFile.altitudeUnit),
+                                intValue = form.altitudeStep?.distanceInUnit(form.altitudeUnit),
                                 onValueChanged = {
-                                    if (it != null) {
-                                        updateAltitudeStep(it.fromDistanceUnitToMeter(configFile.altitudeUnit))
-                                    }
+                                    form.updateAltitudeStep(it?.fromDistanceUnitToMeter(form.altitudeUnit))
                                 }
                             )
                         }
@@ -944,16 +887,16 @@ fun ConfigDetailScreenInternal(
                                 bottom = 8.dp
                             )
                         ) {
-                            configFile.silenceWindows.forEachIndexed { index, silenceWindow ->
+                            form.silenceWindows.forEachIndexed { index, silenceWindow ->
                                 SilenceItemContainer(
                                     index = index + 1,
                                     silenceWindow = silenceWindow,
                                     unitSystem = unitSystem,
                                     onDeleteClicked = {
-                                        deleteSilenceWindow(silenceWindow)
+                                        form.deleteSilenceWindow(silenceWindow)
                                     }
                                 )
-                                if (index < configFile.silenceWindows.size - 1) {
+                                if (index < form.silenceWindows.size - 1) {
                                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                                 }
                             }
@@ -979,7 +922,7 @@ fun ConfigDetailScreenInternal(
                                 AddSilenceWindowDialog(
                                     unitSystem = unitSystem,
                                     onSilenceAdded = {
-                                        addSilenceWindow(it)
+                                        form.addSilenceWindow(it)
                                         addSilenceClicked = false
                                     },
                                     onDismiss = {
@@ -1002,7 +945,7 @@ fun ConfigDetailScreenInternal(
 
                 TextButton(
                     onClick = {
-                        if (state.isDirty) {
+                        if (form.isDirty) {
                             showCancelDialog = true
                         } else {
                             onNavigateUp()
@@ -1016,7 +959,8 @@ fun ConfigDetailScreenInternal(
                 }
                 Spacer(modifier = Modifier.requiredWidth(8.dp))
                 TextButton(
-                    onClick = saveConfigFile,
+                    onClick = saveConfigFileClicked,
+                    enabled = form.isValid && form.hasValidFileName && form.isDirty
                 ) {
                     FText(
                         text = stringResource(R.string.misc_save),
@@ -1644,45 +1588,10 @@ internal fun RateModeContainer(
 fun ConfigDetailScreenInternalPreview() {
     ConfigDetailScreenInternal(
         state = ConfigDetailState(
-            configFile = defaultConfigFile(),
+            editedConfiguration = defaultConfigFile(),
             unitSystem = UnitSystem.Metric,
-            configFileFound = true,
-            hasValidFileName = true
+            configFileFound = true
         ),
-        updateConfigFileName = {},
-        updateConfigFileDescription = {},
-        updateConfigFileKind = {},
-        updateDynamicModel = {},
-        updateSamplePeriod = {},
-        updateUseSAS = {},
-        updateToneMode = {},
-        updateToneMinimum = {},
-        updateToneMaximum = {},
-        updateToneLimitBehaviour = {},
-        updateToneVolume = {},
-        updateRateMode = {},
-        updateRateMinimumValue = {},
-        updateRateMaximumValue = {},
-        updateRateMinimum = {},
-        updateRateMaximum = {},
-        updateFlatLineAtMinimumRate = {},
-        updateSpeechRate = {},
-        updateSpeechVolume = {},
-        addSpeech = {},
-        deleteSpeech = {},
-        updateVerticalThreshold = {},
-        updateHorizontalThreshold = {},
-        updateInitMode = {},
-        updateInitFile = {},
-        updateWindowAbove = {},
-        updateWindowBelow = {},
-        updateDzElev = {},
-        addAlarm = {},
-        deleteAlarm = {},
-        updateAltitudeUnit = {},
-        updateAltitudeStep = {},
-        addSilenceWindow = {},
-        deleteSilenceWindow = {},
-        saveConfigFile = {},
+        saveConfigFileClicked = {},
     ) { }
 }

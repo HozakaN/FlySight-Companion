@@ -59,7 +59,7 @@ data class ConfigFile(
     val silenceWindows: List<SilenceWindow>
 )
 
-private val defaultConfigFile = ConfigFile(
+val defaultConfigFile = ConfigFile(
     name = "",
     description = "",
     group = "",
