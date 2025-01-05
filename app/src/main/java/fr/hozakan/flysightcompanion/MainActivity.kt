@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -265,7 +266,8 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                 horizontalAlignment = Alignment.CenterHorizontally
                                             ) {
                                                 Icon(
-                                                    painter = painterResource(LocalR.drawable.flysight_icon),
+                                                    modifier = Modifier.requiredSize(24.dp),
+                                                    painter = painterResource(LocalR.drawable.flysight_logo_only),
                                                     contentDescription = stringResource(R.string.misc_devices)
                                                 )
                                                 Spacer(modifier = Modifier.requiredHeight(8.dp))
