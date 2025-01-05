@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "fr.hozakan.flysightcompanion.fsdevicemodule"
+    namespace = "fr.hozakan.flysightcompanion.configfilesmodule"
     compileSdk = 35
 
     defaultConfig {
@@ -37,13 +37,12 @@ android {
 }
 
 dependencies {
-    implementation(project(":BluetoothModule"))
     implementation(project(":model"))
-    implementation(project(":framework"))
-    implementation(project(":Middleware:UserPreferencesModule"))
-    implementation(project(":ComposableCommons"))
-    implementation(project(":ConfigFilesModule"))
-    implementation(project(":DesignSystem"))
+    implementation(project(":Feature:UserPreferencesModule"))
+    implementation(project(":Tooling:DialogModule"))
+    implementation(project(":Tooling:framework"))
+    implementation(project(":Tooling:DesignSystem"))
+    implementation(project(":Tooling:ComposableCommons"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -51,18 +50,22 @@ dependencies {
 
     //Dagger
     implementation(libs.dagger)
-    implementation(libs.dagger.android)
-    implementation(libs.dagger.android.support)
+//    implementation(libs.dagger.android)
+//    implementation(libs.dagger.android.support)
 
     //Compose
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.tooling.preview)
-    debugImplementation(libs.androidx.ui.tooling)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    debugImplementation(libs.androidx.ui.tooling)
+//    implementation(libs.androidx.material.icons.extended)
+//    implementation(libs.androidx.activity.compose)
 
+    //Tests
+    testImplementation(project(":model"))
+    testImplementation(project(":Tooling:framework"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

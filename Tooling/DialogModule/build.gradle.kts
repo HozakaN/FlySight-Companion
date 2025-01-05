@@ -39,9 +39,9 @@ android {
 dependencies {
 
     implementation(project(":model"))
-    implementation(project(":framework"))
-    implementation(project(":ComposableCommons"))
-    implementation(project(":DesignSystem"))
+    implementation(project(":Tooling:framework"))
+    implementation(project(":Tooling:ComposableCommons"))
+    implementation(project(":Tooling:DesignSystem"))
 
     implementation(libs.androidx.compose.runtime.android)
     implementation(libs.androidx.ui)

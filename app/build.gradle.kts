@@ -83,14 +83,14 @@ android {
 dependencies {
 
     implementation(project(":model"))
-    implementation(project(":framework"))
-    implementation(project(":BluetoothModule"))
-    implementation(project(":FSDeviceModule"))
-    implementation(project(":ConfigFilesModule"))
-    implementation(project(":ComposableCommons"))
-    implementation(project(":DesignSystem"))
-    implementation(project(":Middleware:UserPreferencesModule"))
-    implementation(project(":Middleware:DialogModule"))
+    implementation(project(":Tooling:framework"))
+    implementation(project(":Middleware:BluetoothModule"))
+    implementation(project(":Feature:FSDeviceModule"))
+    implementation(project(":Feature:ConfigFilesModule"))
+    implementation(project(":Tooling:ComposableCommons"))
+    implementation(project(":Tooling:DesignSystem"))
+    implementation(project(":Feature:UserPreferencesModule"))
+    implementation(project(":Tooling:DialogModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

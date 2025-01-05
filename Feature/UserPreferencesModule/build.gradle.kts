@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "fr.hozakan.flysightcompanion.composablecommons"
+    namespace = "fr.hozakan.flusightble.userpreferencesmodule"
     compileSdk = 35
 
     defaultConfig {
@@ -37,21 +37,17 @@ android {
 }
 
 dependencies {
+
     implementation(project(":model"))
-    implementation(project(":framework"))
-    implementation(project(":DesignSystem"))
+    implementation(project(":Tooling:framework"))
+    implementation(project(":Tooling:ComposableCommons"))
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-
-    //Compose
+    implementation(libs.androidx.compose.runtime.android)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.ui.text.google.fonts)
-
-    //Tests
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    implementation(libs.androidx.ui.tooling.preview)
+    debugImplementation(libs.androidx.ui.tooling)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.datastore.preferences)
 }
