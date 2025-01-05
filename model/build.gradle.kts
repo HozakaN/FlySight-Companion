@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "fr.hozakan.flysightble.model"
-    compileSdk = 34
+    namespace = "fr.hozakan.flysightcompanion.model"
+    compileSdk = 35
 
     defaultConfig {
-        minSdk = 33
+        minSdk = 26
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")

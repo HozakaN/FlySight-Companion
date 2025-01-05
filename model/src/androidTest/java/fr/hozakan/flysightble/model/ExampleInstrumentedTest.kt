@@ -1,4 +1,4 @@
-package fr.hozakan.flysightble.model
+package fr.hozakan.flysightcompanion.model
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("fr.hozakan.flysightble.model.test", appContext.packageName)
+        assertEquals("fr.hozakan.flysightcompanion.model.test", appContext.packageName)
     }
 }

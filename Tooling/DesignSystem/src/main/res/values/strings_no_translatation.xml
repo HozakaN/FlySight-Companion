@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string translatable="false" name="misc_speed_text_metric">km/h</string>
+    <string translatable="false" name="misc_distance_text_metric">m</string>
+    <string translatable="false" name="misc_speed_text_imperial">"mph</string>
+    <string translatable="false" name="misc_distance_text_imperial">ft</string>
+
+    <string translatable="false" name="rate_mode_horizontal_speed">@string/text_horizontal_speed</string>
+    <string translatable="false" name="rate_mode_vertical_speed">@string/text_vertical_speed</string>
+    <string translatable="false" name="rate_mode_glide_ratio">@string/text_glide_ratio</string>
+    <string translatable="false" name="rate_mode_inverse_glide_ratio">@string/text_inverse_glide_ratio</string>
+    <string translatable="false" name="rate_mode_total_speed">@string/text_total_speed</string>
+    <string translatable="false" name="rate_mode_magnitude_of_tone_value">@string/text_magnitude_of_tone_value</string>
+    <string translatable="false" name="rate_mode_change_in_tone_value">@string/text_change_in_tone_value</string>
+    <string translatable="false" name="rate_mode_dive_angle">@string/text_dive_angle</string>
+
+    <string translatable="false" name="speech_mode_horizontal_speed">@string/text_horizontal_speed</string>
+    <string translatable="false" name="speech_mode_vertical_speed">@string/text_vertical_speed</string>
+    <string translatable="false" name="speech_mode_glide_ratio">@string/text_glide_ratio</string>
+    <string translatable="false" name="speech_mode_inverse_glide_ratio">@string/text_inverse_glide_ratio</string>
+    <string translatable="false" name="speech_mode_total_speed">@string/text_total_speed</string>
+    <string translatable="false" name="speech_mode_altitude_above_dropzone">@string/text_altitude_above_dropzone</string>
+    <string translatable="false" name="speech_mode_dive_angle">@string/text_dive_angle</string>
+
+    <string translatable="false" name="tone_mode_horizontal_speed">@string/text_horizontal_speed</string>
+    <string translatable="false" name="tone_mode_vertical_speed">@string/text_vertical_speed</string>
+    <string translatable="false" name="tone_mode_glide_ratio">@string/text_glide_ratio</string>
+    <string translatable="false" name="tone_mode_inverse_glide_ratio">@string/text_inverse_glide_ratio</string>
+    <string translatable="false" name="tone_mode_total_speed">@string/text_total_speed</string>
+    <string translatable="false" name="tone_mode_dive_angle">@string/text_dive_angle</string>
+
+</resources>

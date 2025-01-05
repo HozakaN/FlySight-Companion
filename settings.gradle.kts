@@ -20,12 +20,14 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FlySightBLE"
+rootProject.name = "FlySightCompanion"
 include(":app")
-include(":framework")
-include(":BluetoothModule")
-include(":FSDeviceModule")
+include(":Tooling:framework")
+include(":Middleware:BluetoothModule")
+include(":Feature:FSDeviceModule")
 include(":model")
-include(":ConfigFilesModule")
-include(":ComposableCommons")
-include(":Middleware:UserPreferencesModule")
+include(":Feature:ConfigFilesModule")
+include(":Tooling:ComposableCommons")
+include(":Feature:UserPreferencesModule")
+include(":Tooling:DesignSystem")
+include(":Tooling:DialogModule")

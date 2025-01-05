@@ -1,3 +1,5 @@
+import java.io.ByteArrayOutputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,16 +8,52 @@ plugins {
     id("kotlin-kapt")
 }
 
+fun List<String>.removeAfter(nbElement: Int = 1): List<String> {
+    return if (this.size <= nbElement) this else this.subList(0, nbElement)
+}
+
+fun versionName(): String {
+    val outputStream = ByteArrayOutputStream()
+    // release/1.0.0-RC1-7-ga2f6cd1
+    project.exec {
+        commandLine("git", "describe", "--tags")
+        standardOutput = outputStream
+    }
+    val intermediate = outputStream.toString().trim().split("/")[1] // possible outputs are 1.0.0-RC1-7-ga2f6cd1, 1.0.0-7-ga2f6cd1, 1.0.0-RC1-ga2f6cd1, 1.0.0-ga2f6cd1
+    val output =
+        intermediate.split("-").removeAfter(if (intermediate.contains("RC")) 2 else 1).joinToString("-") // possible outputs are 1.0.0-RC1, 1.0.0
+    return output
+}
+
+// format on 7 characters following pattern Major/Minor/Patch/Patch/Release/Release/Playstore
+fun versionCode(): Int {
+    val versionName = versionName()
+    val major = versionName.first().toString().toInt()
+    val minor = versionName.substring(2 until 3).toInt()
+    val patch = versionName.substring(4 until 5).toInt()
+    val release = if (versionName.contains("RC")) {
+        versionName.substring(versionName.indexOf("RC") + 2).toInt()
+    } else {
+        0
+    }
+    val playstore = if (versionName.contains("playstore")) {
+        1
+    } else {
+        0
+    }
+    return String.format("%d%d%02d%02d%d", major, minor, patch, release, playstore).toInt()
+}
+
 android {
-    namespace = "fr.hozakan.flysightble"
-    compileSdk = 34
+    namespace = "fr.hozakan.flysightcompanion"
+    compileSdk = 35
 
     defaultConfig {
-        applicationId = "fr.hozakan.flysightble"
-        minSdk = 33
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        applicationId = "fr.hozakan.flysightcompanion"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = versionCode()
+        versionName = versionName() //"1.0.0-RC1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -37,17 +75,22 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 }
 
 dependencies {
+
     implementation(project(":model"))
-    implementation(project(":framework"))
-    implementation(project(":BluetoothModule"))
-    implementation(project(":FSDeviceModule"))
-    implementation(project(":ConfigFilesModule"))
-    implementation(project(":Middleware:UserPreferencesModule"))
+    implementation(project(":Tooling:framework"))
+    implementation(project(":Middleware:BluetoothModule"))
+    implementation(project(":Feature:FSDeviceModule"))
+    implementation(project(":Feature:ConfigFilesModule"))
+    implementation(project(":Tooling:ComposableCommons"))
+    implementation(project(":Tooling:DesignSystem"))
+    implementation(project(":Feature:UserPreferencesModule"))
+    implementation(project(":Tooling:DialogModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
