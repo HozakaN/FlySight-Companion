@@ -37,7 +37,7 @@
     <string name="misc_navigate_up">Naviguer en arrière</string>
     <string name="misc_devices">Appareils</string>
 
-    <string name="screen_title_device_detail">Dédtail de l\'appareil</string>
+    <string name="screen_title_device_detail">Détail de l\'appareil</string>
     <string name="screen_title_config_list">Configurations</string>
     <string name="screen_title_file">Fichier %1$s</string>
 
