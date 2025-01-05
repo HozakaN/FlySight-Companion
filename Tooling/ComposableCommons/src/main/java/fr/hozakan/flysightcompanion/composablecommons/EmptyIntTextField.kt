@@ -41,3 +41,14 @@ fun EmptyIntTextField(
         )
     )
 }
+
+@Composable
+fun IntRepresentationTextField(
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    label: String,
+    value: String,
+    onValueChanged: (String) -> Unit
+) {
+
+}

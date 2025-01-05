@@ -148,6 +148,7 @@
     <string name="config_detail_config_file_not_found">Config file not found</string>
 
     <string name="config_detail_configuration_name">Config name</string>
+    <string name="config_detail_configuration_name_invalid">Invalid name</string>
     <string name="config_detail_configuration_description">Description</string>
     <string name="config_detail_configuration_group">Group</string>
     <string name="config_detail_configuration_section_general">General</string>

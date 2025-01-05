@@ -3,19 +3,11 @@ package fr.hozakan.flysightcompanion.configfilesmodule.ui.config_detail
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
-import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
-import fr.hozakan.flysightcompanion.model.config.Alarm
-import fr.hozakan.flysightcompanion.model.config.DynamicModel
-import fr.hozakan.flysightcompanion.model.config.InitMode
-import fr.hozakan.flysightcompanion.model.config.RateMode
-import fr.hozakan.flysightcompanion.model.config.SilenceWindow
-import fr.hozakan.flysightcompanion.model.config.Speech
-import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
-import fr.hozakan.flysightcompanion.model.config.ToneMode
+import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
-import fr.hozakan.flysightcompanion.model.config.Volume
 import fr.hozakan.flysightcompanion.model.defaultConfigFile
+import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -28,7 +20,7 @@ class ConfigDetailViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ConfigDetailState(
-        configFile = defaultConfigFile(),
+        editedConfiguration = defaultConfigFile(),
         unitSystem = UnitSystem.Metric
     ))
 
@@ -56,7 +48,7 @@ class ConfigDetailViewModel @Inject constructor(
             isCreatingConf = true
             _state.update {
                 it.copy(
-                    configFile = defaultConfigFile(),
+                    editedConfiguration = defaultConfigFile(),
                     configFileFound = true
                 )
             }
@@ -67,9 +59,7 @@ class ConfigDetailViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         editedConfiguration = configFile,
-                        configFile = configFile.copy(),
-                        configFileFound = true,
-                        isDirty = false
+                        configFileFound = true
                     )
                 }
             } else {
@@ -82,405 +72,31 @@ class ConfigDetailViewModel @Inject constructor(
         }
     }
 
-    fun updateConfigFileName(fileName: String) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    name = fileName
-                ),
-                hasValidFileName = fileName.isNotBlank(),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateConfigFileDescription(description: String) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    description = description
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateConfigFileKind(kind: String) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    group = kind
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateDynamicModel(dynamicModel: DynamicModel) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    dynamicModel = dynamicModel
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateSamplePeriod(samplePeriod: Int?) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    samplePeriod = samplePeriod ?: 0
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateToneMode(toneMode: ToneMode) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    toneMode = toneMode
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateToneMinimum(toneMinimum: Int?) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    toneMinimum = toneMinimum ?: 0
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateToneMaximum(toneMaximum: Int?) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    toneMaximum = toneMaximum ?: 0
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateToneLimitBehaviour(toneLimitBehaviour: ToneLimitBehaviour) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    toneLimitBehaviour = toneLimitBehaviour
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateToneVolume(toneVolume: Volume) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    toneVolume = toneVolume
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateRateMode(rateMode: RateMode) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    rateMode = rateMode
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateRateMinimumValue(rateValue: Int?) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    rateMinimumValue = rateValue ?: 0
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateRateMaximumValue(rateValue: Int?) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    rateMaximumValue = rateValue ?: 0
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateRateMinimum(rate: Int?) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    rateMinimum = rate ?: 0
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateRateMaximum(rate: Int?) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    rateMaximum = rate ?: 0
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateFlatLineAtMinimumRate(value: Boolean) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    flatLineAtMinimumRate = value
-                ),
-                isDirty = true
-            )
-        }
-    }
-
     fun updateUnitSystem(unitSystem: UnitSystem) {
         viewModelScope.launch {
             userPrefService.updateUnitSystem(unitSystem)
         }
     }
 
-    fun updateSpeechRate(speechRate: Int?) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    speechRate = speechRate ?: 0
-                )
-            )
-        }
-    }
-
-    fun updateSpeechVolume(volume: Volume) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    speechVolume = volume
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun addSpeech(speech: Speech) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    speeches = it.configFile.speeches + speech
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun deleteSpeech(speech: Speech) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    speeches = it.configFile.speeches - speech
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateVerticalThreshold(verticalThreshold: Int?) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    verticalThreshold = verticalThreshold ?: 0
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateHorizontalThreshold(horizontalThreshold: Int?) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    horizontalThreshold = horizontalThreshold ?: 0
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateUseSAS(useSAS: Boolean) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    useSAS = useSAS
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateInitMode(initMode: InitMode) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    initMode = initMode
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateInitFile(initFile: String?) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    initFile = initFile
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateAltitudeUnit(altitudeUnitSystem: UnitSystem) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    altitudeUnit = altitudeUnitSystem
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateAltitudeStep(altitudeStep: Int?) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    altitudeStep = altitudeStep ?: 1
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateWindowAbove(windowAbove: Int?) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    windowAbove = windowAbove ?: 0
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateWindowBelow(windowBelow: Int?) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    windowBelow = windowBelow ?: 0
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun updateDzElev(dzElev: Int?) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    dzElev = dzElev ?: 0
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun addAlarm(alarm: Alarm) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    alarms = it.configFile.alarms + alarm
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun deleteAlarm(alarm: Alarm) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    alarms = it.configFile.alarms - alarm
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun addSilenceWindow(silenceWindow: SilenceWindow) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    silenceWindows = it.configFile.silenceWindows + silenceWindow
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun deleteSilenceWindow(silenceWindow: SilenceWindow) {
-        _state.update {
-            it.copy(
-                configFile = it.configFile.copy(
-                    silenceWindows = it.configFile.silenceWindows - silenceWindow
-                ),
-                isDirty = true
-            )
-        }
-    }
-
-    fun saveConfigFile() {
-        if (_state.value.configFile.name.isBlank()) {
+    fun saveConfigFile(configFile: ConfigFile) {
+        if (configFile.name.isBlank()) {
             _state.update {
                 it.copy(
-                    hasValidFileName = false,
                     fileSaved = false.asEvent()
                 )
             }
         } else {
             viewModelScope.launch {
                 val oldConf = _state.value.editedConfiguration
-                if (oldConf != null) {
-                    configFileService.updateConfigFile(oldConf,_state.value.configFile)
+                if (!isCreatingConf) {
+                    configFileService.updateConfigFile(oldConf,configFile)
                 } else {
-                    configFileService.saveConfigFile(state.value.configFile)
+                    configFileService.saveConfigFile(configFile)
                 }
+                isCreatingConf = false
                 _state.update {
                     it.copy(
-                        hasValidFileName = true,
+                        editedConfiguration = configFile,
                         fileSaved = true.asEvent()
                     )
                 }

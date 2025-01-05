@@ -192,7 +192,8 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
 
                                         else -> {
                                             Icon(
-                                                painter = painterResource(LocalR.drawable.flysight_icon),
+                                                modifier = Modifier.requiredSize(24.dp),
+                                                painter = painterResource(LocalR.drawable.deprecated_flysight_icon),
                                                 contentDescription = stringResource(R.string.misc_home)
                                             )
                                         }

@@ -62,15 +62,13 @@
     <string name="init_mode_test_speech_mode">Tester le speech mode</string>
     <string name="init_mode_play_file">Jouer un fichier</string>
 
-    <string name="tone_limit_behaviour_no_tone">Pas de tone</string>
+    <string name="tone_limit_behaviour_no_tone">Pas de tonalité</string>
     <string name="tone_limit_behaviour_min_max_tone">Min/max tone</string>
     <string name="tone_limit_behaviour_chirp_up_down">Chirp up/down</string>
     <string name="tone_limit_behaviour_chirp_down_up">Chirp down/up</string>
 
-
-
     <string name="text_horizontal_speed">Vitesse horizontale</string>
-    <string name="text_vertical_speed">Vitesse vertical</string>
+    <string name="text_vertical_speed">Vitesse verticale</string>
     <string name="text_glide_ratio">Finesse</string>
     <string name="text_inverse_glide_ratio">Finesse inverse</string>
     <string name="text_total_speed">Vitesse totale</string>
@@ -150,6 +148,7 @@
     <string name="config_detail_config_file_not_found">Configuration introuvable</string>
 
     <string name="config_detail_configuration_name">Nom</string>
+    <string name="config_detail_configuration_name_invalid">Nom invalide</string>
     <string name="config_detail_configuration_description">Description</string>
     <string name="config_detail_configuration_group">Groupe</string>
     <string name="config_detail_configuration_section_general">Général</string>

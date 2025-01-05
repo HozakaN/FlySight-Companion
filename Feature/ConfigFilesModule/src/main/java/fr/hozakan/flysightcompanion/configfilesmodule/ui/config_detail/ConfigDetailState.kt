@@ -7,11 +7,8 @@ import fr.hozakan.flysightcompanion.model.config.UnitSystem
 
 @Immutable
 data class ConfigDetailState(
-    val configFile: ConfigFile,
     val unitSystem: UnitSystem,
-    val editedConfiguration: ConfigFile? = null,
+    val editedConfiguration: ConfigFile,
     val configFileFound: Boolean = true,
-    val hasValidFileName: Boolean = true,
-    val fileSaved: FlowEvent<Boolean>? = null,
-    val isDirty: Boolean = false
+    val fileSaved: FlowEvent<Boolean>? = null
 )
