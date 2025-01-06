@@ -68,7 +68,7 @@ class BleFileReader(
             fileData = dataArray
             sendReadFileAck(packetId)
         } else {
-            if (packetId == fileDataPacketNumber!! + 1) {
+            if (packetId == (fileDataPacketNumber!! + 1).mod(256)) {
                 fileDataPacketNumber = packetId
                 sendReadFileAck(packetId)
                 if (dataArray.isNotEmpty()) {
@@ -79,7 +79,7 @@ class BleFileReader(
                     fileDataPacketNumber = null
                     fileContent.complete(fileState)
                 }
-            } else if (packetId <= fileDataPacketNumber!!) {
+            } else if (packetId <= fileDataPacketNumber!!.mod(256)) {
                 // Already received this packet. Send ack again
                 sendReadFileAck(packetId)
             }
