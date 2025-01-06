@@ -7,6 +7,7 @@ import fr.hozakan.flysightcompanion.model.records.Record
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -89,6 +90,12 @@ class FileBasedRecordService(
             val recordsFolder = getOrCreateRecordsFolder()
             File("${recordsFolder.absolutePath}${File.separator}${record.filePath}").deleteRecursively()
         }
+    }
+
+    override suspend fun loadRecordContent(record: Record): String? {
+        val trackFile =
+            File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${record.dateTime.formatDate()}_${record.dateTime.formatTime()}_track.csv")
+        return if (trackFile.exists()) trackFile.readText() else null
     }
 
     private fun getOrCreateRecordsFolder(): File {

@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.recordsmodule.ui
+package fr.hozakan.flysightcompanion.recordsmodule.ui.list
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -79,7 +79,8 @@ fun ListRecordsScreen(
             ) {
                 items(state.records) { record ->
                     RecordListItem(
-                        record = record
+                        record = record,
+                        onSelected = { onRecordSelected(record) }
                     )
                 }
             }
@@ -88,8 +89,13 @@ fun ListRecordsScreen(
 }
 
 @Composable
-private fun RecordListItem(record: Record) {
-    Card {
+private fun RecordListItem(
+    record: Record,
+    onSelected: () -> Unit
+) {
+    Card(
+        onClick = onSelected,
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -97,7 +103,7 @@ private fun RecordListItem(record: Record) {
                 .padding(8.dp)
         ) {
             Text(
-                text = record.fileName
+                text = record.name
             )
         }
     }

@@ -11,6 +11,11 @@ data class Record(
     val filePath: String,
     val dateTime: LocalDateTime
 ) {
-    val fileName: String
+    val name: String
         get() = "${dateTime.formatDate()}_${dateTime.formatTime()}_track.csv"
 }
+
+val dummyRecord = Record(
+    filePath = "dummy",
+    dateTime = LocalDateTime.now()
+)

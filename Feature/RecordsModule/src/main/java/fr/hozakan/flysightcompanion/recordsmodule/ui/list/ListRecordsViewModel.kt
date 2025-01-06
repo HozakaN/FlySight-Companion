@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.recordsmodule.ui
+package fr.hozakan.flysightcompanion.recordsmodule.ui.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

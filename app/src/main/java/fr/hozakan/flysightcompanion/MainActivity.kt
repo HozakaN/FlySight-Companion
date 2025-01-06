@@ -64,7 +64,8 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.ui.file.DeviceFileScreen
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesMenuActions
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
 import fr.hozakan.flysightcompanion.model.ConfigFile
-import fr.hozakan.flysightcompanion.recordsmodule.ui.ListRecordsScreen
+import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailScreen
+import fr.hozakan.flysightcompanion.recordsmodule.ui.list.ListRecordsScreen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
 import fr.hozakan.flysightcompanion.R as LocalR
@@ -140,6 +141,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                 navigationIcon = {
                                     when (currentRoute) {
 
+                                        AppScreen.RecordTab.RecordDetail.route,
                                         AppScreen.DeviceTab.DeviceDetail.route -> {
                                             IconButton(
                                                 onClick = {
@@ -458,15 +460,18 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                         ListRecordsScreen { selectedRecord ->
                                             navController.navigate(
                                                 AppScreen.RecordTab.RecordDetail.buildRoute(
-                                                    selectedRecord.filePath
+                                                    selectedRecord.name
                                                 )
                                             )
                                         }
                                     }
                                     composable(route = AppScreen.RecordTab.RecordDetail.route) { backStackEntry ->
-                                        val configName =
+                                        val recordName =
                                             backStackEntry.arguments?.getString("recordName")
                                                 ?: return@composable
+                                        RecordDetailScreen(
+                                            recordName = recordName
+                                        )
                                     }
                                 }
                             }

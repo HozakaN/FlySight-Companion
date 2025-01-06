@@ -1,8 +1,6 @@
-package fr.hozakan.flysightcompanion.recordsmodule.ui
+package fr.hozakan.flysightcompanion.recordsmodule.ui.list
 
 import androidx.compose.runtime.Immutable
-import fr.hozakan.flysightcompanion.model.ConfigFile
-import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.records.Record
 
 @Immutable
