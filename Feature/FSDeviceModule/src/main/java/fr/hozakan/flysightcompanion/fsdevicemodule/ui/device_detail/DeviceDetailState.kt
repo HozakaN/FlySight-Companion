@@ -11,7 +11,10 @@ data class DeviceDetailState(
     val device: FlySightDevice?,
     val currentDirectoryPath: List<String>,
     val directoryContent: List<FileInfo>,
+    val isInTrackFolder: Boolean,
     val configFileInfo: FileInfo?,
     val configFile: FileState,
-    val fileClicked: FlowEvent<List<String>>?
+    val fileClicked: FlowEvent<List<String>>?,
+    val uploadingRecord: String? = null,
+    val toastEvent: FlowEvent<String>? = null
 )

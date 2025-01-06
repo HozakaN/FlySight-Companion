@@ -18,7 +18,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 private val record_name_regex =
-    "^\\d{2}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}_track.csv$".toRegex()
+    "^\\d{2}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}_TRACK.CSV".toRegex()
 
 private val record_name_rege2x =
     "^(\\d{2})-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$".toRegex()
@@ -63,10 +63,14 @@ class FileBasedRecordService(
         }
     }
 
+    override fun formatRecordDateTimeFromPathParts(datePart: String, timePart: String): LocalDateTime {
+        return LocalDateTime.parse("${datePart}_$timePart", dateTimeFormatter)
+    }
+
     override suspend fun createRecord(record: Record, trackFileContent: String) {
         withContext(Dispatchers.IO) {
             val trackFile =
-                File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${record.flySightFilePath}")
+                File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${record.phoneFilePath}")
             trackFile.writeText(trackFileContent)
             _records.update {
                 it + record
@@ -79,13 +83,13 @@ class FileBasedRecordService(
             it - record
         }
         withContext(Dispatchers.IO) {
-            File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${record.flySightFilePath}").delete()
+            File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${record.phoneFilePath}").delete()
         }
     }
 
     override suspend fun loadRecordContent(record: Record): String? {
         val trackFile =
-            File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${record.dateTime.formatDate()}_${record.dateTime.formatTime()}_track.csv")
+            File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${record.phoneFilePath}")
         return if (trackFile.exists()) trackFile.readText() else null
     }
 

@@ -217,6 +217,7 @@
     <string name="device_detail_folder">Dossier %1$s</string>
     <string name="device_detail_file">Fichier %1$s</string>
     <string name="device_detail_path_separator">Séparateur de chemin</string>
+    <string name="device_detail_download_record">Télécharger</string>
 
     <string name="device_configuration_formatted">Formaté</string>
     <string name="device_configuration_raw">Brut</string>

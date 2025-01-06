@@ -1,8 +1,10 @@
 package fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,7 +20,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -32,11 +39,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.designsystem.R
+import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
+import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.ConfigFileState
 
@@ -112,6 +124,14 @@ fun DeviceDetailScreen(
         onFileClicked(event)
     }
 
+    val toastEvent = state.toastEvent?.getContentIfNotHandled()
+    val context = LocalContext.current
+    LaunchedEffect(toastEvent) {
+        if (toastEvent != null) {
+            Toast.makeText(context, toastEvent, Toast.LENGTH_LONG).show()
+        }
+    }
+
     var configFileState by remember { mutableStateOf<ConfigFileState?>(null) }
     LaunchedEffect(key1 = state.device?.configFile) {
         val configFileStateFlow = state.device?.configFile
@@ -129,87 +149,85 @@ fun DeviceDetailScreen(
             .fillMaxSize(),
         color = MaterialTheme.colorScheme.surface
     ) {
-        Column {
-            val configFileStr = state.configFile
-//            ExpandableColumn(
-//                headerComposable = {
-//                    Row(
-//                        verticalAlignment = Alignment.CenterVertically
-//                    ) {
-//                        Text("Config file")
-//                        Spacer(modifier = Modifier.weight(1f))
-//                        when (val immutableConfigFileState = configFileState) {
-//                            is ConfigFileState.Error -> {}
-//                            ConfigFileState.Loading -> {}
-//                            ConfigFileState.Nothing -> {}
-//                            is ConfigFileState.Success -> {
-//                                Button(onClick = {
-//                                    onShowDeviceConfigClicked(immutableConfigFileState.config)
-//                                }) {
-//                                    Text("Show")
-//                                }
-//                            }
-//
-//                            null -> {}
-//                        }
-//                    }
-//                },
-//                contentComposable = {
-//                    val text = when (configFileStr) {
-//                        is FileState.Error -> "Error fetching config file"
-//                        FileState.Loading -> "Loading config file"
-//                        FileState.Nothing -> "No config file"
-//                        is FileState.Success -> configFileStr.content
-//                    }
-//                    LazyColumn(
-//                        modifier = Modifier.fillMaxSize()
-//                    ) {
-//                        item {
-//                            Text(
-//                                text = text
-//                            )
-//                        }
-//                    }
-//                }
-//            )
-            BreadCrumb(
-                modifier = Modifier.padding(8.dp),
-                path = state.currentDirectoryPath,
-                onPathPartClicked = { path ->
-                    viewModel.loadDirectory(path)
+        Box {
+            Column {
+                BreadCrumb(
+                    modifier = Modifier.padding(8.dp),
+                    path = state.currentDirectoryPath,
+                    onPathPartClicked = { path ->
+                        viewModel.loadDirectory(path)
+                    }
+                )
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentPadding = PaddingValues(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(state.directoryContent) { fileInfo ->
+                        Row(
+                            modifier = Modifier.clickable {
+                                viewModel.onFileClicked(fileInfo)
+                            }
+                        ) {
+                            if (fileInfo.isDirectory) {
+                                Icon(
+                                    imageVector = Icons.Default.Folder,
+                                    contentDescription = stringResource(
+                                        R.string.device_detail_folder,
+                                        fileInfo.fileName
+                                    )
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.InsertDriveFile,
+                                    contentDescription = stringResource(
+                                        R.string.device_detail_file,
+                                        fileInfo.fileName
+                                    )
+                                )
+                            }
+                            Spacer(modifier = Modifier.requiredWidth(8.dp))
+                            Text(text = fileInfo.fileName)
+                        }
+                    }
                 }
-            )
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(state.directoryContent) { fileInfo ->
-                    Row(
-                        modifier = Modifier.clickable {
-                            viewModel.onFileClicked(fileInfo)
+            }
+            if (state.isInTrackFolder) {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    contentAlignment = Alignment.BottomEnd
+                ) {
+                    FloatingActionButton(
+                        onClick = {
+                            viewModel.downloadRecord()
                         }
                     ) {
-                        if (fileInfo.isDirectory) {
-                            Icon(
-                                imageVector = Icons.Default.Folder,
-                                contentDescription = stringResource(
-                                    R.string.device_detail_folder,
-                                    fileInfo.fileName
-                                )
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.InsertDriveFile,
-                                contentDescription = stringResource(
-                                    R.string.device_detail_file,
-                                    fileInfo.fileName
-                                )
+                        Icon(
+                            imageVector = Icons.Default.Download,
+                            contentDescription = stringResource(R.string.device_detail_download_record)
+                        )
+                    }
+                }
+            }
+            state.uploadingRecord?.let { uploadingRecord ->
+                Dialog(
+                    onDismissRequest = {}
+                ) {
+                    Card {
+                        Row(
+                            modifier = Modifier.padding(32.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator()
+                            Spacer(modifier = Modifier.requiredWidth(8.dp))
+                            FText(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = uploadingRecord,
+                                configuration = FlySightTheme.typography.plainScreenTextLarge,
+                                textAlign = TextAlign.Center
                             )
                         }
-                        Spacer(modifier = Modifier.requiredWidth(8.dp))
-                        Text(text = fileInfo.fileName)
                     }
                 }
             }

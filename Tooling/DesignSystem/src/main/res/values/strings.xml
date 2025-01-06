@@ -217,6 +217,7 @@
     <string name="device_detail_folder">Folder %1$s</string>
     <string name="device_detail_file">File %1$s</string>
     <string name="device_detail_path_separator">Path separator</string>
+    <string name="device_detail_download_record">Download</string>
 
     <string name="device_configuration_formatted">Formatted</string>
     <string name="device_configuration_raw">Raw</string>
