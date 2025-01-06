@@ -521,11 +521,11 @@ class FlySightDeviceImpl(
             }
         val records = mutableListOf<Record>()
         trackFiles.forEach { (dateFolderName, timeFolders) ->
-            timeFolders.forEach { (timeFolderName, file) ->
+            timeFolders.forEach { (timeFolderName, _) ->
                 val dateStr = "$dateFolderName-$timeFolderName"
                 val date =
                     LocalDateTime.parse(dateStr, DateTimeFormatter.ofPattern("yy-MM-dd-HH-mm-ss"))
-                records += Record(file.path, date)
+                records += Record(date)
             }
         }
         return records

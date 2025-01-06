@@ -460,7 +460,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                         ListRecordsScreen { selectedRecord ->
                                             navController.navigate(
                                                 AppScreen.RecordTab.RecordDetail.buildRoute(
-                                                    selectedRecord.name
+                                                    selectedRecord.phoneFilePath
                                                 )
                                             )
                                         }

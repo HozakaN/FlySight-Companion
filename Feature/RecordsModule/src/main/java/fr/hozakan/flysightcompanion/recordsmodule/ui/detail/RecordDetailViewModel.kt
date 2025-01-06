@@ -4,12 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import fr.hozakan.flysightcompanion.model.records.dummyRecord
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flatMapConcat
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -29,7 +26,7 @@ class RecordDetailViewModel @Inject constructor(
     fun loadRecord(recordName: String) {
         loadJob?.cancel()
         loadJob = recordService.records
-            .map { it.filter { record -> record.name == recordName } }
+            .map { it.filter { record -> record.phoneFilePath == recordName } }
             .map { it.firstOrNull() }
             .map { record ->
                 record?.let {

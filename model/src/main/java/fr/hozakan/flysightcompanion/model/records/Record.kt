@@ -5,17 +5,16 @@ import fr.hozakan.flysightcompanion.model.extensions.formatTime
 import java.time.LocalDateTime
 
 data class Record(
-    /**
-     * file path on the FlySight
-     */
-    val filePath: String,
     val dateTime: LocalDateTime
 ) {
-    val name: String
-        get() = "${dateTime.formatDate()}_${dateTime.formatTime()}_track.csv"
+    val flySightFilePath: String
+        get() = if (this == dummyRecord) "Dummy" else "/${dateTime.formatDate()}/${dateTime.formatTime()}/TRACK.CSV"
+
+    val phoneFilePath: String
+        get() = if (this == dummyRecord) "Dummy" else "${dateTime.formatDate()}_${dateTime.formatTime()}_TRACK.CSV"
+
 }
 
 val dummyRecord = Record(
-    filePath = "dummy",
     dateTime = LocalDateTime.now()
 )

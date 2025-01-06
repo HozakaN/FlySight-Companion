@@ -7,14 +7,12 @@ import fr.hozakan.flysightcompanion.model.records.Record
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -53,12 +51,6 @@ class FileBasedRecordService(
                 }
                 ?.mapNotNull { file ->
                     Record(
-                        filePath = "/${file.name.substring(0, 8)}/${
-                            file.name.substring(
-                                9,
-                                17
-                            )
-                        }/TRACK.CSV",
                         dateTime = LocalDateTime.parse(
                             file.name.substring(0, 17),
                             dateTimeFormatter
@@ -88,7 +80,7 @@ class FileBasedRecordService(
         }
         withContext(Dispatchers.IO) {
             val recordsFolder = getOrCreateRecordsFolder()
-            File("${recordsFolder.absolutePath}${File.separator}${record.filePath}").deleteRecursively()
+            File("${recordsFolder.absolutePath}${File.separator}${record.flySightFilePath}").deleteRecursively()
         }
     }
 

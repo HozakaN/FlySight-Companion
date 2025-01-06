@@ -6,7 +6,6 @@ import java.time.LocalDateTime
 class DefaultRecordParser : RecordParser {
     override fun parse(fileLines: List<String>): Record {
         return Record(
-            filePath = "truc",
             dateTime = LocalDateTime.now()
         )
     }

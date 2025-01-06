@@ -281,7 +281,6 @@ fun FlySightDeviceItemConnectedAndConfigFileDiffersPreview() {
                 initialRecordState = LoadingState.Loaded(
                     listOf(
                         Record(
-                            "result1",
                             LocalDateTime.now()
                         )
                     )
@@ -315,7 +314,6 @@ fun FlySightDeviceItemConnectedAndConfigFileLoadingPreview() {
                 initialRecordState = LoadingState.Loaded(
                     listOf(
                         Record(
-                            "result1",
                             LocalDateTime.now()
                         )
                     )
@@ -352,7 +350,6 @@ fun FlySightDeviceItemConnectedAndUpdatingConfigurationPreview() {
                     initialRecordState = LoadingState.Loaded(
                         listOf(
                             Record(
-                                "result1",
                                 LocalDateTime.now()
                             )
                         )
@@ -412,7 +409,6 @@ fun DeviceConfigurationMisMatchDialogWithConfigContentChangedPreview() {
                 initialRecordState = LoadingState.Loaded(
                     listOf(
                         Record(
-                            "result1",
                             LocalDateTime.now()
                         )
                     )

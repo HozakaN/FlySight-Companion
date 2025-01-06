@@ -103,7 +103,7 @@ private fun RecordListItem(
                 .padding(8.dp)
         ) {
             Text(
-                text = record.name
+                text = record.phoneFilePath
             )
         }
     }

@@ -35,7 +35,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @SuppressLint("StaticFieldLeak")
@@ -161,7 +160,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
             ?.value
             ?.maxByOrNull { it.dateTime }
             ?.let { lastRecord ->
-                records.any { it.filePath == lastRecord.filePath }
+                records.any { it.flySightFilePath == lastRecord.flySightFilePath }
             } ?: true
     )
 
