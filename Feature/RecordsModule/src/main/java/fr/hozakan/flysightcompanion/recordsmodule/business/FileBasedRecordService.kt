@@ -66,7 +66,7 @@ class FileBasedRecordService(
     override suspend fun createRecord(record: Record, trackFileContent: String) {
         withContext(Dispatchers.IO) {
             val trackFile =
-                File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${record.dateTime.formatDate()}_${record.dateTime.formatTime()}_track.csv")
+                File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${record.flySightFilePath}")
             trackFile.writeText(trackFileContent)
             _records.update {
                 it + record
@@ -79,8 +79,7 @@ class FileBasedRecordService(
             it - record
         }
         withContext(Dispatchers.IO) {
-            val recordsFolder = getOrCreateRecordsFolder()
-            File("${recordsFolder.absolutePath}${File.separator}${record.flySightFilePath}").deleteRecursively()
+            File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${record.flySightFilePath}").delete()
         }
     }
 
