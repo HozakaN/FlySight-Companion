@@ -242,5 +242,6 @@
     <string name="device_configuration_silence">Silence (%1$d) :</string>
 
     <string name="list_records_no_records">Il n\'y a pas encore d\'enregistrement</string>
+    <string name="list_records_delete_record">@string/misc_delete</string>
 
 </resources>
