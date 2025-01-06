@@ -5,6 +5,8 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,9 +28,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -262,10 +266,19 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                 currentBackStack.value?.destination?.route == AppScreen.ConfigTab.ConfigList.route ||
                                 currentBackStack.value?.destination?.route == AppScreen.RecordTab.RecordList.route
                             ) {
+                                val selectedTab = updateTransition(targetState = currentBackStack.value?.destination?.route)
+
+                                val deviceScale by selectedTab.animateFloat { if (it == AppScreen.DeviceTab.DeviceList.route) 1.2f else 1f }
+                                val configScale by selectedTab.animateFloat { if (it == AppScreen.ConfigTab.ConfigList.route) 1.2f else 1f }
+                                val recordScale by selectedTab.animateFloat { if (it == AppScreen.RecordTab.RecordList.route) 1.2f else 1f }
                                 BottomAppBar(
                                     actions = {
                                         Box(
-                                            modifier = Modifier.weight(1f),
+                                            modifier = Modifier.weight(1f)
+                                                .graphicsLayer {
+                                                    scaleX = deviceScale
+                                                    scaleY = deviceScale
+                                                },
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Column(
@@ -292,7 +305,11 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             )
                                         }
                                         Box(
-                                            modifier = Modifier.weight(1f),
+                                            modifier = Modifier.weight(1f)
+                                                .graphicsLayer {
+                                                    scaleX = configScale
+                                                    scaleY = configScale
+                                                },
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Column(
@@ -318,7 +335,11 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             )
                                         }
                                         Box(
-                                            modifier = Modifier.weight(1f),
+                                            modifier = Modifier.weight(1f)
+                                                .graphicsLayer {
+                                                    scaleX = recordScale
+                                                    scaleY = recordScale
+                                                },
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Column(
