@@ -36,7 +36,7 @@ import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.ble.FlySightCharacteristic
 import fr.hozakan.flysightcompanion.model.ble.cccdUuid
-import fr.hozakan.flysightcompanion.model.result.ResultFile
+import fr.hozakan.flysightcompanion.model.records.Record
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -73,7 +73,7 @@ interface FlySightDevice {
     val connectionState: StateFlow<DeviceConnectionState>
     val configFile: StateFlow<ConfigFileState>
     val rawConfigFile: StateFlow<FileState>
-    val resultFiles: StateFlow<LoadingState<List<ResultFile>>>
+    val records: StateFlow<LoadingState<List<Record>>>
     val logs: StateFlow<List<String>>
     val fileReceived: SharedFlow<FileState>
     val ping: SharedFlow<Boolean>
@@ -82,12 +82,13 @@ interface FlySightDevice {
     fun flowDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>>
     suspend fun loadDirectory(directoryPath: List<String>): List<FileInfo>
     suspend fun readFile(fileName: String)
+    suspend fun readFileSynchronously(fileName: String): FileState
     suspend fun updateConfigFile(configFile: ConfigFile)
 }
 
-private val result_directory_date_regex =
+private val record_directory_date_regex =
     "^(\\d{2})-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$".toRegex()
-private val result_directory_time_regex =
+private val record_directory_time_regex =
     "^(0[0-9]|1[0-9]|2[0-3])-(0[0-9]|[1-5][0-9])-(0[0-9]|[1-5][0-9])$".toRegex()
 
 class FlySightDeviceImpl(
@@ -136,8 +137,8 @@ class FlySightDeviceImpl(
     private val _services = MutableStateFlow<List<BluetoothGattService>>(emptyList())
     val services = _services.asStateFlow()
 
-    private val _resultFiles = MutableStateFlow<LoadingState<List<ResultFile>>>(LoadingState.Idle)
-    override val resultFiles: StateFlow<LoadingState<List<ResultFile>>> = _resultFiles.asStateFlow()
+    private val _records = MutableStateFlow<LoadingState<List<Record>>>(LoadingState.Idle)
+    override val records: StateFlow<LoadingState<List<Record>>> = _records.asStateFlow()
 
     private val parser: ConfigParser = DefaultConfigParser()
 
@@ -388,9 +389,9 @@ class FlySightDeviceImpl(
                 }
                 stateUpdater(DeviceConnectionState.Connected)
                 readCurrentConfigFile()
-                _resultFiles.value = LoadingState.Loading(emptyList())
-                val resultFiles = retrieveResultFiles()
-                _resultFiles.value = LoadingState.Loaded(resultFiles)
+                _records.value = LoadingState.Loading(emptyList())
+                val records = retrieveRecordsInfo()
+                _records.value = LoadingState.Loaded(records)
                 startPingSystem()
             }
         } else {
@@ -446,13 +447,11 @@ class FlySightDeviceImpl(
                 gattTaskQueue = gattTaskQueue,
                 scheduler = scheduler
             )
-//        scope?.launch {
             try {
                 fileWriter.writeFile(fileName, fileContent)
             } catch (e: Exception) {
                 log("Error writing file : $e")
             }
-//        }
         }
     }
 
@@ -492,18 +491,18 @@ class FlySightDeviceImpl(
 
     @FlowPreview
     @ExperimentalCoroutinesApi
-    private suspend fun retrieveResultFiles(): List<ResultFile> {
+    private suspend fun retrieveRecordsInfo(): List<Record> {
         val rootDirContent = loadDirectory(listOf("/"))
         val dateFolders = rootDirContent.filter { it.isDirectory }.filter {
             it.fileName.matches(
-                result_directory_date_regex
+                record_directory_date_regex
             )
         }
         val timeFoldersMap = dateFolders.map { dateFolder ->
             val dateFolderContent = loadDirectory(listOf("/", dateFolder.fileName))
 
             dateFolder.fileName to dateFolderContent.filter { it.isDirectory }
-                .filter { it.fileName.matches(result_directory_time_regex) }
+                .filter { it.fileName.matches(record_directory_time_regex) }
         }
         val trackFiles: List<Pair<String, List<Pair<String, File>>>> =
             timeFoldersMap.map { (dateFolderName, timeFolders) ->
@@ -520,16 +519,16 @@ class FlySightDeviceImpl(
                 }.filter { it.second != null }
                     .map { it.first to it.second!! }
             }
-        val resultFiles = mutableListOf<ResultFile>()
+        val records = mutableListOf<Record>()
         trackFiles.forEach { (dateFolderName, timeFolders) ->
             timeFolders.forEach { (timeFolderName, file) ->
                 val dateStr = "$dateFolderName-$timeFolderName"
                 val date =
                     LocalDateTime.parse(dateStr, DateTimeFormatter.ofPattern("yy-MM-dd-HH-mm-ss"))
-                resultFiles += ResultFile(file.path, date)
+                records += Record(file.path, date)
             }
         }
-        return resultFiles
+        return records
     }
 
     private suspend fun readCurrentConfigFile() {
@@ -583,14 +582,33 @@ class FlySightDeviceImpl(
                 gattTaskQueue = gattTaskQueue,
                 scheduler = scheduler
             )
-//        scope?.launch {
             try {
                 val fileState = fileReader.readFile(fileName)
                 _file.emit(fileState)
             } catch (e: Exception) {
                 log("Error reading file : $e")
             }
-//        }
+        }
+    }
+
+    override suspend fun readFileSynchronously(fileName: String): FileState {
+        val gatt = this.gatt ?: return FileState.Error("No gatt")
+        val rx = this.rxCharacteristic ?: return FileState.Error("No rx characteristic")
+        return withContext(Dispatchers.IO) {
+            log("Reading file $fileName")
+
+            val fileReader = BleFileReader(
+                gatt = gatt,
+                gattCharacteristic = rx,
+                gattTaskQueue = gattTaskQueue,
+                scheduler = scheduler
+            )
+            try {
+                fileReader.readFile(fileName)
+            } catch (e: Exception) {
+                log("Error reading file : $e")
+                FileState.Error(e.message ?: "Unknown error")
+            }
         }
     }
 
@@ -699,7 +717,7 @@ class FlySightDeviceImpl(
     }
 
     private fun resetFlySight() {
-        _resultFiles.value = LoadingState.Idle
+        _records.value = LoadingState.Idle
         _configFile.value = ConfigFileState.Nothing
 //        _logs.value = emptyList()
         _rawConfigFile.value = FileState.Nothing

@@ -13,7 +13,7 @@ import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.defaultConfigFile
-import fr.hozakan.flysightcompanion.model.result.ResultFile
+import fr.hozakan.flysightcompanion.model.records.Record
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -43,7 +43,8 @@ fun ListFlySightDevicesScreenInternalRefreshingWithoutDevicePreview() {
         onUploadConfigToSystemClicked = {},
         onUpdateSystemConfigClicked = {},
         onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
+        onChangeDeviceConfigurationClicked = {},
+        onUploadRecordToSystem = {}
     )
 }
 
@@ -69,7 +70,8 @@ fun ListFlySightDevicesScreenInternalRefreshingWithoutDeviceStep2Preview() {
         onUploadConfigToSystemClicked = {},
         onUpdateSystemConfigClicked = {},
         onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
+        onChangeDeviceConfigurationClicked = {},
+        onUploadRecordToSystem = {}
     )
 }
 
@@ -95,7 +97,8 @@ fun ListFlySightDevicesScreenInternalRefreshingWithoutDeviceStep3Preview() {
         onUploadConfigToSystemClicked = {},
         onUpdateSystemConfigClicked = {},
         onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
+        onChangeDeviceConfigurationClicked = {},
+        onUploadRecordToSystem = {}
     )
 }
 
@@ -121,7 +124,8 @@ fun ListFlySightDevicesScreenInternalNoDevicePreview() {
         onUploadConfigToSystemClicked = {},
         onUpdateSystemConfigClicked = {},
         onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
+        onChangeDeviceConfigurationClicked = {},
+        onUploadRecordToSystem = {}
     )
 }
 
@@ -137,7 +141,7 @@ fun ListFlySightDevicesScreenInternalWithDevicePreview() {
                     device =
                         FakeDeviceImpl(
                             initialConnectionState = DeviceConnectionState.Disconnected,
-                            initialResultFileState = LoadingState.Loaded(
+                            initialRecordState = LoadingState.Loaded(
                                 emptyList()
                             ),
                             initialConfigFileState = ConfigFileState.Nothing,
@@ -163,7 +167,8 @@ fun ListFlySightDevicesScreenInternalWithDevicePreview() {
         onUploadConfigToSystemClicked = {},
         onUpdateSystemConfigClicked = {},
         onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
+        onChangeDeviceConfigurationClicked = {},
+        onUploadRecordToSystem = {}
     )
 }
 
@@ -186,7 +191,8 @@ fun FlySightDeviceItemDisconnectedPreview() {
         onUpdateSystemConfClicked = {},
         onUploadConfigToSystem = {},
         onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
+        onChangeDeviceConfigurationClicked = {},
+        onUploadRecordToSystem = {}
     )
 }
 
@@ -209,7 +215,8 @@ fun FlySightDeviceItemConnectingPreview() {
         onUpdateSystemConfClicked = {},
         onUploadConfigToSystem = {},
         onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
+        onChangeDeviceConfigurationClicked = {},
+        onUploadRecordToSystem = {}
     )
 }
 
@@ -234,7 +241,8 @@ fun FlySightDeviceItemConnectedAndNominalConfigFilePreview() {
         onUpdateSystemConfClicked = {},
         onUploadConfigToSystem = {},
         onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
+        onChangeDeviceConfigurationClicked = {},
+        onUploadRecordToSystem = {}
     )
 }
 
@@ -258,7 +266,8 @@ fun FlySightDeviceItemConnectedAndConfigFileUnknownPreview() {
         onUpdateSystemConfClicked = {},
         onUploadConfigToSystem = {},
         onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
+        onChangeDeviceConfigurationClicked = {},
+        onUploadRecordToSystem = {}
     )
 }
 
@@ -269,9 +278,9 @@ fun FlySightDeviceItemConnectedAndConfigFileDiffersPreview() {
         device = ListFlySightDeviceDisplayData(
             device = FakeDeviceImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
-                initialResultFileState = LoadingState.Loaded(
+                initialRecordState = LoadingState.Loaded(
                     listOf(
-                        ResultFile(
+                        Record(
                             "result1",
                             LocalDateTime.now()
                         )
@@ -291,7 +300,8 @@ fun FlySightDeviceItemConnectedAndConfigFileDiffersPreview() {
         onUpdateSystemConfClicked = {},
         onUploadConfigToSystem = {},
         onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
+        onChangeDeviceConfigurationClicked = {},
+        onUploadRecordToSystem = {}
     )
 }
 
@@ -302,9 +312,9 @@ fun FlySightDeviceItemConnectedAndConfigFileLoadingPreview() {
         device = ListFlySightDeviceDisplayData(
             device = FakeDeviceImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
-                initialResultFileState = LoadingState.Loaded(
+                initialRecordState = LoadingState.Loaded(
                     listOf(
-                        ResultFile(
+                        Record(
                             "result1",
                             LocalDateTime.now()
                         )
@@ -324,7 +334,8 @@ fun FlySightDeviceItemConnectedAndConfigFileLoadingPreview() {
         onUpdateSystemConfClicked = {},
         onUploadConfigToSystem = {},
         onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
+        onChangeDeviceConfigurationClicked = {},
+        onUploadRecordToSystem = {}
     )
 }
 
@@ -338,9 +349,9 @@ fun FlySightDeviceItemConnectedAndUpdatingConfigurationPreview() {
             device = ListFlySightDeviceDisplayData(
                 device = FakeDeviceImpl(
                     initialConnectionState = DeviceConnectionState.Connected,
-                    initialResultFileState = LoadingState.Loaded(
+                    initialRecordState = LoadingState.Loaded(
                         listOf(
-                            ResultFile(
+                            Record(
                                 "result1",
                                 LocalDateTime.now()
                             )
@@ -360,7 +371,8 @@ fun FlySightDeviceItemConnectedAndUpdatingConfigurationPreview() {
             onUpdateSystemConfClicked = {},
             onUploadConfigToSystem = {},
             onPushConfigToDeviceClicked = {},
-            onChangeDeviceConfigurationClicked = {}
+            onChangeDeviceConfigurationClicked = {},
+            onUploadRecordToSystem = {}
         )
     }
 }
@@ -384,7 +396,8 @@ fun FlySightDeviceItemErrorPreview() {
         onUpdateSystemConfClicked = {},
         onUploadConfigToSystem = {},
         onPushConfigToDeviceClicked = {},
-        onChangeDeviceConfigurationClicked = {}
+        onChangeDeviceConfigurationClicked = {},
+        onUploadRecordToSystem = {}
     )
 }
 
@@ -396,9 +409,9 @@ fun DeviceConfigurationMisMatchDialogWithConfigContentChangedPreview() {
         device = ListFlySightDeviceDisplayData(
             device = FakeDeviceImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
-                initialResultFileState = LoadingState.Loaded(
+                initialRecordState = LoadingState.Loaded(
                     listOf(
-                        ResultFile(
+                        Record(
                             "result1",
                             LocalDateTime.now()
                         )
@@ -440,7 +453,7 @@ fun DeviceConfigurationMisMatchDialogWithConfigNotFromSystemPreview() {
 
 private class FakeDeviceImpl(
     initialConnectionState: DeviceConnectionState = DeviceConnectionState.Disconnected,
-    initialResultFileState: LoadingState<List<ResultFile>> = LoadingState.Idle,
+    initialRecordState: LoadingState<List<Record>> = LoadingState.Idle,
     initialConfigFileState: ConfigFileState = ConfigFileState.Nothing,
     private val configFileName: String = "",
     override val name: String = "Fake device"
@@ -454,8 +467,8 @@ private class FakeDeviceImpl(
     override val configFile: StateFlow<ConfigFileState> = MutableStateFlow(initialConfigFileState)
     override val rawConfigFile: StateFlow<FileState>
         get() = MutableStateFlow(FileState.Nothing)
-    override val resultFiles: StateFlow<LoadingState<List<ResultFile>>> =
-        MutableStateFlow(initialResultFileState).asStateFlow()
+    override val records: StateFlow<LoadingState<List<Record>>> =
+        MutableStateFlow(initialRecordState).asStateFlow()
     override val logs: StateFlow<List<String>>
         get() = MutableStateFlow(emptyList())
     override val fileReceived: SharedFlow<FileState>
@@ -475,6 +488,8 @@ private class FakeDeviceImpl(
     }
 
     override suspend fun readFile(fileName: String) {}
+    override suspend fun readFileSynchronously(fileName: String): FileState = FileState.Nothing
+
     override suspend fun updateConfigFile(configFile: ConfigFile) {}
 
 }

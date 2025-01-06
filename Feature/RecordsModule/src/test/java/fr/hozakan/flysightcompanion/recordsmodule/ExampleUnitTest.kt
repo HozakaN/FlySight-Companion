@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.configfilesmodule
+package fr.hozakan.flysightcompanion.recordsmodule
 
 import org.junit.Test
 

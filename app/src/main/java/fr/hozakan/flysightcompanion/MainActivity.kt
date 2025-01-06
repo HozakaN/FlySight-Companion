@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AreaChart
 import androidx.compose.material.icons.filled.Engineering
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -63,6 +64,7 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.ui.file.DeviceFileScreen
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesMenuActions
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
 import fr.hozakan.flysightcompanion.model.ConfigFile
+import fr.hozakan.flysightcompanion.recordsmodule.ui.ListRecordsScreen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
 import fr.hozakan.flysightcompanion.R as LocalR
@@ -255,7 +257,8 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                         },
                         bottomBar = {
                             if (currentBackStack.value?.destination?.route == AppScreen.DeviceTab.DeviceList.route ||
-                                currentBackStack.value?.destination?.route == AppScreen.ConfigTab.ConfigList.route
+                                currentBackStack.value?.destination?.route == AppScreen.ConfigTab.ConfigList.route ||
+                                currentBackStack.value?.destination?.route == AppScreen.RecordTab.RecordList.route
                             ) {
                                 BottomAppBar(
                                     actions = {
@@ -309,6 +312,32 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                     .clip(CircleShape)
                                                     .clickable {
                                                         navController.navigate(AppScreen.ConfigTab.route)
+                                                    }
+                                            )
+                                        }
+                                        Box(
+                                            modifier = Modifier.weight(1f),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.AreaChart,
+                                                    contentDescription = stringResource(R.string.screen_title_record_list)
+                                                )
+                                                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                                                FText(
+                                                    text = stringResource(R.string.screen_title_record_list),
+                                                    configuration = TextConfiguration.TabTitle
+                                                )
+                                            }
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .clip(CircleShape)
+                                                    .clickable {
+                                                        navController.navigate(AppScreen.RecordTab.route)
                                                     }
                                             )
                                         }
@@ -419,6 +448,25 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                 navController.popBackStack()
                                             }
                                         )
+                                    }
+                                }
+                                navigation(
+                                    route = AppScreen.RecordTab.route,
+                                    startDestination = AppScreen.RecordTab.RecordList.route
+                                ) {
+                                    composable(route = AppScreen.RecordTab.RecordList.route) {
+                                        ListRecordsScreen { selectedRecord ->
+                                            navController.navigate(
+                                                AppScreen.RecordTab.RecordDetail.buildRoute(
+                                                    selectedRecord.filePath
+                                                )
+                                            )
+                                        }
+                                    }
+                                    composable(route = AppScreen.RecordTab.RecordDetail.route) { backStackEntry ->
+                                        val configName =
+                                            backStackEntry.arguments?.getString("recordName")
+                                                ?: return@composable
                                     }
                                 }
                             }

@@ -7,9 +7,7 @@ import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.DeviceId
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.model.ConfigFileState
-import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
-import kotlinx.coroutines.flow.StateFlow
 
 @Immutable
 data class ListFlySightDevicesState(
@@ -21,6 +19,7 @@ data class ListFlySightDevicesState(
     val unitSystem: UnitSystem = UnitSystem.Metric,
     val refreshingDeviceList: LoadingState<Unit> = LoadingState.Loading(Unit),
     val updatingConfiguration: DeviceId? = null,
+    val uploadingRecord: String? = null,
     val event: FlowEvent<String>? = null
 )
 
@@ -28,9 +27,10 @@ data class ListFlySightDeviceDisplayData(
     val device: FlySightDevice,
     val deviceConfig: ConfigFileState,
     val isConfigFromSystem: Boolean,
-    val hasConfigContentChanged: Boolean
+    val hasConfigContentChanged: Boolean,
+    val isLastRecordUploaded: Boolean = true,
 ) : FlySightDevice by device {
     override fun toString(): String {
-        return "ListFlySightDeviceDisplayData(device=$device, deviceConfig=$deviceConfig, isConfigFromSystem=$isConfigFromSystem, hasConfigContentChanged=$hasConfigContentChanged)"
+        return "ListFlySightDeviceDisplayData(device=$device, deviceConfig=$deviceConfig, isConfigFromSystem=$isConfigFromSystem, hasConfigContentChanged=$hasConfigContentChanged, isLastResultFileUploaded=$isLastRecordUploaded)"
     }
 }

@@ -7,7 +7,6 @@ import fr.hozakan.flysightcompanion.dialogmodule.DialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.DialogService
 import fr.hozakan.flysightcompanion.dialogmodule.PickConfigurationDialog
 import fr.hozakan.flysightcompanion.dialogmodule.PickConfigurationDialogResult
-import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.CONFIG_FILES_FOLDER
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -140,7 +139,7 @@ class DefaultConfigFileService(
             val configFolder = getOrCreateConfigFilesFolder()
             val configFiles =
                 (configFolder.listFiles()?.mapNotNull { parseConfiguration(it.readLines()) }
-                    ?: emptyList()).toMutableList()
+                    ?: emptyList())
             _configs.update {
                 configFiles
             }
@@ -149,4 +148,7 @@ class DefaultConfigFileService(
 
     private fun parseConfiguration(fileLines: List<String>): ConfigFile = parser.parse(fileLines)
 
+    companion object {
+        private const val CONFIG_FILES_FOLDER = "configFiles"
+    }
 }

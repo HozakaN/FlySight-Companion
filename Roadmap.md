@@ -16,7 +16,7 @@
 + Possibilité de donner une importance supérieure au job de ping. scheduler
 
 - DONE améliorer l'interface de list des devices en :
- + changeant la position du boutton "add device" quand il y a déjà des devices (Icons.Default.NewWindow)
+ + changeant la position du bouton "add device" quand il y a déjà des devices (Icons.Default.NewWindow)
  + ajoutant un spinner dans l'action bar quand un scan est en cours avec des devices déjà trouvés
 
 - DONE Improve config file picking dialog spacing between elements
@@ -67,7 +67,7 @@
 
 - DONE Fix FlySight tab logo on devices with density < my phone density
 
-# TODO release/2.0.0
+# TODO release/1.1.0
 
 - big feature : record analyses
 
@@ -75,14 +75,14 @@
 
 - How to update FlySight 2 Firmware + firmware updater
 
-# TODO release/3.0.0
+# TODO release/2.0.0
 
 - big feature : Live GNSS data and HUD
 
-# TODO release/4.0.0
+# TODO release/3.0.0
 
 - big feature : iOS
 
-# TODO release/5.0.0
+# TODO release/4.0.0
 
 - big feature : Desktop

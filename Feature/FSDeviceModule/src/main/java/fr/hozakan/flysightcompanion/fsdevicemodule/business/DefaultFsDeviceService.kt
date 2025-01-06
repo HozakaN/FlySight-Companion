@@ -6,6 +6,11 @@ import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigEncoder
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.model.ConfigFile
+import fr.hozakan.flysightcompanion.model.FileState
+import fr.hozakan.flysightcompanion.model.extensions.formatDate
+import fr.hozakan.flysightcompanion.model.extensions.formatTime
+import fr.hozakan.flysightcompanion.model.records.Record
+import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -24,14 +29,16 @@ class DefaultFsDeviceService(
     private val context: Context,
     private val bluetoothService: BluetoothService,
     private val configEncoder: ConfigEncoder,
-    private val configFileService: ConfigFileService
+    private val configFileService: ConfigFileService,
+    private val recordService: RecordService
 ) : FsDeviceService {
 
     private val _devices = MutableStateFlow<List<FlySightDevice>>(emptyList())
     override val devices = _devices.asStateFlow()
 
     private val _isRefreshingDeviceList = MutableStateFlow<LoadingState<Unit>>(LoadingState.Idle)
-    override val isRefreshingDeviceList: StateFlow<LoadingState<Unit>> = _isRefreshingDeviceList.asStateFlow()
+    override val isRefreshingDeviceList: StateFlow<LoadingState<Unit>> =
+        _isRefreshingDeviceList.asStateFlow()
 
     private var initialDeviceLoading = true
 
@@ -50,7 +57,8 @@ class DefaultFsDeviceService(
                         is LoadingState.Loaded -> {
                             val btDevices = loadingState.value
                             val btDevicesAddresses = btDevices.map { it.address }
-                            val oldDevices = _devices.value.filter { !initialDeviceLoading || it.address in btDevicesAddresses }
+                            val oldDevices =
+                                _devices.value.filter { !initialDeviceLoading || it.address in btDevicesAddresses }
                             val oldDevicesAddresses = oldDevices.map { it.address }
                             val newDevices = btDevices.filter { it.address !in oldDevicesAddresses }
                             val devices = oldDevices + newDevices.map {
@@ -65,16 +73,19 @@ class DefaultFsDeviceService(
                             }
                             _isRefreshingDeviceList.value = LoadingState.Loaded(Unit)
                         }
+
                         is LoadingState.Error -> {
                             _devices.update {
                                 emptyList()
                             }
                             _isRefreshingDeviceList.value = LoadingState.Error(loadingState.error)
                         }
+
                         is LoadingState.Loading -> {
                             val btDevices = loadingState.currentLoad ?: emptyList()
                             val btDevicesAddresses = btDevices.map { it.address }
-                            val oldDevices = _devices.value.filter { !initialDeviceLoading || it.address in btDevicesAddresses }
+                            val oldDevices =
+                                _devices.value.filter { !initialDeviceLoading || it.address in btDevicesAddresses }
                             initialDeviceLoading = false
                             val oldDevicesAddresses = oldDevices.map { it.address }
                             val newDevices = btDevices.filter { it.address !in oldDevicesAddresses }
@@ -85,7 +96,8 @@ class DefaultFsDeviceService(
                                     configEncoder
                                 )
                             }
-                            _isRefreshingDeviceList.value = LoadingState.Loading(increment = loadingState.increment)
+                            _isRefreshingDeviceList.value =
+                                LoadingState.Loading(increment = loadingState.increment)
                             _devices.update {
                                 devices
                             }
@@ -117,12 +129,31 @@ class DefaultFsDeviceService(
         device.updateConfigFile(configFile)
     }
 
-    override suspend fun changeDeviceConfiguration(device: FlySightDevice): Flow<LoadingState<Unit>> = flow {
-        val pickedConfig = configFileService.userPickConfiguration()
-        if (pickedConfig != null) {
-            emit(LoadingState.Loading(Unit))
-            updateDeviceConfig(device, pickedConfig)
-            emit(LoadingState.Loaded(Unit))
+    override suspend fun changeDeviceConfiguration(device: FlySightDevice): Flow<LoadingState<Unit>> =
+        flow {
+            val pickedConfig = configFileService.userPickConfiguration()
+            if (pickedConfig != null) {
+                emit(LoadingState.Loading(Unit))
+                updateDeviceConfig(device, pickedConfig)
+                emit(LoadingState.Loaded(Unit))
+            }
+        }
+
+    override fun extractRecordFromDevice(
+        device: FlySightDevice,
+        record: Record
+    ): Flow<LoadingState<String>> = flow {
+        val recordPath = "${record.dateTime.formatDate()}/${record.dateTime.formatTime()}"
+        emit(LoadingState.Loading("Downloading file /$recordPath/TRACK.CSV"))
+        val trackFile =
+            device.readFileSynchronously("$recordPath/TRACK.CSV")
+        val trackFileContent = (trackFile as? FileState.Success)?.content
+        if (trackFileContent != null)  {
+            emit(LoadingState.Loading("Saving file on the phone"))
+            recordService.createRecord(record, trackFileContent)
+            emit(LoadingState.Loaded(recordPath))
+        } else {
+            emit(LoadingState.Error(error("Could not load track file")))
         }
     }
 

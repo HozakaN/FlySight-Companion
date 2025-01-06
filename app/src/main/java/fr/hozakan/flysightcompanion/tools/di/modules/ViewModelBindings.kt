@@ -13,6 +13,7 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_config.DeviceConfig
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail.DeviceDetailViewModel
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.file.FileScreenViewModel
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesViewModel
+import fr.hozakan.flysightcompanion.recordsmodule.ui.ListRecordsViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 
@@ -55,6 +56,12 @@ internal abstract class ViewModelBindings {
     @IntoMap
     @ViewModelKey(DeviceConfigurationViewModel::class)
     abstract fun bindDeviceConfigurationViewModel(deviceConfigurationViewModel: DeviceConfigurationViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(ListRecordsViewModel::class)
+    abstract fun bindListRecordsViewModel(listRecordsViewModel: ListRecordsViewModel): ViewModel
 
     @Binds
     abstract fun bindViewModelFactory(factory: ViewModelFactory): ViewModelProvider.Factory

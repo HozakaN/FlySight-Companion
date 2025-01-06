@@ -22,6 +22,8 @@ import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionServ
 import fr.hozakan.flysightcompanion.framework.service.versionning.DefaultAppVersionService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.DefaultFsDeviceService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
+import fr.hozakan.flysightcompanion.recordsmodule.business.FileBasedRecordService
+import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import kotlinx.coroutines.InternalCoroutinesApi
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -62,12 +64,14 @@ class ServiceModule {
         baseApplication: BaseApplication,
         bluetoothService: BluetoothService,
         configEncoder: ConfigEncoder,
-        configFileService: ConfigFileService
+        configFileService: ConfigFileService,
+        recordService: RecordService
     ): FsDeviceService = DefaultFsDeviceService(
         baseApplication.applicationContext,
         bluetoothService,
         configEncoder,
-        configFileService
+        configFileService,
+        recordService
     )
 
     @Singleton
@@ -108,6 +112,14 @@ class ServiceModule {
     fun provideAppVersionService(): AppVersionService = DefaultAppVersionService(
         BuildConfig.VERSION_NAME,
         BuildConfig.VERSION_CODE
+    )
+
+    @Singleton
+    @Provides
+    fun provideRecordService(
+        baseApplication: BaseApplication
+    ): RecordService = FileBasedRecordService(
+        baseApplication.applicationContext
     )
 
 }

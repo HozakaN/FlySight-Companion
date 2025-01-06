@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -76,13 +75,14 @@ import fr.hozakan.flysightcompanion.designsystem.theme.TextConfiguration
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.fsdevicemodule.R as LocalR
 import fr.hozakan.flysightcompanion.designsystem.R
+import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.model.ConfigFileState
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
-import fr.hozakan.flysightcompanion.model.result.ResultFile
+import fr.hozakan.flysightcompanion.model.records.Record
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -149,7 +149,10 @@ fun ListFlySightDevicesMenuActions() {
                     modifier = Modifier.requiredHeight(120.dp)
                 ) {
                     Box(
-                        modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(horizontal = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(text = "Version ${state.versionName}")
@@ -218,6 +221,9 @@ fun ListFlySightDevicesScreen(
         },
         onChangeDeviceConfigurationClicked = {
             viewModel.changeDeviceConfiguration(it)
+        },
+        onUploadRecordToSystem = {
+            viewModel.uploadRecordToSystem(it)
         }
     )
 }
@@ -235,7 +241,8 @@ internal fun ListFlySightDevicesScreenInternal(
     onUploadConfigToSystemClicked: (ListFlySightDeviceDisplayData) -> Unit,
     onUpdateSystemConfigClicked: (ListFlySightDeviceDisplayData) -> Unit,
     onPushConfigToDeviceClicked: (FlySightDevice) -> Unit,
-    onChangeDeviceConfigurationClicked: (ListFlySightDeviceDisplayData) -> Unit
+    onChangeDeviceConfigurationClicked: (ListFlySightDeviceDisplayData) -> Unit,
+    onUploadRecordToSystem: (ListFlySightDeviceDisplayData) -> Unit
 ) {
 
     Surface(
@@ -398,8 +405,32 @@ internal fun ListFlySightDevicesScreenInternal(
                             },
                             onChangeDeviceConfigurationClicked = {
                                 onChangeDeviceConfigurationClicked(device)
+                            },
+                            onUploadRecordToSystem = {
+                                onUploadRecordToSystem(device)
                             }
                         )
+                    }
+                }
+                if (state.uploadingRecord != null) {
+                    Dialog(
+                        onDismissRequest = {}
+                    ) {
+                        Card {
+                            Row(
+                                modifier = Modifier.padding(32.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                                FText(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    text = state.uploadingRecord,
+                                    configuration = FlySightTheme.typography.plainScreenTextLarge,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -418,12 +449,13 @@ fun FlySightDeviceItem(
     onUploadConfigToSystem: () -> Unit,
     onUpdateSystemConfClicked: () -> Unit,
     onPushConfigToDeviceClicked: () -> Unit,
-    onChangeDeviceConfigurationClicked: () -> Unit
+    onChangeDeviceConfigurationClicked: () -> Unit,
+    onUploadRecordToSystem: () -> Unit
 ) {
     Card {
         val connectionState by device.connectionState.collectAsState()
 
-        val resultFilesState by device.resultFiles.collectAsState()
+        val resultFilesState by device.records.collectAsState()
         val clickableModifier =
             if (connectionState == DeviceConnectionState.Connected && resultFilesState is LoadingState.Loaded) {
                 Modifier.clickable { onDeviceClicked() }
@@ -469,7 +501,8 @@ fun FlySightDeviceItem(
                             onUploadConfigToSystem = onUploadConfigToSystem,
                             onUpdateSystemConfClicked = onUpdateSystemConfClicked,
                             onPushConfigToDeviceClicked = onPushConfigToDeviceClicked,
-                            onChangeDeviceConfigurationClicked = onChangeDeviceConfigurationClicked
+                            onChangeDeviceConfigurationClicked = onChangeDeviceConfigurationClicked,
+                            onUploadRecordToSystem = onUploadRecordToSystem
                         )
                     }
                 }
@@ -546,51 +579,86 @@ fun FlySightDeviceItem(
 }
 
 @Composable
-fun DeviceResultFilesContainer(
+fun DeviceRecordsContainer(
     modifier: Modifier = Modifier,
-    device: ListFlySightDeviceDisplayData
+    device: ListFlySightDeviceDisplayData,
+    onUploadRecordToSystem: () -> Unit
 ) {
     val locales = LocalContext.current.resources.configuration.locales
     val locale = if (locales.isEmpty) Locale.ROOT else locales[0]
     val dateTimeFormatter = remember(locale) {
         DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(locale)
     }
-    val resultFiles by device.resultFiles.collectAsState()
+
+    val resultFiles by device.records.collectAsState()
+    val warning = !device.isLastRecordUploaded
+    var warningDialogOpened by remember { mutableStateOf(false) }
+    val mod = if (warning) {
+        Modifier
+            .clickable {
+                warningDialogOpened = true
+            }
+            .padding(8.dp)
+    } else {
+        Modifier.padding(8.dp)
+    }
     Column(
-        modifier = modifier.padding(8.dp)
+        modifier = modifier
+            .then(mod)
     ) {
-        Text(
-            text = stringResource(R.string.list_device_result_files_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
-        )
+        if (warning) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.list_device_records_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    modifier = Modifier.requiredSize(24.dp),
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = stringResource(R.string.list_device_item_record_warning_content_description),
+                    tint = CustomColors.Orange
+                )
+            }
+        } else {
+            Text(
+                text = stringResource(R.string.list_device_records_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+        }
         when (val files = resultFiles) {
-            is LoadingState.Error<List<ResultFile>> -> {
+            is LoadingState.Error<List<Record>> -> {
                 Row(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = stringResource(R.string.list_device_error_loading_result_files),
+                        text = stringResource(R.string.list_device_error_loading_records),
                     )
                 }
             }
 
-            is LoadingState.Loaded<List<ResultFile>> -> {
+            is LoadingState.Loaded<List<Record>> -> {
                 val mostRecentFile = files.value.maxByOrNull { it.dateTime }
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.list_device_result_files_count),
+                        text = stringResource(R.string.list_device_record_count),
                         style = MaterialTheme.typography.titleSmall
                     )
+                    Spacer(modifier = Modifier.requiredHeight(8.dp))
                     Text(text = "${files.value.size}")
                     Spacer(modifier = Modifier.requiredHeight(16.dp))
                     Text(
-                        text = stringResource(R.string.list_device_result_files_most_recent),
+                        text = stringResource(R.string.list_device_record_most_recent),
                         style = MaterialTheme.typography.titleSmall
                     )
                     Text(text = "${mostRecentFile?.dateTime?.format(dateTimeFormatter)}")
@@ -598,13 +666,58 @@ fun DeviceResultFilesContainer(
             }
 
             LoadingState.Idle,
-            is LoadingState.Loading<List<ResultFile>> -> {
+            is LoadingState.Loading<List<Record>> -> {
                 Row(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = stringResource(R.string.list_device_loading_result_files))
+                    Text(text = stringResource(R.string.list_device_loading_records))
                 }
+            }
+        }
+    }
+    if (warningDialogOpened) {
+        DeviceLastRecordNotSavedDialog(
+            device = device,
+            onValidate = {
+                onUploadRecordToSystem()
+                warningDialogOpened = false
+            },
+            onDismissRequest = { warningDialogOpened = false }
+        )
+    }
+}
+
+@Composable
+private fun DeviceLastRecordNotSavedDialog(
+    device: ListFlySightDeviceDisplayData,
+    onValidate: () -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest
+    ) {
+        Card {
+            Column(
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = device.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.requiredHeight(16.dp))
+                Text(
+                    text = stringResource(R.string.list_device_dialog_upload_most_recent_record),
+                    color = CustomColors.Orange
+                )
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                SimpleDialogActionBar(
+                    onCancel = onDismissRequest,
+                    onValidate = onValidate,
+                    validateButtonText = stringResource(R.string.misc_upload).uppercase()
+                )
             }
         }
     }
@@ -612,7 +725,7 @@ fun DeviceResultFilesContainer(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun FlySightDeviceItemConfigBody(
+private fun FlySightDeviceItemConfigBody(
     device: ListFlySightDeviceDisplayData,
     updatingConfiguration: Boolean,
     configFileState: ConfigFileState,
@@ -620,7 +733,8 @@ fun FlySightDeviceItemConfigBody(
     onUploadConfigToSystem: () -> Unit,
     onUpdateSystemConfClicked: () -> Unit,
     onPushConfigToDeviceClicked: () -> Unit,
-    onChangeDeviceConfigurationClicked: () -> Unit
+    onChangeDeviceConfigurationClicked: () -> Unit,
+    onUploadRecordToSystem: () -> Unit
 ) {
     val rows = 2
     FlowRow(
@@ -651,8 +765,9 @@ fun FlySightDeviceItemConfigBody(
         Surface(
             modifier = itemModifier
         ) {
-            DeviceResultFilesContainer(
-                device = device
+            DeviceRecordsContainer(
+                device = device,
+                onUploadRecordToSystem = onUploadRecordToSystem
             )
         }
     }

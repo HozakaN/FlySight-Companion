@@ -20,4 +20,10 @@ sealed class AppScreen(val route: String) {
             fun buildRoute(configName: String) = "config_detail/$configName"
         }
     }
+    data object RecordTab : AppScreen("record_tab") {
+        data object RecordList : AppScreen("record_list")
+        data object RecordDetail: AppScreen("record_detail/{recordName}") {
+            fun buildRoute(recordName: String) = "record_detail/$recordName"
+        }
+    }
 }

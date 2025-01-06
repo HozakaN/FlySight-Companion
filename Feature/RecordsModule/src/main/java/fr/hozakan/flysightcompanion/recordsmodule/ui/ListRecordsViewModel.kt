@@ -1,0 +1,28 @@
+package fr.hozakan.flysightcompanion.recordsmodule.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import javax.inject.Inject
+
+class ListRecordsViewModel @Inject constructor(
+    recordService: RecordService
+) : ViewModel() {
+
+    private val _state = MutableStateFlow(ListRecordsState())
+
+    val state = _state.asStateFlow()
+
+    init {
+        recordService.records
+            .onEach {
+                _state.value = _state.value.copy(records = it)
+            }
+            .launchIn(viewModelScope)
+    }
+
+}

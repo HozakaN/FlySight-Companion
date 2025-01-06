@@ -12,11 +12,14 @@ import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.framework.service.permission.AndroidPermissionsService
 import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
+import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.ConfigFileState
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
+import fr.hozakan.flysightcompanion.model.records.Record
+import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,9 +30,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @SuppressLint("StaticFieldLeak")
@@ -37,6 +43,7 @@ import javax.inject.Inject
 class ListFlySightDevicesViewModel @Inject constructor(
     userPrefService: UserPrefService,
     appVersionService: AppVersionService,
+    recordService: RecordService,
     private val context: Context,
     private val bluetoothService: BluetoothService,
     private val fsDeviceService: FsDeviceService,
@@ -44,10 +51,12 @@ class ListFlySightDevicesViewModel @Inject constructor(
     private val permissionsService: AndroidPermissionsService
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(ListFlySightDevicesState(
-        versionName = appVersionService.appVersion,
-        versionCode = appVersionService.appCode
-    ))
+    private val _state = MutableStateFlow(
+        ListFlySightDevicesState(
+            versionName = appVersionService.appVersion,
+            versionCode = appVersionService.appCode
+        )
+    )
 
     val state = _state.asStateFlow()
 
@@ -77,19 +86,39 @@ class ListFlySightDevicesViewModel @Inject constructor(
         fsDeviceService.devices
             .flatMapConcat { devices ->
                 combine(devices.map { it.configFile }) { configs ->
-                    devices.zip(configs).toMap()
+                    devices.zip(configs)
                 }
             }
-            .combine(configFileService.configFiles) { devices, configFiles ->
-                devices to configFiles
+            .flatMapConcat { devices ->
+                combine(devices.map {
+                    it.first.records
+                }) { records ->
+                    devices.zip(records)
+                }
+            }
+            .map { devices ->
+                devices.map { (deviceWithConf, records) ->
+                    deviceWithConf triple records
+                }
+            }
+            .combine(
+                configFileService.configFiles.combine(recordService.records) { deviceConfigs, records ->
+                    deviceConfigs to records
+                }
+            ) { devices, configFilesAndRecords ->
+                devices to configFilesAndRecords
             }
             .map { blob ->
-                blob.first.map { computeDisplayData(it.key, it.value, blob.second) }
+                blob.first.map {
+                    computeDisplayData(
+                        it.first,
+                        it.second,
+                        it.third,
+                        blob.second.first,
+                        blob.second.second
+                    )
+                }
             }
-//            .map { (devices, configFiles) ->
-//                //device dont get refreshed because it depends on underlying flows. We thus need to subscribe to underlying flows
-//                devices.map { computeDisplayData(it, configFiles) }
-//            }
             .onEach { devices ->
                 _state.update { state ->
                     state.copy(devices = devices)
@@ -106,6 +135,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
                 }
             }
             .launchIn(viewModelScope)
+
     }
 
     fun onCancelScanClicked() {
@@ -117,14 +147,22 @@ class ListFlySightDevicesViewModel @Inject constructor(
     private fun computeDisplayData(
         device: FlySightDevice,
         deviceConfigFileState: ConfigFileState,
-        configFiles: List<ConfigFile>
+        deviceRecords: LoadingState<List<Record>>,
+        configFiles: List<ConfigFile>,
+        records: List<Record>
     ): ListFlySightDeviceDisplayData = ListFlySightDeviceDisplayData(
         device = device,
         deviceConfig = deviceConfigFileState,
         isConfigFromSystem = deviceConfigFileState.conf?.name in configFiles.map { it.name },
         hasConfigContentChanged = configFiles
             .firstOrNull { it.name == deviceConfigFileState.conf?.name }
-                != deviceConfigFileState.conf
+                != deviceConfigFileState.conf,
+        isLastRecordUploaded = (deviceRecords as? LoadingState.Loaded<List<Record>>)
+            ?.value
+            ?.maxByOrNull { it.dateTime }
+            ?.let { lastRecord ->
+                records.any { it.filePath == lastRecord.filePath }
+            } ?: true
     )
 
     fun addDevice() {
@@ -252,5 +290,40 @@ class ListFlySightDevicesViewModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    fun uploadRecordToSystem(device: ListFlySightDeviceDisplayData) {
+        device.records
+            .filterIsInstance<LoadingState.Loaded<List<Record>>>()
+            .map { it.value }
+            .take(1)
+            .mapNotNull { records ->
+                records.maxByOrNull { it.dateTime }
+            }
+            .flatMapConcat { record ->
+                fsDeviceService.extractRecordFromDevice(device, record)
+            }
+            .onEach { loadingState ->
+                _state.update {
+                    it.copy(
+                        uploadingRecord = when (loadingState) {
+                            is LoadingState.Loading -> loadingState.currentLoad
+                            is LoadingState.Error -> null
+                            is LoadingState.Loaded -> null
+                            LoadingState.Idle -> null
+                        },
+                        event = when (loadingState) {
+                            is LoadingState.Error -> loadingState.error.message?.asEvent()
+                                ?: context.getString(R.string.misc_unknown_error).asEvent()
+
+                            is LoadingState.Loaded -> context.getString(R.string.list_devices_event_record_uploaded)
+                                .asEvent()
+
+                            else -> null
+                        }
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
     }
 }

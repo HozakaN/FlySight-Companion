@@ -87,6 +87,7 @@ dependencies {
     implementation(project(":Middleware:BluetoothModule"))
     implementation(project(":Feature:FSDeviceModule"))
     implementation(project(":Feature:ConfigFilesModule"))
+    implementation(project(":Feature:RecordsModule"))
     implementation(project(":Tooling:ComposableCommons"))
     implementation(project(":Tooling:DesignSystem"))
     implementation(project(":Feature:UserPreferencesModule"))
