@@ -41,11 +41,14 @@ class FlySightJobScheduler {
         if (label != null)  {
             Timber.d("Job $tag started")
         }
-        val result = block(counter)
+        val result = try {
+            block(counter)
+        } finally {
+            onJobFinished()
+        }
         if (label != null)  {
             Timber.d("Job $tag finished")
         }
-        onJobFinished()
         return result
     }
 
