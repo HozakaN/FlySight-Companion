@@ -79,7 +79,9 @@ class DefaultBluetoothService(
     @SuppressLint("MissingPermission")
     override fun getPairedDevices(): Flow<LoadingState<List<BluetoothDevice>>> {
         return channelFlow {
-            send(LoadingState.Loading())
+            if (!isClosedForSend) {
+                send(LoadingState.Loading())
+            }
             val adapter = bluetoothAdapter
             val devices = mutableListOf<BluetoothDevice>()
 
@@ -107,17 +109,25 @@ class DefaultBluetoothService(
                 adapter.bluetoothLeScanner.startScan(scanCallback)
                 delay(10_000)
                 if (devices.isEmpty()) {
-                    send(LoadingState.Loading(currentLoad = devices, increment = 1))
+                    if (!isClosedForSend) {
+                        send(LoadingState.Loading(currentLoad = devices, increment = 1))
+                    }
                     delay(10_000)
                 }
                 if (devices.isEmpty()) {
-                    send(LoadingState.Loading(currentLoad = devices, increment = 2))
+                    if (!isClosedForSend) {
+                        send(LoadingState.Loading(currentLoad = devices, increment = 2))
+                    }
                     delay(20_000)
                 }
                 adapter.bluetoothLeScanner.stopScan(scanCallback)
-                send(LoadingState.Loaded(devices))
+                if (!isClosedForSend) {
+                    send(LoadingState.Loaded(devices))
+                }
             } else {
-                send(LoadingState.Error(IllegalStateException("Bluetooth adapter is null")))
+                if (!isClosedForSend) {
+                    send(LoadingState.Error(IllegalStateException("Bluetooth adapter is null")))
+                }
             }
         }
     }
