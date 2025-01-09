@@ -166,7 +166,7 @@ class DefaultFsDeviceService(
             recordService.createRecord(record, trackFileContent)
             emit(LoadingState.Loaded(recordPath))
         } else {
-            emit(LoadingState.Error(error("Could not load track file")))
+            emit(LoadingState.Error(IllegalStateException("Could not load track file")))
         }
     }
 
