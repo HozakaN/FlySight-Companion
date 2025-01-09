@@ -40,7 +40,7 @@ import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
-import fr.hozakan.flysightcompanion.model.records.Record
+import fr.hozakan.flysightcompanion.model.records.RecordFile
 
 @Composable
 fun ListRecordsMenuActions(
@@ -58,7 +58,7 @@ fun ListRecordsMenuActions(
 
 @Composable
 fun ListRecordsScreen(
-    onRecordSelected: (Record) -> Unit
+    onRecordSelected: (RecordFile) -> Unit
 ) {
     val factory = LocalViewModelFactory.current
 
@@ -71,7 +71,7 @@ fun ListRecordsScreen(
             .fillMaxSize(),
         color = MaterialTheme.colorScheme.surface
     ) {
-        if (state.records.isEmpty()) {
+        if (state.recordFiles.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -87,9 +87,9 @@ fun ListRecordsScreen(
                 contentPadding = PaddingValues(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(state.records) { record ->
+                items(state.recordFiles) { record ->
                     RecordListItem(
-                        record = record,
+                        recordFile = record,
                         onSelected = { onRecordSelected(record) },
                         onDeleteRecordClicked = {
                             viewModel.deleteRecord(record)
@@ -103,7 +103,7 @@ fun ListRecordsScreen(
 
 @Composable
 private fun RecordListItem(
-    record: Record,
+    recordFile: RecordFile,
     onSelected: () -> Unit,
     onDeleteRecordClicked: () -> Unit
 ) {
@@ -120,7 +120,7 @@ private fun RecordListItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = record.phoneFilePath
+                    text = recordFile.phoneFilePath
                 )
                 Spacer(modifier = Modifier.weight(1f))
 

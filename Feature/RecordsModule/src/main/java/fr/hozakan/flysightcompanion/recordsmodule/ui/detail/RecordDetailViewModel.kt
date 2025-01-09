@@ -2,7 +2,7 @@ package fr.hozakan.flysightcompanion.recordsmodule.ui.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import fr.hozakan.flysightcompanion.model.records.dummyRecord
+import fr.hozakan.flysightcompanion.model.records.dummyRecordFile
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +36,7 @@ class RecordDetailViewModel @Inject constructor(
             .onEach { record ->
                 _state.update {
                     it.copy(
-                        record = record?.first ?: dummyRecord,
+                        recordFile = record?.first ?: dummyRecordFile,
                         content = record?.second ?: ""
                     )
                 }

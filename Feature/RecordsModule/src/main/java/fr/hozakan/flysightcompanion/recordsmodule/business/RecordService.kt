@@ -1,15 +1,14 @@
 package fr.hozakan.flysightcompanion.recordsmodule.business
 
-import fr.hozakan.flysightcompanion.model.records.Record
-import kotlinx.coroutines.flow.Flow
+import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.flow.StateFlow
 import java.time.LocalDateTime
 
 interface RecordService {
-    val records: StateFlow<List<Record>>
+    val records: StateFlow<List<RecordFile>>
     suspend fun loadRecords()
-    suspend fun createRecord(record: Record, trackFileContent: String)
-    suspend fun deleteRecord(record: Record)
-    suspend fun loadRecordContent(record: Record): String?
+    suspend fun createRecord(recordFile: RecordFile, trackFileContent: String)
+    suspend fun deleteRecord(recordFile: RecordFile)
+    suspend fun loadRecordContent(recordFile: RecordFile): String?
     fun formatRecordDateTimeFromPathParts(datePart: String, timePart: String): LocalDateTime
 }

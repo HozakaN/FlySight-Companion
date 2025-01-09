@@ -17,7 +17,7 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
-import fr.hozakan.flysightcompanion.model.records.Record
+import fr.hozakan.flysightcompanion.model.records.RecordFile
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -138,13 +138,12 @@ class ListFlySightDevicesViewModel @Inject constructor(
     private fun computeDisplayData(
         device: FlySightDevice,
         deviceConfigFileState: LoadingState<ConfigFile>,
-        deviceRecords: LoadingState<List<Record>>,
+        deviceRecords: LoadingState<List<RecordFile>>,
         configFiles: List<ConfigFile>,
-        records: List<Record>
+        recordFiles: List<RecordFile>
     ): ListFlySightDeviceDisplayData {
         val phoneConfigNames = configFiles.map { it.name }
         val deviceConfigName = deviceConfigFileState.content?.name
-        Timber.d("Hoz2 deviceConfigName : $deviceConfigName, phoneConfigNames : $phoneConfigNames")
         return ListFlySightDeviceDisplayData(
             device = device,
             deviceConfig = deviceConfigFileState,
@@ -152,11 +151,11 @@ class ListFlySightDevicesViewModel @Inject constructor(
             hasConfigContentChanged = configFiles
                 .firstOrNull { it.name == deviceConfigName }
                     != deviceConfigFileState.content,
-            isLastRecordUploaded = (deviceRecords as? LoadingState.Loaded<List<Record>>)
+            isLastRecordUploaded = (deviceRecords as? LoadingState.Loaded<List<RecordFile>>)
                 ?.value
                 ?.maxByOrNull { it.dateTime }
                 ?.let { lastRecord ->
-                    records.any { it.flySightFilePath == lastRecord.flySightFilePath }
+                    recordFiles.any { it.flySightFilePath == lastRecord.flySightFilePath }
                 } ?: true
         )
     }
@@ -290,7 +289,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
 
     fun uploadRecordToSystem(device: ListFlySightDeviceDisplayData) {
         device.records
-            .filterIsInstance<LoadingState.Loaded<List<Record>>>()
+            .filterIsInstance<LoadingState.Loaded<List<RecordFile>>>()
             .map { it.value }
             .take(1)
             .mapNotNull { records ->

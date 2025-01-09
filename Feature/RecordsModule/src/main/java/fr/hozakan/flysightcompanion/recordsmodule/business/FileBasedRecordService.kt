@@ -1,9 +1,7 @@
 package fr.hozakan.flysightcompanion.recordsmodule.business
 
 import android.content.Context
-import fr.hozakan.flysightcompanion.model.extensions.formatDate
-import fr.hozakan.flysightcompanion.model.extensions.formatTime
-import fr.hozakan.flysightcompanion.model.records.Record
+import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,8 +30,8 @@ class FileBasedRecordService(
 
     private val parser: RecordParser = DefaultRecordParser()
 
-    private val _records = MutableStateFlow(emptyList<Record>())
-    override val records: StateFlow<List<Record>> = _records.asStateFlow()
+    private val _records = MutableStateFlow(emptyList<RecordFile>())
+    override val records: StateFlow<List<RecordFile>> = _records.asStateFlow()
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -45,12 +43,12 @@ class FileBasedRecordService(
 
     override suspend fun loadRecords() {
         withContext(Dispatchers.IO) {
-            val records = getOrCreateRecordsFolder()
+            val recordFiles = getOrCreateRecordsFolder()
                 .listFiles { file ->
                     file.isFile && file.name.matches(record_name_regex)
                 }
                 ?.mapNotNull { file ->
-                    Record(
+                    RecordFile(
                         dateTime = LocalDateTime.parse(
                             file.name.substring(0, 17),
                             dateTimeFormatter
@@ -58,7 +56,7 @@ class FileBasedRecordService(
                     )
                 }
             _records.update {
-                records ?: emptyList()
+                recordFiles ?: emptyList()
             }
         }
     }
@@ -67,29 +65,29 @@ class FileBasedRecordService(
         return LocalDateTime.parse("${datePart}_$timePart", dateTimeFormatter)
     }
 
-    override suspend fun createRecord(record: Record, trackFileContent: String) {
+    override suspend fun createRecord(recordFile: RecordFile, trackFileContent: String) {
         withContext(Dispatchers.IO) {
             val trackFile =
-                File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${record.phoneFilePath}")
+                File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${recordFile.phoneFilePath}")
             trackFile.writeText(trackFileContent)
             _records.update {
-                it + record
+                it + recordFile
             }
         }
     }
 
-    override suspend fun deleteRecord(record: Record) {
+    override suspend fun deleteRecord(recordFile: RecordFile) {
         _records.update {
-            it - record
+            it - recordFile
         }
         withContext(Dispatchers.IO) {
-            File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${record.phoneFilePath}").delete()
+            File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${recordFile.phoneFilePath}").delete()
         }
     }
 
-    override suspend fun loadRecordContent(record: Record): String? {
+    override suspend fun loadRecordContent(recordFile: RecordFile): String? {
         val trackFile =
-            File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${record.phoneFilePath}")
+            File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${recordFile.phoneFilePath}")
         return if (trackFile.exists()) trackFile.readText() else null
     }
 

@@ -82,7 +82,7 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
-import fr.hozakan.flysightcompanion.model.records.Record
+import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -636,7 +636,7 @@ fun DeviceRecordsContainer(
             )
         }
         when (val files = resultFiles) {
-            is LoadingState.Error<List<Record>> -> {
+            is LoadingState.Error<List<RecordFile>> -> {
                 Row(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
@@ -647,7 +647,7 @@ fun DeviceRecordsContainer(
                 }
             }
 
-            is LoadingState.Loaded<List<Record>> -> {
+            is LoadingState.Loaded<List<RecordFile>> -> {
                 val mostRecentFile = files.value.maxByOrNull { it.dateTime }
                 Column(
                     modifier = Modifier.weight(1f),
@@ -669,7 +669,7 @@ fun DeviceRecordsContainer(
             }
 
             LoadingState.Idle,
-            is LoadingState.Loading<List<Record>> -> {
+            is LoadingState.Loading<List<RecordFile>> -> {
                 Row(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically

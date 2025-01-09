@@ -35,7 +35,7 @@ import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.ble.FlySightCharacteristic
 import fr.hozakan.flysightcompanion.model.ble.cccdUuid
-import fr.hozakan.flysightcompanion.model.records.Record
+import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -72,7 +72,7 @@ interface FlySightDevice {
     val connectionState: StateFlow<DeviceConnectionState>
     val configFile: StateFlow<LoadingState<ConfigFile>>
     val rawConfigFile: StateFlow<FileState>
-    val records: StateFlow<LoadingState<List<Record>>>
+    val records: StateFlow<LoadingState<List<RecordFile>>>
     val logs: StateFlow<List<String>>
     val fileReceived: SharedFlow<FileState>
     val ping: SharedFlow<Boolean>
@@ -136,8 +136,8 @@ class FlySightDeviceImpl(
     private val _services = MutableStateFlow<List<BluetoothGattService>>(emptyList())
     val services = _services.asStateFlow()
 
-    private val _records = MutableStateFlow<LoadingState<List<Record>>>(LoadingState.Idle)
-    override val records: StateFlow<LoadingState<List<Record>>> = _records.asStateFlow()
+    private val _records = MutableStateFlow<LoadingState<List<RecordFile>>>(LoadingState.Idle)
+    override val records: StateFlow<LoadingState<List<RecordFile>>> = _records.asStateFlow()
 
     private val parser: ConfigParser = DefaultConfigParser()
 
@@ -490,7 +490,7 @@ class FlySightDeviceImpl(
 
     @FlowPreview
     @ExperimentalCoroutinesApi
-    private suspend fun retrieveRecordsInfo(): List<Record> {
+    private suspend fun retrieveRecordsInfo(): List<RecordFile> {
         val rootDirContent = loadDirectory(listOf("/"))
         val dateFolders = rootDirContent.filter { it.isDirectory }.filter {
             it.fileName.matches(
@@ -518,16 +518,16 @@ class FlySightDeviceImpl(
                 }.filter { it.second != null }
                     .map { it.first to it.second!! }
             }
-        val records = mutableListOf<Record>()
+        val recordFiles = mutableListOf<RecordFile>()
         trackFiles.forEach { (dateFolderName, timeFolders) ->
             timeFolders.forEach { (timeFolderName, _) ->
                 val dateStr = "$dateFolderName-$timeFolderName"
                 val date =
                     LocalDateTime.parse(dateStr, DateTimeFormatter.ofPattern("yy-MM-dd-HH-mm-ss"))
-                records += Record(date)
+                recordFiles += RecordFile(date)
             }
         }
-        return records
+        return recordFiles
     }
 
     private suspend fun readCurrentConfigFile() {

@@ -1,20 +1,20 @@
 package fr.hozakan.flysightcompanion.model.records
 
-import fr.hozakan.flysightcompanion.model.extensions.formatDate
-import fr.hozakan.flysightcompanion.model.extensions.formatTime
 import java.time.LocalDateTime
 
-data class Record(
-    val dateTime: LocalDateTime
-) {
-    val flySightFilePath: String
-        get() = if (this == dummyRecord) "Dummy" else "/${dateTime.formatDate()}/${dateTime.formatTime()}/TRACK.CSV"
+typealias DataPoints = List<DataPoint>
 
-    val phoneFilePath: String
-        get() = if (this == dummyRecord) "Dummy" else "${dateTime.formatDate()}_${dateTime.formatTime()}_TRACK.CSV"
-
-}
-
-val dummyRecord = Record(
-    dateTime = LocalDateTime.now()
+data class DataPoint(
+    val dateTime: LocalDateTime,
+    val hasGeodetic: Boolean,
+    val latitude: Double,
+    val longitude: Double,
+    val hMSL: Double,
+    val velN: Double,
+    val velE: Double,
+    val velD: Double,
+    val hAcc: Double,
+    val vAcc: Double,
+    val sAcc: Double,
+    val numSV: Int
 )

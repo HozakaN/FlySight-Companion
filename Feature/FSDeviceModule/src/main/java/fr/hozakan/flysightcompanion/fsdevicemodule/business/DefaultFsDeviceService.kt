@@ -9,7 +9,7 @@ import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.extensions.formatDate
 import fr.hozakan.flysightcompanion.model.extensions.formatTime
-import fr.hozakan.flysightcompanion.model.records.Record
+import fr.hozakan.flysightcompanion.model.records.RecordFile
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -154,16 +154,16 @@ class DefaultFsDeviceService(
 
     override fun extractRecordFromDevice(
         device: FlySightDevice,
-        record: Record
+        recordFile: RecordFile
     ): Flow<LoadingState<String>> = flow {
-        val recordPath = "${record.dateTime.formatDate()}/${record.dateTime.formatTime()}"
+        val recordPath = "${recordFile.dateTime.formatDate()}/${recordFile.dateTime.formatTime()}"
         emit(LoadingState.Loading("Downloading file /$recordPath/TRACK.CSV"))
         val trackFile =
             device.readFileSynchronously("$recordPath/TRACK.CSV")
         val trackFileContent = (trackFile as? FileState.Success)?.content
         if (trackFileContent != null)  {
             emit(LoadingState.Loading("Saving file on the phone"))
-            recordService.createRecord(record, trackFileContent)
+            recordService.createRecord(recordFile, trackFileContent)
             emit(LoadingState.Loaded(recordPath))
         } else {
             emit(LoadingState.Error(IllegalStateException("Could not load track file")))

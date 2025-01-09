@@ -64,6 +64,7 @@ class DefaultConfigParserTests {
             ?.getResource("CONFIG.TXT")?.readText()
         Assert.assertTrue(!fileContent.isNullOrBlank())
         if (fileContent == null) {
+            Assert.fail("Could not read CONFIG.TXT file from test resources")
             return
         }
         val fileLines = fileContent.lines()

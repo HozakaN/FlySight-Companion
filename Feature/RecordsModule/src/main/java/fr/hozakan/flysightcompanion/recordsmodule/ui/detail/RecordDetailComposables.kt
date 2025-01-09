@@ -63,7 +63,7 @@ fun RecordDetailScreen(
         ) {
             Column {
                 Text(
-                    text = "record ${state.record.phoneFilePath}"
+                    text = "record ${state.recordFile.phoneFilePath}"
                 )
                 Spacer(modifier = Modifier.requiredHeight(16.dp))
                 Text(

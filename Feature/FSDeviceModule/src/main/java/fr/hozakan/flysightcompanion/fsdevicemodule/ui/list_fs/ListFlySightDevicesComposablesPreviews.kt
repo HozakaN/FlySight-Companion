@@ -12,7 +12,7 @@ import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.defaultConfigFile
-import fr.hozakan.flysightcompanion.model.records.Record
+import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -140,7 +140,7 @@ fun ListFlySightDevicesScreenInternalWithDevicePreview() {
                     device =
                         FakeDeviceImpl(
                             initialConnectionState = DeviceConnectionState.Disconnected,
-                            initialRecordState = LoadingState.Loaded(
+                            initialRecordFileState = LoadingState.Loaded(
                                 emptyList()
                             ),
                             initialConfigFileState = LoadingState.Idle,
@@ -277,9 +277,9 @@ fun FlySightDeviceItemConnectedAndConfigFileDiffersPreview() {
         device = ListFlySightDeviceDisplayData(
             device = FakeDeviceImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
-                initialRecordState = LoadingState.Loaded(
+                initialRecordFileState = LoadingState.Loaded(
                     listOf(
-                        Record(
+                        RecordFile(
                             LocalDateTime.now()
                         )
                     )
@@ -310,9 +310,9 @@ fun FlySightDeviceItemConnectedAndConfigFileLoadingPreview() {
         device = ListFlySightDeviceDisplayData(
             device = FakeDeviceImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
-                initialRecordState = LoadingState.Loaded(
+                initialRecordFileState = LoadingState.Loaded(
                     listOf(
-                        Record(
+                        RecordFile(
                             LocalDateTime.now()
                         )
                     )
@@ -346,9 +346,9 @@ fun FlySightDeviceItemConnectedAndUpdatingConfigurationPreview() {
             device = ListFlySightDeviceDisplayData(
                 device = FakeDeviceImpl(
                     initialConnectionState = DeviceConnectionState.Connected,
-                    initialRecordState = LoadingState.Loaded(
+                    initialRecordFileState = LoadingState.Loaded(
                         listOf(
-                            Record(
+                            RecordFile(
                                 LocalDateTime.now()
                             )
                         )
@@ -405,9 +405,9 @@ fun DeviceConfigurationMisMatchDialogWithConfigContentChangedPreview() {
         device = ListFlySightDeviceDisplayData(
             device = FakeDeviceImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
-                initialRecordState = LoadingState.Loaded(
+                initialRecordFileState = LoadingState.Loaded(
                     listOf(
-                        Record(
+                        RecordFile(
                             LocalDateTime.now()
                         )
                     )
@@ -448,7 +448,7 @@ fun DeviceConfigurationMisMatchDialogWithConfigNotFromSystemPreview() {
 
 private class FakeDeviceImpl(
     initialConnectionState: DeviceConnectionState = DeviceConnectionState.Disconnected,
-    initialRecordState: LoadingState<List<Record>> = LoadingState.Idle,
+    initialRecordFileState: LoadingState<List<RecordFile>> = LoadingState.Idle,
     initialConfigFileState: LoadingState<ConfigFile> = LoadingState.Idle,
     private val configFileName: String = "",
     override val name: String = "Fake device"
@@ -462,8 +462,8 @@ private class FakeDeviceImpl(
     override val configFile: StateFlow<LoadingState<ConfigFile>> = MutableStateFlow(initialConfigFileState)
     override val rawConfigFile: StateFlow<FileState>
         get() = MutableStateFlow(FileState.Nothing)
-    override val records: StateFlow<LoadingState<List<Record>>> =
-        MutableStateFlow(initialRecordState).asStateFlow()
+    override val records: StateFlow<LoadingState<List<RecordFile>>> =
+        MutableStateFlow(initialRecordFileState).asStateFlow()
     override val logs: StateFlow<List<String>>
         get() = MutableStateFlow(emptyList())
     override val fileReceived: SharedFlow<FileState>

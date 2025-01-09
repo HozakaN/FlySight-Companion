@@ -1,9 +1,9 @@
 package fr.hozakan.flysightcompanion.recordsmodule.ui.list
 
 import androidx.compose.runtime.Immutable
-import fr.hozakan.flysightcompanion.model.records.Record
+import fr.hozakan.flysightcompanion.model.records.RecordFile
 
 @Immutable
 data class ListRecordsState(
-    val records: List<Record> = emptyList()
+    val recordFiles: List<RecordFile> = emptyList()
 )

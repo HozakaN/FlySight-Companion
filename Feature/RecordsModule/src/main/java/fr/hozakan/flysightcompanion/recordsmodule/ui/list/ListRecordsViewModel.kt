@@ -2,7 +2,7 @@ package fr.hozakan.flysightcompanion.recordsmodule.ui.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import fr.hozakan.flysightcompanion.model.records.Record
+import fr.hozakan.flysightcompanion.model.records.RecordFile
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,14 +22,14 @@ class ListRecordsViewModel @Inject constructor(
     init {
         recordService.records
             .onEach {
-                _state.value = _state.value.copy(records = it)
+                _state.value = _state.value.copy(recordFiles = it)
             }
             .launchIn(viewModelScope)
     }
 
-    fun deleteRecord(record: Record) {
+    fun deleteRecord(recordFile: RecordFile) {
         viewModelScope.launch {
-            recordService.deleteRecord(record)
+            recordService.deleteRecord(recordFile)
         }
     }
 
