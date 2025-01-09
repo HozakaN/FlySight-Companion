@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class DefaultFsDeviceService(
     private val context: Context,
@@ -28,10 +29,11 @@ class DefaultFsDeviceService(
 ) : FsDeviceService {
 
     private val _devices = MutableStateFlow<List<FlySightDevice>>(emptyList())
-    override val devices = _devices.asStateFlow()
+    override val devices = synchronized(this) { _devices.asStateFlow() }
 
     private val _isRefreshingDeviceList = MutableStateFlow<LoadingState<Unit>>(LoadingState.Idle)
-    override val isRefreshingDeviceList: StateFlow<LoadingState<Unit>> = _isRefreshingDeviceList.asStateFlow()
+    override val isRefreshingDeviceList: StateFlow<LoadingState<Unit>> =
+        _isRefreshingDeviceList.asStateFlow()
 
     private var initialDeviceLoading = true
 
@@ -50,31 +52,9 @@ class DefaultFsDeviceService(
                         is LoadingState.Loaded -> {
                             val btDevices = loadingState.value
                             val btDevicesAddresses = btDevices.map { it.address }
-                            val oldDevices = _devices.value.filter { !initialDeviceLoading || it.address in btDevicesAddresses }
-                            val oldDevicesAddresses = oldDevices.map { it.address }
-                            val newDevices = btDevices.filter { it.address !in oldDevicesAddresses }
-                            val devices = oldDevices + newDevices.map {
-                                FlySightDeviceImpl(
-                                    it,
-                                    context,
-                                    configEncoder
-                                )
+                            val oldDevices = synchronized(this) {
+                                _devices.value.filter { !initialDeviceLoading || it.address in btDevicesAddresses }
                             }
-                            _devices.update {
-                                devices
-                            }
-                            _isRefreshingDeviceList.value = LoadingState.Loaded(Unit)
-                        }
-                        is LoadingState.Error -> {
-                            _devices.update {
-                                emptyList()
-                            }
-                            _isRefreshingDeviceList.value = LoadingState.Error(loadingState.error)
-                        }
-                        is LoadingState.Loading -> {
-                            val btDevices = loadingState.currentLoad ?: emptyList()
-                            val btDevicesAddresses = btDevices.map { it.address }
-                            val oldDevices = _devices.value.filter { !initialDeviceLoading || it.address in btDevicesAddresses }
                             initialDeviceLoading = false
                             val oldDevicesAddresses = oldDevices.map { it.address }
                             val newDevices = btDevices.filter { it.address !in oldDevicesAddresses }
@@ -85,9 +65,48 @@ class DefaultFsDeviceService(
                                     configEncoder
                                 )
                             }
-                            _isRefreshingDeviceList.value = LoadingState.Loading(increment = loadingState.increment)
-                            _devices.update {
-                                devices
+                            synchronized(this) {
+                                _devices.update {
+                                    devices
+                                }
+                            }
+                            _isRefreshingDeviceList.value = LoadingState.Loaded(Unit)
+                        }
+
+                        is LoadingState.Error -> {
+                            synchronized(this) {
+                                _devices.update {
+                                    emptyList()
+                                }
+                            }
+                            _isRefreshingDeviceList.value = LoadingState.Error(loadingState.error)
+                        }
+
+                        is LoadingState.Loading -> {
+                            synchronized(this) {
+                                val btDevices = loadingState.currentLoad ?: emptyList()
+                                val btDevicesAddresses = btDevices.map { it.address }
+                                val oldDevices =
+                                    _devices.value.filter { !initialDeviceLoading || it.address in btDevicesAddresses }
+                                initialDeviceLoading = false
+                                val oldDevicesAddresses = oldDevices.map { it.address }
+                                Timber.d("oldDevices : $oldDevicesAddresses")
+                                val newDevices =
+                                    btDevices.filter { it.address !in oldDevicesAddresses }
+                                Timber.d("oldDevices : ${oldDevices.map { "${it.hashCode()} ${it.address}" }}, newDevices : ${newDevices.map { "${it.hashCode() }${it.address}" }}")
+                                val devices = oldDevices + newDevices.map {
+                                    FlySightDeviceImpl(
+                                        it,
+                                        context,
+                                        configEncoder
+                                    )
+                                }
+                                _isRefreshingDeviceList.value =
+                                    LoadingState.Loading(increment = loadingState.increment)
+                                _devices.update {
+                                    devices
+                                }
+                                Timber.d("Devices updated : ${devices.map { it.address }}")
                             }
                         }
 
@@ -103,7 +122,7 @@ class DefaultFsDeviceService(
     }
 
     override fun observeDevice(deviceId: String): Flow<FlySightDevice?> =
-        _devices.map { flySightDevices -> flySightDevices.firstOrNull { it.uuid == deviceId } }
+        synchronized(this) { _devices.map { flySightDevices -> flySightDevices.firstOrNull { it.uuid == deviceId } } }
 
     override suspend fun connectToDevice(device: FlySightDevice) {
         device.connectGatt()
@@ -117,13 +136,14 @@ class DefaultFsDeviceService(
         device.updateConfigFile(configFile)
     }
 
-    override suspend fun changeDeviceConfiguration(device: FlySightDevice): Flow<LoadingState<Unit>> = flow {
-        val pickedConfig = configFileService.userPickConfiguration()
-        if (pickedConfig != null) {
-            emit(LoadingState.Loading(Unit))
-            updateDeviceConfig(device, pickedConfig)
-            emit(LoadingState.Loaded(Unit))
+    override suspend fun changeDeviceConfiguration(device: FlySightDevice): Flow<LoadingState<Unit>> =
+        flow {
+            val pickedConfig = configFileService.userPickConfiguration()
+            if (pickedConfig != null) {
+                emit(LoadingState.Loading(Unit))
+                updateDeviceConfig(device, pickedConfig)
+                emit(LoadingState.Loaded(Unit))
+            }
         }
-    }
 
 }
