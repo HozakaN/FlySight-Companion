@@ -79,13 +79,14 @@ import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
-import fr.hozakan.flysightcompanion.model.ConfigFileState
+import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.records.Record
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
@@ -455,6 +456,8 @@ fun FlySightDeviceItem(
     Card {
         val connectionState by device.connectionState.collectAsState()
 
+        Timber.d("Composing FlySightDeviceItem with device state : $connectionState")
+
         val resultFilesState by device.records.collectAsState()
         val clickableModifier =
             if (connectionState == DeviceConnectionState.Connected && resultFilesState is LoadingState.Loaded) {
@@ -728,7 +731,7 @@ private fun DeviceLastRecordNotSavedDialog(
 private fun FlySightDeviceItemConfigBody(
     device: ListFlySightDeviceDisplayData,
     updatingConfiguration: Boolean,
-    configFileState: ConfigFileState,
+    configFileState: LoadingState<ConfigFile>,
     unitSystem: UnitSystem,
     onUploadConfigToSystem: () -> Unit,
     onUpdateSystemConfClicked: () -> Unit,
@@ -776,7 +779,7 @@ private fun FlySightDeviceItemConfigBody(
 @Composable
 private fun DeviceConfigurationContainer(
     modifier: Modifier = Modifier,
-    configFileState: ConfigFileState,
+    configFileState: LoadingState<ConfigFile>,
     updatingConfiguration: Boolean,
     device: ListFlySightDeviceDisplayData,
     onUploadConfigToSystem: () -> Unit,
@@ -789,7 +792,7 @@ private fun DeviceConfigurationContainer(
     val warning = !device.isConfigFromSystem || device.hasConfigContentChanged
     var warningDialogOpened by remember { mutableStateOf(false) }
     var menuOpened by remember { mutableStateOf(false) }
-    val mod = if (warning && configFileState is ConfigFileState.Success) {
+    val mod = if (warning && configFileState is LoadingState.Loaded) {
         Modifier
             .clickable {
                 warningDialogOpened = true
@@ -862,7 +865,7 @@ private fun DeviceConfigurationContainer(
             return
         }
         when (configFileState) {
-            is ConfigFileState.Error -> {
+            is LoadingState.Error -> {
                 Row(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
@@ -871,7 +874,7 @@ private fun DeviceConfigurationContainer(
                 }
             }
 
-            ConfigFileState.Loading -> {
+            is LoadingState.Loading -> {
                 Row(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
@@ -880,14 +883,14 @@ private fun DeviceConfigurationContainer(
                 }
             }
 
-            ConfigFileState.Nothing -> {}
-            is ConfigFileState.Success -> {
+            LoadingState.Idle -> {}
+            is LoadingState.Loaded -> {
                 Spacer(modifier = Modifier.requiredHeight(16.dp))
                 if (warning) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = configFileState.config.name.ifBlank { stringResource(R.string.list_device_item_configuration_no_name) })
+                        Text(text = configFileState.value.name.ifBlank { stringResource(R.string.list_device_item_configuration_no_name) })
                         Spacer(modifier = Modifier.weight(1f))
                         Icon(
                             modifier = Modifier.requiredSize(24.dp),
@@ -897,13 +900,13 @@ private fun DeviceConfigurationContainer(
                         )
                     }
                 } else {
-                    Text(text = configFileState.config.name.ifBlank { stringResource(R.string.list_device_item_configuration_no_name) })
+                    Text(text = configFileState.value.name.ifBlank { stringResource(R.string.list_device_item_configuration_no_name) })
                 }
                 Spacer(modifier = Modifier.requiredHeight(16.dp))
                 Text(
                     text = stringResource(
                         R.string.list_config_file_dz_elev_info,
-                        configFileState.config.dzElev,
+                        configFileState.value.dzElev,
                         stringResource(unitSystem.distanceTextResource)
                     ),
                 )
@@ -911,21 +914,21 @@ private fun DeviceConfigurationContainer(
                 Text(
                     text = stringResource(
                         R.string.list_config_file_speech_count,
-                        configFileState.config.speeches.size
+                        configFileState.value.speeches.size
                     ),
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 Text(
                     text = stringResource(
                         R.string.list_config_file_alarm_count,
-                        configFileState.config.alarms.size
+                        configFileState.value.alarms.size
                     ),
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 Text(
                     text = stringResource(
                         R.string.list_config_file_silence_window_count,
-                        configFileState.config.silenceWindows.size
+                        configFileState.value.silenceWindows.size
                     ),
                 )
             }
@@ -954,7 +957,7 @@ private fun DeviceConfigurationContainer(
 
 @Composable
 internal fun DeviceConfigurationMisMatchDialog(
-    configFileState: ConfigFileState,
+    configFileState: LoadingState<ConfigFile>,
     device: ListFlySightDeviceDisplayData,
     onDismissRequest: () -> Unit,
     onUploadConfigToSystem: () -> Unit,
@@ -990,7 +993,7 @@ internal fun DeviceConfigurationMisMatchDialog(
                     Text(
                         text = stringResource(
                             R.string.list_device_dialog_config_content_changed,
-                            configFileState.conf?.name ?: stringResource(R.string.misc_unknown)
+                            configFileState.content?.name ?: stringResource(R.string.misc_unknown)
                         ),
                         color = CustomColors.Orange
                     )

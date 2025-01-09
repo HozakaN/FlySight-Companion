@@ -49,8 +49,8 @@ import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
+import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.model.ConfigFile
-import fr.hozakan.flysightcompanion.model.ConfigFileState
 
 @Composable
 fun DeviceDetailMenuActions(
@@ -68,7 +68,7 @@ fun DeviceDetailMenuActions(
         viewModel.loadDevice(deviceId)
     }
 
-    var configFileState by remember { mutableStateOf<ConfigFileState?>(null) }
+    var configFileState by remember { mutableStateOf<LoadingState<ConfigFile>?>(null) }
     LaunchedEffect(key1 = state.device?.configFile) {
         val configFileStateFlow = state.device?.configFile
         if (configFileStateFlow == null) {
@@ -81,10 +81,10 @@ fun DeviceDetailMenuActions(
     }
 
     when (val immutableConfigFileState = configFileState) {
-        is ConfigFileState.Success -> {
+        is LoadingState.Loaded -> {
             TextButton(
                 onClick = {
-                    onShowDeviceConfigClicked(immutableConfigFileState.config)
+                    onShowDeviceConfigClicked(immutableConfigFileState.value)
                 }
             ) {
                 Text(text = stringResource(R.string.device_detail_show_config))
@@ -132,7 +132,7 @@ fun DeviceDetailScreen(
         }
     }
 
-    var configFileState by remember { mutableStateOf<ConfigFileState?>(null) }
+    var configFileState by remember { mutableStateOf<LoadingState<ConfigFile>?>(null) }
     LaunchedEffect(key1 = state.device?.configFile) {
         val configFileStateFlow = state.device?.configFile
         if (configFileStateFlow == null) {

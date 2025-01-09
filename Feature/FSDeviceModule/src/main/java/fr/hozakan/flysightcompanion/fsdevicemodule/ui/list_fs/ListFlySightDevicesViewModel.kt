@@ -16,7 +16,6 @@ import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.model.ConfigFile
-import fr.hozakan.flysightcompanion.model.ConfigFileState
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.records.Record
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
@@ -35,6 +34,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @SuppressLint("StaticFieldLeak")
@@ -84,25 +84,17 @@ class ListFlySightDevicesViewModel @Inject constructor(
 
         fsDeviceService.devices
             .flatMapConcat { devices ->
-                combine(devices.map { it.configFile }) { configs ->
-                    devices.zip(configs)
-                }
-            }
-            .flatMapConcat { devices ->
                 combine(devices.map {
-                    it.first.records
-                }) { records ->
-                    devices.zip(records)
-                }
-            }
-            .map { devices ->
-                devices.map { (deviceWithConf, records) ->
-                    deviceWithConf triple records
+                    combine(it.configFile, it.records) { conf, records ->
+                        it to conf triple records
+                    }
+                }) { devicesWithConfAndRecords ->
+                    devicesWithConfAndRecords
                 }
             }
             .combine(
-                configFileService.configFiles.combine(recordService.records) { deviceConfigs, records ->
-                    deviceConfigs to records
+                configFileService.configFiles.combine(recordService.records) { phoneConfigs, phoneRecords ->
+                    phoneConfigs to phoneRecords
                 }
             ) { devices, configFilesAndRecords ->
                 devices to configFilesAndRecords
@@ -145,24 +137,29 @@ class ListFlySightDevicesViewModel @Inject constructor(
 
     private fun computeDisplayData(
         device: FlySightDevice,
-        deviceConfigFileState: ConfigFileState,
+        deviceConfigFileState: LoadingState<ConfigFile>,
         deviceRecords: LoadingState<List<Record>>,
         configFiles: List<ConfigFile>,
         records: List<Record>
-    ): ListFlySightDeviceDisplayData = ListFlySightDeviceDisplayData(
-        device = device,
-        deviceConfig = deviceConfigFileState,
-        isConfigFromSystem = deviceConfigFileState.conf?.name in configFiles.map { it.name },
-        hasConfigContentChanged = configFiles
-            .firstOrNull { it.name == deviceConfigFileState.conf?.name }
-                != deviceConfigFileState.conf,
-        isLastRecordUploaded = (deviceRecords as? LoadingState.Loaded<List<Record>>)
-            ?.value
-            ?.maxByOrNull { it.dateTime }
-            ?.let { lastRecord ->
-                records.any { it.flySightFilePath == lastRecord.flySightFilePath }
-            } ?: true
-    )
+    ): ListFlySightDeviceDisplayData {
+        val phoneConfigNames = configFiles.map { it.name }
+        val deviceConfigName = deviceConfigFileState.content?.name
+        Timber.d("Hoz2 deviceConfigName : $deviceConfigName, phoneConfigNames : $phoneConfigNames")
+        return ListFlySightDeviceDisplayData(
+            device = device,
+            deviceConfig = deviceConfigFileState,
+            isConfigFromSystem = deviceConfigName in phoneConfigNames,
+            hasConfigContentChanged = configFiles
+                .firstOrNull { it.name == deviceConfigName }
+                    != deviceConfigFileState.content,
+            isLastRecordUploaded = (deviceRecords as? LoadingState.Loaded<List<Record>>)
+                ?.value
+                ?.maxByOrNull { it.dateTime }
+                ?.let { lastRecord ->
+                    records.any { it.flySightFilePath == lastRecord.flySightFilePath }
+                } ?: true
+        )
+    }
 
     fun addDevice() {
         viewModelScope.launch {
@@ -209,15 +206,15 @@ class ListFlySightDevicesViewModel @Inject constructor(
         job = viewModelScope.launch {
             val configFile = device.configFile
                 .onEach { state ->
-                    if (state is ConfigFileState.Error) {
+                    if (state is LoadingState.Error) {
                         _state.update {
                             it.copy(
-                                event = state.message.asEvent()
+                                event = state.error.message?.asEvent()
                             )
                         }
                         job?.cancel()
                         return@onEach
-                    } else if (state is ConfigFileState.Nothing) {
+                    } else if (state is LoadingState.Idle) {
                         _state.update {
                             it.copy(
                                 event = context.getString(R.string.list_devices_event_device_config_empty)
@@ -228,8 +225,8 @@ class ListFlySightDevicesViewModel @Inject constructor(
                         return@onEach
                     }
                 }
-                .filterIsInstance<ConfigFileState.Success>()
-                .map { it.config }
+                .filterIsInstance<LoadingState.Loaded<ConfigFile>>()
+                .map { it.value }
                 .first()
             val updatedConfigFile = configFileService.saveConfigFile(configFile)
             fsDeviceService.updateDeviceConfig(device.device, updatedConfigFile)
@@ -237,7 +234,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
     }
 
     fun updateSystemConfig(device: ListFlySightDeviceDisplayData) {
-        device.configFile.value.conf?.let { conf ->
+        device.configFile.value.content?.let { conf ->
             configFileService.configFiles.value.firstOrNull { it.name == conf.name }
                 ?.let { oldConf ->
                     viewModelScope.launch {
@@ -248,7 +245,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
     }
 
     fun pushConfigToDevice(device: FlySightDevice) {
-        configFileService.configFiles.value.firstOrNull { it.name == device.configFile.value.conf?.name }
+        configFileService.configFiles.value.firstOrNull { it.name == device.configFile.value.content?.name }
             ?.let { configFile ->
                 viewModelScope.launch {
                     fsDeviceService.updateDeviceConfig(device, configFile)

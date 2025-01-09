@@ -7,7 +7,6 @@ import fr.hozakan.flysightcompanion.designsystem.theme.FlySightCompanionTheme
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.model.ConfigFile
-import fr.hozakan.flysightcompanion.model.ConfigFileState
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
@@ -144,11 +143,11 @@ fun ListFlySightDevicesScreenInternalWithDevicePreview() {
                             initialRecordState = LoadingState.Loaded(
                                 emptyList()
                             ),
-                            initialConfigFileState = ConfigFileState.Nothing,
+                            initialConfigFileState = LoadingState.Idle,
                             configFileName = "Speed Corbas",
                             name = "Fake device 1"
                         ),
-                    deviceConfig = ConfigFileState.Nothing,
+                    deviceConfig = LoadingState.Idle,
                     isConfigFromSystem = false,
                     hasConfigContentChanged = false
                 )
@@ -182,7 +181,7 @@ fun FlySightDeviceItemDisconnectedPreview() {
             ),
             isConfigFromSystem = true,
             hasConfigContentChanged = false,
-            deviceConfig = ConfigFileState.Nothing
+            deviceConfig = LoadingState.Idle
         ),
         unitSystem = UnitSystem.Metric,
         updatingConfiguration = false,
@@ -206,7 +205,7 @@ fun FlySightDeviceItemConnectingPreview() {
             ),
             isConfigFromSystem = true,
             hasConfigContentChanged = false,
-            deviceConfig = ConfigFileState.Nothing
+            deviceConfig = LoadingState.Idle
         ),
         unitSystem = UnitSystem.Metric,
         updatingConfiguration = false,
@@ -228,11 +227,11 @@ fun FlySightDeviceItemConnectedAndNominalConfigFilePreview() {
             device = FakeDeviceImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
                 configFileName = "Distance Le Puy",
-                initialConfigFileState = ConfigFileState.Success(defaultConfigFile().copy(name = "Distance Le Puy"))
+                initialConfigFileState = LoadingState.Loaded(defaultConfigFile().copy(name = "Distance Le Puy"))
             ),
             isConfigFromSystem = true,
             hasConfigContentChanged = false,
-            deviceConfig = ConfigFileState.Nothing
+            deviceConfig = LoadingState.Idle
         ),
         unitSystem = UnitSystem.Metric,
         updatingConfiguration = false,
@@ -253,11 +252,11 @@ fun FlySightDeviceItemConnectedAndConfigFileUnknownPreview() {
         device = ListFlySightDeviceDisplayData(
             device = FakeDeviceImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
-                initialConfigFileState = ConfigFileState.Success(defaultConfigFile().copy(name = "Distance Le Puy"))
+                initialConfigFileState = LoadingState.Loaded(defaultConfigFile().copy(name = "Distance Le Puy"))
             ),
             isConfigFromSystem = false,
             hasConfigContentChanged = false,
-            deviceConfig = ConfigFileState.Nothing
+            deviceConfig = LoadingState.Idle
         ),
         unitSystem = UnitSystem.Metric,
         updatingConfiguration = false,
@@ -286,11 +285,11 @@ fun FlySightDeviceItemConnectedAndConfigFileDiffersPreview() {
                     )
                 ),
                 configFileName = "Speed Corbas",
-                initialConfigFileState = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas"))
+                initialConfigFileState = LoadingState.Loaded(defaultConfigFile().copy(name = "Speed Corbas"))
             ),
             isConfigFromSystem = true,
             hasConfigContentChanged = true,
-            deviceConfig = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas"))
+            deviceConfig = LoadingState.Loaded(defaultConfigFile().copy(name = "Speed Corbas"))
         ),
         unitSystem = UnitSystem.Metric,
         updatingConfiguration = false,
@@ -318,12 +317,12 @@ fun FlySightDeviceItemConnectedAndConfigFileLoadingPreview() {
                         )
                     )
                 ),
-                initialConfigFileState = ConfigFileState.Loading,
+                initialConfigFileState = LoadingState.Loading<ConfigFile>(),
                 configFileName = "Speed Corbas"
             ),
             isConfigFromSystem = true,
             hasConfigContentChanged = true,
-            deviceConfig = ConfigFileState.Loading
+            deviceConfig = LoadingState.Loading<ConfigFile>()
         ),
         unitSystem = UnitSystem.Metric,
         updatingConfiguration = false,
@@ -354,12 +353,12 @@ fun FlySightDeviceItemConnectedAndUpdatingConfigurationPreview() {
                             )
                         )
                     ),
-                    initialConfigFileState = ConfigFileState.Loading,
+                    initialConfigFileState = LoadingState.Loading<ConfigFile>(),
                     configFileName = "Speed Corbas"
                 ),
                 isConfigFromSystem = true,
                 hasConfigContentChanged = true,
-                deviceConfig = ConfigFileState.Loading
+                deviceConfig = LoadingState.Loading<ConfigFile>()
             ),
             unitSystem = UnitSystem.Metric,
             updatingConfiguration = true,
@@ -384,7 +383,7 @@ fun FlySightDeviceItemErrorPreview() {
             ),
             isConfigFromSystem = true,
             hasConfigContentChanged = false,
-            deviceConfig = ConfigFileState.Nothing
+            deviceConfig = LoadingState.Idle
         ),
         unitSystem = UnitSystem.Metric,
         updatingConfiguration = false,
@@ -402,7 +401,7 @@ fun FlySightDeviceItemErrorPreview() {
 @Composable
 fun DeviceConfigurationMisMatchDialogWithConfigContentChangedPreview() {
     DeviceConfigurationMisMatchDialog(
-        configFileState = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas")),
+        configFileState = LoadingState.Loaded(defaultConfigFile().copy(name = "Speed Corbas")),
         device = ListFlySightDeviceDisplayData(
             device = FakeDeviceImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
@@ -417,7 +416,7 @@ fun DeviceConfigurationMisMatchDialogWithConfigContentChangedPreview() {
             ),
             isConfigFromSystem = true,
             hasConfigContentChanged = true,
-            deviceConfig = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas"))
+            deviceConfig = LoadingState.Loaded(defaultConfigFile().copy(name = "Speed Corbas"))
         ),
         onDismissRequest = {},
         onUploadConfigToSystem = {},
@@ -430,7 +429,7 @@ fun DeviceConfigurationMisMatchDialogWithConfigContentChangedPreview() {
 @Composable
 fun DeviceConfigurationMisMatchDialogWithConfigNotFromSystemPreview() {
     DeviceConfigurationMisMatchDialog(
-        configFileState = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas")),
+        configFileState = LoadingState.Loaded(defaultConfigFile().copy(name = "Speed Corbas")),
         device = ListFlySightDeviceDisplayData(
             device = FakeDeviceImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
@@ -438,7 +437,7 @@ fun DeviceConfigurationMisMatchDialogWithConfigNotFromSystemPreview() {
             ),
             isConfigFromSystem = false,
             hasConfigContentChanged = false,
-            deviceConfig = ConfigFileState.Success(defaultConfigFile().copy(name = "Speed Corbas"))
+            deviceConfig = LoadingState.Loaded(defaultConfigFile().copy(name = "Speed Corbas"))
         ),
         onDismissRequest = {},
         onUploadConfigToSystem = {},
@@ -450,7 +449,7 @@ fun DeviceConfigurationMisMatchDialogWithConfigNotFromSystemPreview() {
 private class FakeDeviceImpl(
     initialConnectionState: DeviceConnectionState = DeviceConnectionState.Disconnected,
     initialRecordState: LoadingState<List<Record>> = LoadingState.Idle,
-    initialConfigFileState: ConfigFileState = ConfigFileState.Nothing,
+    initialConfigFileState: LoadingState<ConfigFile> = LoadingState.Idle,
     private val configFileName: String = "",
     override val name: String = "Fake device"
 ) : FlySightDevice {
@@ -460,7 +459,7 @@ private class FakeDeviceImpl(
         get() = "address"
     override val connectionState: StateFlow<DeviceConnectionState> =
         MutableStateFlow(initialConnectionState)
-    override val configFile: StateFlow<ConfigFileState> = MutableStateFlow(initialConfigFileState)
+    override val configFile: StateFlow<LoadingState<ConfigFile>> = MutableStateFlow(initialConfigFileState)
     override val rawConfigFile: StateFlow<FileState>
         get() = MutableStateFlow(FileState.Nothing)
     override val records: StateFlow<LoadingState<List<Record>>> =

@@ -30,7 +30,6 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleFileWrite
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BlePingJob
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.Command
 import fr.hozakan.flysightcompanion.model.ConfigFile
-import fr.hozakan.flysightcompanion.model.ConfigFileState
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
@@ -71,7 +70,7 @@ interface FlySightDevice {
     val name: String
     val address: String
     val connectionState: StateFlow<DeviceConnectionState>
-    val configFile: StateFlow<ConfigFileState>
+    val configFile: StateFlow<LoadingState<ConfigFile>>
     val rawConfigFile: StateFlow<FileState>
     val records: StateFlow<LoadingState<List<Record>>>
     val logs: StateFlow<List<String>>
@@ -149,7 +148,7 @@ class FlySightDeviceImpl(
 
     private val _file = MutableSharedFlow<FileState>()
     private val _rawConfigFile = MutableStateFlow<FileState>(FileState.Nothing)
-    private val _configFile = MutableStateFlow<ConfigFileState>(ConfigFileState.Nothing)
+    private val _configFile = MutableStateFlow<LoadingState<ConfigFile>>(LoadingState.Idle)
     override val fileReceived = _file.asSharedFlow()
     override val rawConfigFile = _rawConfigFile.asStateFlow()
     override val configFile = _configFile.asStateFlow()
@@ -536,7 +535,7 @@ class FlySightDeviceImpl(
             FileState.Loading
         }
         _configFile.update {
-            ConfigFileState.Loading
+            LoadingState.Loading()
         }
 
         val gatt = this.gatt ?: return
@@ -560,7 +559,7 @@ class FlySightDeviceImpl(
                     _rawConfigFile.value = fileState
                     if (fileState is FileState.Success) {
                         val configFile = parser.parse(fileState.content.lines())
-                        _configFile.value = ConfigFileState.Success(configFile)
+                        _configFile.value = LoadingState.Loaded(configFile)
                     }
                 }
             } catch (e: Exception) {
@@ -718,7 +717,7 @@ class FlySightDeviceImpl(
 
     private fun resetFlySight() {
         _records.value = LoadingState.Idle
-        _configFile.value = ConfigFileState.Nothing
+        _configFile.value = LoadingState.Idle
 //        _logs.value = emptyList()
         _rawConfigFile.value = FileState.Nothing
         _services.value = emptyList()
