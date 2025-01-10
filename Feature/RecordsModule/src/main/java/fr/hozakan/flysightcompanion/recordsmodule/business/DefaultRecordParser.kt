@@ -2,6 +2,7 @@ package fr.hozakan.flysightcompanion.recordsmodule.business
 
 import fr.hozakan.flysightcompanion.model.records.DataPoint
 import fr.hozakan.flysightcompanion.model.records.DataPoints
+import fr.hozakan.flysightcompanion.model.records.dataPoint
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -10,10 +11,11 @@ class DefaultRecordParser : RecordParser {
     private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX")
 
     override fun parse(fileLines: List<String>): DataPoints {
+        "dqdq".encodeToByteArray()
         return fileLines.mapNotNull { line ->
             val parts = line.split(",")
             if (parts[0] == "\$GNSS") {
-                DataPoint(
+                dataPoint(
                     dateTime = LocalDateTime.parse(parts[1], dateTimeFormatter),
                     hasGeodetic = true,
                     latitude = parts[2].toDouble(),

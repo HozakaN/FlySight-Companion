@@ -59,6 +59,9 @@ dependencies {
 //    implementation(libs.androidx.material.icons.extended)
 //    implementation(libs.androidx.activity.compose)
 
+    //Misc
+    implementation(libs.geographiclib)
+
     //Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
