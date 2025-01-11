@@ -1,6 +1,7 @@
-package fr.hozakan.flysightcompanion.recordsmodule.business
+package fr.hozakan.flysightcompanion.recordsmodule.business.analyze
 
 import fr.hozakan.flysightcompanion.framework.extension.firstNotNullConsecutive
+import fr.hozakan.flysightcompanion.model.extensions.toEpochMillisecond
 import fr.hozakan.flysightcompanion.model.records.AnalyzeOptions
 import fr.hozakan.flysightcompanion.model.records.ComputableDataPoint
 import fr.hozakan.flysightcompanion.model.records.DataPoints
@@ -11,12 +12,12 @@ import fr.hozakan.flysightcompanion.model.records.interpolateWith
 import fr.hozakan.flysightcompanion.model.records.toComputableDataPoint
 import fr.hozakan.flysightcompanion.model.records.totalSpeed
 import fr.hozakan.flysightcompanion.model.records.using
-import fr.hozakan.flysightcompanion.recordsmodule.A_GRAVITY
-import fr.hozakan.flysightcompanion.recordsmodule.GAS_CONST
-import fr.hozakan.flysightcompanion.recordsmodule.LAPSE_RATE
-import fr.hozakan.flysightcompanion.recordsmodule.MM_AIR
-import fr.hozakan.flysightcompanion.recordsmodule.SL_PRESSURE
-import fr.hozakan.flysightcompanion.recordsmodule.SL_TEMP
+import fr.hozakan.flysightcompanion.model.records.A_GRAVITY
+import fr.hozakan.flysightcompanion.model.records.GAS_CONST
+import fr.hozakan.flysightcompanion.model.records.LAPSE_RATE
+import fr.hozakan.flysightcompanion.model.records.MM_AIR
+import fr.hozakan.flysightcompanion.model.records.SL_PRESSURE
+import fr.hozakan.flysightcompanion.model.records.SL_TEMP
 import net.sf.geographiclib.Geodesic
 import java.time.ZoneOffset
 import kotlin.math.atan2
@@ -55,7 +56,7 @@ class DefaultRecordAnalyzer : RecordAnalyzer {
             .computeCumulativeHeading(theta0 = options.courseReference.content ?: 0.0)
             .computeVelocityDependantParameters()
             .computeAerodynamics()
-        return RecordAnalyze(
+        return RecordAnalyze.success(
             options = options,
             exitTime = exitTime,
             dataPoints = computedDataPoints
@@ -112,7 +113,7 @@ class DefaultRecordAnalyzer : RecordAnalyzer {
 
     private fun Pair<List<ComputableDataPoint>, Double>.updateTimeWithExitValue(): List<ComputableDataPoint> {
         return first.map { dp ->
-            val end = dp.dataPoint.dateTime.toEpochSecond(ZoneOffset.UTC)
+            val end = dp.dataPoint.dateTime.toEpochMillisecond(ZoneOffset.UTC)
             dp.copy(
                 t = (end - second) / 1_000
             )
@@ -178,9 +179,10 @@ class DefaultRecordAnalyzer : RecordAnalyzer {
 
     private fun List<ComputableDataPoint>.computeTime(): List<ComputableDataPoint> {
         val dp0 = first()
-        val start = dp0.dateTime.toEpochSecond(ZoneOffset.UTC)
+        val start = dp0.dateTime.toEpochMillisecond(ZoneOffset.UTC)
         return map { dataPoint ->
-            val t = dataPoint.dateTime.toEpochSecond(ZoneOffset.UTC) - start
+            val currentT = dataPoint.dateTime.toEpochMillisecond(ZoneOffset.UTC)
+            val t = currentT - start
             dataPoint.copy(t = t.toDouble())
         }
     }
@@ -299,11 +301,11 @@ class DefaultRecordAnalyzer : RecordAnalyzer {
             if (az < A_GRAVITY / 5f) return@firstNotNullConsecutive null
 
             // Determine exit
-            val t1 = dp1.dateTime.toEpochSecond(ZoneOffset.UTC)
-            val t2 = dp2.dateTime.toEpochSecond(ZoneOffset.UTC)
+            val t1 = dp1.dateTime.toEpochMillisecond(ZoneOffset.UTC)
+            val t2 = dp2.dateTime.toEpochMillisecond(ZoneOffset.UTC)
             val start = t1 + a * (t2 - t1) - velD / az * 1000f
             start
-        } ?: this.first().dateTime.toEpochSecond(ZoneOffset.UTC).toDouble())
+        } ?: this.first().dateTime.toEpochMillisecond(ZoneOffset.UTC).toDouble())
     }
 
     private fun List<ComputableDataPoint>.computeVelocityDependantParameters(): List<ComputableDataPoint> {

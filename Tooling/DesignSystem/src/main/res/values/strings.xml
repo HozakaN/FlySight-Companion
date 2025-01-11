@@ -17,6 +17,7 @@
     <string name="misc_save">Save</string>
     <string name="misc_cancel">Cancel</string>
     <string name="misc_neutral">Neutral</string>
+    <string name="misc_back">Back</string>
 
     <string name="misc_upload">Upload</string>
 
@@ -36,6 +37,37 @@
     <string name="misc_home">Home</string>
     <string name="misc_navigate_up">Navigate up</string>
     <string name="misc_devices">Devices</string>
+
+    <string name="left_plot_item_elevation">Elevation</string>
+    <string name="left_plot_item_horizontal_speed">Horizontal speed</string>
+    <string name="left_plot_item_vertical_speed">Vertical speed</string>
+    <string name="left_plot_total_speed">Total speed</string>
+    <string name="left_plot_course">Course</string>
+    <string name="left_plot_course_rate">Course rate</string>
+    <string name="left_plot_course_accuracy">Course accuracy</string>
+    <string name="left_plot_glide_ratio">Glide ratio</string>
+    <string name="left_plot_dive_angle">Dive angle</string>
+    <string name="left_plot_dive_rate">Dive rate</string>
+    <string name="left_plot_horizontal_accuracy">Horizontal accuracy</string>
+    <string name="left_plot_vertical_accuracy">Vertical accuracy</string>
+    <string name="left_plot_speed_accuracy">Speed accuracy</string>
+    <string name="left_plot_number_of_satellites">Satellite count</string>
+    <string name="left_plot_acceleration">Acceleration</string>
+    <string name="left_plot_acceleration_local">Acceleration (Local)</string>
+    <string name="left_plot_local_acceleration_forward">Acceleration forward</string>
+    <string name="left_plot_local_acceleration_right">Acceleration right</string>
+    <string name="left_plot_local_acceleration_down">Acceleration down</string>
+    <string name="left_plot_local_acceleration_magnitude">Acceleration magnitude</string>
+    <string name="left_plot_total_energy">Total energy</string>
+    <string name="left_plot_energy_rate">Energy rate</string>
+    <string name="left_plot_lift_coefficient">Lift coefficient</string>
+    <string name="left_plot_drag_coefficient">Drag coefficient</string>
+    <string name="left_plot_wingsuit_sep">Spherical error probability</string>
+    <string name="left_plot_speed__score_accuracy">Speed score accuracy</string>
+
+    <string name="bottom_plot_item_time">Time</string>
+    <string name="bottom_plot_item_horizontal_distance">Horizontal distance</string>
+    <string name="bottom_plot_item_total_distance">Total distance</string>
 
     <string name="screen_title_device_detail">Device Detail</string>
     <string name="screen_title_config_list">Config files</string>
@@ -243,5 +275,7 @@
 
     <string name="list_records_no_records">No record yet</string>
     <string name="list_records_delete_record">@string/misc_delete</string>
+
+    <string name="record_detail_menu">Menu</string>
 
 </resources>

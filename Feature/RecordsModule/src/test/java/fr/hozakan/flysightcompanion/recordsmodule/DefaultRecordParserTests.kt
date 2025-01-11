@@ -1,6 +1,6 @@
 package fr.hozakan.flysightcompanion.recordsmodule
 
-import fr.hozakan.flysightcompanion.recordsmodule.business.DefaultRecordParser
+import fr.hozakan.flysightcompanion.recordsmodule.business.analyze.DefaultRecordParser
 import org.junit.Assert
 import org.junit.Test
 import java.time.LocalDateTime

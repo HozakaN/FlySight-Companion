@@ -1,7 +1,11 @@
 package fr.hozakan.flysightcompanion.recordsmodule.business
 
 import android.content.Context
+import fr.hozakan.flysightcompanion.model.records.RecordAnalyze
 import fr.hozakan.flysightcompanion.model.records.RecordFile
+import fr.hozakan.flysightcompanion.recordsmodule.business.analyze.DefaultRecordAnalyzer
+import fr.hozakan.flysightcompanion.recordsmodule.business.analyze.DefaultRecordParser
+import fr.hozakan.flysightcompanion.recordsmodule.business.analyze.RecordParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -85,10 +89,23 @@ class FileBasedRecordService(
         }
     }
 
-    override suspend fun loadRecordContent(recordFile: RecordFile): String? {
+    override suspend fun loadRecordRawContent(recordFile: RecordFile): String? {
         val trackFile =
             File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${recordFile.phoneFilePath}")
         return if (trackFile.exists()) trackFile.readText() else null
+    }
+
+    override suspend fun analyzeRecord(recordFile: RecordFile): RecordAnalyze {
+        val rawContent = loadRecordRawContent(recordFile) ?: return RecordAnalyze.error("Record is empty")
+        val fileContent = javaClass.classLoader
+            ?.getResource("9_2_temps.CSV")?.readText() ?: ""
+        val parser = DefaultRecordParser()
+        val analyzer = DefaultRecordAnalyzer()
+        val dataPoints = parser.parse(fileContent.lines())
+        val analyze = analyzer.analyze(
+            dataPoints = dataPoints,
+        )
+        return analyze
     }
 
     private fun getOrCreateRecordsFolder(): File {

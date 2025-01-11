@@ -1,5 +1,6 @@
 package fr.hozakan.flysightcompanion.model.records
 
+import fr.hozakan.flysightcompanion.model.extensions.toEpochMillisecond
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.Date
@@ -121,8 +122,8 @@ data class ComputableDataPoint(
 infix fun ComputableDataPoint.interpolateWith(other: ComputableDataPoint): Pair<ComputableDataPoint, ComputableDataPoint> = this to other
 
 infix fun Pair<ComputableDataPoint, ComputableDataPoint>.using(a: Double): ComputableDataPoint {
-    val dateTime1 = first.dateTime.toEpochSecond(ZoneOffset.UTC)
-    val dateTime2 = second.dateTime.toEpochSecond(ZoneOffset.UTC)
+    val dateTime1 = first.dateTime.toEpochMillisecond(ZoneOffset.UTC)
+    val dateTime2 = second.dateTime.toEpochMillisecond(ZoneOffset.UTC)
     val computedDateTime = Date((dateTime1 + a * (dateTime2 - dateTime1)).toLong())
     val hasGeodetic = first.hasGeodetic && second.hasGeodetic
 
@@ -206,8 +207,35 @@ infix fun Pair<ComputableDataPoint, ComputableDataPoint>.using(a: Double): Compu
     )
 }
 
+val ComputableDataPoint.verticalSpeed: Double
+    get() = velD
+
+val ComputableDataPoint.horizontalSpeed: Double
+    get() = sqrt(vx * vx + vy * vy)
+
 val ComputableDataPoint.totalSpeed: Double
     get() = sqrt(vx * vx + vy * vy + velD * velD)
 
 val ComputableDataPoint.diveAngle: Double
     get() = atan2(velD, sqrt(vx * vx + vy * vy)) / Math.PI * 180
+
+val ComputableDataPoint.glideRatio: Double
+    get() = if (velD != 0.0) sqrt(vx * vx + vy * vy) / velD else 0.0
+
+val ComputableDataPoint.totalEnergy: Double
+    get() = totalSpeed * totalSpeed / 2 + A_GRAVITY * verticalSpeed
+
+val ComputableDataPoint.energyRate: Double
+    get() = totalSpeed * accel - A_GRAVITY * verticalSpeed
+
+val ComputableDataPoint.course: Double
+    get() = this.theta
+
+val ComputableDataPoint.courseRate: Double
+    get() = this.omega
+
+val ComputableDataPoint.sep: Double
+    get() = 0.5127 * (2 * hAcc + vAcc)
+
+val ComputableDataPoint.speedScoreAccuracy: Double
+    get() = SQRT_2 * vAcc / 3.0

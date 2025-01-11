@@ -16,12 +16,17 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
+import fr.hozakan.flysightcompanion.model.ui.PlotBottomItem
+import fr.hozakan.flysightcompanion.model.ui.PlotDisplayPreferences
+import fr.hozakan.flysightcompanion.model.ui.PlotLeftItem
+import fr.hozakan.flysightcompanion.model.ui.defaultDisplayPreferences
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -43,13 +48,13 @@ class DatastoreUserPrefService(
         corruptionHandler = ReplaceFileCorruptionHandler(produceNewData = { emptyPreferences() }),
         migrations = listOf(SharedPreferencesMigration(appContext, "fr.hozakan.flusightble.prefs")),
         scope = dataStoreCoroutineScope,
-        produceFile = { appContext.preferencesDataStoreFile("fr.hozakan.flusightble.prefs") }
+        produceFile = { appContext.preferencesDataStoreFile("fr.hozakan.flysight.companion.prefs") }
     )
 
     override val unitSystem: StateFlow<UnitSystem>
         get() = dataStore.data
             .map { preferences ->
-                val key = getKey<Int>("unit-system")
+                val key = getKey<Int>("unit_system")
                 val value = preferences[key] ?: UnitSystem.Metric.value
                 UnitSystem.fromValue(value) ?: UnitSystem.Metric
             }
@@ -59,14 +64,56 @@ class DatastoreUserPrefService(
         get() = dataStore.data
             .map { preferences ->
                 val key = getKey<Boolean>("show_config_as_raw")
-                val value = preferences[key] ?: false
-                value
+                preferences[key] ?: false
             }
             .stateIn(dataStoreCoroutineScope, SharingStarted.WhileSubscribed(), false)
 
+    override val plotLeftItems: StateFlow<List<PlotLeftItem>>
+        get() = dataStore.data
+            .map { preferences ->
+                val key = getKey<Set<String>>("plot_left_items")
+                val value = preferences[key] ?: setOf(PlotLeftItem.Elevation.name)
+                value.mapNotNull { PlotLeftItem.fromName(it) }
+            }
+            .stateIn(
+                dataStoreCoroutineScope,
+                SharingStarted.WhileSubscribed(),
+                listOf(PlotLeftItem.Elevation)
+            )
+
+    override val plotBottomItem: StateFlow<PlotBottomItem>
+        get() = dataStore.data
+            .map { preferences ->
+                val key = getKey<String>("plot_bottom_item")
+                val value = preferences[key] ?: PlotBottomItem.Time.name
+                PlotBottomItem.fromString(value)
+            }
+            .filterNotNull()
+            .stateIn(
+                dataStoreCoroutineScope,
+                SharingStarted.WhileSubscribed(),
+                PlotBottomItem.Time
+            )
+
+    override val plotDisplayPreferences: StateFlow<PlotDisplayPreferences>
+        get() = dataStore.data
+            .map { preferences ->
+                val key = getKey<String>("plot_display_preferences")
+                val value = preferences[key]
+                value?.let { prefs ->
+                    PlotDisplayPreferences.fromStringPreference(prefs)
+                } ?: defaultDisplayPreferences
+            }
+            .filterNotNull()
+            .stateIn(
+                dataStoreCoroutineScope,
+                SharingStarted.WhileSubscribed(),
+                defaultDisplayPreferences
+            )
+
     override fun updateUnitSystem(unitSystem: UnitSystem) {
         dataStoreCoroutineScope.launch {
-            val key = getKey<Int>("unit-system")
+            val key = getKey<Int>("unit_system")
             dataStore.edit { preferences ->
                 preferences[key] = unitSystem.value
             }
@@ -78,6 +125,34 @@ class DatastoreUserPrefService(
             val key = getKey<Boolean>("show_config_as_raw")
             dataStore.edit { preferences ->
                 preferences[key] = showConfigAsRaw
+            }
+        }
+    }
+
+    override fun updatePlotLeftItems(plotLeftItems: List<PlotLeftItem>) {
+        dataStoreCoroutineScope.launch {
+            val key = getKey<Set<String>>("plot_left_items")
+            dataStore.edit { preferences ->
+                preferences[key] = plotLeftItems.map { it.name }.toSet()
+            }
+        }
+    }
+
+    override fun updatePlotBottomItem(plotBottomItem: PlotBottomItem) {
+        dataStoreCoroutineScope.launch {
+            val key = getKey<String>("plot_bottom_item")
+            dataStore.edit { preferences ->
+                preferences[key] = plotBottomItem.name
+            }
+        }
+    }
+
+    override fun updatePlotDisplayPreferences(plotDisplayPreferences: PlotDisplayPreferences) {
+        dataStoreCoroutineScope.launch {
+            val key = getKey<String>("plot_display_preferences")
+            val value = plotDisplayPreferences.toString()
+            dataStore.edit { preferences ->
+                preferences[key] = value
             }
         }
     }

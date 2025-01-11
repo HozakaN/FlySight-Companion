@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.recordsmodule.business
+package fr.hozakan.flysightcompanion.recordsmodule.business.analyze
 
 import fr.hozakan.flysightcompanion.model.records.DataPoints
 

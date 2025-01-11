@@ -41,10 +41,12 @@ dependencies {
     implementation(project(":Tooling:framework"))
     implementation(project(":Tooling:DesignSystem"))
     implementation(project(":Tooling:ComposableCommons"))
+    implementation(project(":Feature:UserPreferencesModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.material)
+//    implementation(libs.material)
+//    implementation(libs.androidx.constraintlayout)
 
     //Dagger
     implementation(libs.dagger)

@@ -68,6 +68,7 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.ui.file.DeviceFileScreen
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesMenuActions
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
 import fr.hozakan.flysightcompanion.model.ConfigFile
+import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailMenuActions
 import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailScreen
 import fr.hozakan.flysightcompanion.recordsmodule.ui.list.ListRecordsScreen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -256,6 +257,10 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             ListFlySightDevicesMenuActions()
                                         }
 
+                                        AppScreen.RecordTab.RecordDetail.route -> {
+                                            RecordDetailMenuActions()
+                                        }
+
                                         else -> {}
                                     }
                                 }
@@ -266,7 +271,8 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                 currentBackStack.value?.destination?.route == AppScreen.ConfigTab.ConfigList.route ||
                                 currentBackStack.value?.destination?.route == AppScreen.RecordTab.RecordList.route
                             ) {
-                                val selectedTab = updateTransition(targetState = currentBackStack.value?.destination?.route)
+                                val selectedTab =
+                                    updateTransition(targetState = currentBackStack.value?.destination?.route)
 
                                 val deviceScale by selectedTab.animateFloat { if (it == AppScreen.DeviceTab.DeviceList.route) 1.2f else 1f }
                                 val configScale by selectedTab.animateFloat { if (it == AppScreen.ConfigTab.ConfigList.route) 1.2f else 1f }
@@ -274,7 +280,8 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                 BottomAppBar(
                                     actions = {
                                         Box(
-                                            modifier = Modifier.weight(1f)
+                                            modifier = Modifier
+                                                .weight(1f)
                                                 .graphicsLayer {
                                                     scaleX = deviceScale
                                                     scaleY = deviceScale
@@ -305,7 +312,8 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             )
                                         }
                                         Box(
-                                            modifier = Modifier.weight(1f)
+                                            modifier = Modifier
+                                                .weight(1f)
                                                 .graphicsLayer {
                                                     scaleX = configScale
                                                     scaleY = configScale
@@ -335,7 +343,8 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             )
                                         }
                                         Box(
-                                            modifier = Modifier.weight(1f)
+                                            modifier = Modifier
+                                                .weight(1f)
                                                 .graphicsLayer {
                                                     scaleX = recordScale
                                                     scaleY = recordScale
