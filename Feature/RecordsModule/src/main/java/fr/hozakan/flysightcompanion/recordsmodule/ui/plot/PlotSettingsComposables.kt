@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
+import fr.hozakan.flysightcompanion.model.ui.PlotDisplayPreference
 import fr.hozakan.flysightcompanion.model.ui.accelerationColor
 import fr.hozakan.flysightcompanion.model.ui.accelerationDownColor
 import fr.hozakan.flysightcompanion.model.ui.accelerationForwardColor
@@ -67,7 +68,7 @@ fun PlotSettingsScreen() {
             .fillMaxSize(),
         color = MaterialTheme.colorScheme.surface
     ) {
-        var selectedParam by remember { mutableStateOf<String?>(null) }
+        var selectedParam by remember { mutableStateOf<PlotDisplayPreference?>(null) }
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(8.dp),
@@ -89,7 +90,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.elevationColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.Elevation }
                             }
                     )
                 }
@@ -113,7 +114,8 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.horizontalSpeedColor
+//                                selectedParam = state.plotDisplayPreferences.horizontalSpeedColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.HorizontalSpeed }
                             }
                     )
                 }
@@ -134,7 +136,8 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.verticalSpeedColor
+//                                selectedParam = state.plotDisplayPreferences.verticalSpeedColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.VerticalSpeed }
                             }
                     )
                 }
@@ -155,7 +158,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.totalSpeedColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.TotalSpeed }
                             }
                     )
                 }
@@ -179,7 +182,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.courseColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.Course }
                             }
                     )
                 }
@@ -200,7 +203,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.courseRateColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.CourseRate }
                             }
                     )
                 }
@@ -221,7 +224,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.courseAccuracyColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.CourseAccuracy }
                             }
                     )
                 }
@@ -245,7 +248,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.glideRatioColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.GlideRatio }
                             }
                     )
                 }
@@ -266,7 +269,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.diveAngleColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.DiveAngle }
                             }
                     )
                 }
@@ -287,7 +290,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.diveRateColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.DiveRate }
                             }
                     )
                 }
@@ -311,7 +314,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.horizontalAccuracyColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.HorizontalAccuracy }
                             }
                     )
                 }
@@ -332,7 +335,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.verticalAccuracyColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.VerticalAccuracy }
                             }
                     )
                 }
@@ -353,7 +356,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.speedAccuracyColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.SpeedAccuracy }
                             }
                     )
                 }
@@ -377,7 +380,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.numberOfSatellitesColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.NumberOfSatellites }
                             }
                     )
                 }
@@ -401,7 +404,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.accelerationColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.Acceleration }
                             }
                     )
                 }
@@ -422,8 +425,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam =
-                                    state.plotDisplayPreferences.accelerationForwardColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.AccelerationForward }
                             }
                     )
                 }
@@ -444,7 +446,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.accelerationRightColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.AccelerationRight }
                             }
                     )
                 }
@@ -465,7 +467,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.accelerationDownColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.AccelerationDown }
                             }
                     )
                 }
@@ -486,8 +488,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam =
-                                    state.plotDisplayPreferences.accelerationMagnitudeColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.AccelerationMagnitude }
                             }
                     )
                 }
@@ -511,7 +512,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.totalEnergyColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.TotalEnergy }
                             }
                     )
                 }
@@ -532,7 +533,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.energyRateColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.EnergyRate }
                             }
                     )
                 }
@@ -556,7 +557,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.liftCoefficientColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.LiftCoefficient }
                             }
                     )
                 }
@@ -577,7 +578,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam = state.plotDisplayPreferences.dragCoefficientColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.DragCoefficient }
                             }
                     )
                 }
@@ -601,8 +602,7 @@ fun PlotSettingsScreen() {
                                 shape = CircleShape
                             )
                             .clickable {
-                                selectedParam =
-                                    state.plotDisplayPreferences.sphericalErrorProbabilityColor
+                                selectedParam = state.plotDisplayPreferences.first { it is PlotDisplayPreference.SphericalErrorProbability }
                             }
                     )
                 }
@@ -610,9 +610,10 @@ fun PlotSettingsScreen() {
         }
         if (selectedParam != null) {
             PlotColorPickerDialog(
-                currentColor = Color(android.graphics.Color.parseColor(selectedParam)),
+                currentColor = Color(android.graphics.Color.parseColor(selectedParam!!.colorHex)),
                 onDismissRequest = { selectedParam = null },
                 onColorSelected = { color ->
+                    viewModel.updatePlotColor(selectedParam!!, color)
                     selectedParam = null
 //                    viewModel.updateLeftPlotItemColor(selectedParam!!, color)
                 }

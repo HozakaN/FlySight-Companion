@@ -40,6 +40,8 @@ import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.designsystem.theme.CustomColors
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
+import fr.hozakan.flysightcompanion.recordsmodule.ui.hexCode
+import timber.log.Timber
 
 @Composable
 fun PlotColorPickerDialog(
@@ -67,6 +69,7 @@ fun PlotColorPickerDialog(
 
     var selectedColor by remember(currentColor) { mutableStateOf(currentColor) }
     var customPickerOpened by remember { mutableStateOf(false) }
+    var customColorSelected by remember { mutableStateOf(false) }
 
     if (!customPickerOpened) {
         Dialog(
@@ -124,6 +127,7 @@ fun PlotColorPickerDialog(
                                     }
                                     .clickable {
                                         selectedColor = availableColors[0]
+                                        customColorSelected = false
                                     }
                             )
                         }
@@ -147,6 +151,7 @@ fun PlotColorPickerDialog(
                                     }
                                     .clickable {
                                         selectedColor = availableColors[1]
+                                        customColorSelected = false
                                     }
                             )
                         }
@@ -170,6 +175,7 @@ fun PlotColorPickerDialog(
                                     }
                                     .clickable {
                                         selectedColor = availableColors[2]
+                                        customColorSelected = false
                                     }
                             )
                         }
@@ -193,6 +199,7 @@ fun PlotColorPickerDialog(
                                     }
                                     .clickable {
                                         selectedColor = availableColors[3]
+                                        customColorSelected = false
                                     }
                             )
                         }
@@ -219,6 +226,7 @@ fun PlotColorPickerDialog(
                                     }
                                     .clickable {
                                         selectedColor = availableColors[4]
+                                        customColorSelected = false
                                     }
                             )
                         }
@@ -242,6 +250,7 @@ fun PlotColorPickerDialog(
                                     }
                                     .clickable {
                                         selectedColor = availableColors[5]
+                                        customColorSelected = false
                                     }
                             )
                         }
@@ -265,6 +274,7 @@ fun PlotColorPickerDialog(
                                     }
                                     .clickable {
                                         selectedColor = availableColors[6]
+                                        customColorSelected = false
                                     }
                             )
                         }
@@ -288,6 +298,7 @@ fun PlotColorPickerDialog(
                                     }
                                     .clickable {
                                         selectedColor = availableColors[7]
+                                        customColorSelected = false
                                     }
                             )
                         }
@@ -314,6 +325,7 @@ fun PlotColorPickerDialog(
                                     }
                                     .clickable {
                                         selectedColor = availableColors[8]
+                                        customColorSelected = false
                                     }
                             )
                         }
@@ -337,6 +349,7 @@ fun PlotColorPickerDialog(
                                     }
                                     .clickable {
                                         selectedColor = availableColors[9]
+                                        customColorSelected = false
                                     }
                             )
                         }
@@ -360,6 +373,7 @@ fun PlotColorPickerDialog(
                                     }
                                     .clickable {
                                         selectedColor = availableColors[10]
+                                        customColorSelected = false
                                     }
                             )
                         }
@@ -383,6 +397,7 @@ fun PlotColorPickerDialog(
                                     }
                                     .clickable {
                                         selectedColor = availableColors[11]
+                                        customColorSelected = false
                                     }
                             )
                         }
@@ -409,6 +424,7 @@ fun PlotColorPickerDialog(
                                     }
                                     .clickable {
                                         selectedColor = availableColors[12]
+                                        customColorSelected = false
                                     }
                             )
                         }
@@ -432,6 +448,7 @@ fun PlotColorPickerDialog(
                                     }
                                     .clickable {
                                         selectedColor = availableColors[13]
+                                        customColorSelected = false
                                     }
                             )
                         }
@@ -455,6 +472,7 @@ fun PlotColorPickerDialog(
                                     }
                                     .clickable {
                                         selectedColor = availableColors[14]
+                                        customColorSelected = false
                                     }
                             )
                         }
@@ -467,7 +485,7 @@ fun PlotColorPickerDialog(
                                     .requiredSize(36.dp)
                                     .border(
                                         width = 2.dp,
-                                        color = textColor,
+                                        color = if (customColorSelected) selectedColor else textColor,
                                         shape = CircleShape
                                     )
                                     .clickable {
@@ -478,7 +496,7 @@ fun PlotColorPickerDialog(
                                 Icon(
                                     imageVector = Icons.Default.MoreHoriz,
                                     contentDescription = stringResource(R.string.color_picker_custom_color),
-                                    tint = textColor
+                                    tint = if (customColorSelected) selectedColor else textColor
                                 )
                             }
                         }
@@ -486,9 +504,13 @@ fun PlotColorPickerDialog(
                     SimpleDialogActionBar(
                         onCancel = onDismissRequest,
                         showCancelButton = selectedColor != currentColor,
-                        validateButtonText = if (selectedColor == currentColor) stringResource(R.string.misc_ok) else stringResource(
-                            R.string.misc_save
-                        ),
+                        validateButtonText = if (selectedColor == currentColor) {
+                            stringResource(R.string.misc_ok).uppercase()
+                        } else {
+                            stringResource(
+                                R.string.misc_save
+                            ).uppercase()
+                        },
                         onValidate = {
                             if (selectedColor != currentColor) {
                                 onColorSelected(selectedColor)
@@ -505,6 +527,8 @@ fun PlotColorPickerDialog(
             initialColor = selectedColor,
             onDismissRequest = { customPickerOpened = false },
             onColorSelected = {
+                selectedColor = it
+                customColorSelected = true
                 customPickerOpened = false
             }
         )

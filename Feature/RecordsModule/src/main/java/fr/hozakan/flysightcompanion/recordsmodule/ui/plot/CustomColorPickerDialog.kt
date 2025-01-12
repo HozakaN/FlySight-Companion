@@ -1,21 +1,32 @@
 package fr.hozakan.flysightcompanion.recordsmodule.ui.plot
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -34,17 +45,20 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.window.core.layout.WindowWidthSizeClass
+import fr.hozakan.flysightcompanion.composablecommons.SimpleDialogActionBar
 import fr.hozakan.flysightcompanion.recordsmodule.ui.angle
 import fr.hozakan.flysightcompanion.recordsmodule.ui.angleToHue
+import fr.hozakan.flysightcompanion.recordsmodule.ui.composeColor
 import fr.hozakan.flysightcompanion.recordsmodule.ui.distanceTo
 import fr.hozakan.flysightcompanion.recordsmodule.ui.fromAngle
+import fr.hozakan.flysightcompanion.recordsmodule.ui.hexCode
 import fr.hozakan.flysightcompanion.recordsmodule.ui.hsvToCoord
 import fr.hozakan.flysightcompanion.recordsmodule.ui.intersectCircle
 import fr.hozakan.flysightcompanion.recordsmodule.ui.length
 import fr.hozakan.flysightcompanion.recordsmodule.ui.radius
 import fr.hozakan.flysightcompanion.recordsmodule.ui.toHSV
 import timber.log.Timber
-import kotlin.math.abs
 import kotlin.math.min
 
 @Composable
@@ -56,75 +70,138 @@ fun CustomColorPickerDialog(
     Dialog(
         onDismissRequest = onDismissRequest
     ) {
+        var currentColorText by remember(initialColor) { mutableStateOf(initialColor.hexCode) }
+        val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+        val displaySideBySide =
+            windowSizeClass.windowWidthSizeClass.hashCode() >= WindowWidthSizeClass.MEDIUM.hashCode()
         Card {
-            Box(
-                modifier = Modifier.padding(8.dp)
-            ) {
-                BoxWithConstraints(
-                    modifier = Modifier.requiredSize(256.dp)
-                ) {
-                    val sideSize = with(LocalDensity.current) {
-                        min(maxWidth.toPx(), maxHeight.toPx())
-                    }
-                    val size = Size(sideSize, sideSize)
-                    var selectedPoint by remember(initialColor) {
-                        val (h, s, _) = initialColor.toHSV()
-                        mutableStateOf(hsvToCoord(h, s, size.center))
-                    }
-                    var selectedColor by remember(initialColor) { mutableStateOf(initialColor) }
-                    Box {
-                        Canvas(
-                            modifier = Modifier
-                                .requiredSize(256.dp)
-                                .clip(CircleShape)
-                                .pointerInput(Unit) {
-                                    detectTapGestures { offset ->
-                                        val (color, _) = coordToColor(
-                                            offset,
-                                            size.center,
-                                            size.radius
-                                        )
-                                        selectedPoint = offset
-                                        selectedColor = color
-                                    }
-                                }
-                                .pointerInput(Unit) {
-                                    detectDragGestures { change, _ ->
-                                        val offset =
-                                            if (change.position.distanceTo(size.center) < size.radius) {
-                                                change.position
-                                            } else {
-                                                val intersections = change.position.intersectCircle(
-                                                    size.center,
-                                                    size.radius
-                                                )
-                                                if (change.position.x > size.center.x) {
-                                                    intersections.maxBy { it.x }
-                                                } else {
-                                                    intersections.minBy { it.x }
-                                                }
-                                            }
-                                        val (color, _) = coordToColor(
-                                            offset,
-                                            size.center,
-                                            size.radius
-                                        )
-                                        selectedPoint = offset
-                                        selectedColor = color
-                                    }
-                                }
-                        ) {
-                            drawIntoCanvas { canvas ->
-                                canvas.drawHsvColorGradient(size)
-                            }
-                        }
-                        Canvas(
-                            modifier = Modifier.requiredSize(256.dp)
-                        ) {
-                            drawColorIndicator(selectedPoint, selectedColor)
-                        }
-                    }
+            Column(
+                modifier = if (displaySideBySide) {
+                    Modifier.requiredWidth(300.dp)
+                } else {
+                    Modifier.fillMaxWidth()
                 }
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val selectedComposeColor = remember(currentColorText) { "#$currentColorText".composeColor }
+                if (displaySideBySide) {
+
+                } else {
+                    CustomColorPicker(
+                        initialColor = selectedComposeColor ?: Color.Black,
+                        onCurrentColorChanged = { color ->
+                            currentColorText = color.hexCode
+                        }
+                    )
+                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+//                    FText(
+//                        text = currentColor.hexCode.uppercase(),
+//                        configuration = FlySightTheme.typography.cardTitle,
+//                        color = currentColor
+//                    )
+                    TextField(
+                        prefix = {
+                            Text(text = "#")
+                        },
+                        value = currentColorText.uppercase(),
+                        onValueChange = {
+                            currentColorText = it
+                        }
+                    )
+                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .requiredHeight(64.dp)
+                            .background(color = Color.Red)
+                    )
+                }
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                SimpleDialogActionBar(
+                    onCancel = onDismissRequest,
+                    validateEnabled = selectedComposeColor != null,
+                    onValidate = {
+                        selectedComposeColor?.let { newColor ->
+                            onColorSelected(newColor)
+                            onDismissRequest()
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CustomColorPicker(
+    initialColor: Color,
+    onCurrentColorChanged: (Color) -> Unit
+) {
+    BoxWithConstraints(
+        modifier = Modifier.requiredSize(360.dp)
+    ) {
+        val sideSize = with(LocalDensity.current) {
+            min(maxWidth.toPx(), maxHeight.toPx())
+        }
+        val size = Size(sideSize, sideSize)
+        var selectedPoint by remember(initialColor) {
+            val (h, s, _) = initialColor.toHSV()
+            mutableStateOf(hsvToCoord(h, s, size.center))
+        }
+        var selectedColor by remember(initialColor) { mutableStateOf(initialColor) }
+        Box {
+            Canvas(
+                modifier = Modifier
+                    .requiredSize(360.dp)
+                    .clip(CircleShape)
+                    .pointerInput(Unit) {
+                        detectTapGestures { offset ->
+                            val (color, _) = coordToColor(
+                                offset,
+                                size.center,
+                                size.radius
+                            )
+                            selectedPoint = offset
+                            selectedColor = color
+                            onCurrentColorChanged(color)
+                        }
+                    }
+                    .pointerInput(Unit) {
+                        detectDragGestures { change, _ ->
+                            val offset =
+                                if (change.position.distanceTo(size.center) < size.radius) {
+                                    change.position
+                                } else {
+                                    val intersections = change.position.intersectCircle(
+                                        size.center,
+                                        size.radius
+                                    )
+                                    if (change.position.x > size.center.x) {
+                                        intersections.maxBy { it.x }
+                                    } else {
+                                        intersections.minBy { it.x }
+                                    }
+                                }
+                            val (color, _) = coordToColor(
+                                offset,
+                                size.center,
+                                size.radius
+                            )
+                            selectedPoint = offset
+                            selectedColor = color
+                            onCurrentColorChanged(color)
+                        }
+                    }
+            ) {
+                drawIntoCanvas { canvas ->
+                    canvas.drawHsvColorGradient(size)
+                }
+            }
+            Canvas(
+                modifier = Modifier.requiredSize(256.dp)
+            ) {
+                drawColorIndicator(selectedPoint, selectedColor)
             }
         }
     }

@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.adaptive.android)
     debugImplementation(libs.androidx.ui.tooling)
 //    implementation(libs.androidx.material.icons.extended)
 //    implementation(libs.androidx.activity.compose)

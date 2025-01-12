@@ -1,5 +1,7 @@
 package fr.hozakan.flysightcompanion.model.ui
 
+import fr.hozakan.flysightcompanion.model.ui.PlotDisplayPreference.Companion.defaultValues
+
 typealias ColorHex = String
 
 sealed class PlotDisplayPreference(
@@ -74,10 +76,6 @@ sealed class PlotDisplayPreference(
             SpeedScoreAccuracy("#FF80FF")
         )
 
-        fun toStringPreference(): String {
-            return defaultValues().joinToString(";") { "${it.name}:${it.colorHex}" }
-        }
-
         fun fromStringPreference(stringPref: String): List<PlotDisplayPreference> {
             return stringPref.split(";").mapNotNull { pref ->
                 val (name, colorHex) = pref.split(":")
@@ -88,6 +86,14 @@ sealed class PlotDisplayPreference(
             }
         }
     }
+
+    override fun toString(): String {
+        return "$name = $colorHex"
+    }
+}
+
+fun List<PlotDisplayPreference>.toStringPreference(): String {
+    return joinToString(";") { "${it.name}:${it.colorHex}" }
 }
 
 val List<PlotDisplayPreference>.accelerationColor: ColorHex

@@ -4,6 +4,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
@@ -16,8 +17,13 @@ import fr.hozakan.flysightcompanion.designsystem.theme.TextConfiguration
 fun FText(
     text: String,
     modifier: Modifier = Modifier,
+    color: Color? = null,
     configuration: TextConfiguration = TextConfiguration.Default
-        .copy(style = LocalTextStyle.current),
+        .copy(
+            style = if (color == null) LocalTextStyle.current else LocalTextStyle.current.copy(
+                color = color
+            )
+        ),
     fontFamily: FontFamily? = null,
     letterSpacing: TextUnit = TextUnit.Unspecified,
     textDecoration: TextDecoration? = null,
@@ -31,6 +37,7 @@ fun FText(
 ) {
     Text(
         text = text,
+        color = (color ?: Color.Unspecified),
         modifier = modifier,
         style = configuration.style,
         fontSize = configuration.fontSize,

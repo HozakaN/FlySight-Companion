@@ -3,7 +3,7 @@ package fr.hozakan.flysightcompanion.recordsmodule.ui
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 
-internal val Color.hexCode: String
+internal val Color.hexCodeWithAlpha: String
   inline get() {
     val a: Int = (alpha * 255).toInt()
     val r: Int = (red * 255).toInt()
@@ -11,6 +11,21 @@ internal val Color.hexCode: String
     val b: Int = (blue * 255).toInt()
     return a.hex + r.hex + g.hex + b.hex
   }
+
+internal val Color.hexCode: String
+  inline get() {
+    val r: Int = (red * 255).toInt()
+    val g: Int = (green * 255).toInt()
+    val b: Int = (blue * 255).toInt()
+    return r.hex + g.hex + b.hex
+  }
+
+internal val String.composeColor: Color?
+    get() = try {
+        Color(android.graphics.Color.parseColor(this))
+    } catch (e: IllegalArgumentException) {
+        null
+    }
 
 private val Int.hex get() = this.toString(16).padStart(2, '0')
 

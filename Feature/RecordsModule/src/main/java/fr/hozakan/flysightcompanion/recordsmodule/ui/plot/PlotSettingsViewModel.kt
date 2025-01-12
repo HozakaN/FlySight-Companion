@@ -1,13 +1,16 @@
 package fr.hozakan.flysightcompanion.recordsmodule.ui.plot
 
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.model.records.dummyAnalyze
 import fr.hozakan.flysightcompanion.model.records.dummyRecordFile
 import fr.hozakan.flysightcompanion.model.ui.PlotBottomItem
+import fr.hozakan.flysightcompanion.model.ui.PlotDisplayPreference
 import fr.hozakan.flysightcompanion.model.ui.PlotLeftItem
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
+import fr.hozakan.flysightcompanion.recordsmodule.ui.hexCode
 import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +20,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 class PlotSettingsViewModel @Inject constructor(
@@ -39,6 +43,20 @@ class PlotSettingsViewModel @Inject constructor(
                 }
             }
             .launchIn(viewModelScope)
+    }
+
+    fun updatePlotColor(selectedParam: PlotDisplayPreference, color: Color) {
+        val newPlotDisplayPreferences = _state.value.plotDisplayPreferences.map {
+            if (it.name == selectedParam.name) {
+                it::class.java.constructors.first()
+                    .newInstance("#${color.hexCode}") as PlotDisplayPreference
+            } else {
+                it
+            }
+        }
+        userPrefService.updatePlotDisplayPreferences(
+            newPlotDisplayPreferences
+        )
     }
 
 }

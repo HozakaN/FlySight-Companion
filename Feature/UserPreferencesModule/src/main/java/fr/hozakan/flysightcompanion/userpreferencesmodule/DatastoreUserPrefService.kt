@@ -19,6 +19,7 @@ import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.ui.PlotBottomItem
 import fr.hozakan.flysightcompanion.model.ui.PlotDisplayPreference
 import fr.hozakan.flysightcompanion.model.ui.PlotLeftItem
+import fr.hozakan.flysightcompanion.model.ui.toStringPreference
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -147,14 +148,25 @@ class DatastoreUserPrefService(
     }
 
     override fun updatePlotDisplayPreferences(plotDisplayPreferences: List<PlotDisplayPreference>) {
+        updateUnitSystem(unitSystem = if (unitSystem.value == UnitSystem.Metric) UnitSystem.Imperial else UnitSystem.Metric)
         dataStoreCoroutineScope.launch {
             val key = getKey<String>("plot_display_preferences")
-            val value = PlotDisplayPreference.toStringPreference()
             dataStore.edit { preferences ->
-                preferences[key] = value
+                preferences[key] = plotDisplayPreferences.toStringPreference()
             }
         }
     }
+
+    /*
+     override fun updateUnitSystem(unitSystem: UnitSystem) {
+        dataStoreCoroutineScope.launch {
+            val key = getKey<Int>("unit_system")
+            dataStore.edit { preferences ->
+                preferences[key] = unitSystem.value
+            }
+        }
+    }
+     */
 
     @Suppress("UNCHECKED_CAST")
     private inline fun <reified T> getKey(name: String): Preferences.Key<T> {
