@@ -17,9 +17,8 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.ui.PlotBottomItem
-import fr.hozakan.flysightcompanion.model.ui.PlotDisplayPreferences
+import fr.hozakan.flysightcompanion.model.ui.PlotDisplayPreference
 import fr.hozakan.flysightcompanion.model.ui.PlotLeftItem
-import fr.hozakan.flysightcompanion.model.ui.defaultDisplayPreferences
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -95,20 +94,20 @@ class DatastoreUserPrefService(
                 PlotBottomItem.Time
             )
 
-    override val plotDisplayPreferences: StateFlow<PlotDisplayPreferences>
+    override val plotDisplayPreferences: StateFlow<List<PlotDisplayPreference>>
         get() = dataStore.data
             .map { preferences ->
                 val key = getKey<String>("plot_display_preferences")
                 val value = preferences[key]
                 value?.let { prefs ->
-                    PlotDisplayPreferences.fromStringPreference(prefs)
-                } ?: defaultDisplayPreferences
+                    PlotDisplayPreference.fromStringPreference(prefs)
+                } ?: PlotDisplayPreference.defaultValues()
             }
             .filterNotNull()
             .stateIn(
                 dataStoreCoroutineScope,
                 SharingStarted.WhileSubscribed(),
-                defaultDisplayPreferences
+                PlotDisplayPreference.defaultValues()
             )
 
     override fun updateUnitSystem(unitSystem: UnitSystem) {
@@ -147,10 +146,10 @@ class DatastoreUserPrefService(
         }
     }
 
-    override fun updatePlotDisplayPreferences(plotDisplayPreferences: PlotDisplayPreferences) {
+    override fun updatePlotDisplayPreferences(plotDisplayPreferences: List<PlotDisplayPreference>) {
         dataStoreCoroutineScope.launch {
             val key = getKey<String>("plot_display_preferences")
-            val value = plotDisplayPreferences.toString()
+            val value = PlotDisplayPreference.toStringPreference()
             dataStore.edit { preferences ->
                 preferences[key] = value
             }

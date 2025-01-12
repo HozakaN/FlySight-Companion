@@ -22,6 +22,7 @@ sealed class AppScreen(val route: String) {
     }
     data object RecordTab : AppScreen("record_tab") {
         data object RecordList : AppScreen("record_list")
+        data object PlotSettings : AppScreen("plot_settings")
         data object RecordDetail: AppScreen("record_detail/{recordName}") {
             fun buildRoute(recordName: String) = "record_detail/$recordName"
         }

@@ -58,7 +58,7 @@
     <string name="left_plot_local_acceleration_right">Accéleration vers la droite</string>
     <string name="left_plot_local_acceleration_down">Accéleration vers le bas</string>
     <string name="left_plot_local_acceleration_magnitude">Accéleration magnitude</string>
-    <string name="left_plot_total_energy">Énergie total</string>
+    <string name="left_plot_total_energy">Énergie totale</string>
     <string name="left_plot_energy_rate">Energy rate</string>
     <string name="left_plot_lift_coefficient">Coefficient de portance</string>
     <string name="left_plot_drag_coefficient">Coefficient de traînée</string>
@@ -73,6 +73,7 @@
     <string name="screen_title_config_list">Configurations</string>
     <string name="screen_title_record_list">Enregistrements</string>
     <string name="screen_title_file">Fichier %1$s</string>
+    <string name="screen_title_plot_settings">Paramètres de graphique</string>
 
     <string name="dialog_pick_config_title">Choisissez une nouvelle configuration pour votre FlySight</string>
 
@@ -277,5 +278,9 @@
     <string name="list_records_delete_record">@string/misc_delete</string>
 
     <string name="record_detail_menu">Menu</string>
+    <string name="record_detail_menu_plot_settings">Paramètres du graphique</string>
+
+    <string name="color_picker_custom_color">Couleur personalisée</string>
+    <string name="color_picker_current_choice">Couleur à remplacer :</string>
 
 </resources>

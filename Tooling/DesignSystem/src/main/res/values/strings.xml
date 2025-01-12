@@ -73,6 +73,7 @@
     <string name="screen_title_config_list">Config files</string>
     <string name="screen_title_record_list">Records</string>
     <string name="screen_title_file">File %1$s</string>
+    <string name="screen_title_plot_settings">Plot settings</string>
 
     <string name="dialog_pick_config_title">Pick a new configuration for your FlySight</string>
 
@@ -277,5 +278,9 @@
     <string name="list_records_delete_record">@string/misc_delete</string>
 
     <string name="record_detail_menu">Menu</string>
+    <string name="record_detail_menu_plot_settings">Plot settings</string>
+
+    <string name="color_picker_custom_color">Custom color</string>
+    <string name="color_picker_current_choice">Color to replace :</string>
 
 </resources>

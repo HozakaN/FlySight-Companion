@@ -27,7 +27,9 @@ import fr.hozakan.flysightcompanion.model.ui.PlotBottomItem
 import fr.hozakan.flysightcompanion.model.ui.PlotLeftItem
 
 @Composable
-fun RecordDetailMenuActions() {
+fun RecordDetailMenuActions(
+    onPlotSettingsClicked: ()  -> Unit
+) {
     val factory = LocalViewModelFactory.current
 
     val viewModel: RecordDetailViewModel = viewModel(factory = factory)
@@ -80,6 +82,13 @@ fun RecordDetailMenuActions() {
             onClick = {
                 bottomSubMenuExpanded = true
                 expanded = false
+            }
+        )
+        DropdownMenuItem(
+            text = { Text(text = stringResource(R.string.record_detail_menu_plot_settings)) },
+            onClick = {
+                expanded = false
+                onPlotSettingsClicked()
             }
         )
     }

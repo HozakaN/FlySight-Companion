@@ -15,6 +15,7 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.ui.file.FileScreenViewModel
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesViewModel
 import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailViewModel
 import fr.hozakan.flysightcompanion.recordsmodule.ui.list.ListRecordsViewModel
+import fr.hozakan.flysightcompanion.recordsmodule.ui.plot.PlotSettingsViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 
@@ -69,6 +70,12 @@ internal abstract class ViewModelBindings {
     @IntoMap
     @ViewModelKey(RecordDetailViewModel::class)
     abstract fun bindRecordDetailViewModel(recordDetailViewModel: RecordDetailViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(PlotSettingsViewModel::class)
+    abstract fun bindPlotSettingsViewModel(plotSettingsViewModel: PlotSettingsViewModel): ViewModel
 
     @Binds
     abstract fun bindViewModelFactory(factory: ViewModelFactory): ViewModelProvider.Factory

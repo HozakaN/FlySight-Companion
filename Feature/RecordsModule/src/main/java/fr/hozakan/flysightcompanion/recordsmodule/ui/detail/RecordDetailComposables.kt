@@ -38,6 +38,31 @@ import fr.hozakan.flysightcompanion.model.records.totalEnergy
 import fr.hozakan.flysightcompanion.model.records.totalSpeed
 import fr.hozakan.flysightcompanion.model.records.verticalSpeed
 import fr.hozakan.flysightcompanion.model.ui.PlotLeftItem
+import fr.hozakan.flysightcompanion.model.ui.accelerationColor
+import fr.hozakan.flysightcompanion.model.ui.accelerationDownColor
+import fr.hozakan.flysightcompanion.model.ui.accelerationForwardColor
+import fr.hozakan.flysightcompanion.model.ui.accelerationMagnitudeColor
+import fr.hozakan.flysightcompanion.model.ui.accelerationRightColor
+import fr.hozakan.flysightcompanion.model.ui.courseAccuracyColor
+import fr.hozakan.flysightcompanion.model.ui.courseColor
+import fr.hozakan.flysightcompanion.model.ui.courseRateColor
+import fr.hozakan.flysightcompanion.model.ui.diveAngleColor
+import fr.hozakan.flysightcompanion.model.ui.diveRateColor
+import fr.hozakan.flysightcompanion.model.ui.dragCoefficientColor
+import fr.hozakan.flysightcompanion.model.ui.elevationColor
+import fr.hozakan.flysightcompanion.model.ui.energyRateColor
+import fr.hozakan.flysightcompanion.model.ui.glideRatioColor
+import fr.hozakan.flysightcompanion.model.ui.horizontalAccuracyColor
+import fr.hozakan.flysightcompanion.model.ui.horizontalSpeedColor
+import fr.hozakan.flysightcompanion.model.ui.liftCoefficientColor
+import fr.hozakan.flysightcompanion.model.ui.numberOfSatellitesColor
+import fr.hozakan.flysightcompanion.model.ui.speedAccuracyColor
+import fr.hozakan.flysightcompanion.model.ui.speedScoreAccuracyColor
+import fr.hozakan.flysightcompanion.model.ui.sphericalErrorProbabilityColor
+import fr.hozakan.flysightcompanion.model.ui.totalEnergyColor
+import fr.hozakan.flysightcompanion.model.ui.totalSpeedColor
+import fr.hozakan.flysightcompanion.model.ui.verticalAccuracyColor
+import fr.hozakan.flysightcompanion.model.ui.verticalSpeedColor
 
 @Composable
 fun RecordDetailScreen(

@@ -6,9 +6,8 @@ import fr.hozakan.flysightcompanion.model.records.RecordFile
 import fr.hozakan.flysightcompanion.model.records.dummyAnalyze
 import fr.hozakan.flysightcompanion.model.records.dummyRecordFile
 import fr.hozakan.flysightcompanion.model.ui.PlotBottomItem
-import fr.hozakan.flysightcompanion.model.ui.PlotDisplayPreferences
+import fr.hozakan.flysightcompanion.model.ui.PlotDisplayPreference
 import fr.hozakan.flysightcompanion.model.ui.PlotLeftItem
-import fr.hozakan.flysightcompanion.model.ui.defaultDisplayPreferences
 
 @Immutable
 data class RecordDetailState(
@@ -17,5 +16,5 @@ data class RecordDetailState(
     val analyze: RecordAnalyze = dummyAnalyze,
     val plotLeftItems: List<PlotLeftItem> = listOf(PlotLeftItem.Elevation),
     val plotBottomItem: PlotBottomItem = PlotBottomItem.Time,
-    val plotDisplayPreferences: PlotDisplayPreferences = defaultDisplayPreferences
+    val plotDisplayPreferences: List<PlotDisplayPreference> = PlotDisplayPreference.defaultValues()
 )

@@ -71,6 +71,7 @@ import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailMenuActions
 import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailScreen
 import fr.hozakan.flysightcompanion.recordsmodule.ui.list.ListRecordsScreen
+import fr.hozakan.flysightcompanion.recordsmodule.ui.plot.PlotSettingsScreen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
 import fr.hozakan.flysightcompanion.R as LocalR
@@ -126,6 +127,10 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                     stringResource(R.string.screen_title_config_list)
                                 }
 
+                                AppScreen.RecordTab.PlotSettings.route -> {
+                                    stringResource(R.string.screen_title_config_list)
+                                }
+
                                 AppScreen.DeviceTab.DeviceFile.route -> {
                                     val filePath =
                                         currentBackStack.value?.arguments?.getString("filePath")
@@ -147,6 +152,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                     when (currentRoute) {
 
                                         AppScreen.RecordTab.RecordDetail.route,
+                                        AppScreen.RecordTab.PlotSettings.route,
                                         AppScreen.DeviceTab.DeviceDetail.route -> {
                                             IconButton(
                                                 onClick = {
@@ -258,7 +264,9 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                         }
 
                                         AppScreen.RecordTab.RecordDetail.route -> {
-                                            RecordDetailMenuActions()
+                                            RecordDetailMenuActions {
+                                                navController.navigate(AppScreen.RecordTab.PlotSettings.route)
+                                            }
                                         }
 
                                         else -> {}
@@ -502,6 +510,9 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                         RecordDetailScreen(
                                             recordName = recordName
                                         )
+                                    }
+                                    composable(route = AppScreen.RecordTab.PlotSettings.route) {
+                                        PlotSettingsScreen()
                                     }
                                 }
                             }
