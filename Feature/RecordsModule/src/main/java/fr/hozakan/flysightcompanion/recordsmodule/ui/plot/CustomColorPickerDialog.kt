@@ -1,28 +1,28 @@
 package fr.hozakan.flysightcompanion.recordsmodule.ui.plot
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,6 +35,7 @@ import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.LinearGradientShader
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.RadialGradient
 import androidx.compose.ui.graphics.TileMode
@@ -44,9 +45,11 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.roundToIntSize
 import androidx.compose.ui.window.Dialog
 import androidx.window.core.layout.WindowWidthSizeClass
 import fr.hozakan.flysightcompanion.composablecommons.SimpleDialogActionBar
+import fr.hozakan.flysightcompanion.framework.extension.drawRoundRect
 import fr.hozakan.flysightcompanion.recordsmodule.ui.angle
 import fr.hozakan.flysightcompanion.recordsmodule.ui.angleToHue
 import fr.hozakan.flysightcompanion.recordsmodule.ui.composeColor
@@ -74,6 +77,7 @@ fun CustomColorPickerDialog(
         val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
         val displaySideBySide =
             windowSizeClass.windowWidthSizeClass.hashCode() >= WindowWidthSizeClass.MEDIUM.hashCode()
+        var brightness by remember { mutableFloatStateOf(1f) }
         Card {
             Column(
                 modifier = if (displaySideBySide) {
@@ -81,20 +85,24 @@ fun CustomColorPickerDialog(
                 } else {
                     Modifier.fillMaxWidth()
                 }
-                    .padding(16.dp),
+                    .padding(start = 16.dp, top = 32.dp, end = 16.dp, bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val selectedComposeColor = remember(currentColorText) { "#$currentColorText".composeColor }
+                val selectedComposeColor =
+                    remember(currentColorText) {
+                        "#$currentColorText".composeColor
+                    }
                 if (displaySideBySide) {
 
                 } else {
                     CustomColorPicker(
                         initialColor = selectedComposeColor ?: Color.Black,
+                        brightness = brightness,
                         onCurrentColorChanged = { color ->
                             currentColorText = color.hexCode
                         }
                     )
-                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+                    Spacer(modifier = Modifier.requiredHeight(24.dp))
 //                    FText(
 //                        text = currentColor.hexCode.uppercase(),
 //                        configuration = FlySightTheme.typography.cardTitle,
@@ -109,13 +117,18 @@ fun CustomColorPickerDialog(
                             currentColorText = it
                         }
                     )
-                    Spacer(modifier = Modifier.requiredHeight(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .requiredHeight(64.dp)
-                            .background(color = Color.Red)
-                    )
+//                    Spacer(modifier = Modifier.requiredHeight(32.dp))
+//                    BrightnessSelector(
+//                        selectedColor = selectedComposeColor ?: Color.Black,
+//                        brightness = brightness,
+//                        onBrightnessChanged = {
+//                            if (brightness != it) {
+//                                brightness = it
+//                                val (h, s, _) = (selectedComposeColor ?: Color.Black).toHSV()
+//                                currentColorText = Color.hsv(h, s, brightness).hexCode
+//                            }
+//                        }
+//                    )
                 }
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 SimpleDialogActionBar(
@@ -134,8 +147,65 @@ fun CustomColorPickerDialog(
 }
 
 @Composable
+private fun BrightnessSelector(
+    selectedColor: Color,
+    brightness: Float,
+    onBrightnessChanged: (Float) -> Unit
+) {
+
+    val fullBrightnessColor = remember(selectedColor) {
+        val (h, s, _) = selectedColor.toHSV()
+        Color.hsv(h, s, 1f)
+    }
+    val colorPaint = remember(fullBrightnessColor) {
+        Paint().apply {
+            color = fullBrightnessColor
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .requiredHeight(64.dp)
+    ) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(16.dp))
+                .pointerInput(Unit) {
+                    detectTapGestures { offset ->
+                        val newBrightness = (offset.x / size.width).coerceIn(0f, 1f)
+                        onBrightnessChanged(newBrightness)
+                    }
+                }
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures { change, _ ->
+                        onBrightnessChanged((change.position.x / size.width).coerceIn(0f, 1f))
+                    }
+                }
+        ) {
+            drawIntoCanvas { canvas ->
+                colorPaint.shader = LinearGradientShader(
+                    colors = listOf(Color.Black, fullBrightnessColor),
+                    from = Offset(0f, 1f),
+                    to = Offset(size.width, 1f),
+                    tileMode = TileMode.Clamp,
+                )
+                canvas.drawRoundRect(size.roundToIntSize(), 16.dp.value, colorPaint)
+                val wheelPaint: Paint = Paint().apply {
+                    color = Color.White
+                }
+                val center = Offset(brightness.coerceIn(0f, 1f) * size.width, size.height * 0.5f)
+                canvas.drawCircle(center, 64.dp.value, wheelPaint)
+            }
+        }
+    }
+}
+
+@Composable
 private fun CustomColorPicker(
     initialColor: Color,
+    brightness: Float,
     onCurrentColorChanged: (Color) -> Unit
 ) {
     BoxWithConstraints(
@@ -149,7 +219,20 @@ private fun CustomColorPicker(
             val (h, s, _) = initialColor.toHSV()
             mutableStateOf(hsvToCoord(h, s, size.center))
         }
-        var selectedColor by remember(initialColor) { mutableStateOf(initialColor) }
+//        var selectedColor by remember(initialColor) {
+//            val (h, s, _) = initialColor.toHSV()
+//            mutableStateOf(Color.hsv(h, s, 1f))
+//        }
+
+        val pureColor by remember(initialColor) {
+            val (h, s, _) = initialColor.toHSV()
+            mutableStateOf(Color.hsv(h, s, 1f))
+        }
+
+        var selectorColor by remember(initialColor) {
+            mutableStateOf(initialColor)
+        }
+
         Box {
             Canvas(
                 modifier = Modifier
@@ -162,8 +245,11 @@ private fun CustomColorPicker(
                                 size.center,
                                 size.radius
                             )
+//                            val (h, s, _) = color.toHSV()
+//                            val newColor = Color.hsv(h, s, brightness)
                             selectedPoint = offset
-                            selectedColor = color
+//                            selectedColor = color
+                            selectorColor = color
                             onCurrentColorChanged(color)
                         }
                     }
@@ -188,8 +274,11 @@ private fun CustomColorPicker(
                                 size.center,
                                 size.radius
                             )
+//                            val (h, s, _) = color.toHSV()
+//                            val newColor = Color.hsv(h, s, brightness)
                             selectedPoint = offset
-                            selectedColor = color
+//                            selectedColor = color
+                            selectorColor = color
                             onCurrentColorChanged(color)
                         }
                     }
@@ -201,7 +290,7 @@ private fun CustomColorPicker(
             Canvas(
                 modifier = Modifier.requiredSize(256.dp)
             ) {
-                drawColorIndicator(selectedPoint, selectedColor)
+                drawColorIndicator(selectedPoint, selectorColor)
             }
         }
     }
