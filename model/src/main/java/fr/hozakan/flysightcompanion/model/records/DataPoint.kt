@@ -1,5 +1,6 @@
 package fr.hozakan.flysightcompanion.model.records
 
+import android.util.Range
 import fr.hozakan.flysightcompanion.model.extensions.toEpochMillisecond
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -119,7 +120,8 @@ data class ComputableDataPoint(
     val omega: Double
 ) : DataPoint by dataPoint
 
-infix fun ComputableDataPoint.interpolateWith(other: ComputableDataPoint): Pair<ComputableDataPoint, ComputableDataPoint> = this to other
+infix fun ComputableDataPoint.interpolateWith(other: ComputableDataPoint): Pair<ComputableDataPoint, ComputableDataPoint> =
+    this to other
 
 infix fun Pair<ComputableDataPoint, ComputableDataPoint>.using(a: Double): ComputableDataPoint {
     val dateTime1 = first.dateTime.toEpochMillisecond(ZoneOffset.UTC)
@@ -239,3 +241,6 @@ val ComputableDataPoint.sep: Double
 
 val ComputableDataPoint.speedScoreAccuracy: Double
     get() = SQRT_2 * vAcc / 3.0
+
+public operator fun ComputableDataPoint.rangeTo(that: ComputableDataPoint): Range<Double> =
+    Range(this.t, that.t)

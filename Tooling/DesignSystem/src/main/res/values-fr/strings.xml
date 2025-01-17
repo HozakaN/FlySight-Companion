@@ -279,6 +279,9 @@
 
     <string name="record_detail_menu">Menu</string>
     <string name="record_detail_menu_plot_settings">Paramètres du graphique</string>
+    <string name="record_detail_time">Temps (s)</string>
+    <string name="record_detail_horizontal_distance">Distance horizontale (%1$s)</string>
+    <string name="record_detail_total_distance">Distance totale (%1$s)</string>
 
     <string name="color_picker_custom_color">Couleur personalisée</string>
     <string name="color_picker_current_choice">Couleur à remplacer :</string>

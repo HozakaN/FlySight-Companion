@@ -1,6 +1,7 @@
 package fr.hozakan.flysightcompanion.recordsmodule.ui.detail
 
 import androidx.compose.runtime.Immutable
+import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.records.RecordAnalyze
 import fr.hozakan.flysightcompanion.model.records.RecordFile
 import fr.hozakan.flysightcompanion.model.records.dummyAnalyze
@@ -16,5 +17,6 @@ data class RecordDetailState(
     val analyze: RecordAnalyze = dummyAnalyze,
     val plotLeftItems: List<PlotLeftItem> = listOf(PlotLeftItem.Elevation),
     val plotBottomItem: PlotBottomItem = PlotBottomItem.Time,
-    val plotDisplayPreferences: List<PlotDisplayPreference> = PlotDisplayPreference.defaultValues()
+    val plotDisplayPreferences: List<PlotDisplayPreference> = PlotDisplayPreference.defaultValues(),
+    val unitSystem: UnitSystem = UnitSystem.Metric
 )

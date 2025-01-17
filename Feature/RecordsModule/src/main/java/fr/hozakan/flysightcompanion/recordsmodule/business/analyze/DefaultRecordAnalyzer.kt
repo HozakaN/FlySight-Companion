@@ -1,6 +1,7 @@
 package fr.hozakan.flysightcompanion.recordsmodule.business.analyze
 
 import fr.hozakan.flysightcompanion.framework.extension.firstNotNullConsecutive
+import fr.hozakan.flysightcompanion.framework.extension.firstNotNullConsecutiveIndexed
 import fr.hozakan.flysightcompanion.model.extensions.toEpochMillisecond
 import fr.hozakan.flysightcompanion.model.records.AnalyzeOptions
 import fr.hozakan.flysightcompanion.model.records.ComputableDataPoint
@@ -13,13 +14,19 @@ import fr.hozakan.flysightcompanion.model.records.toComputableDataPoint
 import fr.hozakan.flysightcompanion.model.records.totalSpeed
 import fr.hozakan.flysightcompanion.model.records.using
 import fr.hozakan.flysightcompanion.model.records.A_GRAVITY
+import fr.hozakan.flysightcompanion.model.records.ExitReference
 import fr.hozakan.flysightcompanion.model.records.GAS_CONST
 import fr.hozakan.flysightcompanion.model.records.LAPSE_RATE
 import fr.hozakan.flysightcompanion.model.records.MM_AIR
 import fr.hozakan.flysightcompanion.model.records.SL_PRESSURE
 import fr.hozakan.flysightcompanion.model.records.SL_TEMP
+import fr.hozakan.flysightcompanion.model.records.dataPoint
 import net.sf.geographiclib.Geodesic
+import timber.log.Timber
 import java.time.ZoneOffset
+import java.util.Calendar
+import java.util.Date
+import java.util.GregorianCalendar
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.max
@@ -46,7 +53,7 @@ class DefaultRecordAnalyzer : RecordAnalyzer {
             .computeTime()
             .computeAltitude(ground = ground)
             .computeAcceleration()
-            .pairWithExitTime()
+            .pairWithExitTime(options = options)
             .also {
                 exitTime = it.second
             }
@@ -160,12 +167,11 @@ class DefaultRecordAnalyzer : RecordAnalyzer {
         var sumXX = 0.0
         var sumXY = 0.0
         this.subList(fromIndex = iMin, toIndex = iMax + 1).forEach { dp ->
-            val x = dp.t
             val y = valueProvider(dp)
-            sumX += x
+            sumX += dp.t
             sumY += y
-            sumXX += x * x
-            sumXY += x * y
+            sumXX += dp.t * dp.t
+            sumXY += dp.t * y
         }
         val n = iMax - iMin + 1
         return (sumXY - sumX * sumY / n) / (sumXX - sumX * sumX / n)
@@ -281,78 +287,155 @@ class DefaultRecordAnalyzer : RecordAnalyzer {
         }
     }
 
-    private fun List<ComputableDataPoint>.pairWithExitTime(): Pair<List<ComputableDataPoint>, Double> {
-        return this to (firstNotNullConsecutive { dp1, dp2 ->
-            // Get interpolation coefficient
-            val velD = A_GRAVITY
-            val a = (velD - dp1.velD) / (dp2.velD - dp1.velD)
+    private fun List<ComputableDataPoint>.pairWithExitTime(
+        options: AnalyzeOptions
+    ): Pair<List<ComputableDataPoint>, Double> {
+        val startTime = when (val exitReference = options.exitReference) {
+            ExitReference.Automatic -> {
+//                firstNotNullConsecutiveIndexed { index, dp1, dp2 ->
+//
+//                    if (index == 4120) {
+//                        Timber.d("Hoz2 dp1 = ${dp1.t}, dp2 = ${dp2.t}")
+//                    }
+//                    // Get interpolation coefficient
+//                    val velD = A_GRAVITY
+//                    val a = (velD - dp1.velD) / (dp2.velD - dp1.velD)
+//
+//                    // Check vertical speed
+//                    if (a < 0 || 1 < a) return@firstNotNullConsecutiveIndexed null
+//
+//                    // Check accuracy
+//                    val vAcc = dp1.vAcc + a * (dp2.vAcc - dp1.vAcc)
+//                    if (vAcc > 10) return@firstNotNullConsecutiveIndexed null
+//
+//                    // Check acceleration
+////                    Timber.d("Hoz2 dp1.az = ${dp1.az}, dp2.az = ${dp2.az}, dp1.z = ${dp1.z}, dp2.z = ${dp2.z}")
+//                    val az = dp1.az + a * (dp2.az - dp1.az)
+//                    if (az < A_GRAVITY / 5f) {
+//                        if (index == 4120) {
+//                            Timber.d("Hoz2 got out at az check az = $az, A_GRAVITY / 5f = ${A_GRAVITY / 5f}")
+//                        }
+//                        return@firstNotNullConsecutiveIndexed null
+//                    }
+//
+//                    // Determine exit
+//                    val t1 = dp1.dateTime.toEpochMillisecond(ZoneOffset.UTC)
+//                    val t2 = dp2.dateTime.toEpochMillisecond(ZoneOffset.UTC)
+//                    val start = t1 + a * (t2 - t1) - velD / az * 1000f
+//                    val date = Date(start.toLong())
+//                    val calendar = GregorianCalendar().also { it.time = date }
+////                calendar.add(Calendar.MINUTE, 3)
+////                calendar.add(Calendar.SECOND, 40)
+//                    Timber.d("Hoz2 start found at index $index : $start, $date")
+//                    calendar.time.time.toDouble()
+////            start
+//                }
 
-            // Check vertical speed
-            if (a < 0 || 1 < a) return@firstNotNullConsecutive null
+                for (i in 1 until size) {
+                    val dp1 = get(i - 1)
+                    val dp2 = get(i)
 
-            // Check accuracy
-            val vAcc = dp1.vAcc + a * (dp2.vAcc - dp1.vAcc)
-            if (vAcc > 10) return@firstNotNullConsecutive null
+                    if (i == 4121) {
+                        Timber.d("Hoz2 dp1 = ${dp1.t}, dp2 = ${dp2.t}")
+                    }
 
-            // Check acceleration
-            val az1 = dp1.z
-            val az2 = dp2.z
-            val az = az1 + a * (az2 - az1)
-            if (az < A_GRAVITY / 5f) return@firstNotNullConsecutive null
+                    // Get interpolation coefficient
+                    val velD = A_GRAVITY
+                    val a = (velD - dp1.velD) / (dp2.velD - dp1.velD)
 
-            // Determine exit
-            val t1 = dp1.dateTime.toEpochMillisecond(ZoneOffset.UTC)
-            val t2 = dp2.dateTime.toEpochMillisecond(ZoneOffset.UTC)
-            val start = t1 + a * (t2 - t1) - velD / az * 1000f
-            start
-        } ?: this.first().dateTime.toEpochMillisecond(ZoneOffset.UTC).toDouble())
+                    // Check vertical speed
+                    if (a < 0 || 1 < a) {
+                        if (i == 4121) {
+                            Timber.d("Hoz2 got out at vertical speed check")
+                        }
+                        continue
+                    }
+
+                    // Check accuracy
+                    val vAcc = dp1.vAcc + a * (dp2.vAcc - dp1.vAcc)
+                    if (vAcc > 10) {
+                        if (i == 4121) {
+                            Timber.d("Hoz2 got out at accuracy check")
+                        }
+                        continue
+                    }
+
+                    // Check acceleration
+                    val az = dp1.z + a * (dp2.z - dp1.z)
+                    if (i == 4121) {
+                        Timber.d("Hoz2 check az = $az, A_GRAVITY / 5f = ${A_GRAVITY / 5f}")
+                    }
+                    if (az < A_GRAVITY / 5f) {
+                        if (i == 4121) {
+                            Timber.d("Hoz2 got out at az check az = $az, A_GRAVITY / 5f = ${A_GRAVITY / 5f}")
+                        }
+                        continue
+                    }
+
+                    // Determine exit
+                    val t1 = dp1.dateTime.toEpochMillisecond(ZoneOffset.UTC)
+                    val t2 = dp2.dateTime.toEpochMillisecond(ZoneOffset.UTC)
+                    val start = t1 + a * (t2 - t1) - velD / az * 1000f
+                    Timber.d("Hoz2 determined an exit : ${Date(start.toLong())}")
+                    return this to start
+                }
+                Timber.d("Hoz2 no exit determined")
+                null
+            }
+
+            is ExitReference.Fixed -> firstOrNull { it.dateTime == exitReference.dateTime }?.dateTime?.toEpochMillisecond(
+                ZoneOffset.UTC
+            )?.toDouble()
+        }
+        return this to (startTime ?: this.first().dateTime.toEpochMillisecond(ZoneOffset.UTC)
+            .toDouble())
     }
 
-    private fun List<ComputableDataPoint>.computeVelocityDependantParameters(): List<ComputableDataPoint> {
-        return mapIndexed { index, dp ->
-            dp.copy(
-                curv = getSlope(index) { it.diveAngle },
-                accel = getSlope(index) { it.totalSpeed },
-                omega = getSlope(index) { it.theta }
-            )
-        }
+private fun List<ComputableDataPoint>.computeVelocityDependantParameters(): List<ComputableDataPoint> {
+    return mapIndexed { index, dp ->
+        dp.copy(
+            curv = getSlope(index) { it.diveAngle },
+            accel = getSlope(index) { it.totalSpeed },
+            omega = getSlope(index) { it.theta }
+        )
+    }
+}
+
+private fun List<ComputableDataPoint>.interpolateDataT(timing: Int): ComputableDataPoint {
+    val i1 = this.indexOfLast { it.t < timing }
+    val i2 = this.indexOfFirst { it.t > timing }
+
+    if (i1 < 0) return this.first()
+    if (i2 >= size) return this.last()
+
+    val dp1 = get(i1)
+    val dp2 = get(i2)
+
+    return dp1 interpolateWith dp2 using ((timing - dp1.t) / (dp2.t - dp1.t))
+}
+
+private fun ComputableDataPoint.distanceTo(
+    other: ComputableDataPoint
+): Double =
+    if (!options.windAdjustment && hasGeodetic && other.hasGeodetic) {
+        val geodesic = Geodesic.WGS84
+        geodesic.Inverse(latitude, longitude, other.latitude, other.longitude).s12
+    } else {
+        sqrt((other.x - x).pow(2) + (other.y - y).pow(2))
     }
 
-    private fun List<ComputableDataPoint>.interpolateDataT(timing: Int): ComputableDataPoint {
-        val i1 = this.indexOfLast { it.t < timing }
-        val i2 = this.indexOfFirst { it.t > timing }
-
-        if (i1 < 0) return this.first()
-        if (i2 >= size) return this.last()
-
-        val dp1 = get(i1)
-        val dp2 = get(i2)
-
-        return dp1 interpolateWith dp2 using ((timing - dp1.t) / (dp2.t - dp1.t))
+private fun ComputableDataPoint.bearingWith(other: ComputableDataPoint): Double =
+    if (!options.windAdjustment && hasGeodetic && other.hasGeodetic) {
+        val geodesic = Geodesic.WGS84
+        geodesic.Inverse(
+            latitude,
+            longitude,
+            other.latitude,
+            other.longitude
+        ).azi1 / 180 * Math.PI
+    } else {
+        atan2(other.x - x, other.y - y) / Math.PI * 100
     }
-
-    private fun ComputableDataPoint.distanceTo(
-        other: ComputableDataPoint
-    ): Double =
-        if (!options.windAdjustment && hasGeodetic && other.hasGeodetic) {
-            val geodesic = Geodesic.WGS84
-            geodesic.Inverse(latitude, longitude, other.latitude, other.longitude).s12
-        } else {
-            sqrt((other.x - x).pow(2) + (other.y - y).pow(2))
-        }
-
-    private fun ComputableDataPoint.bearingWith(other: ComputableDataPoint): Double =
-        if (!options.windAdjustment && hasGeodetic && other.hasGeodetic) {
-            val geodesic = Geodesic.WGS84
-            geodesic.Inverse(
-                latitude,
-                longitude,
-                other.latitude,
-                other.longitude
-            ).azi1 / 180 * Math.PI
-        } else {
-            atan2(other.x - x, other.y - y) / Math.PI * 100
-        }
 }
 
 

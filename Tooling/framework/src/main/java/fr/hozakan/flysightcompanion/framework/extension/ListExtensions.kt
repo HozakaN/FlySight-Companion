@@ -15,15 +15,12 @@ fun <T, R> List<T>.firstNotNullConsecutive(transform: (T, T) -> R?): R? {
     }
     return null
 }
-
-fun <T, R> List<T>.firstNotNullIndexed(transform: (Int, T, T) -> R?): R? {
-    var index = 0
+fun <T, R> List<T>.firstNotNullConsecutiveIndexed(transform: (Int, T, T) -> R?): R? {
     for (i in 0 until this.size - 1) {
-        val result = transform(index, this[i], this[i + 1])
+        val result = transform(i, this[i], this[i + 1])
         if (result != null) {
             return result
         }
-        index++
     }
     return null
 }

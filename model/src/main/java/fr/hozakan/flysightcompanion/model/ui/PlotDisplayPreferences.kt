@@ -1,7 +1,5 @@
 package fr.hozakan.flysightcompanion.model.ui
 
-import fr.hozakan.flysightcompanion.model.ui.PlotDisplayPreference.Companion.defaultValues
-
 typealias ColorHex = String
 
 sealed class PlotDisplayPreference(

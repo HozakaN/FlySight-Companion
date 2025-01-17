@@ -54,6 +54,13 @@ class RecordDetailViewModel @Inject constructor(
                 }
             }
             .launchIn(viewModelScope)
+        userPrefService.unitSystem
+            .onEach { unitSystem ->
+                _state.update {
+                    it.copy(unitSystem = unitSystem)
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     fun loadRecord(recordName: String, softLoad: Boolean = false) {

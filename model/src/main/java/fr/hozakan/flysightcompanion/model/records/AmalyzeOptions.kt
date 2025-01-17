@@ -1,5 +1,7 @@
 package fr.hozakan.flysightcompanion.model.records
 
+import java.time.LocalDateTime
+
 data class AnalyzeOptions(
     val mass: Double = 70.0,
     val planformArea: Double = 2.0,
@@ -12,7 +14,8 @@ data class AnalyzeOptions(
     val windN: Double = 0.0,
     val windAdjustment: Boolean = false,
     val groundReference: GroundReference = GroundReference.Automatic,
-    val courseReference: CourseReference = CourseReference.Automatic
+    val courseReference: CourseReference = CourseReference.Automatic,
+    val exitReference: ExitReference = ExitReference.Automatic
 )
 
 sealed interface GroundReference {
@@ -29,4 +32,9 @@ sealed interface CourseReference {
             is Automatic -> null
             is Fixed -> value
         }
+}
+
+sealed class ExitReference {
+    data object Automatic : ExitReference()
+    data class Fixed(val dateTime: LocalDateTime) : ExitReference()
 }
