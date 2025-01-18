@@ -37,6 +37,7 @@ import fr.hozakan.flysightcompanion.model.ble.FlySightCharacteristic
 import fr.hozakan.flysightcompanion.model.ble.cccdUuid
 import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -72,6 +73,7 @@ interface FlySightDevice {
     val connectionState: StateFlow<DeviceConnectionState>
     val configFile: StateFlow<LoadingState<ConfigFile>>
     val rawConfigFile: StateFlow<FileState>
+    val flySightFile: StateFlow<FileState>
     val records: StateFlow<LoadingState<List<RecordFile>>>
     val logs: StateFlow<List<String>>
     val fileReceived: SharedFlow<FileState>
@@ -148,10 +150,12 @@ class FlySightDeviceImpl(
 
     private val _file = MutableSharedFlow<FileState>()
     private val _rawConfigFile = MutableStateFlow<FileState>(FileState.Nothing)
+    private val _flySightFile = MutableStateFlow<FileState>(FileState.Nothing)
     private val _configFile = MutableStateFlow<LoadingState<ConfigFile>>(LoadingState.Idle)
     override val fileReceived = _file.asSharedFlow()
     override val rawConfigFile = _rawConfigFile.asStateFlow()
     override val configFile = _configFile.asStateFlow()
+    override val flySightFile: StateFlow<FileState> = _flySightFile.asStateFlow()
 
     private val _ping = MutableSharedFlow<Boolean>()
     override val ping: SharedFlow<Boolean> = _ping.asSharedFlow()
@@ -392,6 +396,7 @@ class FlySightDeviceImpl(
                 val records = retrieveRecordsInfo()
                 _records.value = LoadingState.Loaded(records)
                 startPingSystem()
+                readCurrentFlySightFile()
             }
         } else {
             gatt.disconnect()
@@ -454,8 +459,8 @@ class FlySightDeviceImpl(
         }
     }
 
-    private suspend fun startPingSystem() {
-        withContext(Dispatchers.IO) {
+    private fun startPingSystem() {
+        scope?.launch(Dispatchers.IO) {
             while (_connectionState.value == DeviceConnectionState.Connected) {
                 delay(14_000)
                 val ping = pingDevice()
@@ -463,7 +468,7 @@ class FlySightDeviceImpl(
                 if (!ping) {
                     log("Device $name not responding to pings")
                     disconnectGatt()
-                    return@withContext
+                    return@launch
                 }
             }
         }
@@ -528,6 +533,39 @@ class FlySightDeviceImpl(
             }
         }
         return recordFiles
+    }
+
+    private suspend fun readCurrentFlySightFile() {
+        _flySightFile.update {
+            FileState.Loading
+        }
+
+        val gatt = this.gatt ?: return
+        val rx = this.rxCharacteristic ?: return
+        val file = "/FLYSIGHT.TXT"
+
+        log("Reading flysight file")
+
+        withContext(Dispatchers.IO) {
+            val fileReader = BleFileReader(
+                gatt = gatt,
+                gattCharacteristic = rx,
+                gattTaskQueue = gattTaskQueue,
+                scheduler = scheduler
+            )
+            try {
+                val fileState = fileReader.readFile(file)
+                if (_flySightFile.value is FileState.Loading) {
+                    _flySightFile.value = fileState
+                }
+            } catch (e: Exception) {
+                if (e is CancellationException) {
+                    throw e
+                } else {
+                    log("Error reading file : $e")
+                }
+            }
+        }
     }
 
     private suspend fun readCurrentConfigFile() {
