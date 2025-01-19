@@ -1,18 +1,34 @@
 {
   "desc":"my desc",
-  "firmwares":[
+  "firmwares": [
     {
-      "name":"v2024.12.30",
-      "app_compatibility":[
-        "1", "2"
+      "name": "v2024.12.30",
+      "app_compatibility": [
+        "1.0.0-RC3",
+        "1.0.0-RC4"
+      ]
+    },
+    {
+      "name": "v2024.11.11.release_candidate",
+      "app_compatibility": [
+        "1.0.0-RC3",
+        "1.0.0-RC4"
       ]
     }
   ],
-  "apps":[
+  "apps": [
     {
-      "name":"1",
-      "firmware_compatibility":[
-        "v2024.12.30"
+      "name":"1.0.0-RC3",
+      "firmware_compatibility": [
+        "v2024.12.30",
+        "v2024.11.11.release_candidate"
+      ]
+    },
+    {
+      "name":"1.0.0-RC4",
+      "firmware_compatibility": [
+        "v2024.12.30",
+        "v2024.11.11.release_candidate"
       ]
     }
   ]
