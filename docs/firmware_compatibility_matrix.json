@@ -4,7 +4,6 @@
     {
       "name": "v2024.12.30",
       "app_compatibility": [
-        "1.0.0-RC3",
         "1.0.0-RC4"
       ]
     },
