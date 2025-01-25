@@ -6,6 +6,7 @@ import fr.hozakan.flysightcompanion.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightCompanionTheme
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
+import fr.hozakan.flysightcompanion.fsdevicemodule.business.MutableFlySightDevice
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.FileInfo
@@ -474,7 +475,7 @@ private class FakeDeviceImpl(
     initialConfigFileState: LoadingState<ConfigFile> = LoadingState.Idle,
     private val configFileName: String = "",
     override val name: String = "Fake device"
-) : FlySightDevice {
+) : MutableFlySightDevice {
     override val uuid: String
         get() = "uuid"
     override val address: String
@@ -486,6 +487,8 @@ private class FakeDeviceImpl(
         get() = MutableStateFlow(FileState.Nothing)
     override val flySightFile: StateFlow<FileState>
         get() = MutableStateFlow(FileState.Nothing)
+    override val hasAccess: StateFlow<Boolean>
+        get() = MutableStateFlow(true)
     override val records: StateFlow<LoadingState<List<RecordFile>>> =
         MutableStateFlow(initialRecordFileState).asStateFlow()
     override val logs: StateFlow<List<String>>
@@ -503,10 +506,6 @@ private class FakeDeviceImpl(
 
     override fun flowDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>> =
         MutableStateFlow(emptyList())
-
-    override suspend fun loadDirectory(directoryPath: List<String>): List<FileInfo> {
-        return emptyList()
-    }
 
     override suspend fun readFile(fileName: String) {}
     override suspend fun readFileSynchronously(fileName: String): FileState = FileState.Nothing

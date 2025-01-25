@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.firmwaremodule
+package fr.hozakan.flysightcompanion.firmwaremodule.business
 
 sealed interface FirmwareUpdateStatus {
     data object Unknown : FirmwareUpdateStatus

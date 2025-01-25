@@ -73,8 +73,6 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_config.DeviceConfig
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail.DeviceDetailMenuActions
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail.DeviceDetailScreen
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.file.DeviceFileScreen
-import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.BalanceUiState
-import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.GaugeContainer
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesMenuActions
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
 import fr.hozakan.flysightcompanion.model.ConfigFile
@@ -121,39 +119,6 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                     val currentBackStack = navController.currentBackStackEntryAsState()
 
                     DialogHandler()
-
-                    @Composable
-                    fun GaugeContainerPreview() {
-
-                        var counter by remember { mutableIntStateOf(0) }
-                        Timber.d("Hoz2 counter : $counter")
-                        val balanceState by remember(counter) {
-                            mutableStateOf(
-                                when (counter.mod(3)) {
-                                    0 -> { BalanceUiState.Good }
-                                    1 -> { BalanceUiState.Bad }
-                                    2 -> { BalanceUiState.Empty }
-                                    else -> { BalanceUiState.Good }
-                                }
-                            )
-                        }
-                        Timber.d("Hoz2 counter : $counter, balanceState : $balanceState")
-                        val transition = updateTransition(balanceState)
-
-                        Row {
-                            GaugeContainer(
-                                balanceState = balanceState, transition = transition
-                            )
-                            Spacer(modifier = Modifier.requiredWidth(8.dp))
-                            Button(
-                                onClick = {
-                                    counter++
-                                }
-                            ) {
-                                Text(text = "cycle")
-                            }
-                        }
-                    }
 
                     Scaffold(
                         topBar = {

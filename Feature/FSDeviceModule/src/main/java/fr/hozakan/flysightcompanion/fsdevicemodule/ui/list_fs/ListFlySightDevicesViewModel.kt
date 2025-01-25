@@ -27,7 +27,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.launchIn
@@ -81,7 +80,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
             }
         }.launchIn(viewModelScope)
 
-        fsDeviceService.devices.flatMapConcat { devices ->
+        fsDeviceService.bluetoothDevices.flatMapConcat { devices ->
             combine(devices.map {
                 Timber.d("Hoz3 [ListFlySightDevicesViewModel]: devices.map $it")
                 combine(
@@ -218,7 +217,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
     @SuppressLint("MissingPermission")
     fun refreshBluetoothDeviceList() {
         viewModelScope.launch {
-            fsDeviceService.refreshKnownDevices()
+            fsDeviceService.refreshBtDevices()
         }
     }
 

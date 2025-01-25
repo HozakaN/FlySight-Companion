@@ -1,11 +1,10 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
 }
 
 android {
-    namespace = "fr.hozakan.flysightcompanion.firmwaremodule"
+    namespace = "fr.hozakan.flysightcompanion.usbmodule"
     compileSdk = 35
 
     defaultConfig {
@@ -31,21 +30,10 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-    buildFeatures {
-        compose = true
-    }
 }
 
 dependencies {
-    implementation(project(":model"))
-    implementation(project(":Feature:FSDeviceModule"))
-    implementation(project(":Tooling:NetworkModule"))
-
-    //Compose
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.ui.text.google.fonts)
+    implementation(project(":Tooling:framework"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

@@ -26,10 +26,10 @@ import fr.hozakan.flysightcompanion.networkmodule.KTorNetworkService
 import fr.hozakan.flysightcompanion.networkmodule.NetworkService
 import fr.hozakan.flysightcompanion.recordsmodule.business.FileBasedRecordService
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
+import fr.hozakan.flysightcompanion.usbmodule.DefaultUsbService
+import fr.hozakan.flysightcompanion.usbmodule.UsbService
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import javax.inject.Named
@@ -68,14 +68,16 @@ class ServiceModule {
         configEncoder: ConfigEncoder,
         configFileService: ConfigFileService,
         recordService: RecordService,
-        networkService: NetworkService
+        networkService: NetworkService,
+        usbService: UsbService
     ): FsDeviceService = DefaultFsDeviceService(
         baseApplication.applicationContext,
         bluetoothService,
         configEncoder,
         configFileService,
         recordService,
-        networkService
+        networkService,
+        usbService
     )
 
     @Singleton
@@ -131,5 +133,14 @@ class ServiceModule {
     fun provideNetworkService(
         application: BaseApplication
     ): NetworkService = KTorNetworkService(application.applicationContext)
+
+    @Singleton
+    @Provides
+    fun provideFsUsbService(
+        application: BaseApplication,
+        activityLifecycleService: ActivityLifecycleService
+    ): UsbService {
+        return DefaultUsbService(application.applicationContext, activityLifecycleService)
+    }
 
 }

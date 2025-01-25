@@ -40,6 +40,7 @@ dependencies {
     implementation(project(":Middleware:BluetoothModule"))
     implementation(project(":model"))
     implementation(project(":Tooling:framework"))
+    implementation(project(":Tooling:UsbModule"))
     implementation(project(":Feature:UserPreferencesModule"))
     implementation(project(":Tooling:ComposableCommons"))
     implementation(project(":Feature:ConfigFilesModule"))

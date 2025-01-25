@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.firmwaremodule
+package fr.hozakan.flysightcompanion.firmwaremodule.business
 
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 

@@ -1,6 +1,8 @@
 package fr.hozakan.flysightcompanion.fsdevicemodule.business
 
+import android.bluetooth.BluetoothDevice
 import android.content.Context
+import android.hardware.usb.UsbDevice
 import fr.hozakan.flysightcompanion.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigEncoder
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
@@ -12,29 +14,26 @@ import fr.hozakan.flysightcompanion.model.extensions.formatTime
 import fr.hozakan.flysightcompanion.model.records.RecordFile
 import fr.hozakan.flysightcompanion.networkmodule.NetworkService
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
+import fr.hozakan.flysightcompanion.usbmodule.UsbService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.timeout
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import kotlin.time.Duration
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 class DefaultFsDeviceService(
     private val context: Context,
@@ -42,11 +41,22 @@ class DefaultFsDeviceService(
     private val configEncoder: ConfigEncoder,
     private val configFileService: ConfigFileService,
     private val recordService: RecordService,
-    private val networkService: NetworkService
+    private val networkService: NetworkService,
+    private val usbService: UsbService
 ) : FsDeviceService {
 
-    private val _devices = MutableStateFlow<List<FlySightDevice>>(emptyList())
-    override val devices = synchronized(this) { _devices.asStateFlow() }
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    private val _bluetoothDevices = MutableStateFlow<List<BleFlySightDevice>>(emptyList())
+    override val bluetoothDevices: StateFlow<List<FlySightDevice>> = _bluetoothDevices.asStateFlow()
+
+    private val _usbDevices = MutableStateFlow<List<UsbFlySightDevice>>(emptyList())
+
+    private val _devices: StateFlow<List<MutableFlySightDevice>> = combine(_bluetoothDevices, _usbDevices) { bluetooth, usb ->
+        mergeBtAndUsbDevices(bluetooth, usb)
+    }.stateIn(scope, SharingStarted.WhileSubscribed(), emptyList())
+
+    override val devices: StateFlow<List<FlySightDevice>> = _devices
 
     private val _isRefreshingDeviceList = MutableStateFlow<LoadingState<Unit>>(LoadingState.Idle)
     override val isRefreshingDeviceList: StateFlow<LoadingState<Unit>> =
@@ -56,9 +66,34 @@ class DefaultFsDeviceService(
 
     private var scanJob: Job? = null
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    init {
+        usbService.usbFlySights
+            .onEach {
+                synchronized(this) {
+                    mergeUsbDevices(
+                        currentUsbDevices = _usbDevices.value,
+                        newUsbDeviceList = it
+                    )
+                }
+            }
+            .launchIn(scope)
+    }
 
-    override suspend fun refreshKnownDevices() {
+    private fun mergeUsbDevices(
+        currentUsbDevices: List<FlySightDevice>,
+        newUsbDeviceList: List<UsbDevice>
+    ): List<FlySightDevice> {
+        TODO("Not yet implemented")
+    }
+
+    private fun mergeBtAndUsbDevices(
+        bluetooth: List<BleFlySightDevice>,
+        usb: List<UsbFlySightDevice>
+    ): List<MutableFlySightDevice> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun refreshBtDevices() {
         scanJob = scope.launch {
             bluetoothService.getPairedDevices()
                 .onStart {
@@ -67,24 +102,9 @@ class DefaultFsDeviceService(
                 .collect { loadingState ->
                     when (loadingState) {
                         is LoadingState.Loaded -> {
-                            val btDevices = loadingState.value
-                            val btDevicesAddresses = btDevices.map { it.address }
-                            val oldDevices = synchronized(this) {
-                                _devices.value.filter { !initialDeviceLoading || it.address in btDevicesAddresses }
-                            }
-                            initialDeviceLoading = false
-                            val oldDevicesAddresses = oldDevices.map { it.address }
-                            val newDevices = btDevices.filter { it.address !in oldDevicesAddresses }
-                            val devices = oldDevices + newDevices.map {
-                                FlySightDeviceImpl(
-                                    it,
-                                    context,
-                                    configEncoder
-                                )
-                            }
                             synchronized(this) {
-                                _devices.update {
-                                    devices
+                                _bluetoothDevices.update {
+                                    mergeBtDevices(it, loadingState.value)
                                 }
                             }
                             _isRefreshingDeviceList.value = LoadingState.Loaded(Unit)
@@ -92,7 +112,7 @@ class DefaultFsDeviceService(
 
                         is LoadingState.Error -> {
                             synchronized(this) {
-                                _devices.update {
+                                _bluetoothDevices.update {
                                     emptyList()
                                 }
                             }
@@ -101,29 +121,37 @@ class DefaultFsDeviceService(
 
                         is LoadingState.Loading -> {
                             synchronized(this) {
-                                val btDevices = loadingState.currentLoad ?: emptyList()
-                                val btDevicesAddresses = btDevices.map { it.address }
-                                val oldDevices =
-                                    _devices.value.filter { !initialDeviceLoading || it.address in btDevicesAddresses }
-                                initialDeviceLoading = false
-                                val oldDevicesAddresses = oldDevices.map { it.address }
-                                Timber.d("oldDevices : $oldDevicesAddresses")
-                                val newDevices =
-                                    btDevices.filter { it.address !in oldDevicesAddresses }
-                                Timber.d("oldDevices : ${oldDevices.map { "${it.hashCode()} ${it.address}" }}, newDevices : ${newDevices.map { "${it.hashCode() }${it.address}" }}")
-                                val devices = oldDevices + newDevices.map {
-                                    FlySightDeviceImpl(
-                                        it,
-                                        context,
-                                        configEncoder
-                                    )
+//                                val btDevices = loadingState.currentLoad ?: emptyList()
+//                                val btDevicesAddresses = btDevices.map { it.address }
+//                                val oldDevices =
+//                                    _bluetoothDevices.value.filter { !initialDeviceLoading || it.address in btDevicesAddresses }
+//                                initialDeviceLoading = false
+//                                val oldDevicesAddresses = oldDevices.map { it.address }
+//                                Timber.d("oldDevices : $oldDevicesAddresses")
+//                                val newDevices =
+//                                    btDevices.filter { it.address !in oldDevicesAddresses }
+//                                Timber.d("oldDevices : ${oldDevices.map { "${it.hashCode()} ${it.address}" }}, newDevices : ${newDevices.map { "${it.hashCode()}${it.address}" }}")
+//                                val devices = oldDevices + newDevices.map {
+//                                    FlySightDeviceImpl(
+//                                        it,
+//                                        context,
+//                                        configEncoder
+//                                    )
+//                                }
+//                                _isRefreshingDeviceList.value =
+//                                    LoadingState.Loading(increment = loadingState.increment)
+//                                _bluetoothDevices.update {
+//                                    devices
+//                                }
+
+                                if (loadingState.currentLoad?.isNotEmpty() == true) {
+                                    _bluetoothDevices.update {
+                                        mergeBtDevices(it, loadingState.currentLoad ?: emptyList())
+                                    }
                                 }
                                 _isRefreshingDeviceList.value =
                                     LoadingState.Loading(increment = loadingState.increment)
-                                _devices.update {
-                                    devices
-                                }
-                                Timber.d("Devices updated : ${devices.map { it.address }}")
+                                Timber.d("Devices updated : ${_bluetoothDevices.value.map { it.address }}")
                             }
                         }
 
@@ -133,25 +161,46 @@ class DefaultFsDeviceService(
         }
     }
 
+    private fun mergeBtDevices(
+        currentBtDevices: List<BleFlySightDevice>,
+        newBtDeviceList: List<BluetoothDevice>
+    ): List<BleFlySightDevice> {
+        val btDevicesAddresses = newBtDeviceList.map { it.address }
+        val oldDevices =
+            currentBtDevices.filter { !initialDeviceLoading || it.address in btDevicesAddresses }
+        initialDeviceLoading = false
+        val oldDevicesAddresses = oldDevices.map { it.address }
+        val newDevices = newBtDeviceList.filter { it.address !in oldDevicesAddresses }
+        val devices = oldDevices + newDevices.map {
+            BleFlySightDeviceImpl(
+                it,
+                context,
+                configEncoder
+            )
+        }
+
+        return devices
+    }
+
     override suspend fun cancelScan() {
         scanJob?.cancel()
         _isRefreshingDeviceList.value = LoadingState.Loaded(Unit)
     }
 
     override fun observeDevice(deviceId: String): Flow<FlySightDevice?> =
-        synchronized(this) { _devices.map { flySightDevices -> flySightDevices.firstOrNull { it.uuid == deviceId } } }
+        synchronized(this) { _bluetoothDevices.map { flySightDevices -> flySightDevices.firstOrNull { it.uuid == deviceId } } }
 
-//    @OptIn(FlowPreview::class)
+    //    @OptIn(FlowPreview::class)
     override suspend fun connectToDevice(device: FlySightDevice) {
-        device.connectGatt()
+        (device as? MutableFlySightDevice)?.connectGatt()
     }
 
     override suspend fun disconnectFromDevice(device: FlySightDevice) {
-        device.disconnectGatt()
+        (device as? MutableFlySightDevice)?.disconnectGatt()
     }
 
     override suspend fun updateDeviceConfig(device: FlySightDevice, configFile: ConfigFile) {
-        device.updateConfigFile(configFile)
+        (device as? MutableFlySightDevice)?.updateConfigFile(configFile)
     }
 
     override suspend fun changeDeviceConfiguration(device: FlySightDevice): Flow<LoadingState<Unit>> =
@@ -168,12 +217,16 @@ class DefaultFsDeviceService(
         device: FlySightDevice,
         recordFile: RecordFile
     ): Flow<LoadingState<String>> = flow {
+        if ((device as? MutableFlySightDevice) == null) {
+            emit(LoadingState.Error(IllegalStateException("Device is read only")))
+            return@flow
+        }
         val recordPath = "${recordFile.dateTime.formatDate()}/${recordFile.dateTime.formatTime()}"
         emit(LoadingState.Loading("Downloading file /$recordPath/TRACK.CSV"))
         val trackFile =
             device.readFileSynchronously("$recordPath/TRACK.CSV")
         val trackFileContent = (trackFile as? FileState.Success)?.content
-        if (trackFileContent != null)  {
+        if (trackFileContent != null) {
             emit(LoadingState.Loading("Saving file on the phone"))
             recordService.createRecord(recordFile, trackFileContent)
             emit(LoadingState.Loaded(recordPath))
