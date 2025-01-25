@@ -12,7 +12,7 @@
     <string name="misc_discard">Annuler les changements</string>
     <string name="misc_do_not_discard">Ne rien faire</string>
 
-    <string name="misc_expand_more">Plus</string>
+    <string name="misc_expand">Plus</string>
     <string name="misc_reduce">Réduire</string>
     <string name="misc_save">Enregistrer</string>
     <string name="misc_cancel">Annuler</string>

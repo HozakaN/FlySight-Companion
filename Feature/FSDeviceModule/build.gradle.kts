@@ -45,6 +45,7 @@ dependencies {
     implementation(project(":Feature:ConfigFilesModule"))
     implementation(project(":Feature:RecordsModule"))
     implementation(project(":Tooling:DesignSystem"))
+    implementation(project(":Tooling:NetworkModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

@@ -10,28 +10,39 @@ import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.extensions.formatDate
 import fr.hozakan.flysightcompanion.model.extensions.formatTime
 import fr.hozakan.flysightcompanion.model.records.RecordFile
+import fr.hozakan.flysightcompanion.networkmodule.NetworkService
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.timeout
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 class DefaultFsDeviceService(
     private val context: Context,
     private val bluetoothService: BluetoothService,
     private val configEncoder: ConfigEncoder,
     private val configFileService: ConfigFileService,
-    private val recordService: RecordService
+    private val recordService: RecordService,
+    private val networkService: NetworkService
 ) : FsDeviceService {
 
     private val _devices = MutableStateFlow<List<FlySightDevice>>(emptyList())
@@ -130,6 +141,7 @@ class DefaultFsDeviceService(
     override fun observeDevice(deviceId: String): Flow<FlySightDevice?> =
         synchronized(this) { _devices.map { flySightDevices -> flySightDevices.firstOrNull { it.uuid == deviceId } } }
 
+//    @OptIn(FlowPreview::class)
     override suspend fun connectToDevice(device: FlySightDevice) {
         device.connectGatt()
     }

@@ -17,4 +17,6 @@ interface UserPrefService {
     fun updatePlotLeftItems(plotLeftItems: List<PlotLeftItem>)
     fun updatePlotBottomItem(plotBottomItem: PlotBottomItem)
     fun updatePlotDisplayPreferences(plotDisplayPreferences: List<PlotDisplayPreference>)
+    suspend fun canShowFirmwareWarningForVersion(deviceId: String, firmwareVersionName: String): Boolean
+    fun updateFirmwareWarningForDeviceIdAndFirmwareVersion(deviceId: String, firmwareVersionName: String)
 }

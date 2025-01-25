@@ -10,25 +10,33 @@ import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AreaChart
 import androidx.compose.material.icons.filled.Engineering
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,6 +73,8 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_config.DeviceConfig
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail.DeviceDetailMenuActions
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail.DeviceDetailScreen
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.file.DeviceFileScreen
+import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.BalanceUiState
+import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.GaugeContainer
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesMenuActions
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
 import fr.hozakan.flysightcompanion.model.ConfigFile
@@ -73,6 +83,7 @@ import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailScreen
 import fr.hozakan.flysightcompanion.recordsmodule.ui.list.ListRecordsScreen
 import fr.hozakan.flysightcompanion.recordsmodule.ui.plot.PlotSettingsScreen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import timber.log.Timber
 import javax.inject.Inject
 import fr.hozakan.flysightcompanion.R as LocalR
 
@@ -110,6 +121,39 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                     val currentBackStack = navController.currentBackStackEntryAsState()
 
                     DialogHandler()
+
+                    @Composable
+                    fun GaugeContainerPreview() {
+
+                        var counter by remember { mutableIntStateOf(0) }
+                        Timber.d("Hoz2 counter : $counter")
+                        val balanceState by remember(counter) {
+                            mutableStateOf(
+                                when (counter.mod(3)) {
+                                    0 -> { BalanceUiState.Good }
+                                    1 -> { BalanceUiState.Bad }
+                                    2 -> { BalanceUiState.Empty }
+                                    else -> { BalanceUiState.Good }
+                                }
+                            )
+                        }
+                        Timber.d("Hoz2 counter : $counter, balanceState : $balanceState")
+                        val transition = updateTransition(balanceState)
+
+                        Row {
+                            GaugeContainer(
+                                balanceState = balanceState, transition = transition
+                            )
+                            Spacer(modifier = Modifier.requiredWidth(8.dp))
+                            Button(
+                                onClick = {
+                                    counter++
+                                }
+                            ) {
+                                Text(text = "cycle")
+                            }
+                        }
+                    }
 
                     Scaffold(
                         topBar = {

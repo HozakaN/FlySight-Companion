@@ -22,6 +22,8 @@ import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionServ
 import fr.hozakan.flysightcompanion.framework.service.versionning.DefaultAppVersionService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.DefaultFsDeviceService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
+import fr.hozakan.flysightcompanion.networkmodule.KTorNetworkService
+import fr.hozakan.flysightcompanion.networkmodule.NetworkService
 import fr.hozakan.flysightcompanion.recordsmodule.business.FileBasedRecordService
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -65,13 +67,15 @@ class ServiceModule {
         bluetoothService: BluetoothService,
         configEncoder: ConfigEncoder,
         configFileService: ConfigFileService,
-        recordService: RecordService
+        recordService: RecordService,
+        networkService: NetworkService
     ): FsDeviceService = DefaultFsDeviceService(
         baseApplication.applicationContext,
         bluetoothService,
         configEncoder,
         configFileService,
-        recordService
+        recordService,
+        networkService
     )
 
     @Singleton
@@ -121,5 +125,11 @@ class ServiceModule {
     ): RecordService = FileBasedRecordService(
         baseApplication.applicationContext
     )
+
+    @Singleton
+    @Provides
+    fun provideNetworkService(
+        application: BaseApplication
+    ): NetworkService = KTorNetworkService(application.applicationContext)
 
 }

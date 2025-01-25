@@ -78,6 +78,7 @@ interface FlySightDevice {
     val logs: StateFlow<List<String>>
     val fileReceived: SharedFlow<FileState>
     val ping: SharedFlow<Boolean>
+    val firmwareVersion: StateFlow<String?>
     suspend fun connectGatt(): Boolean
     suspend fun disconnectGatt(): Boolean
     fun flowDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>>
@@ -140,6 +141,9 @@ class FlySightDeviceImpl(
 
     private val _records = MutableStateFlow<LoadingState<List<RecordFile>>>(LoadingState.Idle)
     override val records: StateFlow<LoadingState<List<RecordFile>>> = _records.asStateFlow()
+
+    private val _firmwareVersion = MutableStateFlow<String?>(null)
+    override val firmwareVersion: StateFlow<String?> = _firmwareVersion.asStateFlow()
 
     private val parser: ConfigParser = DefaultConfigParser()
 
@@ -295,7 +299,9 @@ class FlySightDeviceImpl(
         _connectionState.update {
             newConnectionState
         }
-        freeConnectionContinuation(newConnectionState == DeviceConnectionState.Connected)
+        if (newConnectionState == DeviceConnectionState.Connected || newConnectionState == DeviceConnectionState.ConnectionError) {
+            freeConnectionContinuation(newConnectionState == DeviceConnectionState.Connected)
+        }
     }
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
@@ -557,6 +563,17 @@ class FlySightDeviceImpl(
                 val fileState = fileReader.readFile(file)
                 if (_flySightFile.value is FileState.Loading) {
                     _flySightFile.value = fileState
+                }
+                if (fileState is FileState.Success) {
+                    val content = fileState.content
+                    if (content.isNotBlank()) {
+                        val firmwareVersionCharacterIndex = content.indexOf("Firmware_Ver: ")
+                        if (firmwareVersionCharacterIndex >= 0 ) {
+                            val firmwareVersion = content.substring(firmwareVersionCharacterIndex + "Firmware_Ver: ".length)
+                                .substringBefore("\n").trim()
+                            _firmwareVersion.value = firmwareVersion
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) {
@@ -836,4 +853,10 @@ class FlySightDeviceImpl(
             )
         } ?: Timber.e("${characteristic.uuid} doesn't contain the CCCD descriptor!")
     }
+
+    override fun toString(): String {
+        return "FlySightDeviceImpl(uuid='$uuid', name='$name', firmwareVersion=${firmwareVersion.value})"
+    }
+
+
 }

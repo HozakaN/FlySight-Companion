@@ -1,6 +1,7 @@
 package fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs
 
 import android.annotation.SuppressLint
+import android.widget.Space
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -82,6 +84,7 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
+import fr.hozakan.flysightcompanion.model.firmware.FirmwareCompatibilityMatrix
 import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -225,6 +228,9 @@ fun ListFlySightDevicesScreen(
         },
         onUploadRecordToSystem = {
             viewModel.uploadRecordToSystem(it)
+        },
+        onPreventDialogForFirmwareVersion = {
+            viewModel.preventDialogForFirmwareVersion(it)
         }
     )
 }
@@ -243,7 +249,8 @@ internal fun ListFlySightDevicesScreenInternal(
     onUpdateSystemConfigClicked: (ListFlySightDeviceDisplayData) -> Unit,
     onPushConfigToDeviceClicked: (FlySightDevice) -> Unit,
     onChangeDeviceConfigurationClicked: (ListFlySightDeviceDisplayData) -> Unit,
-    onUploadRecordToSystem: (ListFlySightDeviceDisplayData) -> Unit
+    onUploadRecordToSystem: (ListFlySightDeviceDisplayData) -> Unit,
+    onPreventDialogForFirmwareVersion: (ListFlySightDeviceDisplayData) -> Unit
 ) {
 
     Surface(
@@ -387,6 +394,7 @@ internal fun ListFlySightDevicesScreenInternal(
                     items(state.devices) { device ->
                         FlySightDeviceItem(
                             device = device,
+                            firmwareCompatibilityMatrix = state.compatibilityMatrix,
                             unitSystem = state.unitSystem,
                             updatingConfiguration = state.updatingConfiguration == device.uuid,
                             onConnectionClicked = {
@@ -409,6 +417,9 @@ internal fun ListFlySightDevicesScreenInternal(
                             },
                             onUploadRecordToSystem = {
                                 onUploadRecordToSystem(device)
+                            },
+                            onPreventDialogForFirmwareVersion = {
+                                onPreventDialogForFirmwareVersion(device)
                             }
                         )
                     }
@@ -443,6 +454,7 @@ internal fun ListFlySightDevicesScreenInternal(
 @Composable
 fun FlySightDeviceItem(
     device: ListFlySightDeviceDisplayData,
+    firmwareCompatibilityMatrix: FirmwareCompatibilityMatrix,
     unitSystem: UnitSystem,
     updatingConfiguration: Boolean,
     onConnectionClicked: () -> Unit,
@@ -451,17 +463,30 @@ fun FlySightDeviceItem(
     onUpdateSystemConfClicked: () -> Unit,
     onPushConfigToDeviceClicked: () -> Unit,
     onChangeDeviceConfigurationClicked: () -> Unit,
-    onUploadRecordToSystem: () -> Unit
+    onUploadRecordToSystem: () -> Unit,
+    onPreventDialogForFirmwareVersion: () -> Unit
 ) {
+    var firmwareUpdateDialogOpened by remember { mutableStateOf(false) }
     Card {
         val connectionState by device.connectionState.collectAsState()
 
         Timber.d("Composing FlySightDeviceItem with device state : $connectionState")
 
         val resultFilesState by device.records.collectAsState()
+
         val clickableModifier =
-            if (connectionState == DeviceConnectionState.Connected && resultFilesState is LoadingState.Loaded) {
-                Modifier.clickable { onDeviceClicked() }
+            if (connectionState == DeviceConnectionState.Connected) {
+                if (device.hasFirmwareUpdate && device.canShowFirmwareWarning) {
+                    Modifier.clickable {
+                        firmwareUpdateDialogOpened = true
+                    }
+                } else if (resultFilesState is LoadingState.Loaded) {
+                    Modifier.clickable {
+                        onDeviceClicked()
+                    }
+                } else {
+                    Modifier
+                }
             } else {
                 Modifier
             }
@@ -488,6 +513,14 @@ fun FlySightDeviceItem(
                                 connectionState = connectionState,
                                 flySightDevice = device
                             )
+                            if (device.hasFirmwareUpdate && device.canShowFirmwareWarning) {
+                                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = "",
+                                    tint = CustomColors.Orange
+                                )
+                            }
                             Spacer(modifier = Modifier.weight(1f))
                             TextButton(
                                 onClick = onConnectionClicked
@@ -576,6 +609,77 @@ fun FlySightDeviceItem(
                         }
                     }
                 }
+            }
+        }
+    }
+
+    if (firmwareUpdateDialogOpened) {
+        FirmwareUpdateDialog(
+            device = device,
+            firmwareCompatibilityMatrix = firmwareCompatibilityMatrix,
+            onDismissRequest = {
+                firmwareUpdateDialogOpened = false
+                if (it) {
+                    onPreventDialogForFirmwareVersion()
+                }
+            },
+            onValidate = {
+                onDeviceClicked()
+                firmwareUpdateDialogOpened = false
+            }
+        )
+    }
+}
+
+@Composable
+fun FirmwareUpdateDialog(
+    device: ListFlySightDeviceDisplayData,
+    firmwareCompatibilityMatrix: FirmwareCompatibilityMatrix,
+    onDismissRequest: (Boolean) -> Unit,
+    onValidate: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = { onDismissRequest(false) }
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(8.dp)
+            ) {
+                FText(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = device.name,
+                    configuration = FlySightTheme.typography.cardTitle,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.requiredHeight(32.dp))
+                Text(
+                    text = "You can update the firmware of your device to version ${firmwareCompatibilityMatrix.firmwares.first().name}",
+                    color = CustomColors.Orange
+                )
+                Spacer(modifier = Modifier.requiredHeight(32.dp))
+                var donnotShowAgain by remember { mutableStateOf(false) }
+                Row(
+                    modifier = Modifier.clickable { donnotShowAgain = !donnotShowAgain },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = donnotShowAgain,
+                        onCheckedChange = {
+                            donnotShowAgain = !donnotShowAgain
+                        }
+                    )
+                    Spacer(modifier = Modifier.requiredWidth(8.dp))
+                    Text(
+                        text = "Don't show this message again for this version"
+                    )
+                }
+                SimpleDialogActionBar(
+                    onCancel = { onDismissRequest(donnotShowAgain) },
+                    onValidate = onValidate,
+                    validateButtonText = "Update".uppercase()
+                )
             }
         }
     }

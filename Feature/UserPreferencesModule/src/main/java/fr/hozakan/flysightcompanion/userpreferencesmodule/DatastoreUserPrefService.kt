@@ -27,6 +27,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -153,6 +154,20 @@ class DatastoreUserPrefService(
             val key = getKey<String>("plot_display_preferences")
             dataStore.edit { preferences ->
                 preferences[key] = plotDisplayPreferences.toStringPreference()
+            }
+        }
+    }
+
+    override suspend fun canShowFirmwareWarningForVersion(deviceId: String, firmwareVersionName: String): Boolean {
+        val key = getKey<Boolean>("can_show_firmware_warning_for_version_${deviceId}_$firmwareVersionName")
+        return dataStore.data.first()[key] ?: true
+    }
+
+    override fun updateFirmwareWarningForDeviceIdAndFirmwareVersion(deviceId: String, firmwareVersionName: String) {
+        dataStoreCoroutineScope.launch {
+            val key = getKey<Boolean>("can_show_firmware_warning_for_version_${deviceId}_$firmwareVersionName")
+            dataStore.edit { preferences ->
+                preferences[key] = false
             }
         }
     }

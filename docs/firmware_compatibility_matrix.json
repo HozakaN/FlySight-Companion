@@ -1,0 +1,19 @@
+{
+  "desc":"my desc",
+  "firmwares":[
+    {
+      "name":"v2024.12.30",
+      "app_compatibility":[
+        "1", "2"
+      ]
+    }
+  ],
+  "apps":[
+    {
+      "name":"1",
+      "firmware_compatibility":[
+        "v2024.12.30"
+      ]
+    }
+  ]
+}

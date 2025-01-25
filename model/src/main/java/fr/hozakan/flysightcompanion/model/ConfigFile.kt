@@ -11,9 +11,6 @@ import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.config.Volume
 
-/*
-TODO Pay attention to unit system and Rate value (does it change when changing unit system?)
- */
 data class ConfigFile(
     val name: String,
     val description: String,

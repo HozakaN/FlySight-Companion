@@ -17,7 +17,9 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
+import fr.hozakan.flysightcompanion.model.firmware.FirmwareCompatibilityMatrix
 import fr.hozakan.flysightcompanion.model.records.RecordFile
+import fr.hozakan.flysightcompanion.networkmodule.NetworkService
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -25,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.launchIn
@@ -40,9 +43,10 @@ import javax.inject.Inject
 @SuppressLint("StaticFieldLeak")
 @ExperimentalCoroutinesApi
 class ListFlySightDevicesViewModel @Inject constructor(
-    userPrefService: UserPrefService,
+    private val userPrefService: UserPrefService,
     appVersionService: AppVersionService,
     recordService: RecordService,
+    networkService: NetworkService,
     private val context: Context,
     private val bluetoothService: BluetoothService,
     private val fsDeviceService: FsDeviceService,
@@ -52,8 +56,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(
         ListFlySightDevicesState(
-            versionName = appVersionService.appVersion,
-            versionCode = appVersionService.appCode
+            versionName = appVersionService.appVersion, versionCode = appVersionService.appCode
         )
     )
 
@@ -66,67 +69,83 @@ class ListFlySightDevicesViewModel @Inject constructor(
                 bluetoothState = bluetoothService.checkBluetoothState()
             )
         }
-        if (bluetoothService.checkBluetoothState() == BluetoothService.BluetoothState.Available
-            && permissionsService.hasBluetoothPermission()
-        ) {
+        if (bluetoothService.checkBluetoothState() == BluetoothService.BluetoothState.Available && permissionsService.hasBluetoothPermission()) {
             refreshBluetoothDeviceList()
         }
 
-        userPrefService.unitSystem
-            .onEach { unitSystem ->
-                _state.update {
-                    it.copy(
-                        unitSystem = unitSystem
-                    )
-                }
+        userPrefService.unitSystem.onEach { unitSystem ->
+            _state.update {
+                it.copy(
+                    unitSystem = unitSystem
+                )
             }
-            .launchIn(viewModelScope)
+        }.launchIn(viewModelScope)
 
-        fsDeviceService.devices
-            .flatMapConcat { devices ->
-                combine(devices.map {
-                    combine(it.configFile, it.records) { conf, records ->
-                        it to conf triple records
+        fsDeviceService.devices.flatMapConcat { devices ->
+            combine(devices.map {
+                Timber.d("Hoz3 [ListFlySightDevicesViewModel]: devices.map $it")
+                combine(
+                    it.configFile, it.records, it.firmwareVersion
+                ) { conf, records, firmwareVersion ->
+                    Timber.d("Hoz3 [ListFlySightDevicesViewModel]: combine $conf $records $firmwareVersion")
+                    it to (conf to records triple firmwareVersion)
+                }
+            }) { devicesWithConfAndRecordsAndFirmwareVersion ->
+                Timber.d("Hoz3 [ListFlySightDevicesViewModel]: devicesWithConfAndRecordsAndFirmwareVersion = $devicesWithConfAndRecordsAndFirmwareVersion")
+                devicesWithConfAndRecordsAndFirmwareVersion
+            }
+        }.combine(
+            combine(
+                configFileService.configFiles,
+                recordService.records,
+                networkService.firmwareCompatibilityMatrix
+            ) { configFiles, records, matrix ->
+                configFiles to records triple matrix
+            }) { devices, configFilesAndRecordsAndMatrix ->
+            devices to configFilesAndRecordsAndMatrix
+        }.map { blob ->
+            blob.first.map { device ->
+                val lastOrNull = blob.second.third.firmwares.lastOrNull()
+                val canShowFirmwareWarning =
+                    lastOrNull?.name?.let { firmwareName ->
+                        userPrefService.canShowFirmwareWarningForVersion(
+                            device.first.uuid,
+                            firmwareName
+                        )
                     }
-                }) { devicesWithConfAndRecords ->
-                    devicesWithConfAndRecords
-                }
+                computeDisplayData(
+                    device.first,
+                    device.second.first,
+                    device.second.second,
+                    device.second.third ?: "",
+                    blob.second.first,
+                    blob.second.second,
+                    blob.second.third,
+                    canShowFirmwareWarning ?: false,
+                    appVersionService.appVersion
+                )
             }
-            .combine(
-                configFileService.configFiles.combine(recordService.records) { phoneConfigs, phoneRecords ->
-                    phoneConfigs to phoneRecords
-                }
-            ) { devices, configFilesAndRecords ->
-                devices to configFilesAndRecords
+        }.onEach { devices ->
+            _state.update { state ->
+                state.copy(devices = devices)
             }
-            .map { blob ->
-                blob.first.map {
-                    computeDisplayData(
-                        it.first,
-                        it.second,
-                        it.third,
-                        blob.second.first,
-                        blob.second.second
-                    )
-                }
-            }
-            .onEach { devices ->
-                _state.update { state ->
-                    state.copy(devices = devices)
-                }
-            }
-            .launchIn(viewModelScope)
+        }.launchIn(viewModelScope)
 
-        fsDeviceService.isRefreshingDeviceList
-            .onEach { isRefreshing ->
-                _state.update {
-                    it.copy(
-                        refreshingDeviceList = isRefreshing
-                    )
-                }
+        fsDeviceService.isRefreshingDeviceList.onEach { isRefreshing ->
+            _state.update {
+                it.copy(
+                    refreshingDeviceList = isRefreshing
+                )
             }
-            .launchIn(viewModelScope)
+        }.launchIn(viewModelScope)
 
+        networkService.firmwareCompatibilityMatrix.onEach { matrix ->
+            _state.update {
+                it.copy(
+                    compatibilityMatrix = matrix
+                )
+            }
+        }.launchIn(viewModelScope)
     }
 
     fun onCancelScanClicked() {
@@ -139,25 +158,38 @@ class ListFlySightDevicesViewModel @Inject constructor(
         device: FlySightDevice,
         deviceConfigFileState: LoadingState<ConfigFile>,
         deviceRecords: LoadingState<List<RecordFile>>,
+        firmwareVersion: String,
         configFiles: List<ConfigFile>,
-        recordFiles: List<RecordFile>
+        recordFiles: List<RecordFile>,
+        firmwareCompatibilityMatrix: FirmwareCompatibilityMatrix,
+        canShowFirmwareWarning: Boolean,
+        appVersion: String
     ): ListFlySightDeviceDisplayData {
+        Timber.d("Hoz3 [ListFlySightDevicesViewModel]: computeDisplayData $device $deviceConfigFileState $deviceRecords $firmwareVersion $configFiles $recordFiles $firmwareCompatibilityMatrix $canShowFirmwareWarning $appVersion")
         val phoneConfigNames = configFiles.map { it.name }
         val deviceConfigName = deviceConfigFileState.content?.name
+        Timber.d("Hoz4 firmwareVersion=$firmwareVersion; firmwareCompatibilityMatrix.firmwares = ${firmwareCompatibilityMatrix.firmwares.map { it.name }}")
+        Timber.d(
+            "Hoz4 index = ${
+                firmwareCompatibilityMatrix.firmwares.map { it.name }
+                    .indexOf(firmwareVersion)
+            }")
         return ListFlySightDeviceDisplayData(
             device = device,
             deviceConfig = deviceConfigFileState,
             isConfigFromSystem = deviceConfigName in phoneConfigNames,
-            hasConfigContentChanged = configFiles
-                .firstOrNull { it.name == deviceConfigName }
-                    != deviceConfigFileState.content,
-            isLastRecordUploaded = (deviceRecords as? LoadingState.Loaded<List<RecordFile>>)
-                ?.value
-                ?.maxByOrNull { it.dateTime }
+            hasConfigContentChanged = configFiles.firstOrNull { it.name == deviceConfigName } != deviceConfigFileState.content,
+            isLastRecordUploaded = (deviceRecords as? LoadingState.Loaded<List<RecordFile>>)?.value?.maxByOrNull { it.dateTime }
                 ?.let { lastRecord ->
                     recordFiles.any { it.flySightFilePath == lastRecord.flySightFilePath }
-                } ?: true
-        )
+                } ?: true,
+            hasFirmwareUpdate = firmwareCompatibilityMatrix.firmwares.map { it.name }
+                .indexOf(firmwareVersion) != 0,
+            canShowFirmwareWarning = firmwareCompatibilityMatrix.firmwares.isNotEmpty()
+                    && canShowFirmwareWarning
+                    && firmwareCompatibilityMatrix.firmwares.first().appCompatibility.contains(
+                appVersion
+            ))
     }
 
     fun addDevice() {
@@ -203,30 +235,26 @@ class ListFlySightDevicesViewModel @Inject constructor(
     fun uploadConfigToSystem(device: ListFlySightDeviceDisplayData) {
         var job: Job? = null
         job = viewModelScope.launch {
-            val configFile = device.configFile
-                .onEach { state ->
-                    if (state is LoadingState.Error) {
-                        _state.update {
-                            it.copy(
-                                event = state.error.message?.asEvent()
-                            )
-                        }
-                        job?.cancel()
-                        return@onEach
-                    } else if (state is LoadingState.Idle) {
-                        _state.update {
-                            it.copy(
-                                event = context.getString(R.string.list_devices_event_device_config_empty)
-                                    .asEvent()
-                            )
-                        }
-                        job?.cancel()
-                        return@onEach
+            val configFile = device.configFile.onEach { state ->
+                if (state is LoadingState.Error) {
+                    _state.update {
+                        it.copy(
+                            event = state.error.message?.asEvent()
+                        )
                     }
+                    job?.cancel()
+                    return@onEach
+                } else if (state is LoadingState.Idle) {
+                    _state.update {
+                        it.copy(
+                            event = context.getString(R.string.list_devices_event_device_config_empty)
+                                .asEvent()
+                        )
+                    }
+                    job?.cancel()
+                    return@onEach
                 }
-                .filterIsInstance<LoadingState.Loaded<ConfigFile>>()
-                .map { it.value }
-                .first()
+            }.filterIsInstance<LoadingState.Loaded<ConfigFile>>().map { it.value }.first()
             val updatedConfigFile = configFileService.saveConfigFile(configFile)
             fsDeviceService.updateDeviceConfig(device.device, updatedConfigFile)
         }
@@ -254,51 +282,45 @@ class ListFlySightDevicesViewModel @Inject constructor(
 
     fun changeDeviceConfiguration(device: ListFlySightDeviceDisplayData) {
         viewModelScope.launch {
-            fsDeviceService.changeDeviceConfiguration(device)
-                .collect {
-                    when (it) {
-                        is LoadingState.Error -> {
-                            _state.update { state ->
-                                state.copy(
-                                    event = it.error.message?.asEvent()
-                                        ?: context.getString(R.string.misc_unknown_error).asEvent()
-                                )
-                            }
+            fsDeviceService.changeDeviceConfiguration(device).collect {
+                when (it) {
+                    is LoadingState.Error -> {
+                        _state.update { state ->
+                            state.copy(
+                                event = it.error.message?.asEvent()
+                                    ?: context.getString(R.string.misc_unknown_error).asEvent()
+                            )
                         }
+                    }
 
-                        is LoadingState.Loading -> {
-                            _state.update { state ->
-                                state.copy(
-                                    updatingConfiguration = device.uuid
-                                )
-                            }
+                    is LoadingState.Loading -> {
+                        _state.update { state ->
+                            state.copy(
+                                updatingConfiguration = device.uuid
+                            )
                         }
+                    }
 
-                        LoadingState.Idle -> error("Should not get into state Idle")
-                        is LoadingState.Loaded<*> -> {
-                            _state.update { state ->
-                                state.copy(
-                                    updatingConfiguration = null
-                                )
-                            }
+                    LoadingState.Idle -> error("Should not get into state Idle")
+                    is LoadingState.Loaded<*> -> {
+                        _state.update { state ->
+                            state.copy(
+                                updatingConfiguration = null
+                            )
                         }
                     }
                 }
+            }
         }
     }
 
     fun uploadRecordToSystem(device: ListFlySightDeviceDisplayData) {
-        device.records
-            .filterIsInstance<LoadingState.Loaded<List<RecordFile>>>()
-            .map { it.value }
-            .take(1)
-            .mapNotNull { records ->
+        device.records.filterIsInstance<LoadingState.Loaded<List<RecordFile>>>().map { it.value }
+            .take(1).mapNotNull { records ->
                 records.maxByOrNull { it.dateTime }
-            }
-            .flatMapConcat { record ->
+            }.flatMapConcat { record ->
                 fsDeviceService.extractRecordFromDevice(device, record)
-            }
-            .onEach { loadingState ->
+            }.onEach { loadingState ->
                 _state.update {
                     it.copy(
                         uploadingRecord = when (loadingState) {
@@ -306,8 +328,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
                             is LoadingState.Error -> null
                             is LoadingState.Loaded -> null
                             LoadingState.Idle -> null
-                        },
-                        event = when (loadingState) {
+                        }, event = when (loadingState) {
                             is LoadingState.Error -> loadingState.error.message?.asEvent()
                                 ?: context.getString(R.string.misc_unknown_error).asEvent()
 
@@ -318,7 +339,24 @@ class ListFlySightDevicesViewModel @Inject constructor(
                         }
                     )
                 }
-            }
-            .launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
+    }
+
+    fun preventDialogForFirmwareVersion(device: ListFlySightDeviceDisplayData) {
+        userPrefService.updateFirmwareWarningForDeviceIdAndFirmwareVersion(
+            device.uuid,
+            _state.value.compatibilityMatrix.firmwares.first().name
+        )
+        _state.update {
+            it.copy(
+                devices = it.devices.map { aDevice ->
+                    if (aDevice.uuid == device.uuid) {
+                        aDevice.copy(canShowFirmwareWarning = false)
+                    } else {
+                        aDevice
+                    }
+                }
+            )
+        }
     }
 }

@@ -33,6 +33,11 @@ android {
 }
 
 dependencies {
+    implementation(project(":model"))
+    implementation(project(":Tooling:framework"))
+
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.logging)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

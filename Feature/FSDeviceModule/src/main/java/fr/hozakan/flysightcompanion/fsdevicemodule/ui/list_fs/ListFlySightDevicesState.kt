@@ -8,6 +8,7 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.business.DeviceId
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
+import fr.hozakan.flysightcompanion.model.firmware.FirmwareCompatibilityMatrix
 
 @Immutable
 data class ListFlySightDevicesState(
@@ -20,7 +21,8 @@ data class ListFlySightDevicesState(
     val refreshingDeviceList: LoadingState<Unit> = LoadingState.Loading(Unit),
     val updatingConfiguration: DeviceId? = null,
     val uploadingRecord: String? = null,
-    val event: FlowEvent<String>? = null
+    val event: FlowEvent<String>? = null,
+    val compatibilityMatrix: FirmwareCompatibilityMatrix = FirmwareCompatibilityMatrix.placeholder
 )
 
 data class ListFlySightDeviceDisplayData(
@@ -29,6 +31,8 @@ data class ListFlySightDeviceDisplayData(
     val isConfigFromSystem: Boolean,
     val hasConfigContentChanged: Boolean,
     val isLastRecordUploaded: Boolean = true,
+    val hasFirmwareUpdate: Boolean = false,
+    val canShowFirmwareWarning: Boolean = false
 ) : FlySightDevice by device {
     override fun toString(): String {
         return "ListFlySightDeviceDisplayData(device=$device, deviceConfig=$deviceConfig, isConfigFromSystem=$isConfigFromSystem, hasConfigContentChanged=$hasConfigContentChanged, isLastResultFileUploaded=$isLastRecordUploaded)"

@@ -59,13 +59,19 @@
 
 - DONE gradle modules organization and clean up
 
-# TODO release/1.0.0 RC4
+# DONE release/1.0.0 RC4
 
 - NOPE Help on config file edition and display ?
 
 - DONE Fix textfield issues (0 staying when clearing field)
 
 - DONE Fix FlySight tab logo on devices with density < my phone density
+
+# TODO release/1.0.0 RC5
+
+- Distance is only displayed in meters in the Configuration Card of a device on the list of devices
+
+- Some coroutines are hanging up in FlySightDeviceImpl class
 
 # TODO release/1.1.0
 
