@@ -127,6 +127,31 @@ object TaskBuilder {
         )
     }
 
+    fun buildMakeDirTask(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic,
+        path: String,
+        commandLogger: (String) -> Unit
+    ) : GattTask {
+        val command = CommandBuilder.buildMkDirCommand(path)
+        return GattTask.WriteTask(
+            gatt,
+            characteristic,
+            command,
+            BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
+            {
+                commandLogger(
+                    "[COMMAND] [WRITE] [${
+                        FlySightCharacteristic.fromUuid(
+                            characteristic.uuid
+                        )?.name
+                    }] ${command.bytesToHex()}"
+                )
+            }
+        )
+    }
+
+
     fun buildPingTask(
         gatt: BluetoothGatt,
         characteristic: BluetoothGattCharacteristic,

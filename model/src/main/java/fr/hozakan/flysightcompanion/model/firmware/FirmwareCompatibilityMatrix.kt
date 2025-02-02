@@ -5,12 +5,20 @@ import com.google.gson.annotations.SerializedName
 data class FirmwareCompatibilityMatrix(
     val description: String,
     val firmwares: List<FirmwareInfo>,
-    val apps: List<AppVersionInfo>
+    val apps: List<AppVersionInfo>,
+    @SerializedName("batch_infos")
+    val batchInfos: List<BatchInfo>
 ) {
     companion object {
-        val placeholder = FirmwareCompatibilityMatrix("", emptyList(), emptyList())
+        val placeholder = FirmwareCompatibilityMatrix("", emptyList(), emptyList(), emptyList())
     }
 }
+
+data class BatchInfo(
+    val key: String,
+    @SerializedName("batch_prefix")
+    val batchPrefix: String
+)
 
 data class AppVersionInfo(
     val name: String,

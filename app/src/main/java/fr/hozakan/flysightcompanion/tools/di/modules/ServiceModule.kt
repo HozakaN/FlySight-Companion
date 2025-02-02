@@ -22,6 +22,8 @@ import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionServ
 import fr.hozakan.flysightcompanion.framework.service.versionning.DefaultAppVersionService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.DefaultFsDeviceService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
+import fr.hozakan.flysightcompanion.loggermodule.DefaultLoggerService
+import fr.hozakan.flysightcompanion.loggermodule.LoggerService
 import fr.hozakan.flysightcompanion.networkmodule.KTorNetworkService
 import fr.hozakan.flysightcompanion.networkmodule.NetworkService
 import fr.hozakan.flysightcompanion.recordsmodule.business.FileBasedRecordService
@@ -69,7 +71,10 @@ class ServiceModule {
         configFileService: ConfigFileService,
         recordService: RecordService,
         networkService: NetworkService,
-        usbService: UsbService
+        usbService: UsbService,
+        loggerService: LoggerService,
+        dialogService: DialogService,
+        appVersionService: AppVersionService
     ): FsDeviceService = DefaultFsDeviceService(
         baseApplication.applicationContext,
         bluetoothService,
@@ -77,7 +82,10 @@ class ServiceModule {
         configFileService,
         recordService,
         networkService,
-        usbService
+        usbService,
+        loggerService,
+        dialogService,
+        appVersionService
     )
 
     @Singleton
@@ -142,5 +150,9 @@ class ServiceModule {
     ): UsbService {
         return DefaultUsbService(application.applicationContext, activityLifecycleService)
     }
+
+    @Singleton
+    @Provides
+    fun provideLoggerService(): LoggerService = DefaultLoggerService()
 
 }

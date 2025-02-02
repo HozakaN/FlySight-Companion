@@ -4,23 +4,30 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,6 +37,10 @@ import fr.hozakan.flysightcompanion.composablecommons.SimpleDialogActionBar
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.defaultConfigFile
 import fr.hozakan.flysightcompanion.designsystem.R
+import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
+import fr.hozakan.flysightcompanion.designsystem.widget.FText
+import fr.hozakan.flysightcompanion.model.firmware.FirmwareUpdateStatus
+import kotlinx.coroutines.flow.StateFlow
 
 data class ConfigFileName(val name: String) : DialogResult
 data class PickConfigurationDialogResult(val configFile: ConfigFile) : DialogResult
@@ -136,4 +147,109 @@ fun PickConfigurationDialogPreview() {
             defaultConfigFile().copy(name = "Config 4"),
         )
     }.Content {}
+}
+
+data class UpdateFirmwareDialog(
+    val firmwareUpdateFlow: StateFlow<FirmwareUpdateStatus>
+) : DialogItem {
+    @Composable
+    override fun Content(onResult: (DialogResult) -> Unit) {
+
+        val firmwareUpdateState by firmwareUpdateFlow.collectAsState()
+
+        Dialog(
+            onDismissRequest = {}
+        ) {
+            Card {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    val text = remember(firmwareUpdateState) {
+                        when (firmwareUpdateState) {
+                            FirmwareUpdateStatus.Downloading -> "Downloading firmware from internet..."
+                            FirmwareUpdateStatus.Pushing -> "Pushing firmware to the FlySight..."
+                            FirmwareUpdateStatus.DisconnectingFromBluetooth,
+                            FirmwareUpdateStatus.AwaitingUsbConnection -> "Connect the FlySight to the phone through USB..."
+
+                            FirmwareUpdateStatus.AwaitingButtonPush -> "Press the power button until the LED becomes orange"
+                            FirmwareUpdateStatus.DisconnectingFromUsb -> "Disconnect the FlySight from the phone"
+
+                            FirmwareUpdateStatus.AwaitingBluetoothReconnection -> "Reconnecting through Bluetooth..."
+                            FirmwareUpdateStatus.FirmwareVersionCheck -> "Checking firmware version..."
+                            FirmwareUpdateStatus.NoUpdate -> "No update available"
+                            FirmwareUpdateStatus.Done -> "You FlySight has been updated!"
+                            FirmwareUpdateStatus.Error -> "An error occurred during the update"
+                        }
+                    }
+                    when (firmwareUpdateState) {
+                        FirmwareUpdateStatus.Downloading,
+                        FirmwareUpdateStatus.Pushing,
+                        FirmwareUpdateStatus.DisconnectingFromBluetooth -> {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                                FText(
+                                    text = text,
+                                    configuration = FlySightTheme.typography.cardTitle
+                                )
+                            }
+                        }
+
+                        FirmwareUpdateStatus.AwaitingUsbConnection,
+                        FirmwareUpdateStatus.AwaitingButtonPush,
+                        FirmwareUpdateStatus.DisconnectingFromUsb -> {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.usb_flysight_to_phone),
+                                    contentDescription = text,
+                                )
+                                Spacer(modifier = Modifier.requiredHeight(16.dp))
+                                FText(
+                                    text = text,
+                                    configuration = FlySightTheme.typography.cardTitle
+                                )
+                            }
+                        }
+
+                        FirmwareUpdateStatus.AwaitingBluetoothReconnection,
+                        FirmwareUpdateStatus.FirmwareVersionCheck -> {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                                FText(
+                                    text = text,
+                                    configuration = FlySightTheme.typography.cardTitle
+                                )
+                            }
+                        }
+
+                        FirmwareUpdateStatus.NoUpdate,
+                        FirmwareUpdateStatus.Done,
+                        FirmwareUpdateStatus.Error -> {
+                            FText(
+                                text = text,
+                                configuration = FlySightTheme.typography.cardTitle
+                            )
+                            Spacer(modifier = Modifier.requiredHeight(16.dp))
+                            SimpleDialogActionBar(
+                                showCancelButton = false,
+                                validateButtonText = stringResource(R.string.misc_ok),
+                                onValidate = {
+                                    onResult(DialogResult.Dismiss)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

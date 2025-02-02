@@ -29,8 +29,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -231,6 +233,9 @@ fun ListFlySightDevicesScreen(
         },
         onPreventDialogForFirmwareVersion = {
             viewModel.preventDialogForFirmwareVersion(it)
+        },
+        onUpdateFirmwareClicked = {
+            viewModel.updateFirmware(it)
         }
     )
 }
@@ -250,7 +255,8 @@ internal fun ListFlySightDevicesScreenInternal(
     onPushConfigToDeviceClicked: (FlySightDevice) -> Unit,
     onChangeDeviceConfigurationClicked: (ListFlySightDeviceDisplayData) -> Unit,
     onUploadRecordToSystem: (ListFlySightDeviceDisplayData) -> Unit,
-    onPreventDialogForFirmwareVersion: (ListFlySightDeviceDisplayData) -> Unit
+    onPreventDialogForFirmwareVersion: (ListFlySightDeviceDisplayData) -> Unit,
+    onUpdateFirmwareClicked: (ListFlySightDeviceDisplayData) -> Unit
 ) {
 
     Surface(
@@ -420,6 +426,9 @@ internal fun ListFlySightDevicesScreenInternal(
                             },
                             onPreventDialogForFirmwareVersion = {
                                 onPreventDialogForFirmwareVersion(device)
+                            },
+                            onUpdateFirmwareClicked = {
+                                onUpdateFirmwareClicked(device)
                             }
                         )
                     }
@@ -464,7 +473,8 @@ fun FlySightDeviceItem(
     onPushConfigToDeviceClicked: () -> Unit,
     onChangeDeviceConfigurationClicked: () -> Unit,
     onUploadRecordToSystem: () -> Unit,
-    onPreventDialogForFirmwareVersion: () -> Unit
+    onPreventDialogForFirmwareVersion: () -> Unit,
+    onUpdateFirmwareClicked: () -> Unit
 ) {
     var firmwareUpdateDialogOpened by remember { mutableStateOf(false) }
     Card {
@@ -508,11 +518,23 @@ fun FlySightDeviceItem(
                                 text = device.name,
                                 style = MaterialTheme.typography.titleLarge
                             )
-                            Spacer(modifier = Modifier.requiredWidth(8.dp))
-                            ConnectionIndicator(
-                                connectionState = connectionState,
-                                flySightDevice = device
-                            )
+                            if (device.isBle) {
+                                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                                ConnectionIndicator(
+                                    connectionState = connectionState,
+                                    flySightDevice = device
+                                )
+                                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                                Icon(
+                                    imageVector = Icons.Default.Bluetooth,
+                                    contentDescription = "This device is connected through Bluetooth"
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Usb,
+                                    contentDescription = "This device is connected through Usb"
+                                )
+                            }
                             if (device.hasFirmwareUpdate && device.canShowFirmwareWarning) {
                                 Spacer(modifier = Modifier.requiredWidth(8.dp))
                                 Icon(
@@ -552,10 +574,26 @@ fun FlySightDeviceItem(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = device.name,
-                            style = MaterialTheme.typography.titleLarge
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = device.name,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Spacer(modifier = Modifier.requiredWidth(8.dp))
+                            if (device.isBle) {
+                                Icon(
+                                    imageVector = Icons.Default.Bluetooth,
+                                    contentDescription = "This device is connected through Bluetooth"
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Usb,
+                                    contentDescription = "This device is connected through Usb"
+                                )
+                            }
+                        }
                         Spacer(modifier = Modifier.requiredHeight(32.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically
@@ -576,10 +614,26 @@ fun FlySightDeviceItem(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = device.name,
-                            style = MaterialTheme.typography.titleLarge
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = device.name,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Spacer(modifier = Modifier.requiredWidth(8.dp))
+                            if (device.isBle) {
+                                Icon(
+                                    imageVector = Icons.Default.Bluetooth,
+                                    contentDescription = "This device is connected through Bluetooth"
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Usb,
+                                    contentDescription = "This device is connected through Usb"
+                                )
+                            }
+                        }
                         Spacer(modifier = Modifier.requiredHeight(32.dp))
                         Text(
                             text = connectionText(connectionState),
@@ -597,10 +651,26 @@ fun FlySightDeviceItem(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = device.name,
-                            style = MaterialTheme.typography.titleLarge
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = device.name,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Spacer(modifier = Modifier.requiredWidth(8.dp))
+                            if (device.isBle) {
+                                Icon(
+                                    imageVector = Icons.Default.Bluetooth,
+                                    contentDescription = "This device is connected through Bluetooth"
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Usb,
+                                    contentDescription = "This device is connected through Usb"
+                                )
+                            }
+                        }
                         Spacer(modifier = Modifier.requiredHeight(32.dp))
                         Button(
                             onClick = onConnectionClicked
@@ -624,7 +694,7 @@ fun FlySightDeviceItem(
                 }
             },
             onValidate = {
-                onDeviceClicked()
+                onUpdateFirmwareClicked()
                 firmwareUpdateDialogOpened = false
             }
         )

@@ -94,6 +94,7 @@ dependencies {
     implementation(project(":Feature:UserPreferencesModule"))
     implementation(project(":Tooling:DialogModule"))
     implementation(project(":Tooling:NetworkModule"))
+    implementation(project(":Tooling:LoggerModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

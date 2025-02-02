@@ -5,7 +5,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import fr.hozakan.flysightcompanion.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightCompanionTheme
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
-import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.MutableFlySightDevice
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
@@ -46,7 +45,8 @@ fun ListFlySightDevicesScreenInternalRefreshingWithoutDevicePreview() {
         onPushConfigToDeviceClicked = {},
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
-        onPreventDialogForFirmwareVersion = {}
+        onPreventDialogForFirmwareVersion = {},
+        onUpdateFirmwareClicked = {}
     )
 }
 
@@ -74,7 +74,8 @@ fun ListFlySightDevicesScreenInternalRefreshingWithoutDeviceStep2Preview() {
         onPushConfigToDeviceClicked = {},
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
-        onPreventDialogForFirmwareVersion = {}
+        onPreventDialogForFirmwareVersion = {},
+        onUpdateFirmwareClicked = {}
     )
 }
 
@@ -102,7 +103,8 @@ fun ListFlySightDevicesScreenInternalRefreshingWithoutDeviceStep3Preview() {
         onPushConfigToDeviceClicked = {},
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
-        onPreventDialogForFirmwareVersion = {}
+        onPreventDialogForFirmwareVersion = {},
+        onUpdateFirmwareClicked = {}
     )
 }
 
@@ -130,7 +132,8 @@ fun ListFlySightDevicesScreenInternalNoDevicePreview() {
         onPushConfigToDeviceClicked = {},
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
-        onPreventDialogForFirmwareVersion = {}
+        onPreventDialogForFirmwareVersion = {},
+        onUpdateFirmwareClicked = {}
     )
 }
 
@@ -144,7 +147,7 @@ fun ListFlySightDevicesScreenInternalWithDevicePreview() {
             devices = listOf(
                 ListFlySightDeviceDisplayData(
                     device =
-                        FakeDeviceImpl(
+                        FakeDeviceDelegateImpl(
                             initialConnectionState = DeviceConnectionState.Disconnected,
                             initialRecordFileState = LoadingState.Loaded(
                                 emptyList()
@@ -174,7 +177,8 @@ fun ListFlySightDevicesScreenInternalWithDevicePreview() {
         onPushConfigToDeviceClicked = {},
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
-        onPreventDialogForFirmwareVersion = {}
+        onPreventDialogForFirmwareVersion = {},
+        onUpdateFirmwareClicked = {}
     )
 }
 
@@ -184,7 +188,7 @@ fun FlySightDeviceItemDisconnectedPreview() {
     FlySightDeviceItem(
         firmwareCompatibilityMatrix = FirmwareCompatibilityMatrix.placeholder,
         device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
+            device = FakeDeviceDelegateImpl(
                 initialConnectionState = DeviceConnectionState.Disconnected
             ),
             isConfigFromSystem = true,
@@ -200,7 +204,8 @@ fun FlySightDeviceItemDisconnectedPreview() {
         onPushConfigToDeviceClicked = {},
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
-        onPreventDialogForFirmwareVersion = {}
+        onPreventDialogForFirmwareVersion = {},
+        onUpdateFirmwareClicked = {}
     )
 }
 
@@ -210,7 +215,7 @@ fun FlySightDeviceItemConnectingPreview() {
     FlySightDeviceItem(
         firmwareCompatibilityMatrix = FirmwareCompatibilityMatrix.placeholder,
         device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
+            device = FakeDeviceDelegateImpl(
                 initialConnectionState = DeviceConnectionState.Connecting
             ),
             isConfigFromSystem = true,
@@ -226,7 +231,8 @@ fun FlySightDeviceItemConnectingPreview() {
         onPushConfigToDeviceClicked = {},
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
-        onPreventDialogForFirmwareVersion = {}
+        onPreventDialogForFirmwareVersion = {},
+        onUpdateFirmwareClicked = {}
     )
 }
 
@@ -236,7 +242,7 @@ fun FlySightDeviceItemConnectedAndNominalConfigFilePreview() {
     FlySightDeviceItem(
         firmwareCompatibilityMatrix = FirmwareCompatibilityMatrix.placeholder,
         device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
+            device = FakeDeviceDelegateImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
                 configFileName = "Distance Le Puy",
                 initialConfigFileState = LoadingState.Loaded(defaultConfigFile().copy(name = "Distance Le Puy"))
@@ -254,7 +260,8 @@ fun FlySightDeviceItemConnectedAndNominalConfigFilePreview() {
         onPushConfigToDeviceClicked = {},
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
-        onPreventDialogForFirmwareVersion = {}
+        onPreventDialogForFirmwareVersion = {},
+        onUpdateFirmwareClicked = {}
     )
 }
 
@@ -264,7 +271,7 @@ fun FlySightDeviceItemConnectedAndConfigFileUnknownPreview() {
     FlySightDeviceItem(
         firmwareCompatibilityMatrix = FirmwareCompatibilityMatrix.placeholder,
         device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
+            device = FakeDeviceDelegateImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
                 initialConfigFileState = LoadingState.Loaded(defaultConfigFile().copy(name = "Distance Le Puy"))
             ),
@@ -281,7 +288,8 @@ fun FlySightDeviceItemConnectedAndConfigFileUnknownPreview() {
         onPushConfigToDeviceClicked = {},
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
-        onPreventDialogForFirmwareVersion = {}
+        onPreventDialogForFirmwareVersion = {},
+        onUpdateFirmwareClicked = {}
     )
 }
 
@@ -291,7 +299,7 @@ fun FlySightDeviceItemConnectedAndConfigFileDiffersPreview() {
     FlySightDeviceItem(
         firmwareCompatibilityMatrix = FirmwareCompatibilityMatrix.placeholder,
         device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
+            device = FakeDeviceDelegateImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
                 initialRecordFileState = LoadingState.Loaded(
                     listOf(
@@ -316,7 +324,8 @@ fun FlySightDeviceItemConnectedAndConfigFileDiffersPreview() {
         onPushConfigToDeviceClicked = {},
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
-        onPreventDialogForFirmwareVersion = {}
+        onPreventDialogForFirmwareVersion = {},
+        onUpdateFirmwareClicked = {}
     )
 }
 
@@ -326,7 +335,7 @@ fun FlySightDeviceItemConnectedAndConfigFileLoadingPreview() {
     FlySightDeviceItem(
         firmwareCompatibilityMatrix = FirmwareCompatibilityMatrix.placeholder,
         device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
+            device = FakeDeviceDelegateImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
                 initialRecordFileState = LoadingState.Loaded(
                     listOf(
@@ -351,7 +360,8 @@ fun FlySightDeviceItemConnectedAndConfigFileLoadingPreview() {
         onPushConfigToDeviceClicked = {},
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
-        onPreventDialogForFirmwareVersion = {}
+        onPreventDialogForFirmwareVersion = {},
+        onUpdateFirmwareClicked = {}
     )
 }
 
@@ -364,7 +374,7 @@ fun FlySightDeviceItemConnectedAndUpdatingConfigurationPreview() {
         FlySightDeviceItem(
             firmwareCompatibilityMatrix = FirmwareCompatibilityMatrix.placeholder,
             device = ListFlySightDeviceDisplayData(
-                device = FakeDeviceImpl(
+                device = FakeDeviceDelegateImpl(
                     initialConnectionState = DeviceConnectionState.Connected,
                     initialRecordFileState = LoadingState.Loaded(
                         listOf(
@@ -389,7 +399,8 @@ fun FlySightDeviceItemConnectedAndUpdatingConfigurationPreview() {
             onPushConfigToDeviceClicked = {},
             onChangeDeviceConfigurationClicked = {},
             onUploadRecordToSystem = {},
-        onPreventDialogForFirmwareVersion = {}
+        onPreventDialogForFirmwareVersion = {},
+        onUpdateFirmwareClicked = {}
         )
     }
 }
@@ -400,7 +411,7 @@ fun FlySightDeviceItemErrorPreview() {
     FlySightDeviceItem(
         firmwareCompatibilityMatrix = FirmwareCompatibilityMatrix.placeholder,
         device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
+            device = FakeDeviceDelegateImpl(
                 initialConnectionState = DeviceConnectionState.ConnectionError
             ),
             isConfigFromSystem = true,
@@ -416,7 +427,8 @@ fun FlySightDeviceItemErrorPreview() {
         onPushConfigToDeviceClicked = {},
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
-        onPreventDialogForFirmwareVersion = {}
+        onPreventDialogForFirmwareVersion = {},
+        onUpdateFirmwareClicked = {}
     )
 }
 
@@ -426,7 +438,7 @@ fun DeviceConfigurationMisMatchDialogWithConfigContentChangedPreview() {
     DeviceConfigurationMisMatchDialog(
         configFileState = LoadingState.Loaded(defaultConfigFile().copy(name = "Speed Corbas")),
         device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
+            device = FakeDeviceDelegateImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
                 initialRecordFileState = LoadingState.Loaded(
                     listOf(
@@ -454,7 +466,7 @@ fun DeviceConfigurationMisMatchDialogWithConfigNotFromSystemPreview() {
     DeviceConfigurationMisMatchDialog(
         configFileState = LoadingState.Loaded(defaultConfigFile().copy(name = "Speed Corbas")),
         device = ListFlySightDeviceDisplayData(
-            device = FakeDeviceImpl(
+            device = FakeDeviceDelegateImpl(
                 initialConnectionState = DeviceConnectionState.Connected,
                 configFileName = "Speed Corbas"
             ),
@@ -469,7 +481,7 @@ fun DeviceConfigurationMisMatchDialogWithConfigNotFromSystemPreview() {
     )
 }
 
-private class FakeDeviceImpl(
+private class FakeDeviceDelegateImpl(
     initialConnectionState: DeviceConnectionState = DeviceConnectionState.Disconnected,
     initialRecordFileState: LoadingState<List<RecordFile>> = LoadingState.Idle,
     initialConfigFileState: LoadingState<ConfigFile> = LoadingState.Idle,
@@ -478,8 +490,6 @@ private class FakeDeviceImpl(
 ) : MutableFlySightDevice {
     override val uuid: String
         get() = "uuid"
-    override val address: String
-        get() = "address"
     override val connectionState: StateFlow<DeviceConnectionState> =
         MutableStateFlow(initialConnectionState)
     override val configFile: StateFlow<LoadingState<ConfigFile>> = MutableStateFlow(initialConfigFileState)
@@ -487,8 +497,6 @@ private class FakeDeviceImpl(
         get() = MutableStateFlow(FileState.Nothing)
     override val flySightFile: StateFlow<FileState>
         get() = MutableStateFlow(FileState.Nothing)
-    override val hasAccess: StateFlow<Boolean>
-        get() = MutableStateFlow(true)
     override val records: StateFlow<LoadingState<List<RecordFile>>> =
         MutableStateFlow(initialRecordFileState).asStateFlow()
     override val logs: StateFlow<List<String>>
@@ -499,10 +507,13 @@ private class FakeDeviceImpl(
         get() = MutableSharedFlow()
     override val firmwareVersion: StateFlow<String?>
         get() = MutableStateFlow("")
+    override val publicKeys: StateFlow<Pair<String, String>?>
+        get() = MutableStateFlow(null)
+    override val isBle: Boolean = true
 
-    override suspend fun connectGatt(): Boolean = true
+    override suspend fun connect(): Boolean = true
 
-    override suspend fun disconnectGatt(): Boolean = true
+    override suspend fun disconnect(): Boolean = true
 
     override fun flowDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>> =
         MutableStateFlow(emptyList())
@@ -511,5 +522,6 @@ private class FakeDeviceImpl(
     override suspend fun readFileSynchronously(fileName: String): FileState = FileState.Nothing
 
     override suspend fun updateConfigFile(configFile: ConfigFile) {}
+    override suspend fun writeBinaryFile(filePath: String, fileContent: ByteArray): Boolean = true
 
 }

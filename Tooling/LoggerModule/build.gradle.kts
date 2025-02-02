@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "fr.hozakan.flysightcompanion.usbmodule"
+    namespace = "fr.hozakan.flysightcompanion.loggermodule"
     compileSdk = 35
 
     defaultConfig {
@@ -34,7 +34,6 @@ android {
 
 dependencies {
     implementation(project(":model"))
-    implementation(project(":Tooling:framework"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

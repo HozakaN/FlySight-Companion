@@ -10,14 +10,12 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class FlySightDeviceWrapper(
-    val usbDelegate: UsbFlySightDevice?,
-    val bleDelegate: BleFlySightDevice?
+    val usbDelegate: UsbFlySightDeviceDelegate?,
+    val bleDelegate: BleFlySightDeviceDelegate?
 ) : MutableFlySightDevice {
     override val uuid: DeviceId
         get() = TODO("Not yet implemented")
     override val name: String
-        get() = TODO("Not yet implemented")
-    override val address: String
         get() = TODO("Not yet implemented")
     override val connectionState: StateFlow<DeviceConnectionState>
         get() = TODO("Not yet implemented")
@@ -26,8 +24,6 @@ class FlySightDeviceWrapper(
     override val rawConfigFile: StateFlow<FileState>
         get() = TODO("Not yet implemented")
     override val flySightFile: StateFlow<FileState>
-        get() = TODO("Not yet implemented")
-    override val hasAccess: StateFlow<Boolean>
         get() = TODO("Not yet implemented")
     override val records: StateFlow<LoadingState<List<RecordFile>>>
         get() = TODO("Not yet implemented")
@@ -39,12 +35,15 @@ class FlySightDeviceWrapper(
         get() = TODO("Not yet implemented")
     override val firmwareVersion: StateFlow<String?>
         get() = TODO("Not yet implemented")
+    override val publicKeys: StateFlow<Pair<String, String>?>
+        get() = TODO("Not yet implemented")
+    override val isBle: Boolean = bleDelegate != null
 
-    override suspend fun connectGatt(): Boolean {
+    override suspend fun connect(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override suspend fun disconnectGatt(): Boolean {
+    override suspend fun disconnect(): Boolean {
         TODO("Not yet implemented")
     }
 
@@ -61,6 +60,10 @@ class FlySightDeviceWrapper(
     }
 
     override suspend fun updateConfigFile(configFile: ConfigFile) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun writeBinaryFile(filePath: String, fileContent: ByteArray): Boolean {
         TODO("Not yet implemented")
     }
 }

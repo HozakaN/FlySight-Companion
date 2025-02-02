@@ -12,6 +12,8 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import timber.log.Timber
+import java.time.LocalDateTime
+import kotlin.time.Duration
 
 class BlePingJob(
     private val gatt: BluetoothGatt,
@@ -72,3 +74,8 @@ class BlePingJob(
         return returnValue
     }
 }
+
+fun LocalDateTime.isWithin(duration: Duration): Boolean {
+    return this.isAfter(LocalDateTime.now().minusNanos(duration.inWholeNanoseconds))
+}
+

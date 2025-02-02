@@ -15,6 +15,7 @@ import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionServ
 import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
+import fr.hozakan.flysightcompanion.loggermodule.LoggerService
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.firmware.FirmwareCompatibilityMatrix
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
@@ -50,7 +52,8 @@ class ListFlySightDevicesViewModel @Inject constructor(
     private val bluetoothService: BluetoothService,
     private val fsDeviceService: FsDeviceService,
     private val configFileService: ConfigFileService,
-    private val permissionsService: AndroidPermissionsService
+    private val permissionsService: AndroidPermissionsService,
+    private val loggerService: LoggerService
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -80,17 +83,16 @@ class ListFlySightDevicesViewModel @Inject constructor(
             }
         }.launchIn(viewModelScope)
 
-        fsDeviceService.bluetoothDevices.flatMapConcat { devices ->
+        fsDeviceService.devices.flatMapLatest { devices ->
+            loggerService.log("[ListFlySightDevicesViewModel]: new list of ${devices.size} devices")
             combine(devices.map {
-                Timber.d("Hoz3 [ListFlySightDevicesViewModel]: devices.map $it")
+                loggerService.log("[ListFlySightDevicesViewModel]: devices.map $it")
                 combine(
                     it.configFile, it.records, it.firmwareVersion
                 ) { conf, records, firmwareVersion ->
-                    Timber.d("Hoz3 [ListFlySightDevicesViewModel]: combine $conf $records $firmwareVersion")
                     it to (conf to records triple firmwareVersion)
                 }
             }) { devicesWithConfAndRecordsAndFirmwareVersion ->
-                Timber.d("Hoz3 [ListFlySightDevicesViewModel]: devicesWithConfAndRecordsAndFirmwareVersion = $devicesWithConfAndRecordsAndFirmwareVersion")
                 devicesWithConfAndRecordsAndFirmwareVersion
             }
         }.combine(
@@ -112,7 +114,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
                             firmwareName
                         )
                     }
-                computeDisplayData(
+                val computeDisplayData = computeDisplayData(
                     device.first,
                     device.second.first,
                     device.second.second,
@@ -123,6 +125,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
                     canShowFirmwareWarning ?: false,
                     appVersionService.appVersion
                 )
+                computeDisplayData
             }
         }.onEach { devices ->
             _state.update { state ->
@@ -164,10 +167,10 @@ class ListFlySightDevicesViewModel @Inject constructor(
         canShowFirmwareWarning: Boolean,
         appVersion: String
     ): ListFlySightDeviceDisplayData {
-        Timber.d("Hoz3 [ListFlySightDevicesViewModel]: computeDisplayData $device $deviceConfigFileState $deviceRecords $firmwareVersion $configFiles $recordFiles $firmwareCompatibilityMatrix $canShowFirmwareWarning $appVersion")
+//        Timber.d("Hoz3 [ListFlySightDevicesViewModel]: computeDisplayData $device $deviceConfigFileState $deviceRecords $firmwareVersion $configFiles $recordFiles $firmwareCompatibilityMatrix $canShowFirmwareWarning $appVersion")
         val phoneConfigNames = configFiles.map { it.name }
         val deviceConfigName = deviceConfigFileState.content?.name
-        Timber.d("Hoz4 firmwareVersion=$firmwareVersion; firmwareCompatibilityMatrix.firmwares = ${firmwareCompatibilityMatrix.firmwares.map { it.name }}")
+//        Timber.d("Hoz4 firmwareVersion=$firmwareVersion; firmwareCompatibilityMatrix.firmwares = ${firmwareCompatibilityMatrix.firmwares.map { it.name }}")
         Timber.d(
             "Hoz4 index = ${
                 firmwareCompatibilityMatrix.firmwares.map { it.name }
@@ -356,6 +359,12 @@ class ListFlySightDevicesViewModel @Inject constructor(
                     }
                 }
             )
+        }
+    }
+
+    fun updateFirmware(device: ListFlySightDeviceDisplayData) {
+        viewModelScope.launch {
+            fsDeviceService.updateFirmware(device)
         }
     }
 }

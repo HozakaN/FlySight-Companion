@@ -25,6 +25,7 @@ import fr.hozakan.flysightcompanion.framework.extension.bytesToHex
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleDirectoryFetcher
+import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleDirectoryWriter
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleFileReader
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleFileWriter
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BlePingJob
@@ -70,19 +71,17 @@ private val record_directory_date_regex =
 private val record_directory_time_regex =
     "^(0[0-9]|1[0-9]|2[0-3])-(0[0-9]|[1-5][0-9])-(0[0-9]|[1-5][0-9])$".toRegex()
 
-class BleFlySightDeviceImpl(
+class BleFlySightDeviceDelegateImpl(
     private val bluetoothDevice: BluetoothDevice,
     private val context: Context,
     private val configEncoder: ConfigEncoder
-) : BleFlySightDevice {
+) : BleFlySightDeviceDelegate {
 
     override val uuid = UUID.randomUUID().toString()
 
     override val name: String
         @SuppressLint("MissingPermission")
         get() = bluetoothDevice.name ?: context.resources.getString(R.string.misc_unknown)
-
-    override val hasAccess: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
 
     private var gatt: BluetoothGatt? = null
         private set(value) {
@@ -124,12 +123,17 @@ class BleFlySightDeviceImpl(
     private val _firmwareVersion = MutableStateFlow<String?>(null)
     override val firmwareVersion: StateFlow<String?> = _firmwareVersion.asStateFlow()
 
+    private val _publicKeys = MutableStateFlow<Pair<String, String>?>(null)
+    override val publicKeys: StateFlow<Pair<String, String>?> = _publicKeys.asStateFlow()
+
     private val parser: ConfigParser = DefaultConfigParser()
 
     private var connectionContinuation: CancellableContinuation<Boolean>? = null
 
     override val address: String
         get() = bluetoothDevice.address
+
+    override val isBle: Boolean = true
 
     private val _file = MutableSharedFlow<FileState>()
     private val _rawConfigFile = MutableStateFlow<FileState>(FileState.Nothing)
@@ -421,29 +425,6 @@ class BleFlySightDeviceImpl(
         }
     }
 
-    private suspend fun writeFile(
-        fileName: String,
-        fileContent: String
-    ) {
-        log("Writing file $fileName")
-        val gatt = this.gatt ?: return
-        val rx = this.rxCharacteristic ?: return
-
-        withContext(Dispatchers.IO) {
-            val fileWriter = BleFileWriter(
-                gatt = gatt,
-                gattCharacteristic = rx,
-                gattTaskQueue = gattTaskQueue,
-                scheduler = scheduler
-            )
-            try {
-                fileWriter.writeFile(fileName, fileContent)
-            } catch (e: Exception) {
-                log("Error writing file : $e")
-            }
-        }
-    }
-
     private fun startPingSystem() {
         scope?.launch(Dispatchers.IO) {
             while (_connectionState.value == DeviceConnectionState.Connected) {
@@ -452,7 +433,7 @@ class BleFlySightDeviceImpl(
                 _ping.emit(ping)
                 if (!ping) {
                     log("Device $name not responding to pings")
-                    disconnectGatt()
+                    disconnect()
                     return@launch
                 }
             }
@@ -547,10 +528,28 @@ class BleFlySightDeviceImpl(
                     val content = fileState.content
                     if (content.isNotBlank()) {
                         val firmwareVersionCharacterIndex = content.indexOf("Firmware_Ver: ")
-                        if (firmwareVersionCharacterIndex >= 0 ) {
-                            val firmwareVersion = content.substring(firmwareVersionCharacterIndex + "Firmware_Ver: ".length)
-                                .substringBefore("\n").trim()
+                        if (firmwareVersionCharacterIndex >= 0) {
+                            val firmwareVersion =
+                                content.substring(firmwareVersionCharacterIndex + "Firmware_Ver: ".length)
+                                    .substringBefore("\n").trim()
                             _firmwareVersion.value = firmwareVersion
+                        }
+                        val publicKeyXCharacterIndex = content.indexOf("Pubkey_X: ")
+                        val publicKeyX = if (publicKeyXCharacterIndex >= 0) {
+                            content.substring(publicKeyXCharacterIndex + "Pubkey_X: ".length)
+                                .substringBefore("\n").trim()
+                        } else {
+                            null
+                        }
+                        val publicKeyYCharacterIndex = content.indexOf("Pubkey_Y: ")
+                        val publicKeyY = if (publicKeyYCharacterIndex >= 0) {
+                            content.substring(publicKeyYCharacterIndex + "Pubkey_Y: ".length)
+                                .substringBefore("\n").trim()
+                        } else {
+                            null
+                        }
+                        if (publicKeyX != null && publicKeyY != null) {
+                            _publicKeys.value = publicKeyX to publicKeyY
                         }
                     }
                 }
@@ -622,6 +621,76 @@ class BleFlySightDeviceImpl(
                 log("Error reading file : $e")
             }
         }
+    }
+
+
+    private suspend fun writeFile(
+        fileName: String,
+        fileContent: String
+    ) {
+        writeBinaryFile(fileName, fileContent.toByteArray())
+    }
+
+    override suspend fun writeBinaryFile(fileName: String, data: ByteArray): Boolean {
+        log("Writing file $fileName")
+        val gatt = this.gatt ?: return false
+        val rx = this.rxCharacteristic ?: return false
+
+        return withContext(Dispatchers.IO) {
+            val pathWithoutFileSimpleName = fileName.substringBeforeLast("/")
+            val pathWithoutFileSimpleNameSplit = pathWithoutFileSimpleName.split("/")
+            var firstNonExistingPartIndex =
+                checkNonExistingPathParts(filePath = pathWithoutFileSimpleNameSplit)
+            if (firstNonExistingPartIndex > -1) {
+                var existingPart = pathWithoutFileSimpleNameSplit.subList(0, firstNonExistingPartIndex).joinToString(separator = "/")
+                while (firstNonExistingPartIndex < pathWithoutFileSimpleNameSplit.size) {
+                    existingPart += "/${pathWithoutFileSimpleNameSplit[firstNonExistingPartIndex]}"
+                    val directoryWriter = BleDirectoryWriter(
+                        gatt = gatt,
+                        gattCharacteristic = rx,
+                        gattTaskQueue = gattTaskQueue,
+                        scheduler = scheduler
+                    )
+                    if (!directoryWriter.writeDirectory(existingPart)) {
+                        return@withContext false
+                    }
+                    firstNonExistingPartIndex++
+                }
+            }
+            val fileWriter = BleFileWriter(
+                gatt = gatt,
+                gattCharacteristic = rx,
+                gattTaskQueue = gattTaskQueue,
+                scheduler = scheduler
+            )
+            try {
+                fileWriter.writeFile(fileName, data)
+                true
+            } catch (e: Exception) {
+                log("Error writing file : $e")
+                false
+            }
+        }
+    }
+
+    /**
+     * For each part of the path, check if the folder exists.
+     * If the whole path exists, return -1, else returns the index of the first part that does not exist
+     */
+    private suspend fun checkNonExistingPathParts(filePath: List<String>): Int {
+        var index = 0
+        val currentPath = mutableListOf("/")
+        while (index < filePath.size) {
+            val part = filePath[index]
+            val directory = loadDirectory(currentPath)
+            if (directory.any { it.fileName == part && it.isDirectory }) {
+                currentPath += part
+                index++
+            } else {
+                return index
+            }
+        }
+        return -1
     }
 
     override suspend fun readFileSynchronously(fileName: String): FileState {
@@ -698,7 +767,7 @@ class BleFlySightDeviceImpl(
     }
 
     @SuppressLint("MissingPermission")
-    override suspend fun connectGatt(): Boolean {
+    override suspend fun connect(): Boolean {
         if (scope != null) {
             Timber.e("attempting to connect while already connected")
             return false
@@ -724,7 +793,7 @@ class BleFlySightDeviceImpl(
     }
 
     @SuppressLint("MissingPermission")
-    override suspend fun disconnectGatt(): Boolean {
+    override suspend fun disconnect(): Boolean {
         if (scope == null) {
             return false
         }

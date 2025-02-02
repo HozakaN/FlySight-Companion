@@ -3,6 +3,7 @@ package fr.hozakan.flysightcompanion.networkmodule
 import android.content.Context
 import com.google.gson.Gson
 import fr.hozakan.flysightcompanion.model.firmware.FirmwareCompatibilityMatrix
+import fr.hozakan.flysightcompanion.model.firmware.FirmwareInfo
 import fr.hozakan.flysightcompanion.model.firmware.FirmwareVersion
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -12,6 +13,7 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
 import io.ktor.client.request.url
+import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.readRawBytes
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.CoroutineScope
@@ -22,7 +24,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.File
 
 class KTorNetworkService(
     private val context: Context
@@ -33,7 +34,7 @@ class KTorNetworkService(
             level = LogLevel.ALL
             logger = object : Logger {
                 override fun log(message: String) {
-//                    Timber.d("Hoz3 [KTOR]: $message")
+                    Timber.d("Hoz3 [KTOR]: $message")
                 }
 
             }
@@ -104,11 +105,19 @@ class KTorNetworkService(
             FirmwareCompatibilityMatrix.placeholder
         }
     }
+
+    override suspend fun downloadFirmware(deviceBatch: String, firmwareInfo: FirmwareInfo): ByteArray? {
+        val response = client.get("$flySightFirmwareDownloadSite${deviceBatch}_${firmwareInfo.name}.sfb")
+        if (response.status != HttpStatusCode.OK) {
+            return null
+        }
+        return response.bodyAsBytes()
+    }
 }
 
 private const val flySightUpdateUrl = "https://flysight.ca/firmware"
 private const val flySightFirmwareDownloadSite =
-    "https://flysight.ca/wp-admin/admin-post.php?action=download_firmware&amp;firmware_file="
+    "https://flysight.ca/wp-admin/admin-post.php?action=download_firmware&firmware_file="
 
 private const val githubTagPagesUrl = "https://github.com/flysight/flysight-2-firmware/tags"
 private const val githubTagMarker = "<a href=\"/flysight/flysight-2-firmware/releases/tag/"

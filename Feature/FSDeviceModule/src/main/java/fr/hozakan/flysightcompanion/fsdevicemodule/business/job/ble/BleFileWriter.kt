@@ -26,6 +26,13 @@ class BleFileWriter(
         filePath: String,
         fileContent: String
     ) {
+        writeFile(filePath, fileContent.toByteArray())
+    }
+
+    override suspend fun writeFile(
+        filePath: String,
+        fileContent: ByteArray
+    ) {
         scheduler.schedule(
             labelProvider = { "Write file $filePath" }
         ) {
@@ -89,14 +96,13 @@ class BleFileWriter(
         }
     }
 
-    private fun prepareDataPackets(fileContent: String) {
-        val contentBytes = fileContent.toByteArray()
-        val nbPackets = contentBytes.size / FRAME_LENGTH + 1
+    private fun prepareDataPackets(fileContent: ByteArray) {
+        val nbPackets = fileContent.size / FRAME_LENGTH + 1
         for (i in 0 until nbPackets) {
             val packet = try {
-                contentBytes.copyOfRange(i * FRAME_LENGTH, (i + 1) * FRAME_LENGTH)
+                fileContent.copyOfRange(i * FRAME_LENGTH, (i + 1) * FRAME_LENGTH)
             } catch (e: Exception) {
-                contentBytes.copyOfRange(i * FRAME_LENGTH, contentBytes.size)
+                fileContent.copyOfRange(i * FRAME_LENGTH, fileContent.size)
             }
             dataPackets.add(packet)
         }

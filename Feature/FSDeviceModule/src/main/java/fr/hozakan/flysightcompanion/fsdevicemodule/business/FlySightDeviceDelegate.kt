@@ -9,11 +9,10 @@ import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
-typealias DeviceId = String
-
-interface FlySightDevice {
+interface FlySightDeviceDelegate {
     val uuid: DeviceId
     val name: String
+    val isBle: Boolean
     val connectionState: StateFlow<DeviceConnectionState>
     val configFile: StateFlow<LoadingState<ConfigFile>>
     val rawConfigFile: StateFlow<FileState>
@@ -21,12 +20,14 @@ interface FlySightDevice {
     val records: StateFlow<LoadingState<List<RecordFile>>>
     val logs: StateFlow<List<String>>
     val fileReceived: SharedFlow<FileState>
-    val ping: SharedFlow<Boolean>
     val firmwareVersion: StateFlow<String?>
     val publicKeys: StateFlow<Pair<String, String>?>
-    val isBle: Boolean
     fun flowDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>>
-//    suspend fun loadDirectory(directoryPath: List<String>): List<FileInfo>
+    //    suspend fun loadDirectory(directoryPath: List<String>): List<FileInfo>
     suspend fun readFile(fileName: String)
+    suspend fun writeBinaryFile(fileName: String, data: ByteArray): Boolean
+    suspend fun connect(): Boolean
+    suspend fun disconnect(): Boolean
+    suspend fun readFileSynchronously(fileName: String): FileState
+    suspend fun updateConfigFile(configFile: ConfigFile)
 }
-

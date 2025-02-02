@@ -8,22 +8,20 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AreaChart
 import androidx.compose.material.icons.filled.Engineering
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,8 +30,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -64,10 +63,12 @@ import fr.hozakan.flysightcompanion.designsystem.theme.TextConfiguration
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.dialogmodule.DialogHandler
 import fr.hozakan.flysightcompanion.dialogmodule.LocalDialogService
+import fr.hozakan.flysightcompanion.dialogmodule.MutableDialogService
 import fr.hozakan.flysightcompanion.framework.compose.LocalMenuState
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.dagger.Injectable
 import fr.hozakan.flysightcompanion.framework.menu.rememberActionBarMenuState
+import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_config.DeviceConfigurationMenuActions
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_config.DeviceConfigurationScreen
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail.DeviceDetailMenuActions
@@ -75,12 +76,16 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail.DeviceDetail
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.file.DeviceFileScreen
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesMenuActions
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
+import fr.hozakan.flysightcompanion.loggermodule.LoggerService
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailMenuActions
 import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailScreen
 import fr.hozakan.flysightcompanion.recordsmodule.ui.list.ListRecordsScreen
 import fr.hozakan.flysightcompanion.recordsmodule.ui.plot.PlotSettingsScreen
+import fr.hozakan.flysightcompanion.ui.DevScreen
+import fr.hozakan.flysightcompanion.usbmodule.UsbService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import timber.log.Timber
 import javax.inject.Inject
 import fr.hozakan.flysightcompanion.R as LocalR
@@ -94,7 +99,16 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
     lateinit var viewModelFactory: ViewModelProvider.Factory
 
     @Inject
-    lateinit var dialogService: fr.hozakan.flysightcompanion.dialogmodule.MutableDialogService
+    lateinit var dialogService: MutableDialogService
+
+    @Inject
+    lateinit var usbService: UsbService
+
+    @Inject
+    lateinit var fsDeviceService: FsDeviceService
+
+    @Inject
+    lateinit var loggerService: LoggerService
 
     @Inject
     lateinit var json: Gson
@@ -117,10 +131,25 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                 ) {
                     val navController = rememberNavController()
                     val currentBackStack = navController.currentBackStackEntryAsState()
+                    var devScreenOpened by remember { mutableStateOf(false) }
 
                     DialogHandler()
 
+                    if (devScreenOpened) {
+                        DevScreen(
+                            usbService = usbService,
+                            fsDeviceService = fsDeviceService,
+                            loggerService = loggerService
+                        ) {
+                            devScreenOpened = false
+                        }
+                        return@CompositionLocalProvider
+                    }
                     Scaffold(
+                        modifier = Modifier.tripleTapHandler {
+                            devScreenOpened = true
+                            Timber.d("Hoz4 triple tap detected!")
+                        },
                         topBar = {
                             val currentRoute = currentBackStack.value?.destination?.route
                             val title = when (currentRoute) {
@@ -536,6 +565,45 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun Modifier.tripleTapHandler(
+        callback: () -> Unit
+    ): Modifier {
+        if (!BuildConfig.DEBUG)  {
+            return this
+        }
+        var simpleTapDetected by remember { mutableStateOf(false) }
+        var doubleTapDetected by remember { mutableStateOf(false) }
+
+        LaunchedEffect(doubleTapDetected, simpleTapDetected) {
+            if (doubleTapDetected || simpleTapDetected) {
+                delay(500)
+                run {
+                    simpleTapDetected = false
+                    doubleTapDetected = false
+                }
+            }
+        }
+        // detect triple tap
+        return this.pointerInput(Unit) {
+            detectTapGestures(
+                onDoubleTap = { position ->
+                    if (simpleTapDetected) {
+                        callback()
+                    } else {
+                        doubleTapDetected = true
+                    }
+                },
+            ) { position ->
+                if (doubleTapDetected) {
+                    callback()
+                } else {
+                    simpleTapDetected = true
                 }
             }
         }
