@@ -63,7 +63,11 @@ class FlySightDeviceWrapper(
         TODO("Not yet implemented")
     }
 
-    override suspend fun writeBinaryFile(filePath: String, fileContent: ByteArray): Boolean {
+    override suspend fun writeBinaryFile(
+        filePath: String,
+        fileContent: ByteArray,
+        callback: (Int) -> Unit
+    ): Boolean {
         TODO("Not yet implemented")
     }
 }

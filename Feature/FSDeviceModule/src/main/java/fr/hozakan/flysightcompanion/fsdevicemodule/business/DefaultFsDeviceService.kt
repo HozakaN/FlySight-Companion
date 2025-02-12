@@ -275,14 +275,15 @@ class DefaultFsDeviceService(
         val realDevice = _devices.value.firstOrNull { it.uuid == device.uuid }
         if (realDevice == null) return
         withContext(Dispatchers.IO) {
-            val flow = MutableStateFlow(FirmwareUpdateStatus.Downloading)
+            val flow = MutableStateFlow<FirmwareUpdateStatus>(FirmwareUpdateStatus.Downloading)
             val dialogItem = UpdateFirmwareDialog(flow)
             scope.launch {
                 dialogService.displayDialog(dialogItem)
             }
             val compatibilityMatrix = networkService.firmwareCompatibilityMatrix.value
             val appVersion = appVersionService.appVersion
-            val latestCompatibleVersionIndex = compatibilityMatrix.firmwares.indexOfFirst { appVersion in it.appCompatibility }
+            val latestCompatibleVersionIndex =
+                compatibilityMatrix.firmwares.indexOfFirst { appVersion in it.appCompatibility }
 
             val currentFirmwareVersion = realDevice.firmwareVersion.value
             if (currentFirmwareVersion == null) {
@@ -291,8 +292,9 @@ class DefaultFsDeviceService(
             }
 
             // Find version of firmware to update to
-            val currentFirmwareIndex = compatibilityMatrix.firmwares.indexOfFirst { it.name == currentFirmwareVersion }
-            if (latestCompatibleVersionIndex == -1 || currentFirmwareIndex == -1 || latestCompatibleVersionIndex >= currentFirmwareIndex)  {
+            val currentFirmwareIndex =
+                compatibilityMatrix.firmwares.indexOfFirst { it.name == currentFirmwareVersion }
+            if (latestCompatibleVersionIndex == -1 || currentFirmwareIndex == -1 || latestCompatibleVersionIndex >= currentFirmwareIndex) {
                 //There is no firmware update to do
                 flow.value = FirmwareUpdateStatus.NoUpdate
                 return@withContext
@@ -300,13 +302,17 @@ class DefaultFsDeviceService(
             val firmwareToUpdate = compatibilityMatrix.firmwares[latestCompatibleVersionIndex]
 
             val publicKeys = device.publicKeys.value
-            val batchPrefix = if (publicKeys == null || (publicKeys.first.startsWith("fffff") && publicKeys.second.startsWith("fffff"))) {
-                // Consider b1
-                "B1"
-            } else {
-                val key = "04" + publicKeys.first + publicKeys.second
-                compatibilityMatrix.batchInfos.firstOrNull { it.key == key }?.batchPrefix
-            }
+            val batchPrefix =
+                if (publicKeys == null || (publicKeys.first.startsWith("fffff") && publicKeys.second.startsWith(
+                        "fffff"
+                    ))
+                ) {
+                    // Consider b1
+                    "B1"
+                } else {
+                    val key = "04" + publicKeys.first + publicKeys.second
+                    compatibilityMatrix.batchInfos.firstOrNull { it.key == key }?.batchPrefix
+                }
             if (batchPrefix == null) {
                 //There is no firmware update to do
                 flow.value = FirmwareUpdateStatus.NoUpdate
@@ -319,25 +325,31 @@ class DefaultFsDeviceService(
                 return@withContext
             }
             flow.value = FirmwareUpdateStatus.Pushing
-            if (!realDevice.writeBinaryFile("/FW/APP.SFB", binaryFile)) {
+            if (!realDevice.writeBinaryFile("/FW/APP.SFB", binaryFile) { sentDataSize ->
+                    flow.value = FirmwareUpdateStatus.PushingWithAmount(
+                        maxValue = binaryFile.size,
+                        currentValue = sentDataSize
+                    )
+                }) {
                 flow.value = FirmwareUpdateStatus.Error
                 return@withContext
             }
             flow.value = FirmwareUpdateStatus.DisconnectingFromBluetooth
             realDevice.disconnect()
             flow.value = FirmwareUpdateStatus.AwaitingUsbConnection
+//            flow.value = FirmwareUpdateStatus.Done
+            usbService.awaitUsbConnection()
+            flow.value = FirmwareUpdateStatus.AwaitingButtonPush
+            usbService.awaitUsbDisconnection()
+            usbService.awaitUsbConnection()
+            flow.value = FirmwareUpdateStatus.DisconnectingFromUsb
+            usbService.awaitUsbDisconnection()
+            flow.value = FirmwareUpdateStatus.AwaitingBluetoothReconnection
+            if (!realDevice.connect()) {
+                flow.value = FirmwareUpdateStatus.Error
+                return@withContext
+            }
             flow.value = FirmwareUpdateStatus.Done
-//            usbService.awaitUsbConnection()
-//            flow.value = FirmwareUpdateStatus.AwaitingButtonPush
-//            usbService.awaitUsbDisconnection()
-//            usbService.awaitUsbConnection()
-//            flow.value = FirmwareUpdateStatus.DisconnectingFromUsb
-//            usbService.awaitUsbDisconnection()
-//            flow.value = FirmwareUpdateStatus.AwaitingBluetoothReconnection
-//            if (!realDevice.connect()) {
-//                flow.value = FirmwareUpdateStatus.Error
-//                return@withContext
-//            }
 //            flow.value = FirmwareUpdateStatus.FirmwareVersionCheck
 //            val firmwareVersion = realDevice.firmwareVersion
 //                .timeout(30_000.milliseconds)

@@ -399,8 +399,8 @@ fun FlySightDeviceItemConnectedAndUpdatingConfigurationPreview() {
             onPushConfigToDeviceClicked = {},
             onChangeDeviceConfigurationClicked = {},
             onUploadRecordToSystem = {},
-        onPreventDialogForFirmwareVersion = {},
-        onUpdateFirmwareClicked = {}
+            onPreventDialogForFirmwareVersion = {},
+            onUpdateFirmwareClicked = {}
         )
     }
 }
@@ -492,7 +492,8 @@ private class FakeDeviceDelegateImpl(
         get() = "uuid"
     override val connectionState: StateFlow<DeviceConnectionState> =
         MutableStateFlow(initialConnectionState)
-    override val configFile: StateFlow<LoadingState<ConfigFile>> = MutableStateFlow(initialConfigFileState)
+    override val configFile: StateFlow<LoadingState<ConfigFile>> =
+        MutableStateFlow(initialConfigFileState)
     override val rawConfigFile: StateFlow<FileState>
         get() = MutableStateFlow(FileState.Nothing)
     override val flySightFile: StateFlow<FileState>
@@ -522,6 +523,10 @@ private class FakeDeviceDelegateImpl(
     override suspend fun readFileSynchronously(fileName: String): FileState = FileState.Nothing
 
     override suspend fun updateConfigFile(configFile: ConfigFile) {}
-    override suspend fun writeBinaryFile(filePath: String, fileContent: ByteArray): Boolean = true
+    override suspend fun writeBinaryFile(
+        filePath: String,
+        fileContent: ByteArray,
+        callback: (Int) -> Unit
+    ): Boolean = true
 
 }

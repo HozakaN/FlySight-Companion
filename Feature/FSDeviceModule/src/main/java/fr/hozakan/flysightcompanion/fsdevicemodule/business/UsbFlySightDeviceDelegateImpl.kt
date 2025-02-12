@@ -99,7 +99,7 @@ class UsbFlySightDeviceDelegateImpl(
         TODO("Not yet implemented")
     }
 
-    override suspend fun writeBinaryFile(fileName: String, data: ByteArray): Boolean {
+    override suspend fun writeBinaryFile(fileName: String, data: ByteArray, callback: (Int) -> Unit): Boolean {
         TODO("Not yet implemented")
     }
 

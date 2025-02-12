@@ -34,7 +34,7 @@ class KTorNetworkService(
             level = LogLevel.ALL
             logger = object : Logger {
                 override fun log(message: String) {
-                    Timber.d("Hoz3 [KTOR]: $message")
+                    Timber.d("[KTOR]: $message")
                 }
 
             }

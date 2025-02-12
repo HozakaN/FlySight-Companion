@@ -1,59 +1,64 @@
 package fr.hozakan.flysightcompanion.model.firmware
 
-enum class FirmwareUpdateStatus {
+sealed interface FirmwareUpdateStatus {
     /**
      * Downloading the firmware from internet
      */
-    Downloading,
+    data object Downloading : FirmwareUpdateStatus
 
     /**
      * Pushing the firmware onto the FlySight
      */
-    Pushing,
+    data object Pushing : FirmwareUpdateStatus
+
+    data class PushingWithAmount(
+        val maxValue: Int,
+        val currentValue: Int
+    ) : FirmwareUpdateStatus
 
     /**
      * Disconnecting from Bluetooth
      */
-    DisconnectingFromBluetooth,
+    data object DisconnectingFromBluetooth : FirmwareUpdateStatus
 
     /**
      * Awaiting for the user to plug the FlySight to the phone through USB
      */
-    AwaitingUsbConnection,
+    data object AwaitingUsbConnection : FirmwareUpdateStatus
 
     /**
      * Awaiting for the user to push the power button until the LED becomes orange.
-     * This state should end when the FlySight usb is detached, then reattached
+     * This state should end when the FlySight usb is detached : then reattached
      */
-    AwaitingButtonPush,
+    data object AwaitingButtonPush : FirmwareUpdateStatus
 
     /**
      * Ask the user to disconnect the cable from the phone. This state should end when the phone receives a detached state callback
      */
-    DisconnectingFromUsb,
+    data object DisconnectingFromUsb : FirmwareUpdateStatus
 
     /**
      * Then trying to reconnect to the FlySight through Bluetooth
      */
-    AwaitingBluetoothReconnection,
+    data object AwaitingBluetoothReconnection : FirmwareUpdateStatus
 
     /**
      * Waiting for the flysight.txt file to be fetched so we can check the firmware version
      */
-    FirmwareVersionCheck,
+    data object FirmwareVersionCheck : FirmwareUpdateStatus
 
     /**
      * The firmware update is done
      */
-    Done,
+    data object Done : FirmwareUpdateStatus
 
     /**
      * Actually, there is no firmware update to do
      */
-    NoUpdate,
+    data object NoUpdate : FirmwareUpdateStatus
 
     /**
      * The firmware update has encountered an error
      */
-    Error
+    data object Error : FirmwareUpdateStatus
 }

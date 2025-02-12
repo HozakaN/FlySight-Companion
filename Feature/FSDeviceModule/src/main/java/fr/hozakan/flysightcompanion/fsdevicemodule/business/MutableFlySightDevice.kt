@@ -8,5 +8,5 @@ interface MutableFlySightDevice : FlySightDevice {
     suspend fun disconnect(): Boolean
     suspend fun readFileSynchronously(fileName: String): FileState
     suspend fun updateConfigFile(configFile: ConfigFile)
-    suspend fun writeBinaryFile(filePath: String, fileContent: ByteArray): Boolean
+    suspend fun writeBinaryFile(filePath: String, fileContent: ByteArray, callback: (Int) -> Unit): Boolean
 }

@@ -3,7 +3,8 @@ package fr.hozakan.flysightcompanion.fsdevicemodule.business.job
 interface FileWriter {
     suspend fun writeFile(
         filePath: String,
-        fileContent: ByteArray
+        fileContent: ByteArray,
+        callback: (Int) -> Unit
     )
     suspend fun writeFile(
         filePath: String,

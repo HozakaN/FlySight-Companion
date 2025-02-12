@@ -165,7 +165,7 @@ data class UpdateFirmwareDialog(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     val text = remember(firmwareUpdateState) {
-                        when (firmwareUpdateState) {
+                        when (val state = firmwareUpdateState) {
                             FirmwareUpdateStatus.Downloading -> "Downloading firmware from internet..."
                             FirmwareUpdateStatus.Pushing -> "Pushing firmware to the FlySight..."
                             FirmwareUpdateStatus.DisconnectingFromBluetooth,
@@ -179,11 +179,24 @@ data class UpdateFirmwareDialog(
                             FirmwareUpdateStatus.NoUpdate -> "No update available"
                             FirmwareUpdateStatus.Done -> "You FlySight has been updated!"
                             FirmwareUpdateStatus.Error -> "An error occurred during the update"
+                            is FirmwareUpdateStatus.PushingWithAmount -> {
+                                val factor = if (state.maxValue > 1_000_000) 1_000_000 else 1_000
+                                val maxValueText = if (state.maxValue > 1_000_000) {
+                                    "${state.maxValue / factor} MB"
+                                } else {
+                                    "${state.maxValue / factor} KB"
+                                }
+                                """
+                                    Pushing firmware to the FlySight...
+                                    ${state.currentValue / factor} / $maxValueText
+                                """.trimIndent()
+                            }
                         }
                     }
                     when (firmwareUpdateState) {
                         FirmwareUpdateStatus.Downloading,
                         FirmwareUpdateStatus.Pushing,
+                        is FirmwareUpdateStatus.PushingWithAmount,
                         FirmwareUpdateStatus.DisconnectingFromBluetooth -> {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -192,8 +205,10 @@ data class UpdateFirmwareDialog(
                                 CircularProgressIndicator()
                                 Spacer(modifier = Modifier.requiredWidth(8.dp))
                                 FText(
+                                    modifier = Modifier.fillMaxWidth(),
                                     text = text,
-                                    configuration = FlySightTheme.typography.cardTitle
+                                    configuration = FlySightTheme.typography.cardTitle,
+                                    textAlign = TextAlign.Center
                                 )
                             }
                         }
@@ -210,8 +225,10 @@ data class UpdateFirmwareDialog(
                                 )
                                 Spacer(modifier = Modifier.requiredHeight(16.dp))
                                 FText(
+                                    modifier = Modifier.fillMaxWidth(),
                                     text = text,
-                                    configuration = FlySightTheme.typography.cardTitle
+                                    configuration = FlySightTheme.typography.cardTitle,
+                                    textAlign = TextAlign.Center
                                 )
                             }
                         }
@@ -225,8 +242,10 @@ data class UpdateFirmwareDialog(
                                 CircularProgressIndicator()
                                 Spacer(modifier = Modifier.requiredWidth(8.dp))
                                 FText(
+                                    modifier = Modifier.fillMaxWidth(),
                                     text = text,
-                                    configuration = FlySightTheme.typography.cardTitle
+                                    configuration = FlySightTheme.typography.cardTitle,
+                                    textAlign = TextAlign.Center
                                 )
                             }
                         }
@@ -236,7 +255,8 @@ data class UpdateFirmwareDialog(
                         FirmwareUpdateStatus.Error -> {
                             FText(
                                 text = text,
-                                configuration = FlySightTheme.typography.cardTitle
+                                configuration = FlySightTheme.typography.cardTitle,
+                                textAlign = TextAlign.Center
                             )
                             Spacer(modifier = Modifier.requiredHeight(16.dp))
                             SimpleDialogActionBar(

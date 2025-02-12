@@ -628,17 +628,17 @@ class BleFlySightDeviceDelegateImpl(
         fileName: String,
         fileContent: String
     ) {
-        writeBinaryFile(fileName, fileContent.toByteArray())
+        writeBinaryFile(fileName, fileContent.toByteArray(), {})
     }
 
-    override suspend fun writeBinaryFile(fileName: String, data: ByteArray): Boolean {
+    override suspend fun writeBinaryFile(fileName: String, data: ByteArray, callback: (Int) -> Unit): Boolean {
         log("Writing file $fileName")
         val gatt = this.gatt ?: return false
         val rx = this.rxCharacteristic ?: return false
 
         return withContext(Dispatchers.IO) {
             val pathWithoutFileSimpleName = fileName.substringBeforeLast("/")
-            val pathWithoutFileSimpleNameSplit = pathWithoutFileSimpleName.split("/")
+            val pathWithoutFileSimpleNameSplit = pathWithoutFileSimpleName.substringAfter("/").split("/")
             var firstNonExistingPartIndex =
                 checkNonExistingPathParts(filePath = pathWithoutFileSimpleNameSplit)
             if (firstNonExistingPartIndex > -1) {
@@ -664,7 +664,7 @@ class BleFlySightDeviceDelegateImpl(
                 scheduler = scheduler
             )
             try {
-                fileWriter.writeFile(fileName, data)
+                fileWriter.writeFile(fileName, data, callback)
                 true
             } catch (e: Exception) {
                 log("Error writing file : $e")

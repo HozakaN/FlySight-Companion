@@ -42,8 +42,8 @@ class IntermediateBleOrUsbFlySightDevice(
     override suspend fun updateConfigFile(configFile: ConfigFile) =
         delegate.updateConfigFile(configFile)
 
-    override suspend fun writeBinaryFile(filePath: String, fileContent: ByteArray): Boolean =
-        delegate.writeBinaryFile(filePath, fileContent)
+    override suspend fun writeBinaryFile(filePath: String, fileContent: ByteArray, callback: (Int) -> Unit): Boolean =
+        delegate.writeBinaryFile(filePath, fileContent, callback)
 
     override fun flowDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>> =
         delegate.flowDirectory(directoryPath)

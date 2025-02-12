@@ -54,7 +54,7 @@ class BleDirectoryWriter(
 
             gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
 
-            val writeTask = TaskBuilder.buildPingTask(gatt, gattCharacteristic) {}
+            val writeTask = TaskBuilder.buildMakeDirTask(gatt, gattCharacteristic, filePath) {}
             gattTaskQueue.addTask(writeTask)
             val returnValue = try {
                 resultDeferred.await()

@@ -5,10 +5,12 @@ import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import fr.hozakan.flysightcompanion.bluetoothmodule.GattTaskQueue
 import fr.hozakan.flysightcompanion.bluetoothmodule.SimpleBluetoothGattCallback
+import fr.hozakan.flysightcompanion.framework.extension.bytesToHex
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.FileWriter
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightcompanion.model.ble.FlySightCharacteristic
 import kotlinx.coroutines.CompletableDeferred
+import timber.log.Timber
 
 class BleFileWriter(
     private val gatt: BluetoothGatt,
@@ -26,12 +28,13 @@ class BleFileWriter(
         filePath: String,
         fileContent: String
     ) {
-        writeFile(filePath, fileContent.toByteArray())
+        writeFile(filePath, fileContent.toByteArray(), {})
     }
 
     override suspend fun writeFile(
         filePath: String,
-        fileContent: ByteArray
+        fileContent: ByteArray,
+        callback: (Int) -> Unit
     ) {
         scheduler.schedule(
             labelProvider = { "Write file $filePath" }
@@ -43,6 +46,7 @@ class BleFileWriter(
                     value: ByteArray
                 ) {
                     super.onCharacteristicChanged(gatt, characteristic, value)
+                    Timber.d("Hoz3 reading ${value.bytesToHex()}")
                     val cmdCode = value[0].toInt() and 0xFF
                     val cmd = Command.fromValue(cmdCode)
                     if (cmd == Command.ACK) {
@@ -59,11 +63,12 @@ class BleFileWriter(
                         }
                     } else if (cmd == Command.FILE_ACK) {
                         val ackNum = value[1].toInt() and 0xFF
-                        if (ackNum == currentPacket) {
+                        if (ackNum == currentPacket.mod(256)) {
                             currentPacket++
                             if (currentPacket > dataPackets.size) {
                                 fileDataSent.complete(Unit)
                             } else {
+                                callback(currentPacket * FRAME_LENGTH)
                                 sendNextDataPacket()
                             }
                         }
@@ -85,8 +90,11 @@ class BleFileWriter(
                 throw e
             }
             prepareDataPackets(fileContent)
+            Timber.d("Hoz3 sending first ping packet")
             sendNextDataPacket()
+//            sendPingPacket()
             try {
+                Timber.d("Hoz3 awaiting file sent")
                 fileDataSent.await()
             } catch (e: Exception) {
                 gattTaskQueue -= gattCallback
@@ -121,7 +129,7 @@ class BleFileWriter(
             TaskBuilder.buildWriteFileDataTask(
                 gatt,
                 gattCharacteristic,
-                currentPacket,
+                currentPacket.mod(256),
                 chunk
             ) {}
         }

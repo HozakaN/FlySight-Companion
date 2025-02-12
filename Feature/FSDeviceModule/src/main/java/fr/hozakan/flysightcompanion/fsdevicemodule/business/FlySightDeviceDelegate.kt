@@ -25,7 +25,7 @@ interface FlySightDeviceDelegate {
     fun flowDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>>
     //    suspend fun loadDirectory(directoryPath: List<String>): List<FileInfo>
     suspend fun readFile(fileName: String)
-    suspend fun writeBinaryFile(fileName: String, data: ByteArray): Boolean
+    suspend fun writeBinaryFile(fileName: String, data: ByteArray, callback: (Int) -> Unit): Boolean
     suspend fun connect(): Boolean
     suspend fun disconnect(): Boolean
     suspend fun readFileSynchronously(fileName: String): FileState
