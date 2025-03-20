@@ -27,6 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -296,7 +297,7 @@ class DefaultFsDeviceService(
 
             val currentFirmwareVersion = realDevice.firmwareVersion.value
             if (currentFirmwareVersion == null) {
-                flow.value = FirmwareUpdateStatus.Error
+                FirmwareUpdateStatus.Error(FirmwareUpdateStatus.ErrorInfo.FirmwareVersionCheckError)
                 return@withContext
             }
 
@@ -330,7 +331,7 @@ class DefaultFsDeviceService(
 
             val binaryFile = networkService.downloadFirmware(batchPrefix, firmwareToUpdate)
             if (binaryFile == null) {
-                flow.value = FirmwareUpdateStatus.Error
+                FirmwareUpdateStatus.Error(FirmwareUpdateStatus.ErrorInfo.DownloadError)
                 return@withContext
             }
             flow.value = FirmwareUpdateStatus.Pushing
@@ -340,7 +341,7 @@ class DefaultFsDeviceService(
                         currentValue = sentDataSize
                     )
                 }) {
-                flow.value = FirmwareUpdateStatus.Error
+                FirmwareUpdateStatus.Error(FirmwareUpdateStatus.ErrorInfo.PushFirmwareError)
                 return@withContext
             }
             flow.value = FirmwareUpdateStatus.DisconnectingFromBluetooth
@@ -355,18 +356,26 @@ class DefaultFsDeviceService(
             usbService.awaitUsbDisconnection()
             flow.value = FirmwareUpdateStatus.AwaitingBluetoothReconnection
             if (!realDevice.connect()) {
-                flow.value = FirmwareUpdateStatus.Error
+                FirmwareUpdateStatus.Error(FirmwareUpdateStatus.ErrorInfo.CantReconnect)
                 return@withContext
             }
 //            flow.value = FirmwareUpdateStatus.Done
             flow.value = FirmwareUpdateStatus.FirmwareVersionCheck
 
             //Wait for the file to be received
-            realDevice.flySightFile
-                    .filter { it is FileState.Success }
-                    .timeout(30_000.milliseconds)
-                    .first()
-            val firmwareVersion = realDevice.firmwareVersion.value
+            val timeout = 30_000.milliseconds
+            val firmwareVersion: String?
+            val timer = measureTime {
+                firmwareVersion = try {
+                    realDevice.flySightFile
+                        .filter { it is FileState.Success }
+                        .timeout(timeout)
+                        .first()
+                    realDevice.firmwareVersion.value
+                } catch (ex: TimeoutCancellationException) {
+                    null
+                }
+            }
             flow.value = if (firmwareVersion == firmwareToUpdate.name) {
                 userPrefService.updateFirmwareWarningForDeviceIdAndFirmwareVersion(
                     device.uuid,
@@ -374,7 +383,11 @@ class DefaultFsDeviceService(
                 )
                 FirmwareUpdateStatus.Done
             } else {
-                FirmwareUpdateStatus.Error
+                if (timer > timeout) {
+                    FirmwareUpdateStatus.Error(FirmwareUpdateStatus.ErrorInfo.FirmwareVersionCheckTimeOut)
+                } else {
+                    FirmwareUpdateStatus.Error(FirmwareUpdateStatus.ErrorInfo.Unknown)
+                }
             }
         }
     }

@@ -179,7 +179,17 @@ data class UpdateFirmwareDialog(
                             FirmwareUpdateStatus.FirmwareVersionCheck -> "Checking firmware version..."
                             FirmwareUpdateStatus.NoUpdate -> "No update available"
                             FirmwareUpdateStatus.Done -> "You FlySight has been updated!"
-                            FirmwareUpdateStatus.Error -> "An error occurred during the update"
+                            is FirmwareUpdateStatus.Error -> when (state.errorInfo) {
+                                FirmwareUpdateStatus.ErrorInfo.CantReconnect -> "Can't reconnect to the FlySight"
+                                FirmwareUpdateStatus.ErrorInfo.DownloadError -> "Error while downloading the firmware"
+                                FirmwareUpdateStatus.ErrorInfo.FirmwareVersionCheckError -> "Error while checking the firmware version"
+                                FirmwareUpdateStatus.ErrorInfo.FirmwareVersionCheckTimeOut -> """
+                                    Timeout while checking the firmware version.
+                                    Reconnect to check if it has been updated.
+                                """.trimIndent()
+                                FirmwareUpdateStatus.ErrorInfo.PushFirmwareError -> "Error while pushing the firmware"
+                                FirmwareUpdateStatus.ErrorInfo.Unknown -> "An error occurred"
+                            }
                             is FirmwareUpdateStatus.PushingWithAmount -> {
                                 val factor = if (state.maxValue > 1_000_000) 1_000_000 else 1_000
                                 val maxValueText = if (state.maxValue > 1_000_000) {
@@ -257,7 +267,7 @@ data class UpdateFirmwareDialog(
 
                         FirmwareUpdateStatus.NoUpdate,
                         FirmwareUpdateStatus.Done,
-                        FirmwareUpdateStatus.Error -> {
+                        is FirmwareUpdateStatus.Error -> {
                             FText(
                                 text = text,
                                 configuration = FlySightTheme.typography.cardTitle,

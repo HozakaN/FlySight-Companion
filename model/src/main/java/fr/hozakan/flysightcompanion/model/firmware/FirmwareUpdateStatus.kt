@@ -60,5 +60,14 @@ sealed interface FirmwareUpdateStatus {
     /**
      * The firmware update has encountered an error
      */
-    data object Error : FirmwareUpdateStatus
+    data class Error(val errorInfo: ErrorInfo) : FirmwareUpdateStatus
+
+    sealed interface ErrorInfo {
+        data object FirmwareVersionCheckError : ErrorInfo
+        data object FirmwareVersionCheckTimeOut : ErrorInfo
+        data object CantReconnect : ErrorInfo
+        data object DownloadError : ErrorInfo
+        data object PushFirmwareError : ErrorInfo
+        data object Unknown : ErrorInfo
+    }
 }
