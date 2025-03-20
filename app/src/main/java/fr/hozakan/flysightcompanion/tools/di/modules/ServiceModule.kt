@@ -74,7 +74,8 @@ class ServiceModule {
         usbService: UsbService,
         loggerService: LoggerService,
         dialogService: DialogService,
-        appVersionService: AppVersionService
+        appVersionService: AppVersionService,
+        userPrefService: UserPrefService
     ): FsDeviceService = DefaultFsDeviceService(
         baseApplication.applicationContext,
         bluetoothService,
@@ -85,7 +86,8 @@ class ServiceModule {
         usbService,
         loggerService,
         dialogService,
-        appVersionService
+        appVersionService,
+        userPrefService
     )
 
     @Singleton

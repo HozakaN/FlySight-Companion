@@ -46,7 +46,6 @@ class BleFileWriter(
                     value: ByteArray
                 ) {
                     super.onCharacteristicChanged(gatt, characteristic, value)
-                    Timber.d("Hoz3 reading ${value.bytesToHex()}")
                     val cmdCode = value[0].toInt() and 0xFF
                     val cmd = Command.fromValue(cmdCode)
                     if (cmd == Command.ACK) {
@@ -90,11 +89,8 @@ class BleFileWriter(
                 throw e
             }
             prepareDataPackets(fileContent)
-            Timber.d("Hoz3 sending first ping packet")
             sendNextDataPacket()
-//            sendPingPacket()
             try {
-                Timber.d("Hoz3 awaiting file sent")
                 fileDataSent.await()
             } catch (e: Exception) {
                 gattTaskQueue -= gattCallback

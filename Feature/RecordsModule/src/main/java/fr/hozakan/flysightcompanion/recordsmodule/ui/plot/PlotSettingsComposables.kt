@@ -54,6 +54,7 @@ import fr.hozakan.flysightcompanion.model.ui.totalEnergyColor
 import fr.hozakan.flysightcompanion.model.ui.totalSpeedColor
 import fr.hozakan.flysightcompanion.model.ui.verticalAccuracyColor
 import fr.hozakan.flysightcompanion.model.ui.verticalSpeedColor
+import androidx.core.graphics.toColorInt
 
 @Composable
 fun PlotSettingsScreen() {
@@ -598,7 +599,7 @@ fun PlotSettingsScreen() {
                         modifier = Modifier
                             .requiredSize(24.dp)
                             .background(
-                                color = Color(android.graphics.Color.parseColor(state.plotDisplayPreferences.sphericalErrorProbabilityColor)),
+                                color = Color(state.plotDisplayPreferences.sphericalErrorProbabilityColor.toColorInt()),
                                 shape = CircleShape
                             )
                             .clickable {
@@ -608,14 +609,14 @@ fun PlotSettingsScreen() {
                 }
             }
         }
-        if (selectedParam != null) {
+        selectedParam?.let {
             PlotColorPickerDialog(
-                currentColor = Color(android.graphics.Color.parseColor(selectedParam!!.colorHex)),
+                currentColor = Color(it.colorHex.toColorInt()),
                 onDismissRequest = { selectedParam = null },
                 onColorSelected = { color ->
-                    viewModel.updatePlotColor(selectedParam!!, color)
+                    viewModel.updatePlotColor(it, color)
                     selectedParam = null
-//                    viewModel.updateLeftPlotItemColor(selectedParam!!, color)
+//                    viewModel.updateLeftPlotItemColor(it, color)
                 }
             )
         }

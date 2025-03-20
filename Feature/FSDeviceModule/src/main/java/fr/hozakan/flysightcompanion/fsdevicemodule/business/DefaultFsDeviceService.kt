@@ -21,6 +21,7 @@ import fr.hozakan.flysightcompanion.model.records.RecordFile
 import fr.hozakan.flysightcompanion.networkmodule.NetworkService
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import fr.hozakan.flysightcompanion.usbmodule.UsbService
+import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -32,16 +33,22 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.timeout
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import kotlin.collections.first
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.measureTime
 
 class DefaultFsDeviceService(
     private val context: Context,
@@ -53,7 +60,8 @@ class DefaultFsDeviceService(
     private val usbService: UsbService,
     private val loggerService: LoggerService,
     private val dialogService: DialogService,
-    private val appVersionService: AppVersionService
+    private val appVersionService: AppVersionService,
+    private val userPrefService: UserPrefService
 ) : FsDeviceService {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -271,6 +279,7 @@ class DefaultFsDeviceService(
         }
     }
 
+    @OptIn(FlowPreview::class)
     override suspend fun updateFirmware(device: FlySightDevice) {
         val realDevice = _devices.value.firstOrNull { it.uuid == device.uuid }
         if (realDevice == null) return
@@ -349,17 +358,24 @@ class DefaultFsDeviceService(
                 flow.value = FirmwareUpdateStatus.Error
                 return@withContext
             }
-            flow.value = FirmwareUpdateStatus.Done
-//            flow.value = FirmwareUpdateStatus.FirmwareVersionCheck
-//            val firmwareVersion = realDevice.firmwareVersion
-//                .timeout(30_000.milliseconds)
-//                .first()
-//
-//            flow.value = if (firmwareVersion == firmwareToUpdate.name) {
-//                FirmwareUpdateStatus.Done
-//            } else {
-//                FirmwareUpdateStatus.Error
-//            }
+//            flow.value = FirmwareUpdateStatus.Done
+            flow.value = FirmwareUpdateStatus.FirmwareVersionCheck
+
+            //Wait for the file to be received
+            realDevice.flySightFile
+                    .filter { it is FileState.Success }
+                    .timeout(30_000.milliseconds)
+                    .first()
+            val firmwareVersion = realDevice.firmwareVersion.value
+            flow.value = if (firmwareVersion == firmwareToUpdate.name) {
+                userPrefService.updateFirmwareWarningForDeviceIdAndFirmwareVersion(
+                    device.uuid,
+                    firmwareToUpdate.name
+                )
+                FirmwareUpdateStatus.Done
+            } else {
+                FirmwareUpdateStatus.Error
+            }
         }
     }
 

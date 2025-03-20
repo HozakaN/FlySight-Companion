@@ -114,6 +114,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
                             firmwareName
                         )
                     }
+//                Timber.d("Hoz3 canShowFirmwareWarning=$canShowFirmwareWarning")
                 val computeDisplayData = computeDisplayData(
                     device.first,
                     device.second.first,
@@ -122,7 +123,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
                     blob.second.first,
                     blob.second.second,
                     blob.second.third,
-                    canShowFirmwareWarning ?: false,
+                    canShowFirmwareWarning == true,
                     appVersionService.appVersion
                 )
                 computeDisplayData
@@ -167,15 +168,8 @@ class ListFlySightDevicesViewModel @Inject constructor(
         canShowFirmwareWarning: Boolean,
         appVersion: String
     ): ListFlySightDeviceDisplayData {
-//        Timber.d("Hoz3 [ListFlySightDevicesViewModel]: computeDisplayData $device $deviceConfigFileState $deviceRecords $firmwareVersion $configFiles $recordFiles $firmwareCompatibilityMatrix $canShowFirmwareWarning $appVersion")
         val phoneConfigNames = configFiles.map { it.name }
         val deviceConfigName = deviceConfigFileState.content?.name
-//        Timber.d("Hoz4 firmwareVersion=$firmwareVersion; firmwareCompatibilityMatrix.firmwares = ${firmwareCompatibilityMatrix.firmwares.map { it.name }}")
-        Timber.d(
-            "Hoz4 index = ${
-                firmwareCompatibilityMatrix.firmwares.map { it.name }
-                    .indexOf(firmwareVersion)
-            }")
         return ListFlySightDeviceDisplayData(
             device = device,
             deviceConfig = deviceConfigFileState,

@@ -1,5 +1,6 @@
 package fr.hozakan.flysightcompanion.dialogmodule
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -219,10 +220,14 @@ data class UpdateFirmwareDialog(
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Icon(
+                                Image(
                                     painter = painterResource(R.drawable.usb_flysight_to_phone),
                                     contentDescription = text,
                                 )
+//                                Icon(
+//                                    painter = painterResource(R.drawable.usb_flysight_to_phone),
+//                                    contentDescription = text,
+//                                )
                                 Spacer(modifier = Modifier.requiredHeight(16.dp))
                                 FText(
                                     modifier = Modifier.fillMaxWidth(),

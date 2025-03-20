@@ -819,6 +819,8 @@ class BleFlySightDeviceDelegateImpl(
     }
 
     private fun resetFlySight() {
+        _flySightFile.value = FileState.Nothing
+        _firmwareVersion.value = null
         _records.value = LoadingState.Idle
         _configFile.value = LoadingState.Idle
 //        _logs.value = emptyList()
