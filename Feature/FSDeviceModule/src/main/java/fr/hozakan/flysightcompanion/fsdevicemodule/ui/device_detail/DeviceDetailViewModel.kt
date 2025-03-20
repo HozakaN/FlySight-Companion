@@ -7,31 +7,42 @@ import androidx.lifecycle.viewModelScope
 import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
 import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
+import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
+import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDeviceDisplayData
 import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
+import fr.hozakan.flysightcompanion.networkmodule.NetworkService
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.collections.map
 
 @SuppressLint("StaticFieldLeak")
 class DeviceDetailViewModel @Inject constructor(
     private val context: Context,
     private val fsDeviceService: FsDeviceService,
-    private val recordService: RecordService
+    private val recordService: RecordService,
+    private val networkService: NetworkService
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
         DeviceDetailState(
             device = null,
+            hasFirmwareUpdate = false,
+            showFirmwareUpdateInfo = true,
             currentDirectoryPath = listOf("/"),
             directoryContent = emptyList(),
             isInTrackFolder = false,
@@ -47,6 +58,7 @@ class DeviceDetailViewModel @Inject constructor(
     private var deviceDirectoryJob: Job? = null
     private var deviceConfigFileJob: Job? = null
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun loadDevice(deviceId: String) {
         var initialLoad = true
         deviceJob?.cancel()
@@ -58,11 +70,39 @@ class DeviceDetailViewModel @Inject constructor(
             )
         }
         deviceJob = viewModelScope.launch {
+//            combine(
+//                fsDeviceService.observeDevice(deviceId),
+//                networkService.firmwareCompatibilityMatrix
+//            ) { device, matrix ->
+//                device to matrix
+//            }.flatMapLatest { (devide, matrix) ->
+//
+//            }
             fsDeviceService.observeDevice(deviceId)
-                .collect { device ->
+                .flatMapLatest { device ->
+                    if (device != null) {
+                        combine(networkService.firmwareCompatibilityMatrix, device.flySightFile) { matrix, flySightFile ->
+                            device to matrix triple if (flySightFile is FileState.Success) device.firmwareVersion.value else null
+                        }
+                    } else {
+                        flowOf(null to networkService.firmwareCompatibilityMatrix.value triple null)
+                    }
+                }.collect { (device, matrix, firmwareVersion) ->
+
+//                }
+//            fsDeviceService.observeDevice(deviceId)
+//                .combine(networkService.firmwareCompatibilityMatrix) { device, matrix ->
+//                    device to matrix
+//                }
+//                .map { (device, matrix) ->
+//                    device to matrix triple device?.firmwareVersion?.value
+//                }
+//                .collect { (device, matrix, firmwareVersion) ->
                     _state.update {
                         it.copy(
-                            device = device
+                            device = device,
+                            hasFirmwareUpdate = matrix.firmwares.map { fw -> fw.name }
+                                .indexOf(firmwareVersion) != 0
                         )
                     }
                     if (initialLoad && device != null) {
@@ -118,6 +158,21 @@ class DeviceDetailViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun updateFirmware() {
+        val device = _state.value.device ?: return
+        viewModelScope.launch {
+            fsDeviceService.updateFirmware(device)
+        }
+    }
+
+    fun closeFirmwareUpdateInfo() {
+        _state.update {
+            it.copy(
+                showFirmwareUpdateInfo = false
+            )
         }
     }
 

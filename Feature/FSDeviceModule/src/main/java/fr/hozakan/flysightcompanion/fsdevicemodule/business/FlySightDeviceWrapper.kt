@@ -13,7 +13,7 @@ class FlySightDeviceWrapper(
     val usbDelegate: UsbFlySightDeviceDelegate?,
     val bleDelegate: BleFlySightDeviceDelegate?
 ) : MutableFlySightDevice {
-    override val uuid: DeviceId
+    override val volatileUuid: DeviceId
         get() = TODO("Not yet implemented")
     override val name: String
         get() = TODO("Not yet implemented")

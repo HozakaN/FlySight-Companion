@@ -488,7 +488,7 @@ private class FakeDeviceDelegateImpl(
     private val configFileName: String = "",
     override val name: String = "Fake device"
 ) : MutableFlySightDevice {
-    override val uuid: String
+    override val volatileUuid: String
         get() = "uuid"
     override val connectionState: StateFlow<DeviceConnectionState> =
         MutableStateFlow(initialConnectionState)

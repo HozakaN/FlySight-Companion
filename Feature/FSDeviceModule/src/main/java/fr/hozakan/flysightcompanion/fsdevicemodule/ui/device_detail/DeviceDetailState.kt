@@ -9,6 +9,8 @@ import fr.hozakan.flysightcompanion.model.FileInfo
 @Immutable
 data class DeviceDetailState(
     val device: FlySightDevice?,
+    val hasFirmwareUpdate: Boolean,
+    val showFirmwareUpdateInfo: Boolean,
     val currentDirectoryPath: List<String>,
     val directoryContent: List<FileInfo>,
     val isInTrackFolder: Boolean,

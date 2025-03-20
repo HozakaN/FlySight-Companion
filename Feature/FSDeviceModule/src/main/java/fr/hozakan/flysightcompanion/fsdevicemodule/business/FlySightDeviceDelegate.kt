@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
 interface FlySightDeviceDelegate {
+    @Deprecated("Check usage")
     val uuid: DeviceId
     val name: String
     val isBle: Boolean

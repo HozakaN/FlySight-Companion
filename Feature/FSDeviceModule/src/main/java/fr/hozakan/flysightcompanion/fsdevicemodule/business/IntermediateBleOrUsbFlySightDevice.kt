@@ -18,7 +18,7 @@ class IntermediateBleOrUsbFlySightDevice(
     private val delegate: FlySightDeviceDelegate
 ) : MutableFlySightDevice {
 
-    override val uuid: DeviceId = delegate.uuid
+    override val volatileUuid: DeviceId = delegate.uuid
     override val name: String = delegate.name
     override val connectionState: StateFlow<DeviceConnectionState> = delegate.connectionState
     override val configFile: StateFlow<LoadingState<ConfigFile>> = delegate.configFile

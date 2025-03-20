@@ -12,7 +12,11 @@ import kotlinx.coroutines.flow.StateFlow
 typealias DeviceId = String
 
 interface FlySightDevice {
-    val uuid: DeviceId
+    /**
+     * This resets at each new instance
+     */
+    @Deprecated("Check usage")
+    val volatileUuid: DeviceId
     val name: String
     val connectionState: StateFlow<DeviceConnectionState>
     val configFile: StateFlow<LoadingState<ConfigFile>>

@@ -14,12 +14,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.Card
@@ -45,12 +48,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import fr.hozakan.flysightcompanion.composablecommons.SimpleDialogActionBar
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.model.ConfigFile
+import timber.log.Timber
 
 @Composable
 fun DeviceDetailMenuActions(
@@ -90,6 +95,7 @@ fun DeviceDetailMenuActions(
                 Text(text = stringResource(R.string.device_detail_show_config))
             }
         }
+
         else -> {}
     }
 }
@@ -151,6 +157,16 @@ fun DeviceDetailScreen(
     ) {
         Box {
             Column {
+                if (state.hasFirmwareUpdate && state.showFirmwareUpdateInfo && (state.currentDirectoryPath.isEmpty() || state.currentDirectoryPath.size == 1)) {
+                    UpdateInfoContainer(
+                        onUpdateClicked = {
+                            viewModel.updateFirmware()
+                        },
+                        onDismissClicked = {
+                            viewModel.closeFirmwareUpdateInfo()
+                        }
+                    )
+                }
                 BreadCrumb(
                     modifier = Modifier.padding(8.dp),
                     path = state.currentDirectoryPath,
@@ -195,7 +211,9 @@ fun DeviceDetailScreen(
             }
             if (state.isInTrackFolder) {
                 Box(
-                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
                     contentAlignment = Alignment.BottomEnd
                 ) {
                     FloatingActionButton(
@@ -231,6 +249,49 @@ fun DeviceDetailScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun UpdateInfoContainer(
+    onUpdateClicked: () -> Unit,
+    onDismissClicked: () -> Unit
+) {
+    Card(
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Row {
+                Box(
+                    modifier = Modifier.requiredHeight(56.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    FText(
+                        text = "New firmware available!",
+                        configuration = FlySightTheme.typography.cardTitle
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    modifier = Modifier
+                        .requiredSize(48.dp)
+                        .clickable {
+                            onDismissClicked()
+                        }
+                        .padding(8.dp),
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Dismiss firmware update info",
+                )
+            }
+            Spacer(modifier = Modifier.requiredHeight(8.dp))
+            SimpleDialogActionBar(
+                showCancelButton = false,
+                onValidate = onUpdateClicked,
+                validateButtonText = "Update",
+            )
         }
     }
 }

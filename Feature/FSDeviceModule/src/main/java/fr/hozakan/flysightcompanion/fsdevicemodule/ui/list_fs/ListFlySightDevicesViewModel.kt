@@ -38,7 +38,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @SuppressLint("StaticFieldLeak")
@@ -106,15 +105,14 @@ class ListFlySightDevicesViewModel @Inject constructor(
             devices to configFilesAndRecordsAndMatrix
         }.map { blob ->
             blob.first.map { device ->
-                val lastOrNull = blob.second.third.firmwares.lastOrNull()
+                val firstOrNull = blob.second.third.firmwares.firstOrNull()
                 val canShowFirmwareWarning =
-                    lastOrNull?.name?.let { firmwareName ->
+                    firstOrNull?.name?.let { firmwareName ->
                         userPrefService.canShowFirmwareWarningForVersion(
-                            device.first.uuid,
+                            device.first.name,
                             firmwareName
                         )
                     }
-//                Timber.d("Hoz3 canShowFirmwareWarning=$canShowFirmwareWarning")
                 val computeDisplayData = computeDisplayData(
                     device.first,
                     device.second.first,
@@ -292,7 +290,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
                     is LoadingState.Loading -> {
                         _state.update { state ->
                             state.copy(
-                                updatingConfiguration = device.uuid
+                                updatingConfiguration = device.volatileUuid
                             )
                         }
                     }
@@ -340,13 +338,13 @@ class ListFlySightDevicesViewModel @Inject constructor(
 
     fun preventDialogForFirmwareVersion(device: ListFlySightDeviceDisplayData) {
         userPrefService.updateFirmwareWarningForDeviceIdAndFirmwareVersion(
-            device.uuid,
+            device.name,
             _state.value.compatibilityMatrix.firmwares.first().name
         )
         _state.update {
             it.copy(
                 devices = it.devices.map { aDevice ->
-                    if (aDevice.uuid == device.uuid) {
+                    if (aDevice.volatileUuid == device.volatileUuid) {
                         aDevice.copy(canShowFirmwareWarning = false)
                     } else {
                         aDevice

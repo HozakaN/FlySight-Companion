@@ -1,7 +1,6 @@
 package fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs
 
 import android.annotation.SuppressLint
-import android.widget.Space
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -402,7 +401,7 @@ internal fun ListFlySightDevicesScreenInternal(
                             device = device,
                             firmwareCompatibilityMatrix = state.compatibilityMatrix,
                             unitSystem = state.unitSystem,
-                            updatingConfiguration = state.updatingConfiguration == device.uuid,
+                            updatingConfiguration = state.updatingConfiguration == device.volatileUuid,
                             onConnectionClicked = {
                                 onConnectDeviceClicked(device)
                             },

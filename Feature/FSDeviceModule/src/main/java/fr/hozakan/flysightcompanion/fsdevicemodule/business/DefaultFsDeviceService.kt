@@ -47,7 +47,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import kotlin.collections.first
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.measureTime
 
@@ -233,7 +232,7 @@ class DefaultFsDeviceService(
     }
 
     override fun observeDevice(deviceId: String): Flow<FlySightDevice?> =
-        synchronized(this) { devices.map { flySightDevices -> flySightDevices.firstOrNull { it.uuid == deviceId } } }
+        synchronized(this) { devices.map { flySightDevices -> flySightDevices.firstOrNull { it.volatileUuid == deviceId } } }
 
     //    @OptIn(FlowPreview::class)
     override suspend fun connectToDevice(device: FlySightDevice) {
@@ -282,7 +281,7 @@ class DefaultFsDeviceService(
 
     @OptIn(FlowPreview::class)
     override suspend fun updateFirmware(device: FlySightDevice) {
-        val realDevice = _devices.value.firstOrNull { it.uuid == device.uuid }
+        val realDevice = _devices.value.firstOrNull { it.volatileUuid == device.volatileUuid }
         if (realDevice == null) return
         withContext(Dispatchers.IO) {
             val flow = MutableStateFlow<FirmwareUpdateStatus>(FirmwareUpdateStatus.Downloading)
@@ -378,7 +377,7 @@ class DefaultFsDeviceService(
             }
             flow.value = if (firmwareVersion == firmwareToUpdate.name) {
                 userPrefService.updateFirmwareWarningForDeviceIdAndFirmwareVersion(
-                    device.uuid,
+                    device.name,
                     firmwareToUpdate.name
                 )
                 FirmwareUpdateStatus.Done
