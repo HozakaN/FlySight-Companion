@@ -5,6 +5,7 @@ import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
+import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +31,7 @@ class IntermediateBleFlySightDevice(
     override val firmwareVersion: StateFlow<String?> = delegate.firmwareVersion
     override val publicKeys: StateFlow<Pair<String, String>?> = delegate.publicKeys
     override val isBle: Boolean = true
+    override val gnssFeed: SharedFlow<GnssData> = delegate.gnssFeed
 
     override suspend fun connect(): Boolean = delegate.connect()
 
@@ -52,4 +54,12 @@ class IntermediateBleFlySightDevice(
         delegate.flowDirectory(directoryPath)
 
     override suspend fun readFile(fileName: String) = delegate.readFile(fileName)
+
+    override suspend fun startGNSSFeed() {
+        delegate.startGNSSFeed()
+    }
+
+    override suspend fun stopGNSSFeed() {
+        delegate.stopGNSSFeed()
+    }
 }

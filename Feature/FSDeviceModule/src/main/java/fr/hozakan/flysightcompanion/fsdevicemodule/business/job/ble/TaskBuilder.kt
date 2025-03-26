@@ -127,6 +127,52 @@ object TaskBuilder {
         )
     }
 
+    fun buildStartPistolTask(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic,
+        commandLogger: (String) -> Unit
+    ) : GattTask {
+        val command = CommandBuilder.buildStartPistolCommand()
+        return GattTask.WriteTask(
+            gatt,
+            characteristic,
+            command,
+            BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
+            {
+                commandLogger(
+                    "[COMMAND] [WRITE] [${
+                        FlySightCharacteristic.fromUuid(
+                            characteristic.uuid
+                        )?.name
+                    }] ${command.bytesToHex()}"
+                )
+            }
+        )
+    }
+
+    fun buildCancelPistolTask(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic,
+        commandLogger: (String) -> Unit
+    ) : GattTask {
+        val command = CommandBuilder.buildCancelPistolSCommand()
+        return GattTask.WriteTask(
+            gatt,
+            characteristic,
+            command,
+            BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
+            {
+                commandLogger(
+                    "[COMMAND] [WRITE] [${
+                        FlySightCharacteristic.fromUuid(
+                            characteristic.uuid
+                        )?.name
+                    }] ${command.bytesToHex()}"
+                )
+            }
+        )
+    }
+
     fun buildMakeDirTask(
         gatt: BluetoothGatt,
         characteristic: BluetoothGattCharacteristic,

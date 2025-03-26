@@ -9,4 +9,6 @@ interface MutableFlySightDevice : FlySightDevice {
     suspend fun readFileSynchronously(fileName: String): FileState
     suspend fun updateConfigFile(configFile: ConfigFile)
     suspend fun writeBinaryFile(filePath: String, fileContent: ByteArray, callback: (Int) -> Unit): Boolean
+    suspend fun startGNSSFeed()
+    suspend fun stopGNSSFeed()
 }

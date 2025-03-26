@@ -34,6 +34,7 @@ import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
+import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.ble.FlySightCharacteristic
 import fr.hozakan.flysightcompanion.model.ble.cccdUuid
 import fr.hozakan.flysightcompanion.model.records.RecordFile
@@ -53,12 +54,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.handleCoroutineException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 import java.io.IOException
+import java.nio.ByteBuffer
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -125,6 +128,9 @@ class BleFlySightDeviceDelegateImpl(
 
     private val _publicKeys = MutableStateFlow<Pair<String, String>?>(null)
     override val publicKeys: StateFlow<Pair<String, String>?> = _publicKeys.asStateFlow()
+
+    private val _gnssFeed = MutableSharedFlow<GnssData>()
+    override val gnssFeed: SharedFlow<GnssData> = _gnssFeed.asSharedFlow()
 
     private val parser: ConfigParser = DefaultConfigParser()
 
@@ -194,6 +200,17 @@ class BleFlySightDeviceDelegateImpl(
                     }), status = $status, value = ${value.bytesToHex()}"
                 )
                 logReadCharacteristic(characteristic.uuid, value)
+                if (characteristic.uuid == FlySightCharacteristic.START_RESULT.uuid) {
+                    handleGNSSFeed(value)
+                }
+            }
+
+            private fun handleGNSSFeed(data: ByteArray) {
+                if (data.size != 9) {
+                    log("Invalid GNSS feed data size")
+                    return
+                }
+
             }
 
             override fun onCharacteristicWrite(
@@ -271,6 +288,31 @@ class BleFlySightDeviceDelegateImpl(
                             }
                         }
                     }
+                    FlySightCharacteristic.GNSS_PV.uuid -> {
+                        if (value.size != 28) {
+                            log("Invalid GNSS PV data size")
+                            return
+                        }
+                        val buffer = ByteBuffer.wrap(value)
+                        val iTow = buffer.int.toUInt() //getInt(bytes, 0).toUInt()
+                        val lon = buffer.int //getInt(bytes, 4)
+                        val lat = buffer.int //getInt(bytes, 8)
+                        val hMsl = buffer.int //getInt(bytes, 12)
+                        val velN = buffer.int //getInt(bytes, 16)
+                        val velE = buffer.int //getInt(bytes, 20)
+                        val velD = buffer.int //getInt(bytes, 24)
+                        scope?.launch {
+                            _gnssFeed.emit(GnssData(
+                                iTow = iTow,
+                                lon = lon,
+                                lat = lat,
+                                hMsl = hMsl,
+                                velN = velN,
+                                velE = velE,
+                                velD = velD
+                            ))
+                        }
+                    }
 
                     else -> {}
                 }
@@ -339,6 +381,8 @@ class BleFlySightDeviceDelegateImpl(
                             log("is gnss char writable without response : ${char.isWritableWithoutResponse()}")
                             log("is gnss char indicatable : ${char.isIndicatable()}")
                             log("is gnss char notifiable : ${char.isNotifiable()}")
+                            enableNotifications(gatt, char)
+                            gatt.setCharacteristicNotification(char, true)
                         }
 
                         FlySightCharacteristic.START_CONTROL.uuid -> {
@@ -744,6 +788,43 @@ class BleFlySightDeviceDelegateImpl(
                 this.command.bytesToHex()
             }
         }
+    }
+
+    /*
+
+    public func sendStartCommand() {
+            guard let controlCharacteristic = controlCharacteristic else {
+                print("Control characteristic not found")
+                return
+            }
+
+            // Sending 0x00 to the control characteristic
+            let startCommand = Data([0x00])
+            connectedPeripheral?.peripheral.writeValue(startCommand, for: controlCharacteristic, type: .withResponse)
+            state = .counting
+        }
+
+        public func sendCancelCommand() {
+            guard let controlCharacteristic = controlCharacteristic else {
+                print("Control characteristic not found")
+                return
+            }
+
+            // Sending 0x01 to the control characteristic
+            let cancelCommand = Data([0x01])
+            connectedPeripheral?.peripheral.writeValue(cancelCommand, for: controlCharacteristic, type: .withResponse)
+            state = .idle
+        }
+     */
+
+    override suspend fun startGNSSFeed() {
+        val gatt = this.gatt ?: return
+        val characteristic = this.controlCharacteristic ?: return
+
+    }
+
+    override suspend fun stopGNSSFeed() {
+        TODO("Not yet implemented")
     }
 
     @SuppressLint("MissingPermission")

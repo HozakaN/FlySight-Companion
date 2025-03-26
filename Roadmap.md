@@ -79,7 +79,9 @@
 
 - Help on config file edition and display (if not in 1.0.0)
 
-- How to update FlySight 2 Firmware + firmware updater
+- DONE firmware updater
+
+- Check feedback not exporting device logs in playstore app
 
 # TODO release/2.0.0
 

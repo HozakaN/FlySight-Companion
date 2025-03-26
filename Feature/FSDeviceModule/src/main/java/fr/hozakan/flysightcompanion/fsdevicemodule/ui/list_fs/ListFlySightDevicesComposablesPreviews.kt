@@ -10,6 +10,7 @@ import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
+import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.defaultConfigFile
 import fr.hozakan.flysightcompanion.model.firmware.FirmwareCompatibilityMatrix
@@ -510,6 +511,7 @@ private class FakeDeviceDelegateImpl(
         get() = MutableStateFlow("")
     override val publicKeys: StateFlow<Pair<String, String>?>
         get() = MutableStateFlow(null)
+    override val gnssFeed: SharedFlow<GnssData> = MutableSharedFlow()
     override val isBle: Boolean = true
 
     override suspend fun connect(): Boolean = true
@@ -528,5 +530,13 @@ private class FakeDeviceDelegateImpl(
         fileContent: ByteArray,
         callback: (Int) -> Unit
     ): Boolean = true
+
+    override suspend fun startGNSSFeed() {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun stopGNSSFeed() {
+        TODO("Not yet implemented")
+    }
 
 }

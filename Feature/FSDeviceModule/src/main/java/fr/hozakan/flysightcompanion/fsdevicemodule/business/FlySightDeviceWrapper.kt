@@ -5,6 +5,7 @@ import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
+import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +39,17 @@ class FlySightDeviceWrapper(
     override val publicKeys: StateFlow<Pair<String, String>?>
         get() = TODO("Not yet implemented")
     override val isBle: Boolean = bleDelegate != null
+
+    override val gnssFeed: SharedFlow<GnssData>
+        get() = TODO("Not yet implemented")
+
+    override suspend fun startGNSSFeed() {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun stopGNSSFeed() {
+        TODO("Not yet implemented")
+    }
 
     override suspend fun connect(): Boolean {
         TODO("Not yet implemented")

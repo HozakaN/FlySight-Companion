@@ -10,6 +10,7 @@ import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
+import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -55,6 +56,8 @@ class UsbFlySightDeviceDelegateImpl(
 
     private val _publicKeys = MutableStateFlow<Pair<String, String>?>(null)
     override val publicKeys: StateFlow<Pair<String, String>?> = _publicKeys.asStateFlow()
+    override val gnssFeed: SharedFlow<GnssData>
+        get() = TODO("Not yet implemented")
 
     override val isBle: Boolean = false
 

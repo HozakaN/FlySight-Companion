@@ -5,6 +5,7 @@ import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
+import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +24,7 @@ interface FlySightDeviceDelegate {
     val fileReceived: SharedFlow<FileState>
     val firmwareVersion: StateFlow<String?>
     val publicKeys: StateFlow<Pair<String, String>?>
+    val gnssFeed: SharedFlow<GnssData>
     fun flowDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>>
     //    suspend fun loadDirectory(directoryPath: List<String>): List<FileInfo>
     suspend fun readFile(fileName: String)

@@ -22,4 +22,6 @@ interface FsDeviceService {
     suspend fun cancelScan()
     fun extractRecordFromDevice(device: FlySightDevice, recordFile: RecordFile): Flow<LoadingState<String>>
     suspend fun updateFirmware(device: FlySightDevice)
+
+
 }

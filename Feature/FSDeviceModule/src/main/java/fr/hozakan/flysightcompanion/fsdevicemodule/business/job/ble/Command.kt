@@ -15,6 +15,8 @@ private const val FS_CRS_COMMAND_NAK = 0xf0
 private const val FS_CRS_COMMAND_ACK = 0xf1
 private const val FS_CRS_COMMAND_PING = 0xfe
 private const val FS_CRS_COMMAND_CANCEL = 0xff
+private const val FS_CONTROL_COMMAND_START_PISTOL = 0x00
+private const val FS_CONTROL_COMMAND_CANCEL_PISTOL = 0x01
 
 enum class Command(val value: Int) {
     CREATE(FS_CRS_COMMAND_CREATE),
@@ -29,7 +31,9 @@ enum class Command(val value: Int) {
     NAK(FS_CRS_COMMAND_NAK),
     ACK(FS_CRS_COMMAND_ACK),
     PING(FS_CRS_COMMAND_PING),
-    CANCEL(FS_CRS_COMMAND_CANCEL);
+    CANCEL(FS_CRS_COMMAND_CANCEL),
+    START_GNSS(FS_CONTROL_COMMAND_START_PISTOL),
+    STOP_GNSS(FS_CONTROL_COMMAND_CANCEL_PISTOL);
 
     companion object {
 
@@ -59,6 +63,12 @@ object CommandBuilder {
 
     fun buildWriteFileCommand(path: String): ByteArray =
         byteArrayOf(FS_CRS_COMMAND_WRITE.toByte()) + path.toByteArray(Charsets.UTF_8)
+
+    fun buildStartPistolCommand(): ByteArray =
+        byteArrayOf(FS_CONTROL_COMMAND_START_PISTOL.toByte())
+
+    fun buildCancelPistolSCommand(): ByteArray =
+        byteArrayOf(FS_CONTROL_COMMAND_CANCEL_PISTOL.toByte())
 
     fun buildFileDataCommand(packetId: Int, data: ByteArray): ByteArray =
         byteArrayOf(FS_CRS_COMMAND_FILE_DATA.toByte()) + byteArrayOf(packetId.toByte()) + data

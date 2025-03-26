@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -54,7 +55,10 @@ import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
+import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.model.ConfigFile
+import fr.hozakan.flysightcompanion.model.GnssData
+import kotlinx.coroutines.flow.collect
 import timber.log.Timber
 
 @Composable
@@ -156,101 +160,158 @@ fun DeviceDetailScreen(
         color = MaterialTheme.colorScheme.surface
     ) {
         Box {
-            Column {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentPadding = PaddingValues(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item {
+                    GnssDataContainer(state.device)
+                }
+
+                item {
+                    LogsContainer(state.device)
+                }
                 if (state.hasFirmwareUpdate && state.showFirmwareUpdateInfo && (state.currentDirectoryPath.isEmpty() || state.currentDirectoryPath.size == 1)) {
-                    UpdateInfoContainer(
-                        onUpdateClicked = {
-                            viewModel.updateFirmware()
-                        },
-                        onDismissClicked = {
-                            viewModel.closeFirmwareUpdateInfo()
-                        }
-                    )
-                }
-                BreadCrumb(
-                    modifier = Modifier.padding(8.dp),
-                    path = state.currentDirectoryPath,
-                    onPathPartClicked = { path ->
-                        viewModel.loadDirectory(path)
-                    }
-                )
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    contentPadding = PaddingValues(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(state.directoryContent) { fileInfo ->
-                        Row(
-                            modifier = Modifier.clickable {
-                                viewModel.onFileClicked(fileInfo)
+                    item {
+                        UpdateInfoContainer(
+                            onUpdateClicked = {
+                                viewModel.updateFirmware()
+                            },
+                            onDismissClicked = {
+                                viewModel.closeFirmwareUpdateInfo()
                             }
-                        ) {
-                            if (fileInfo.isDirectory) {
-                                Icon(
-                                    imageVector = Icons.Default.Folder,
-                                    contentDescription = stringResource(
-                                        R.string.device_detail_folder,
-                                        fileInfo.fileName
-                                    )
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.InsertDriveFile,
-                                    contentDescription = stringResource(
-                                        R.string.device_detail_file,
-                                        fileInfo.fileName
-                                    )
-                                )
-                            }
-                            Spacer(modifier = Modifier.requiredWidth(8.dp))
-                            Text(text = fileInfo.fileName)
-                        }
-                    }
-                }
-            }
-            if (state.isInTrackFolder) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.BottomEnd
-                ) {
-                    FloatingActionButton(
-                        onClick = {
-                            viewModel.downloadRecord()
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Download,
-                            contentDescription = stringResource(R.string.device_detail_download_record)
                         )
                     }
                 }
-            }
-            state.uploadingRecord?.let { uploadingRecord ->
-                Dialog(
-                    onDismissRequest = {}
-                ) {
-                    Card {
-                        Row(
-                            modifier = Modifier.padding(32.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.requiredWidth(8.dp))
-                            FText(
-                                modifier = Modifier.fillMaxWidth(),
-                                text = uploadingRecord,
-                                configuration = FlySightTheme.typography.plainScreenTextLarge,
-                                textAlign = TextAlign.Center
+                item {
+                    BreadCrumb(
+                        modifier = Modifier.padding(8.dp),
+                        path = state.currentDirectoryPath,
+                        onPathPartClicked = { path ->
+                            viewModel.loadDirectory(path)
+                        }
+                    )
+                }
+                items(state.directoryContent) { fileInfo ->
+                    Row(
+                        modifier = Modifier.clickable {
+                            viewModel.onFileClicked(fileInfo)
+                        }
+                    ) {
+                        if (fileInfo.isDirectory) {
+                            Icon(
+                                imageVector = Icons.Default.Folder,
+                                contentDescription = stringResource(
+                                    R.string.device_detail_folder,
+                                    fileInfo.fileName
+                                )
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.InsertDriveFile,
+                                contentDescription = stringResource(
+                                    R.string.device_detail_file,
+                                    fileInfo.fileName
+                                )
                             )
                         }
+                        Spacer(modifier = Modifier.requiredWidth(8.dp))
+                        Text(text = fileInfo.fileName)
+                    }
+                }
+            }
+        }
+        if (state.isInTrackFolder) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.BottomEnd
+            ) {
+                FloatingActionButton(
+                    onClick = {
+                        viewModel.downloadRecord()
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = stringResource(R.string.device_detail_download_record)
+                    )
+                }
+            }
+        }
+        state.uploadingRecord?.let { uploadingRecord ->
+            Dialog(
+                onDismissRequest = {}
+            ) {
+                Card {
+                    Row(
+                        modifier = Modifier.padding(32.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.requiredWidth(8.dp))
+                        FText(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = uploadingRecord,
+                            configuration = FlySightTheme.typography.plainScreenTextLarge,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+fun GnssDataContainer(device: FlySightDevice?) {
+    if (device == null) return
+    var data: GnssData? by remember { mutableStateOf(null) }
+    LaunchedEffect(device) {
+        device.gnssFeed.collect {
+            data = it
+        }
+    }
+    Box(
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Card {
+            Column(
+                modifier = Modifier
+                    .defaultMinSize(minHeight = 56.dp)
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+                Text("data : $data")
+            }
+        }
+    }
+
+}
+
+@Composable
+fun LogsContainer(device: FlySightDevice?) {
+    if (device == null) return
+    val logs by device.logs.collectAsState()
+
+    Box(
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Card {
+            Column(
+                modifier = Modifier
+                    .defaultMinSize(minHeight = 56.dp)
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+                Text(logs.joinToString("\n"))
+            }
+        }
+    }
+
 }
 
 @Composable
