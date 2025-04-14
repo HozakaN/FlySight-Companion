@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import fr.hozakan.flysightcompanion.bluetoothmodule.GattTask
 import fr.hozakan.flysightcompanion.framework.extension.bytesToHex
+import fr.hozakan.flysightcompanion.model.DeviceMode
 import fr.hozakan.flysightcompanion.model.ble.FlySightCharacteristic
 
 object TaskBuilder {
@@ -197,13 +198,59 @@ object TaskBuilder {
         )
     }
 
-
     fun buildPingTask(
         gatt: BluetoothGatt,
         characteristic: BluetoothGattCharacteristic,
         commandLogger: (String) -> Unit
     ) : GattTask {
         val command = CommandBuilder.buildPingCommand()
+        return GattTask.WriteTask(
+            gatt,
+            characteristic,
+            command,
+            BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
+            {
+                commandLogger(
+                    "[COMMAND] [WRITE] [${
+                        FlySightCharacteristic.fromUuid(
+                            characteristic.uuid
+                        )?.name
+                    }] ${command.bytesToHex()}"
+                )
+            }
+        )
+    }
+
+    fun buildGetModeTask(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic,
+        commandLogger: (String) -> Unit
+    ) : GattTask {
+        val command = CommandBuilder.buildGetModeCommand()
+        return GattTask.WriteTask(
+            gatt,
+            characteristic,
+            command,
+            BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
+            {
+                commandLogger(
+                    "[COMMAND] [WRITE] [${
+                        FlySightCharacteristic.fromUuid(
+                            characteristic.uuid
+                        )?.name
+                    }] ${command.bytesToHex()}"
+                )
+            }
+        )
+    }
+
+    fun buildSetModeTask(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic,
+        deviceMode: DeviceMode,
+        commandLogger: (String) -> Unit
+    ) : GattTask {
+        val command = CommandBuilder.buildSetModeCommand(deviceMode)
         return GattTask.WriteTask(
             gatt,
             characteristic,

@@ -14,14 +14,14 @@ class GnssData(
     override fun toString(): String {
         return String.format(
             Locale.ROOT,
-            "%.03f, %.07f, %.07f, %.03f, %.03f, %.03f, %.03f",
-            iTow.toDouble() / 1e3,
-            lon.toDouble() / 1e7,
-            lat.toDouble() / 1e7,
-            hMsl.toDouble() / 1e3,
-            velN.toDouble() / 1e3,
-            velE.toDouble() / 1e3,
-            velD.toDouble() / 1e3
+            "%d, %.07f, %.07f, %.03f, %.03f, %.03f, %.03f",
+            iTow.toInt(),
+            lon.toFloat() / 1e7,
+            lat.toFloat() / 1e7,
+            hMsl / 1e3,
+            velN / 1e3,
+            velE / 1e3,
+            velD / 1e3
         )
     }
 }

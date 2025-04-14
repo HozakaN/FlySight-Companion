@@ -28,10 +28,13 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleDirectory
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleDirectoryWriter
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleFileReader
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleFileWriter
+import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleGetModeJob
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BlePingJob
+import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleSetModeJob
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.Command
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
+import fr.hozakan.flysightcompanion.model.DeviceMode
 import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.GnssData
@@ -54,7 +57,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.handleCoroutineException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -62,6 +64,7 @@ import timber.log.Timber
 import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -95,7 +98,7 @@ class BleFlySightDeviceDelegateImpl(
                 }
                 rxCharacteristic = null
                 txCharacteristic = null
-                pvCharacteristic = null
+                gnssCharacteristic = null
                 controlCharacteristic = null
                 resultCharacteristic = null
             }
@@ -106,9 +109,10 @@ class BleFlySightDeviceDelegateImpl(
     private var batteryCharacteristic: BluetoothGattCharacteristic? = null
     private var rxCharacteristic: BluetoothGattCharacteristic? = null
     private var txCharacteristic: BluetoothGattCharacteristic? = null
-    private var pvCharacteristic: BluetoothGattCharacteristic? = null
+    private var gnssCharacteristic: BluetoothGattCharacteristic? = null
     private var controlCharacteristic: BluetoothGattCharacteristic? = null
     private var resultCharacteristic: BluetoothGattCharacteristic? = null
+    private var modeCharacteristic: BluetoothGattCharacteristic? = null
 
     private val _connectionState =
         MutableStateFlow<DeviceConnectionState>(DeviceConnectionState.Disconnected)
@@ -200,9 +204,9 @@ class BleFlySightDeviceDelegateImpl(
                     }), status = $status, value = ${value.bytesToHex()}"
                 )
                 logReadCharacteristic(characteristic.uuid, value)
-                if (characteristic.uuid == FlySightCharacteristic.START_RESULT.uuid) {
-                    handleGNSSFeed(value)
-                }
+//                if (characteristic.uuid == FlySightCharacteristic.START_RESULT.uuid) {
+//                    handleGNSSFeed(value)
+//                }
             }
 
             private fun handleGNSSFeed(data: ByteArray) {
@@ -283,17 +287,23 @@ class BleFlySightDeviceDelegateImpl(
                             Command.READ -> {}
                             Command.READ_DIR -> {}
                             Command.WRITE -> {}
+                            Command.DEVICE_MODE -> {}
                             else -> {
                                 log("Unknown command code : $cmdCode")
                             }
                         }
                     }
+                    FlySightCharacteristic.MODE.uuid -> {
+                        log("Status received from mode : ${value.bytesToHex()}")
+                    }
                     FlySightCharacteristic.GNSS_PV.uuid -> {
-                        if (value.size != 28) {
+                        log("GNSS data received (${value.size}) : ${value.bytesToHex()}")
+                        if (value.size != 29) {
                             log("Invalid GNSS PV data size")
                             return
                         }
-                        val buffer = ByteBuffer.wrap(value)
+                        val buffer = ByteBuffer.wrap(value.sliceArray(1 until value.size))
+                        buffer.order(ByteOrder.LITTLE_ENDIAN)
                         val iTow = buffer.int.toUInt() //getInt(bytes, 0).toUInt()
                         val lon = buffer.int //getInt(bytes, 4)
                         val lat = buffer.int //getInt(bytes, 8)
@@ -302,7 +312,7 @@ class BleFlySightDeviceDelegateImpl(
                         val velE = buffer.int //getInt(bytes, 20)
                         val velD = buffer.int //getInt(bytes, 24)
                         scope?.launch {
-                            _gnssFeed.emit(GnssData(
+                            val gnssData = GnssData(
                                 iTow = iTow,
                                 lon = lon,
                                 lat = lat,
@@ -310,7 +320,9 @@ class BleFlySightDeviceDelegateImpl(
                                 velN = velN,
                                 velE = velE,
                                 velD = velD
-                            ))
+                            )
+                            log("GNSS data : $gnssData")
+                            _gnssFeed.emit(gnssData)
                         }
                     }
 
@@ -375,7 +387,7 @@ class BleFlySightDeviceDelegateImpl(
                         }
 
                         FlySightCharacteristic.GNSS_PV.uuid -> {
-                            pvCharacteristic = char
+                            gnssCharacteristic = char
                             log("is gnss char readable : ${char.isReadable()}")
                             log("is gnss char writable : ${char.isWritable()}")
                             log("is gnss char writable without response : ${char.isWritableWithoutResponse()}")
@@ -403,6 +415,17 @@ class BleFlySightDeviceDelegateImpl(
                             log("is start result char notifiable : ${char.isNotifiable()}")
                             gatt.setCharacteristicNotification(char, true)
                         }
+
+                        FlySightCharacteristic.MODE.uuid -> {
+                            modeCharacteristic = char
+                            log("is mode char readable : ${char.isReadable()}")
+                            log("is mode char writable : ${char.isWritable()}")
+                            log("is mode char writable without response : ${char.isWritableWithoutResponse()}")
+                            log("is mode char indicatable : ${char.isIndicatable()}")
+                            log("is mode char notifiable : ${char.isNotifiable()}")
+                            enableNotifications(gatt, char)
+                            gatt.setCharacteristicNotification(char, true)
+                        }
                     }
                 }
             }
@@ -410,26 +433,32 @@ class BleFlySightDeviceDelegateImpl(
         gatt.requestMtu(250)
         if (txCharacteristic != null && rxCharacteristic != null) {
             scope?.launch {
-                scheduler.schedule(
-                    labelProvider = { "init device" }
-                ) {
-                    gattTaskQueue.addTask(GattTask.ReadTask(gatt, rxCharacteristic!!, {
-                        log(
-                            "[COMMAND] [READ] [${
-                                FlySightCharacteristic.fromUuid(
-                                    rxCharacteristic!!.uuid
-                                )?.name
-                            }]"
-                        )
-                    }))
-                }
+//                scheduler.schedule(
+//                    labelProvider = { "init device" }
+//                ) {
+//                    gattTaskQueue.addTask(GattTask.ReadTask(gatt, rxCharacteristic!!, {
+//                        log(
+//                            "[COMMAND] [READ] [${
+//                                FlySightCharacteristic.fromUuid(
+//                                    rxCharacteristic!!.uuid
+//                                )?.name
+//                            }]"
+//                        )
+//                    }))
+//                }
                 stateUpdater(DeviceConnectionState.Connected)
+                try {
+                    getMode()
+                } catch (ex: Exception) {
+                    Timber.d("Hoz3 mode exception : ${ex.message}")
+                }
                 readCurrentConfigFile()
                 _records.value = LoadingState.Loading(emptyList())
                 val records = retrieveRecordsInfo()
                 _records.value = LoadingState.Loaded(records)
                 startPingSystem()
                 readCurrentFlySightFile()
+                setMode(DeviceMode.Active)
             }
         } else {
             gatt.disconnect()
@@ -500,6 +529,54 @@ class BleFlySightDeviceDelegateImpl(
         } catch (e: Exception) {
             log("Error pinging device : $e")
             false
+        }
+    }
+
+    private suspend fun setMode(mode: DeviceMode) {
+        val gatt = this.gatt ?: return
+        val rx = this.rxCharacteristic ?: return
+
+        log("Setting Mode")
+
+        withContext(Dispatchers.IO) {
+            val getModeJob = BleSetModeJob(
+                gatt = gatt,
+                gattCharacteristic = rx,
+                gattTaskQueue = gattTaskQueue,
+                scheduler = scheduler
+            )
+            try {
+                val changed = getModeJob.setMode(mode)
+                log("Device mode changed : $changed")
+            } catch (e: Exception) {
+                log("Error setting device mode : $e")
+                null
+            }
+        }
+    }
+
+    private suspend fun getMode() {
+
+        log("trying to get mode ${bluetoothDevice.address}")
+        val gatt = this.gatt ?: return
+        val rx = this.modeCharacteristic ?: return
+
+        log("Reading Mode")
+
+        withContext(Dispatchers.IO) {
+            val getModeJob = BleGetModeJob(
+                gatt = gatt,
+                gattCharacteristic = rx,
+                gattTaskQueue = gattTaskQueue,
+                scheduler = scheduler
+            )
+            try {
+                val mode = getModeJob.getMode()
+                log("Device mode : $mode")
+            } catch (e: Exception) {
+                log("Error obtaining device mode : $e")
+                null
+            }
         }
     }
 
@@ -913,6 +990,7 @@ class BleFlySightDeviceDelegateImpl(
     }
 
     private fun log(message: String) {
+        Timber.d("Hoz3 : $message")
         _logs.update {
             it + message
         }
