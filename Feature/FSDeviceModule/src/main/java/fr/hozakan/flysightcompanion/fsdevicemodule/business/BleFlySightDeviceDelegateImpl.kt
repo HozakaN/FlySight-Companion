@@ -182,6 +182,7 @@ class BleFlySightDeviceDelegateImpl(
 
             override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
                 super.onServicesDiscovered(gatt, status)
+                Timber.d("Hoz3 onServicesDiscovered : $status")
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     gatt?.let {
                         doDiscoverGattServices(it)
@@ -344,7 +345,9 @@ class BleFlySightDeviceDelegateImpl(
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     @SuppressLint("MissingPermission")
     private fun doDiscoverGattServices(gatt: BluetoothGatt) {
+        Timber.d("Hoz3 doDiscoverGattServices")
         val servs = gatt.services
+        Timber.d("Hoz3 services : ${servs.map { it.uuid }}")
         _services.update {
             servs
         }
@@ -458,7 +461,7 @@ class BleFlySightDeviceDelegateImpl(
                 _records.value = LoadingState.Loaded(records)
                 startPingSystem()
                 readCurrentFlySightFile()
-                setMode(DeviceMode.Active)
+//                setMode(DeviceMode.Active)
             }
         } else {
             gatt.disconnect()
@@ -749,10 +752,10 @@ class BleFlySightDeviceDelegateImpl(
         fileName: String,
         fileContent: String
     ) {
-        writeBinaryFile(fileName, fileContent.toByteArray(), {})
+        writeFile(fileName, fileContent.toByteArray(), {})
     }
 
-    override suspend fun writeBinaryFile(fileName: String, data: ByteArray, callback: (Int) -> Unit): Boolean {
+    override suspend fun writeFile(fileName: String, data: ByteArray, callback: (Int) -> Unit): Boolean {
         log("Writing file $fileName")
         val gatt = this.gatt ?: return false
         val rx = this.rxCharacteristic ?: return false
@@ -913,6 +916,7 @@ class BleFlySightDeviceDelegateImpl(
     @SuppressLint("MissingPermission")
     private fun startGattServicesDiscovery() {
         scope?.launch {
+            Timber.d("Hoz3 startGattServicesDiscovery")
             gatt?.discoverServices()
         }
     }

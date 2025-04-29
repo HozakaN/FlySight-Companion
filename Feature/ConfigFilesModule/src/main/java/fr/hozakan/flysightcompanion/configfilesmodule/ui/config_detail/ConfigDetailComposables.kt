@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
@@ -33,16 +35,21 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightcompanion.composablecommons.DropdownContainer
@@ -302,7 +309,8 @@ fun ConfigDetailScreenInternal(
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         if (!focusState.hasFocus && form.samplePeriod == null) {
                                             form.updateSamplePeriodToDefaultValue()
@@ -350,7 +358,8 @@ fun ConfigDetailScreenInternal(
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         if (!focusState.hasFocus && form.toneMinimum == null) {
                                             form.updateToneMinimumToDefaultValue()
@@ -372,7 +381,8 @@ fun ConfigDetailScreenInternal(
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         if (!focusState.hasFocus && form.toneMaximum == null) {
                                             form.updateToneMaximumToDefaultValue()
@@ -430,7 +440,8 @@ fun ConfigDetailScreenInternal(
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         if (!focusState.hasFocus && form.rateMinimumValue == null) {
                                             form.updateRateMinimumValueToDefaultValue()
@@ -452,7 +463,8 @@ fun ConfigDetailScreenInternal(
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         if (!focusState.hasFocus && form.rateMaximumValue == null) {
                                             form.updateRateMaximumValueToDefaultValue()
@@ -474,7 +486,8 @@ fun ConfigDetailScreenInternal(
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         if (!focusState.hasFocus && form.rateMinimum == null) {
                                             form.updateRateMinimumToDefaultValue()
@@ -490,7 +503,8 @@ fun ConfigDetailScreenInternal(
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         if (!focusState.hasFocus && form.rateMaximum == null) {
                                             form.updateRateMaximumToDefaultValue()
@@ -541,7 +555,8 @@ fun ConfigDetailScreenInternal(
                             )
                         ) {
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         if (!focusState.hasFocus && form.speechRate == null) {
                                             form.updateSpeechRateToDefaultValue()
@@ -624,7 +639,8 @@ fun ConfigDetailScreenInternal(
                             )
                         ) {
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         if (!focusState.hasFocus && form.verticalThreshold == null) {
                                             form.updateVerticalThresholdToDefaultValue()
@@ -645,7 +661,8 @@ fun ConfigDetailScreenInternal(
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         if (!focusState.hasFocus && form.horizontalThreshold == null) {
                                             form.updateHorizontalThresholdToDefaultValue()
@@ -692,7 +709,8 @@ fun ConfigDetailScreenInternal(
                             if (form.initMode == InitMode.PlayFile) {
                                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                                 OutlinedTextField(
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier
+                                        .fillMaxWidth()
                                         .onFocusChanged { focusState ->
                                             if (!focusState.hasFocus && form.initFile == null) {
                                                 form.updateInitFile("")
@@ -731,7 +749,8 @@ fun ConfigDetailScreenInternal(
                             )
                         ) {
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         if (!focusState.hasFocus && form.windowAbove == null) {
                                             form.updateWindowAbove(0)
@@ -748,7 +767,8 @@ fun ConfigDetailScreenInternal(
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         if (!focusState.hasFocus && form.windowBelow == null) {
                                             form.updateWindowBelow(0)
@@ -765,7 +785,8 @@ fun ConfigDetailScreenInternal(
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         if (!focusState.hasFocus && form.dzElev == null) {
                                             form.updateDzElev(0)
@@ -856,7 +877,8 @@ fun ConfigDetailScreenInternal(
                             )
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
                             EmptyIntTextField(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         if (!focusState.hasFocus && form.altitudeStep == null) {
                                             form.updateAltitudeStep(0)

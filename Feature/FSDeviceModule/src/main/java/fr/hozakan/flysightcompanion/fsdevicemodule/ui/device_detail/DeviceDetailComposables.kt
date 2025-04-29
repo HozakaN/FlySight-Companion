@@ -154,17 +154,17 @@ fun DeviceDetailScreen(
         }
     }
 
-    val logs by state.device?.logs?.collectAsState() ?: return
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        items(logs.reversed()) {
-            Text(it)
-        }
-    }
-
-    return
+//    val logs by state.device?.logs?.collectAsState() ?: return
+//
+//    LazyColumn(
+//        modifier = Modifier.fillMaxSize()
+//    ) {
+//        items(logs.reversed()) {
+//            Text(it)
+//        }
+//    }
+//
+//    return
 
     Surface(
         modifier = Modifier
