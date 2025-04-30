@@ -21,8 +21,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AreaChart
 import androidx.compose.material.icons.filled.Engineering
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -82,6 +84,9 @@ import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailMenuActi
 import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailScreen
 import fr.hozakan.flysightcompanion.recordsmodule.ui.list.ListRecordsScreen
 import fr.hozakan.flysightcompanion.recordsmodule.ui.plot.PlotSettingsScreen
+import fr.hozakan.flysightcompanion.sessionmodule.ui.config.SessionConfigScreen
+import fr.hozakan.flysightcompanion.sessionmodule.ui.pick_config.PickConfigScreen
+import fr.hozakan.flysightcompanion.sessionmodule.ui.play.SessionPlayerScreen
 import fr.hozakan.flysightcompanion.ui.DevScreen
 import fr.hozakan.flysightcompanion.usbmodule.UsbService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -149,6 +154,23 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                         modifier = Modifier.tripleTapHandler {
                             devScreenOpened = true
                             Timber.d("Hoz4 triple tap detected!")
+                        },
+                        floatingActionButton = {
+                            FloatingActionButton(
+                                onClick = {
+                                    navController.navigate(AppScreen.Session.PickConfig.route)
+//                                    navController.navigate(
+//                                        AppScreen.Session.Config.buildRoute(
+//                                            configurationName = ""
+//                                        )
+//                                    )
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PlayArrow,
+                                    contentDescription = ""
+                                )
+                            }
                         },
                         topBar = {
                             val currentRoute = currentBackStack.value?.destination?.route
@@ -553,6 +575,28 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                         PlotSettingsScreen()
                                     }
                                 }
+                                navigation(
+                                    route = AppScreen.Session.route,
+                                    startDestination = AppScreen.Session.PickConfig.route
+                                ) {
+                                    composable(route = AppScreen.Session.PickConfig.route) {
+                                        PickConfigScreen()
+                                    }
+                                    composable(route = AppScreen.Session.Config.route) { backStackEntry ->
+                                        val configurationName =
+                                            backStackEntry.arguments?.getString("configurationName")
+                                                ?: return@composable
+                                        SessionConfigScreen(
+                                            configurationName = configurationName,
+                                            onNavigateUp = {
+                                                navController.popBackStack()
+                                            }
+                                        )
+                                    }
+                                    composable(route = AppScreen.Session.Play.route) {
+                                        SessionPlayerScreen()
+                                    }
+                                }
                             }
 
                             BackHandler {
@@ -574,7 +618,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
     private fun Modifier.tripleTapHandler(
         callback: () -> Unit
     ): Modifier {
-        if (!BuildConfig.DEBUG)  {
+        if (!BuildConfig.DEBUG) {
             return this
         }
         var simpleTapDetected by remember { mutableStateOf(false) }

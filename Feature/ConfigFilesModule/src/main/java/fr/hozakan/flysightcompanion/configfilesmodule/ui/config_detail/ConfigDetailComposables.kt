@@ -195,7 +195,7 @@ fun ConfigDetailScreen(
 fun ConfigDetailScreenInternal(
     state: ConfigDetailState,
     form: ConfigDetailForm = rememberConfigDetailForm(),
-    saveConfigFileClicked: () -> Unit,
+    saveConfigFileClicked: (ConfigDetailForm) -> Unit,
     onNavigateUp: () -> Unit
 ) {
     Surface(
@@ -981,7 +981,7 @@ fun ConfigDetailScreenInternal(
                 }
                 Spacer(modifier = Modifier.requiredWidth(8.dp))
                 TextButton(
-                    onClick = saveConfigFileClicked,
+                    onClick = { saveConfigFileClicked(form) },
                     enabled = form.isValid && form.hasValidFileName && form.isDirty
                 ) {
                     FText(

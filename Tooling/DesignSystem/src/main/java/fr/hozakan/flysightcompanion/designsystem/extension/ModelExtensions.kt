@@ -10,6 +10,8 @@ import fr.hozakan.flysightcompanion.model.config.SpeechMode
 import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
 import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
+import fr.hozakan.flysightcompanion.model.session.configuration.StaticSessionSource
 
 val UnitSystem.unitNameResource: Int
     get() = when (this) {
@@ -119,4 +121,15 @@ val ToneMode.textResource: Int
 
 fun ToneMode.Companion.fromText(context: Context, text: String): ToneMode? {
     return ToneMode.entries.firstOrNull { context.getString(it.textResource) == text }
+}
+
+val StaticSessionSource.textResource: Int
+    get() = when (this) {
+        StaticSessionSource.Local -> R.string.session_configuration_source_local
+        StaticSessionSource.FlySight -> R.string.session_configuration_source_flysight
+        StaticSessionSource.File -> R.string.session_configuration_source_file
+    }
+
+fun StaticSessionSource.Companion.fromText(context: Context, text: String): StaticSessionSource? {
+    return StaticSessionSource.entries.firstOrNull { context.getString(it.textResource) == text }
 }

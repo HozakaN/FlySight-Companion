@@ -1,53 +1,55 @@
-package fr.hozakan.flysightcompanion.configfilesmodule.business
+package fr.hozakan.flysightcompanion.sessionmodule.business
 
 import android.content.Context
+import com.google.gson.Gson
 import fr.hozakan.flysightcompanion.dialogmodule.ConfigFileName
 import fr.hozakan.flysightcompanion.dialogmodule.ConfigFileNameDialog
 import fr.hozakan.flysightcompanion.dialogmodule.DialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.DialogService
 import fr.hozakan.flysightcompanion.dialogmodule.PickConfigurationDialog
 import fr.hozakan.flysightcompanion.dialogmodule.PickConfigurationDialogResult
-import fr.hozakan.flysightcompanion.model.ConfigFile
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionConfiguration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-class DefaultConfigFileService(
+class DefaultSessionConfigurationsService(
     private val context: Context,
-    private val dialogService: DialogService,
-    private val configEncoder: ConfigEncoder
-) : ConfigFileService {
-
-    private val _configs = MutableStateFlow<List<ConfigFile>>(emptyList())
-    override val configFiles = _configs.asStateFlow()
+    private val dialogService: DialogService
+) : SessionConfigurationsService {
 
     private val serviceScope = CoroutineScope(SupervisorJob())
 
-    private val parser: ConfigParser = DefaultConfigParser()
+    private val gson = Gson()
+
+    private val _sessionConfigurations = MutableStateFlow<List<SessionConfiguration>>(emptyList())
+    override val sessionConfigurations: StateFlow<List<SessionConfiguration>> =
+        _sessionConfigurations.asStateFlow()
 
     init {
         serviceScope.launch {
-            loadConfigFiles()
+            loadSessionConfigurations()
         }
     }
 
-    override suspend fun saveConfigFile(configFile: ConfigFile): ConfigFile {
-        var name = configFile.name
+    override suspend fun saveConfigFile(sessionConfiguration: SessionConfiguration): SessionConfiguration {
+        var name = sessionConfiguration.name
         if (name.isBlank()) {
             when (val result = dialogService.displayDialog(ConfigFileNameDialog())) {
                 is ConfigFileName -> name = result.name
-                DialogResult.Dismiss -> return configFile
-                else -> error("Save config file result should not have another type (${result::class.java})")
+                DialogResult.Dismiss -> return sessionConfiguration
+                else -> error("Save session config result should not have another type (${result::class.java})")
             }
         }
-        val readyConfigFile = configFile.copy(name = name)
-        _configs.update {
+        val readyConfigFile = sessionConfiguration.copy(name = name)
+        _sessionConfigurations.update {
             it + readyConfigFile
         }
         val fileContent = withContext(Dispatchers.IO) {
@@ -59,8 +61,8 @@ class DefaultConfigFileService(
         return readyConfigFile
     }
 
-    override suspend fun updateConfigFile(oldConf: ConfigFile, newConf: ConfigFile) {
-        _configs.update { configs ->
+    override suspend fun updateSessionConfiguration(oldConf: SessionConfiguration, newConf: SessionConfiguration) {
+        _sessionConfigurations.update { configs ->
             val index = configs.indexOfFirst { it.name == oldConf.name }
             (configs - configs.first { it.name == oldConf.name }).run {
                 toMutableList().also { mutableList -> mutableList.add(index, newConf) }
@@ -80,23 +82,24 @@ class DefaultConfigFileService(
         }
     }
 
-    override suspend fun deleteConfigFile(configFile: ConfigFile) {
+    override suspend fun deleteSessionConfiguration(sessionConfiguration: SessionConfiguration) {
         val file =
-            File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${configFile.name}.txt")
+            File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${sessionConfiguration.name}.txt")
         file.delete()
-        _configs.update {
-            it - configFile
+        _sessionConfigurations.update {
+            it - sessionConfiguration
         }
     }
 
-    override suspend fun userPickConfiguration(): ConfigFile? {
-        val configs = _configs.value
+    override suspend fun userPickConfiguration(): SessionConfiguration? {
+        val configs = _sessionConfigurations.value
         if (configs.isEmpty()) return null
-        return when (val result = dialogService.displayDialog(PickConfigurationDialog {
+        val dialogItem = PickConfigurationDialog {
             configs
-        })) {
+        }
+        return when (val result = dialogService.displayDialog(dialogItem)) {
             is PickConfigurationDialogResult -> {
-                result.configFile as? ConfigFile
+                result.configFile as? SessionConfiguration
             }
 
             DialogResult.Dismiss -> null
@@ -104,51 +107,51 @@ class DefaultConfigFileService(
         }
     }
 
-    override suspend fun duplicateConfigFile(configFile: ConfigFile) {
+    override suspend fun duplicateSessionConfiguration(sessionConfiguration: SessionConfiguration) {
         var index = 1
-        var name = "${configFile.name} ($index)"
-        while (_configs.value.any { it.name == name }) {
+        var name = "${sessionConfiguration.name} ($index)"
+        while (_sessionConfigurations.value.any { it.name == name }) {
             index++
-            name = "${configFile.name} ($index)"
+            name = "${sessionConfiguration.name} ($index)"
         }
         when (val result = dialogService.displayDialog(ConfigFileNameDialog(name))) {
             is ConfigFileName -> name = result.name
             DialogResult.Dismiss -> return
-            else -> error("Duplicate config file should not have another output")
+            else -> error("Duplicate session config should not have another output")
         }
         saveConfigFile(
-            configFile.copy(
+            sessionConfiguration.copy(
                 name = name
             )
         )
     }
 
-    private fun buildFileContent(configFile: ConfigFile): String {
-        return configEncoder.encodeConfig(configFile)
-    }
-
     private fun getOrCreateConfigFilesFolder(): File {
         val folder =
-            File("${context.filesDir.absolutePath}${File.separator}$CONFIG_FILES_FOLDER")
+            File("${context.filesDir.absolutePath}${File.separator}$SESSION_CONFIGS_FOLDER")
         val success = folder.exists() || folder.mkdir()
         return if (success) folder else throw IllegalAccessException("Cannot access app folder")
     }
 
-    private suspend fun loadConfigFiles() {
+    private suspend fun loadSessionConfigurations() {
         withContext(Dispatchers.IO) {
             val configFolder = getOrCreateConfigFilesFolder()
-            val configFiles =
+            val sessionConfigurations =
                 (configFolder.listFiles()?.mapNotNull { parseConfiguration(it.readLines()) }
                     ?: emptyList())
-            _configs.update {
-                configFiles
+            _sessionConfigurations.update {
+                sessionConfigurations
             }
         }
     }
 
-    private fun parseConfiguration(fileLines: List<String>): ConfigFile = parser.parse(fileLines)
+    private fun buildFileContent(sessionConfiguration: SessionConfiguration): String {
+        return gson.toJson(sessionConfiguration)
+    }
+
+    private fun parseConfiguration(fileLines: List<String>): SessionConfiguration = gson.fromJson(fileLines.joinToString(separator = "\n"), SessionConfiguration::class.java)
 
     companion object {
-        private const val CONFIG_FILES_FOLDER = "configFiles"
+        private const val SESSION_CONFIGS_FOLDER = "sessionConfigurations"
     }
 }

@@ -286,4 +286,9 @@
     <string name="color_picker_custom_color">Custom color</string>
     <string name="color_picker_current_choice">Color to replace :</string>
 
+    <string name="session_configuration_file_not_found">Session configuration not found</string>
+    <string name="session_configuration_source_local">onboard GPS</string>
+    <string name="session_configuration_source_flysight">FlySight</string>
+    <string name="session_configuration_source_file">TRACK.CSV file</string>
+
 </resources>

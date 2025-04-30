@@ -12,6 +12,8 @@ import fr.hozakan.flysightcompanion.BaseApplication
 import fr.hozakan.flysightcompanion.BuildConfig
 import fr.hozakan.flysightcompanion.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightcompanion.bluetoothmodule.DefaultBluetoothService
+import fr.hozakan.flysightcompanion.capabilitiesmodule.CapabilitiesService
+import fr.hozakan.flysightcompanion.capabilitiesmodule.DefaultCapabilitiesService
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigEncoder
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightcompanion.configfilesmodule.business.DefaultConfigEncoder
@@ -28,9 +30,12 @@ import fr.hozakan.flysightcompanion.networkmodule.KTorNetworkService
 import fr.hozakan.flysightcompanion.networkmodule.NetworkService
 import fr.hozakan.flysightcompanion.recordsmodule.business.FileBasedRecordService
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
+import fr.hozakan.flysightcompanion.sessionmodule.business.DefaultSessionConfigurationsService
+import fr.hozakan.flysightcompanion.sessionmodule.business.DefaultSessionPlayerService
+import fr.hozakan.flysightcompanion.sessionmodule.business.SessionConfigurationsService
+import fr.hozakan.flysightcompanion.sessionmodule.business.SessionPlayerService
 import fr.hozakan.flysightcompanion.usbmodule.DefaultUsbService
 import fr.hozakan.flysightcompanion.usbmodule.UsbService
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -156,5 +161,30 @@ class ServiceModule {
     @Singleton
     @Provides
     fun provideLoggerService(): LoggerService = DefaultLoggerService()
+
+    @Singleton
+    @Provides
+    fun provideCapabilitiesService(): CapabilitiesService = DefaultCapabilitiesService()
+
+    @Singleton
+    @Provides
+    fun provideSessionConfigurationsService(
+        application: BaseApplication,
+        dialogService: DialogService
+    ): SessionConfigurationsService =
+        DefaultSessionConfigurationsService(
+            context = application.applicationContext,
+            dialogService = dialogService
+        )
+
+    @Singleton
+    @Provides
+    fun provideSessionPlayerService(
+        application: BaseApplication,
+        fsDeviceService: FsDeviceService
+    ) : SessionPlayerService = DefaultSessionPlayerService(
+        context = application.applicationContext,
+        fsDeviceService = fsDeviceService
+    )
 
 }

@@ -11,8 +11,12 @@ import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.config.Volume
 
+interface DisplayableConfig {
+    val name: String
+}
+
 data class ConfigFile(
-    val name: String,
+    override val name: String,
     val description: String,
     val group: String,
     //General
@@ -54,7 +58,7 @@ data class ConfigFile(
     val altitudeUnit: UnitSystem,
     //silence windows
     val silenceWindows: List<SilenceWindow>
-)
+) : DisplayableConfig
 
 val defaultConfigFile = ConfigFile(
     name = "",

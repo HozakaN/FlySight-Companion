@@ -15,12 +15,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,16 +33,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import fr.hozakan.flysightcompanion.composablecommons.SimpleDialogActionBar
-import fr.hozakan.flysightcompanion.model.ConfigFile
-import fr.hozakan.flysightcompanion.model.defaultConfigFile
 import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
+import fr.hozakan.flysightcompanion.model.DisplayableConfig
 import fr.hozakan.flysightcompanion.model.firmware.FirmwareUpdateStatus
 import kotlinx.coroutines.flow.StateFlow
 
 data class ConfigFileName(val name: String) : DialogResult
-data class PickConfigurationDialogResult(val configFile: ConfigFile) : DialogResult
+data class PickConfigurationDialogResult(val configFile: DisplayableConfig) : DialogResult
 
 data class ConfigFileNameDialog(
     private val name: String? = null
@@ -93,7 +90,7 @@ data class ConfigFileNameDialog(
 }
 
 data class PickConfigurationDialog(
-    val configProvider: () -> List<ConfigFile>
+    val configProvider: () -> List<DisplayableConfig>
 ) : DialogItem {
     @Composable
     override fun Content(onResult: (DialogResult) -> Unit) {
@@ -142,10 +139,26 @@ data class PickConfigurationDialog(
 fun PickConfigurationDialogPreview() {
     PickConfigurationDialog {
         listOf(
-            defaultConfigFile().copy(name = "Config 1"),
-            defaultConfigFile().copy(name = "Config 2"),
-            defaultConfigFile().copy(name = "Config 3"),
-            defaultConfigFile().copy(name = "Config 4"),
+            object : DisplayableConfig {
+                override val name: String
+                    get() = "Config 1"
+
+            },
+            object : DisplayableConfig {
+                override val name: String
+                    get() = "Config 2"
+
+            },
+            object : DisplayableConfig {
+                override val name: String
+                    get() = "Config 3"
+
+            },
+            object : DisplayableConfig {
+                override val name: String
+                    get() = "Config 4"
+
+            }
         )
     }.Content {}
 }

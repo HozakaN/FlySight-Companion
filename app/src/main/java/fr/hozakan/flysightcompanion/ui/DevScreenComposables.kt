@@ -42,7 +42,7 @@ fun DevScreen(
         Column {
             FText(
                 modifier = Modifier.fillMaxWidth(),
-                text = "USB logs",
+                text = "Global logs",
                 configuration = FlySightTheme.typography.cardTitle,
                 textAlign = TextAlign.Center
             )

@@ -16,6 +16,9 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevice
 import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailViewModel
 import fr.hozakan.flysightcompanion.recordsmodule.ui.list.ListRecordsViewModel
 import fr.hozakan.flysightcompanion.recordsmodule.ui.plot.PlotSettingsViewModel
+import fr.hozakan.flysightcompanion.sessionmodule.ui.config.SessionConfigViewModel
+import fr.hozakan.flysightcompanion.sessionmodule.ui.pick_config.PickConfigViewModel
+import fr.hozakan.flysightcompanion.sessionmodule.ui.play.SessionPlayerViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 
@@ -76,6 +79,24 @@ internal abstract class ViewModelBindings {
     @IntoMap
     @ViewModelKey(PlotSettingsViewModel::class)
     abstract fun bindPlotSettingsViewModel(plotSettingsViewModel: PlotSettingsViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(PickConfigViewModel::class)
+    abstract fun bindPickConfigViewModel(pickConfigViewModel: PickConfigViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(SessionConfigViewModel::class)
+    abstract fun bindSessionConfigViewModel(sessionConfigViewModel: SessionConfigViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(SessionPlayerViewModel::class)
+    abstract fun bindSessionPlayViewModel(sessionPlayerViewModel: SessionPlayerViewModel): ViewModel
 
     @Binds
     abstract fun bindViewModelFactory(factory: ViewModelFactory): ViewModelProvider.Factory
