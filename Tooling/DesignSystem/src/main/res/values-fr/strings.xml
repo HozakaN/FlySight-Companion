@@ -74,6 +74,7 @@
     <string name="screen_title_record_list">Enregistrements</string>
     <string name="screen_title_file">Fichier %1$s</string>
     <string name="screen_title_plot_settings">Paramètres de graphique</string>
+    <string name="screen_title_prepare_session">Préparons votre session</string>
 
     <string name="dialog_pick_config_title">Choisissez une nouvelle configuration pour votre FlySight</string>
 
@@ -286,7 +287,7 @@
     <string name="color_picker_custom_color">Couleur personalisée</string>
     <string name="color_picker_current_choice">Couleur à remplacer :</string>
 
-    <string name="session_configuration_file_not_found">Configuration introuvable</string>
+    <string name="session_profile_not_found">Profil introuvable</string>
     <string name="session_configuration_source_local">GPS du téléphone</string>
     <string name="session_configuration_source_flysight">FlySight</string>
     <string name="session_configuration_source_file">fichier TRACK.CSV</string>

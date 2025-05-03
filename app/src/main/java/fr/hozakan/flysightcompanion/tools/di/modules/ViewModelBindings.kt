@@ -16,9 +16,10 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevice
 import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailViewModel
 import fr.hozakan.flysightcompanion.recordsmodule.ui.list.ListRecordsViewModel
 import fr.hozakan.flysightcompanion.recordsmodule.ui.plot.PlotSettingsViewModel
-import fr.hozakan.flysightcompanion.sessionmodule.ui.config.SessionConfigViewModel
-import fr.hozakan.flysightcompanion.sessionmodule.ui.pick_config.PickConfigViewModel
+import fr.hozakan.flysightcompanion.sessionmodule.ui.profile.SessionProfileViewModel
+import fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session.PrepareSessionViewModel
 import fr.hozakan.flysightcompanion.sessionmodule.ui.play.SessionPlayerViewModel
+import fr.hozakan.flysightcompanion.sessionmodule.ui.reference.ReferencePointListViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 
@@ -83,20 +84,26 @@ internal abstract class ViewModelBindings {
     @InternalCoroutinesApi
     @Binds
     @IntoMap
-    @ViewModelKey(PickConfigViewModel::class)
-    abstract fun bindPickConfigViewModel(pickConfigViewModel: PickConfigViewModel): ViewModel
+    @ViewModelKey(PrepareSessionViewModel::class)
+    abstract fun bindPickConfigViewModel(prepareSessionViewModel: PrepareSessionViewModel): ViewModel
 
     @InternalCoroutinesApi
     @Binds
     @IntoMap
-    @ViewModelKey(SessionConfigViewModel::class)
-    abstract fun bindSessionConfigViewModel(sessionConfigViewModel: SessionConfigViewModel): ViewModel
+    @ViewModelKey(SessionProfileViewModel::class)
+    abstract fun bindSessionConfigViewModel(sessionProfileViewModel: SessionProfileViewModel): ViewModel
 
     @InternalCoroutinesApi
     @Binds
     @IntoMap
     @ViewModelKey(SessionPlayerViewModel::class)
     abstract fun bindSessionPlayViewModel(sessionPlayerViewModel: SessionPlayerViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(ReferencePointListViewModel::class)
+    abstract fun bindReferencePointListViewModel(referencePointListViewModel: ReferencePointListViewModel): ViewModel
 
     @Binds
     abstract fun bindViewModelFactory(factory: ViewModelFactory): ViewModelProvider.Factory

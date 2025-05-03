@@ -7,7 +7,7 @@ import fr.hozakan.flysightcompanion.sessionmodule.business.player.FlySightGnssSo
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.LocalGnssSource
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionPlayer
 import fr.hozakan.flysightcompanion.sessionmodule.model.PlayerState
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionConfiguration
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -31,13 +31,13 @@ class DefaultSessionPlayerService(
     private var _sessionPlayer= MutableStateFlow<SessionPlayer?>(null)
     override val sessionPlayer: StateFlow<SessionPlayer?> = _sessionPlayer.asStateFlow()
 
-    override suspend fun playSession(sessionConfiguration: SessionConfiguration, sessionSource: SessionSource) {
+    override suspend fun playSession(sessionProfile: SessionProfile, sessionSource: SessionSource) {
         val currentState = _state.value
         if (currentState is PlayerState.Playing) {
             // Already playing a session, handle accordingly
             return
         }
-        _state.value = PlayerState.Playing(sessionConfiguration)
+        _state.value = PlayerState.Playing(sessionProfile)
         job = scope.launch {
             val gnssSource = when (sessionSource) {
                 SessionSource.Local -> LocalGnssSource()
@@ -46,7 +46,7 @@ class DefaultSessionPlayerService(
                     val fsDevice = fsDeviceService.devices.value.firstOrNull { it.name == fsName } ?: return@launch
                     FlySightGnssSource(fsDevice)
                 }
-                is SessionSource.File -> {
+                is SessionSource.Record -> {
                     FileGnssSource(
                         context = context,
                         fileName = sessionSource.fileName
@@ -55,7 +55,7 @@ class DefaultSessionPlayerService(
             }
             _sessionPlayer.value = SessionPlayer(
                 gnssSource = gnssSource,
-                sessionConfiguration = sessionConfiguration
+                sessionProfile = sessionProfile
             )
         }
     }

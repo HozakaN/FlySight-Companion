@@ -39,6 +39,7 @@ android {
 dependencies {
     implementation(project(":model"))
     implementation(project(":Feature:FSDeviceModule"))
+    implementation(project(":Feature:RecordsModule"))
     implementation(project(":Tooling:DialogModule"))
     implementation(project(":Tooling:framework"))
     implementation(project(":Tooling:DesignSystem"))
@@ -59,6 +60,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(project(":Feature:ConfigFilesModule"))
     debugImplementation(libs.androidx.ui.tooling)
 //    implementation(libs.androidx.material.icons.extended)
 //    implementation(libs.androidx.activity.compose)

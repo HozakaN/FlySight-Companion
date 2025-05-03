@@ -1,0 +1,10 @@
+package fr.hozakan.flysightcompanion.sessionmodule.ui.reference
+
+import androidx.compose.runtime.Immutable
+import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
+
+@Immutable
+data class ReferencePointListState(
+    val referencePoints: List<ReferencePoint>,
+    val areReferencePointsSelectable: Boolean
+)

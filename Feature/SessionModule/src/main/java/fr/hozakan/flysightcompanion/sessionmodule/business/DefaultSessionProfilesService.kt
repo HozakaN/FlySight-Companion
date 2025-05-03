@@ -8,7 +8,7 @@ import fr.hozakan.flysightcompanion.dialogmodule.DialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.DialogService
 import fr.hozakan.flysightcompanion.dialogmodule.PickConfigurationDialog
 import fr.hozakan.flysightcompanion.dialogmodule.PickConfigurationDialogResult
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionConfiguration
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,17 +20,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-class DefaultSessionConfigurationsService(
+class DefaultSessionProfilesService(
     private val context: Context,
     private val dialogService: DialogService
-) : SessionConfigurationsService {
+) : SessionProfilesService {
 
     private val serviceScope = CoroutineScope(SupervisorJob())
 
     private val gson = Gson()
 
-    private val _sessionConfigurations = MutableStateFlow<List<SessionConfiguration>>(emptyList())
-    override val sessionConfigurations: StateFlow<List<SessionConfiguration>> =
+    private val _sessionConfigurations = MutableStateFlow<List<SessionProfile>>(emptyList())
+    override val sessionProfiles: StateFlow<List<SessionProfile>> =
         _sessionConfigurations.asStateFlow()
 
     init {
@@ -39,16 +39,16 @@ class DefaultSessionConfigurationsService(
         }
     }
 
-    override suspend fun saveConfigFile(sessionConfiguration: SessionConfiguration): SessionConfiguration {
-        var name = sessionConfiguration.name
+    override suspend fun saveProfile(sessionProfile: SessionProfile): SessionProfile {
+        var name = sessionProfile.name
         if (name.isBlank()) {
             when (val result = dialogService.displayDialog(ConfigFileNameDialog())) {
                 is ConfigFileName -> name = result.name
-                DialogResult.Dismiss -> return sessionConfiguration
+                DialogResult.Dismiss -> return sessionProfile
                 else -> error("Save session config result should not have another type (${result::class.java})")
             }
         }
-        val readyConfigFile = sessionConfiguration.copy(name = name)
+        val readyConfigFile = sessionProfile.copy(name = name)
         _sessionConfigurations.update {
             it + readyConfigFile
         }
@@ -61,7 +61,7 @@ class DefaultSessionConfigurationsService(
         return readyConfigFile
     }
 
-    override suspend fun updateSessionConfiguration(oldConf: SessionConfiguration, newConf: SessionConfiguration) {
+    override suspend fun updateProfile(oldConf: SessionProfile, newConf: SessionProfile) {
         _sessionConfigurations.update { configs ->
             val index = configs.indexOfFirst { it.name == oldConf.name }
             (configs - configs.first { it.name == oldConf.name }).run {
@@ -82,16 +82,16 @@ class DefaultSessionConfigurationsService(
         }
     }
 
-    override suspend fun deleteSessionConfiguration(sessionConfiguration: SessionConfiguration) {
+    override suspend fun deleteProfile(sessionProfile: SessionProfile) {
         val file =
-            File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${sessionConfiguration.name}.txt")
+            File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${sessionProfile.name}.txt")
         file.delete()
         _sessionConfigurations.update {
-            it - sessionConfiguration
+            it - sessionProfile
         }
     }
 
-    override suspend fun userPickConfiguration(): SessionConfiguration? {
+    override suspend fun userPickProfile(): SessionProfile? {
         val configs = _sessionConfigurations.value
         if (configs.isEmpty()) return null
         val dialogItem = PickConfigurationDialog {
@@ -99,7 +99,7 @@ class DefaultSessionConfigurationsService(
         }
         return when (val result = dialogService.displayDialog(dialogItem)) {
             is PickConfigurationDialogResult -> {
-                result.configFile as? SessionConfiguration
+                result.configFile as? SessionProfile
             }
 
             DialogResult.Dismiss -> null
@@ -107,20 +107,20 @@ class DefaultSessionConfigurationsService(
         }
     }
 
-    override suspend fun duplicateSessionConfiguration(sessionConfiguration: SessionConfiguration) {
+    override suspend fun duplicateProfile(sessionProfile: SessionProfile) {
         var index = 1
-        var name = "${sessionConfiguration.name} ($index)"
+        var name = "${sessionProfile.name} ($index)"
         while (_sessionConfigurations.value.any { it.name == name }) {
             index++
-            name = "${sessionConfiguration.name} ($index)"
+            name = "${sessionProfile.name} ($index)"
         }
         when (val result = dialogService.displayDialog(ConfigFileNameDialog(name))) {
             is ConfigFileName -> name = result.name
             DialogResult.Dismiss -> return
             else -> error("Duplicate session config should not have another output")
         }
-        saveConfigFile(
-            sessionConfiguration.copy(
+        saveProfile(
+            sessionProfile.copy(
                 name = name
             )
         )
@@ -145,11 +145,11 @@ class DefaultSessionConfigurationsService(
         }
     }
 
-    private fun buildFileContent(sessionConfiguration: SessionConfiguration): String {
-        return gson.toJson(sessionConfiguration)
+    private fun buildFileContent(sessionProfile: SessionProfile): String {
+        return gson.toJson(sessionProfile)
     }
 
-    private fun parseConfiguration(fileLines: List<String>): SessionConfiguration = gson.fromJson(fileLines.joinToString(separator = "\n"), SessionConfiguration::class.java)
+    private fun parseConfiguration(fileLines: List<String>): SessionProfile = gson.fromJson(fileLines.joinToString(separator = "\n"), SessionProfile::class.java)
 
     companion object {
         private const val SESSION_CONFIGS_FOLDER = "sessionConfigurations"

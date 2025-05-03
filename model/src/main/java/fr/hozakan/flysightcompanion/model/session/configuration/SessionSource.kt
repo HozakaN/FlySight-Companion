@@ -1,15 +1,19 @@
 package fr.hozakan.flysightcompanion.model.session.configuration
 
-sealed class SessionSource(val staticSessionSource: StaticSessionSource) {
-    data object Local : SessionSource(StaticSessionSource.Local)
-    data class FlySight(val fsId: String) : SessionSource(StaticSessionSource.FlySight)
-    data class File(val fileName: String) : SessionSource(StaticSessionSource.File)
+sealed class SessionSource(val sessionSourceType: SessionSourceType) {
+    data object Local : SessionSource(SessionSourceType.Local)
+    data class FlySight(
+        val fsId: String,
+        val fsName: String
+    ) : SessionSource(SessionSourceType.FlySight)
+
+    data class Record(val fileName: String) : SessionSource(SessionSourceType.Record)
 }
 
-enum class StaticSessionSource {
+enum class SessionSourceType {
     Local,
     FlySight,
-    File;
+    Record;
 
     companion object {}
 }

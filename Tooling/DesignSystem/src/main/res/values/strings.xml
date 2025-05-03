@@ -74,6 +74,7 @@
     <string name="screen_title_record_list">Records</string>
     <string name="screen_title_file">File %1$s</string>
     <string name="screen_title_plot_settings">Plot settings</string>
+    <string name="screen_title_prepare_session">Prepare your session</string>
 
     <string name="dialog_pick_config_title">Pick a new configuration for your FlySight</string>
 
@@ -286,7 +287,7 @@
     <string name="color_picker_custom_color">Custom color</string>
     <string name="color_picker_current_choice">Color to replace :</string>
 
-    <string name="session_configuration_file_not_found">Session configuration not found</string>
+    <string name="session_profile_not_found">Session profile not found</string>
     <string name="session_configuration_source_local">onboard GPS</string>
     <string name="session_configuration_source_flysight">FlySight</string>
     <string name="session_configuration_source_file">TRACK.CSV file</string>

@@ -1,7 +1,7 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.player
 
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionConfiguration
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class SessionPlayer(
     gnssSource: GnssSource,
-    private val sessionConfiguration: SessionConfiguration
+    private val sessionProfile: SessionProfile
 ) {
 
     private val _navLane = MutableStateFlow<LoadingState<Int>>(LoadingState.Loading())

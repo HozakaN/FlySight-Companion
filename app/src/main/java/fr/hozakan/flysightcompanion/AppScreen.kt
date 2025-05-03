@@ -28,10 +28,11 @@ sealed class AppScreen(val route: String) {
         }
     }
     data object Session : AppScreen("Session") {
-        data object PickConfig : AppScreen("session_pick_config")
+        data object PrepareSession : AppScreen("prepare_session")
         data object Config : AppScreen("session_config/{configurationName}") {
             fun buildRoute(configurationName: String) = "session_config/$configurationName"
         }
         data object Play : AppScreen("session_play")
+        data object ReferencePointList : AppScreen("reference_point_list")
     }
 }

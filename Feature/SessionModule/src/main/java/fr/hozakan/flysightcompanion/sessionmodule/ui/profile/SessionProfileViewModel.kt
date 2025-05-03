@@ -1,26 +1,29 @@
-package fr.hozakan.flysightcompanion.sessionmodule.ui.config
+package fr.hozakan.flysightcompanion.sessionmodule.ui.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
-import fr.hozakan.flysightcompanion.sessionmodule.business.SessionConfigurationsService
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionConfiguration
-import fr.hozakan.flysightcompanion.model.session.configuration.StaticSessionSource
+import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
+import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class SessionConfigViewModel @Inject constructor(
-    private val sessionConfigurationsService: SessionConfigurationsService
+class SessionProfileViewModel @Inject constructor(
+    private val sessionProfilesService: SessionProfilesService,
+    configFileService: ConfigFileService
 ) : ViewModel() {
 
     private val _state =
         MutableStateFlow(
-            SessionConfigState(
-                sessionConfiguration = SessionConfiguration.default(),
-                staticSessionSource = StaticSessionSource.FlySight
+            SessionProfileState(
+                sessionProfile = SessionProfile.default(),
+                configFiles = emptyList()
             )
         )
 
@@ -31,22 +34,34 @@ class SessionConfigViewModel @Inject constructor(
      */
     private var isCreatingConf = false
 
+    init {
+        configFileService.configFiles
+            .onEach { configFiles ->
+                _state.update {
+                    it.copy(
+                        configFiles = configFiles
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
     fun loadSessionConfiguration(configurationName: String) {
         isCreatingConf = configurationName.isEmpty()
         if (configurationName.isEmpty()) {
             _state.update {
                 it.copy(
-                    sessionConfiguration = SessionConfiguration.default(),
+                    sessionProfile = SessionProfile.default(),
                     configurationFound = true
                 )
             }
         } else {
             val configFile =
-                sessionConfigurationsService.sessionConfigurations.value.firstOrNull { it.name == configurationName }
+                sessionProfilesService.sessionProfiles.value.firstOrNull { it.name == configurationName }
             if (configFile != null) {
                 _state.update {
                     it.copy(
-                        sessionConfiguration = configFile,
+                        sessionProfile = configFile,
                         configurationFound = true
                     )
                 }
@@ -60,8 +75,8 @@ class SessionConfigViewModel @Inject constructor(
         }
     }
 
-    fun saveSessionConfiguration(sessionConfiguration: SessionConfiguration) {
-        if (sessionConfiguration.name.isBlank()) {
+    fun saveSessionConfiguration(sessionProfile: SessionProfile) {
+        if (sessionProfile.name.isBlank()) {
             _state.update {
                 it.copy(
                     fileSaved = false.asEvent()
@@ -69,19 +84,19 @@ class SessionConfigViewModel @Inject constructor(
             }
         } else {
             viewModelScope.launch {
-                val oldConf = _state.value.sessionConfiguration
+                val oldConf = _state.value.sessionProfile
                 if (!isCreatingConf) {
-                    sessionConfigurationsService.updateSessionConfiguration(
+                    sessionProfilesService.updateProfile(
                         oldConf,
-                        sessionConfiguration
+                        sessionProfile
                     )
                 } else {
-                    sessionConfigurationsService.saveConfigFile(sessionConfiguration)
+                    sessionProfilesService.saveProfile(sessionProfile)
                 }
                 isCreatingConf = false
                 _state.update {
                     it.copy(
-                        sessionConfiguration = sessionConfiguration,
+                        sessionProfile = sessionProfile,
                         fileSaved = true.asEvent()
                     )
                 }

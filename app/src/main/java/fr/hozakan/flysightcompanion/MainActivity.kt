@@ -33,6 +33,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -84,9 +85,12 @@ import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailMenuActi
 import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailScreen
 import fr.hozakan.flysightcompanion.recordsmodule.ui.list.ListRecordsScreen
 import fr.hozakan.flysightcompanion.recordsmodule.ui.plot.PlotSettingsScreen
-import fr.hozakan.flysightcompanion.sessionmodule.ui.config.SessionConfigScreen
-import fr.hozakan.flysightcompanion.sessionmodule.ui.pick_config.PickConfigScreen
+import fr.hozakan.flysightcompanion.sessionmodule.business.SessionPlayerService
+import fr.hozakan.flysightcompanion.sessionmodule.model.PlayerState
+import fr.hozakan.flysightcompanion.sessionmodule.ui.profile.SessionProfileScreen
+import fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session.PrepareSessionScreen
 import fr.hozakan.flysightcompanion.sessionmodule.ui.play.SessionPlayerScreen
+import fr.hozakan.flysightcompanion.sessionmodule.ui.reference.ReferencePointListScreen
 import fr.hozakan.flysightcompanion.ui.DevScreen
 import fr.hozakan.flysightcompanion.usbmodule.UsbService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -118,6 +122,9 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
     @Inject
     lateinit var json: Gson
 
+    @Inject
+    lateinit var sessionPlayerService: SessionPlayerService
+
     override fun androidInjector(): AndroidInjector<Any> = androidInjector
 
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalCoroutinesApi::class)
@@ -140,6 +147,8 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
 
                     DialogHandler()
 
+                    val playerState by sessionPlayerService.state.collectAsState()
+
                     if (devScreenOpened) {
                         DevScreen(
                             usbService = usbService,
@@ -150,27 +159,31 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                         }
                         return@CompositionLocalProvider
                     }
+                    if (playerState is PlayerState.Playing) {
+                        SessionPlayerScreen()
+                    }
                     Scaffold(
                         modifier = Modifier.tripleTapHandler {
                             devScreenOpened = true
                             Timber.d("Hoz4 triple tap detected!")
                         },
                         floatingActionButton = {
-                            FloatingActionButton(
-                                onClick = {
-                                    navController.navigate(AppScreen.Session.PickConfig.route)
-//                                    navController.navigate(
-//                                        AppScreen.Session.Config.buildRoute(
-//                                            configurationName = ""
-//                                        )
-//                                    )
-                                }
+                            if (currentBackStack.value?.destination?.route == AppScreen.DeviceTab.DeviceList.route ||
+                                currentBackStack.value?.destination?.route == AppScreen.ConfigTab.ConfigList.route ||
+                                currentBackStack.value?.destination?.route == AppScreen.RecordTab.RecordList.route
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.PlayArrow,
-                                    contentDescription = ""
-                                )
+                                FloatingActionButton(
+                                    onClick = {
+                                        navController.navigate(AppScreen.Session.PrepareSession.route)
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.PlayArrow,
+                                        contentDescription = ""
+                                    )
+                                }
                             }
+
                         },
                         topBar = {
                             val currentRoute = currentBackStack.value?.destination?.route
@@ -202,6 +215,10 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                     )
                                 }
 
+                                AppScreen.Session.PrepareSession.route -> {
+                                    stringResource(R.string.screen_title_prepare_session)
+                                }
+
                                 else -> {
                                     stringResource(LocalR.string.app_name)
                                 }
@@ -213,46 +230,10 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
 
                                         AppScreen.RecordTab.RecordDetail.route,
                                         AppScreen.RecordTab.PlotSettings.route,
-                                        AppScreen.DeviceTab.DeviceDetail.route -> {
-                                            IconButton(
-                                                onClick = {
-                                                    navController.popBackStack()
-                                                },
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                    contentDescription = stringResource(R.string.misc_navigate_up)
-                                                )
-                                            }
-                                        }
-
-                                        AppScreen.DeviceTab.DeviceFile.route -> {
-                                            IconButton(
-                                                onClick = {
-                                                    navController.popBackStack()
-                                                },
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                    contentDescription = stringResource(R.string.misc_navigate_up)
-                                                )
-                                            }
-                                        }
-
-                                        AppScreen.ConfigTab.ConfigDetail.route -> {
-                                            IconButton(
-                                                onClick = {
-                                                    navController.popBackStack()
-                                                },
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                    contentDescription = stringResource(R.string.misc_navigate_up)
-                                                )
-                                            }
-                                        }
-
-                                        AppScreen.DeviceTab.DeviceConfig.route -> {
+                                        AppScreen.DeviceTab.DeviceDetail.route,
+                                        AppScreen.ConfigTab.ConfigDetail.route,
+                                        AppScreen.DeviceTab.DeviceConfig.route,
+                                        AppScreen.Session.PrepareSession.route -> {
                                             IconButton(
                                                 onClick = {
                                                     navController.popBackStack()
@@ -577,16 +558,34 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                 }
                                 navigation(
                                     route = AppScreen.Session.route,
-                                    startDestination = AppScreen.Session.PickConfig.route
+                                    startDestination = AppScreen.Session.PrepareSession.route
                                 ) {
-                                    composable(route = AppScreen.Session.PickConfig.route) {
-                                        PickConfigScreen()
+                                    composable(route = AppScreen.Session.PrepareSession.route) {
+                                        PrepareSessionScreen(
+                                            onCreateConfigurationClicked = {
+                                                navController.navigate(
+                                                    AppScreen.Session.Config.buildRoute(
+                                                        ""
+                                                    )
+                                                )
+                                            },
+                                            onEditConfigurationClicked = {
+                                                navController.navigate(
+                                                    AppScreen.Session.Config.buildRoute(
+                                                        it.name
+                                                    )
+                                                )
+                                            },
+                                            onSessionReady = { profile, source ->
+
+                                            }
+                                        )
                                     }
                                     composable(route = AppScreen.Session.Config.route) { backStackEntry ->
                                         val configurationName =
                                             backStackEntry.arguments?.getString("configurationName")
                                                 ?: return@composable
-                                        SessionConfigScreen(
+                                        SessionProfileScreen(
                                             configurationName = configurationName,
                                             onNavigateUp = {
                                                 navController.popBackStack()
@@ -595,6 +594,9 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                     }
                                     composable(route = AppScreen.Session.Play.route) {
                                         SessionPlayerScreen()
+                                    }
+                                    composable(route = AppScreen.Session.ReferencePointList.route) {
+                                        ReferencePointListScreen()
                                     }
                                 }
                             }

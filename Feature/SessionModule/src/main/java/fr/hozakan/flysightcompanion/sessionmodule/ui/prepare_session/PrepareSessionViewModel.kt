@@ -1,0 +1,142 @@
+package fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
+import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
+import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
+import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
+import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
+import fr.hozakan.flysightcompanion.sessionmodule.business.SessionPlayerService
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+class PrepareSessionViewModel @Inject constructor(
+    fsDeviceService: FsDeviceService,
+    recordService: RecordService,
+    private val sessionProfilesService: SessionProfilesService,
+    private val sessionPlayerService: SessionPlayerService
+) : ViewModel() {
+
+    private val _state =
+        MutableStateFlow(
+            PrepareSessionState(
+                prepareSessionPhase = PrepareSessionPhase.SelectProfile,
+                sessionProfiles = LoadingState.Loading(),
+                selectedProfile = null,
+                selectedSourceType = SessionSourceType.Local,
+                selectedSource = null,
+                availableSources = emptyList(),
+                doneEvent = null
+            )
+        )
+
+    val state = _state.asStateFlow()
+
+    init {
+        sessionProfilesService.sessionProfiles
+            .onEach {
+                _state.update { aState ->
+                    aState.copy(
+                        sessionProfiles = LoadingState.Loaded(it)
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+        fsDeviceService.devices
+            .combine(recordService.records) { devices, records ->
+                devices.map { device -> SessionSource.FlySight(device.volatileUuid, device.name) } +
+                        records.map { record -> SessionSource.Record(record.phoneFilePath) }
+            }
+            .onEach { sources ->
+                _state.update {
+                    it.copy(
+                        availableSources = sources
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun deleteSessionProfile(sessionProfile: SessionProfile) {
+        viewModelScope.launch {
+            sessionProfilesService.deleteProfile(sessionProfile)
+        }
+    }
+
+    fun duplicateSessionProfile(sessionProfile: SessionProfile) {
+        viewModelScope.launch {
+            sessionProfilesService.duplicateProfile(sessionProfile)
+        }
+    }
+
+    fun onSessionProfileSelected(sessionProfile: SessionProfile) {
+        _state.update {
+            it.copy(
+                selectedProfile = sessionProfile
+            )
+        }
+    }
+
+    fun onNextClicked() {
+        if (_state.value.prepareSessionPhase == PrepareSessionPhase.SelectProfile && _state.value.selectedProfile != null) {
+            _state.update {
+                it.copy(
+                    prepareSessionPhase = PrepareSessionPhase.SelectSource
+                )
+            }
+        } else if (_state.value.prepareSessionPhase == PrepareSessionPhase.SelectSource &&
+            (_state.value.selectedSource != null || _state.value.selectedSourceType == SessionSourceType.Local)) {
+            val profile = _state.value.selectedProfile ?: return
+            val source = _state.value.selectedSource ?: SessionSource.Local
+            viewModelScope.launch {
+                sessionPlayerService.playSession(
+                    sessionProfile = profile,
+                    sessionSource = source
+                )
+            }
+//            _state.update {
+//                it.copy(
+//                    doneEvent = true.asEvent()
+//                )
+//            }
+        }
+    }
+
+    fun onPrevClicked() {
+        if (_state.value.prepareSessionPhase == PrepareSessionPhase.SelectSource) {
+            _state.update {
+                it.copy(
+                    prepareSessionPhase = PrepareSessionPhase.SelectProfile
+                )
+            }
+        }
+    }
+
+    fun onSourceTypeSelected(sourceType: SessionSourceType) {
+        _state.update {
+            it.copy(
+                selectedSourceType = sourceType,
+                selectedSource = null
+            )
+        }
+    }
+
+    fun onSourceSelected(source: SessionSource) {
+        _state.update {
+            it.copy(
+                selectedSource = source
+            )
+        }
+    }
+
+}

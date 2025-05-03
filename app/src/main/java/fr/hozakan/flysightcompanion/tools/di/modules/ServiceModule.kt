@@ -30,9 +30,9 @@ import fr.hozakan.flysightcompanion.networkmodule.KTorNetworkService
 import fr.hozakan.flysightcompanion.networkmodule.NetworkService
 import fr.hozakan.flysightcompanion.recordsmodule.business.FileBasedRecordService
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
-import fr.hozakan.flysightcompanion.sessionmodule.business.DefaultSessionConfigurationsService
+import fr.hozakan.flysightcompanion.sessionmodule.business.DefaultSessionProfilesService
 import fr.hozakan.flysightcompanion.sessionmodule.business.DefaultSessionPlayerService
-import fr.hozakan.flysightcompanion.sessionmodule.business.SessionConfigurationsService
+import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
 import fr.hozakan.flysightcompanion.sessionmodule.business.SessionPlayerService
 import fr.hozakan.flysightcompanion.usbmodule.DefaultUsbService
 import fr.hozakan.flysightcompanion.usbmodule.UsbService
@@ -171,8 +171,8 @@ class ServiceModule {
     fun provideSessionConfigurationsService(
         application: BaseApplication,
         dialogService: DialogService
-    ): SessionConfigurationsService =
-        DefaultSessionConfigurationsService(
+    ): SessionProfilesService =
+        DefaultSessionProfilesService(
             context = application.applicationContext,
             dialogService = dialogService
         )
