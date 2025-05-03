@@ -9,6 +9,7 @@ import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionPlayer
 import fr.hozakan.flysightcompanion.sessionmodule.model.PlayerState
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.player.DefaultSessionPlayer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -53,9 +54,9 @@ class DefaultSessionPlayerService(
                     )
                 }
             }
-            _sessionPlayer.value = SessionPlayer(
+            _sessionPlayer.value = DefaultSessionPlayer(
                 gnssSource = gnssSource,
-                sessionProfile = sessionProfile
+                profile = sessionProfile
             )
         }
     }
