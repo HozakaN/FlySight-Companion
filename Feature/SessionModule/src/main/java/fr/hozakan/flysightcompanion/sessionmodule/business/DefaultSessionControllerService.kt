@@ -1,6 +1,8 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business
 
+import android.content.Context
 import fr.hozakan.flysightcompanion.audiomodule.AudioService
+import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.FileGnssSource
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.FlySightGnssSource
@@ -21,9 +23,11 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class DefaultSessionControllerService(
+    private val context: Context,
     private val fsDeviceService: FsDeviceService,
     private val audioService: AudioService,
-    private val recordService: RecordService
+    private val recordService: RecordService,
+    private val displayService: DisplayService
 ) : SessionControllerService {
 
     private val _state = MutableStateFlow<SessionControllerState>(SessionControllerState.Idle)
@@ -58,15 +62,19 @@ class DefaultSessionControllerService(
                 }
             }
             _sessionController.value = DefaultSessionController(
+                context = context,
                 gnssSource = gnssSource,
-                profile = sessionProfile,
-                audioService = audioService
+                audioService = audioService,
+                displayService = displayService,
+                profile = sessionProfile
             )
+            displayService.lockDisplay(true)
             _sessionController.value?.play(object : SessionController.SessionControllerCallback {
                 override fun onDone() {
                     Timber.d("Hoz5 session done")
-                    _state.value = SessionControllerState.Idle
-                    _sessionController.value = null
+                    displayService.lockDisplay(false)
+//                    _state.value = SessionControllerState.Idle
+//                    _sessionController.value = null
                 }
             })
         }

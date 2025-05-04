@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface SessionController {
 
+    val sessionEvents: SharedFlow<SessionEvent>
+
     val profile: SessionProfile
 
     val navLane: StateFlow<LoadingState<Int>>

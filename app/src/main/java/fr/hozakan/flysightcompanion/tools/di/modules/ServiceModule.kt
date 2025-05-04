@@ -20,6 +20,8 @@ import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigEncoder
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightcompanion.configfilesmodule.business.DefaultConfigEncoder
 import fr.hozakan.flysightcompanion.configfilesmodule.business.DefaultConfigFileService
+import fr.hozakan.flysightcompanion.externaldisplaymodule.DefaultDisplayService
+import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.framework.service.applifecycle.ActivityLifecycleService
 import fr.hozakan.flysightcompanion.framework.service.async.ActivityOperationsService
 import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
@@ -182,13 +184,17 @@ class ServiceModule {
     @Singleton
     @Provides
     fun provideSessionPlayerService(
+        application: BaseApplication,
         fsDeviceService: FsDeviceService,
         audioService: AudioService,
-        recordService: RecordService
+        recordService: RecordService,
+        displayService: DisplayService
     ) : SessionControllerService = DefaultSessionControllerService(
+        context = application.applicationContext,
         fsDeviceService = fsDeviceService,
         audioService = audioService,
-        recordService = recordService
+        recordService = recordService,
+        displayService = displayService
     )
 
     @Singleton
@@ -198,6 +204,20 @@ class ServiceModule {
     ): AudioService {
         return DefaultAudioService(
             application.applicationContext
+        )
+    }
+
+    @Singleton
+    @Provides
+    fun provideExternalDisplayService(
+        application: BaseApplication,
+        activityLifecycleService: ActivityLifecycleService,
+        loggerService: LoggerService
+    ): DisplayService {
+        return DefaultDisplayService(
+            application.applicationContext,
+            activityLifecycleService,
+            loggerService
         )
     }
 

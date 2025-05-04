@@ -35,6 +35,7 @@ android {
 dependencies {
     implementation(project(":model"))
     implementation(project(":Tooling:framework"))
+    implementation(project(":Tooling:LoggerModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

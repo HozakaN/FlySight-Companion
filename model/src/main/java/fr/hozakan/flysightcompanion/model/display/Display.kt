@@ -1,6 +1,7 @@
 package fr.hozakan.flysightcompanion.model.display
 
 data class Display(
-    val id: String,
-    val name: String
+    val id: Int,
+    val name: String,
+    val internal: android.view.Display
 )

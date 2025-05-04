@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -25,11 +26,11 @@ import androidx.compose.ui.unit.dp
 import fr.hozakan.flysightcompanion.audiomodule.AudioService
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
+import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.loggermodule.LoggerService
 import fr.hozakan.flysightcompanion.usbmodule.UsbService
 import kotlinx.coroutines.flow.combine
-import java.util.Locale
 
 @Composable
 fun DevScreen(
@@ -37,6 +38,7 @@ fun DevScreen(
     fsDeviceService: FsDeviceService,
     loggerService: LoggerService,
     audioService: AudioService,
+    displayService: DisplayService,
     onBackClicked: () -> Unit
 ) {
 
@@ -91,7 +93,18 @@ fun DevScreen(
                 ) {
                     Text("Play speech")
                 }
+                Spacer(modifier = Modifier.requiredHeight(16.dp))
 
+                val displays by displayService.displays.collectAsState()
+                LazyColumn {
+                    itemsIndexed(displays) { index, display ->
+                        FText(
+                            text = "Display #${index + 1} : ${display.name}",
+                            configuration = FlySightTheme.typography.plainScreenTextLarge,
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.requiredHeight(16.dp))
                 FText(
                     modifier = Modifier.fillMaxWidth(),
                     text = "Global logs",

@@ -5,9 +5,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -15,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +41,7 @@ import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapab
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.ui.SpeedOrientation
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionController
+import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionEvent
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -63,14 +69,18 @@ fun SessionPlayerScreen() {
 
     val state by viewModel.state.collectAsState()
 
-    Surface(
-        modifier = Modifier
-            .fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        SessionPlayerScreenInternal(
-            state = state
-        )
+    Scaffold { paddingValues ->
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.displayCutout)
+                .padding(paddingValues),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            SessionPlayerScreenInternal(
+                state = state
+            )
+        }
     }
 }
 
@@ -283,22 +293,27 @@ private fun DisplayCapabilityContainer(
             orientation = SpeedOrientation.Horizontal,
             player = player
         )
+
         DisplayableCapability.VerticalSpeed -> SpeedContainer(
             orientation = SpeedOrientation.Vertical,
             player = player
         )
+
         DisplayableCapability.TotalSpeed -> SpeedContainer(
             orientation = SpeedOrientation.Total,
             player = player
         )
+
         DisplayableCapability.Elevation -> TagAndValueContainer(
             tag = "Elv",
             value = "${gnssData?.hMsl?.minus(config.dzElev)}"
         )
+
         DisplayableCapability.Altitude -> TagAndValueContainer(
             tag = "Alt",
             value = "${gnssData?.hMsl}"
         )
+
         DisplayableCapability.DistanceToReferencePoint -> TagAndValueContainer(
             tag = "RefPt",
             value = "1425 m"
@@ -308,6 +323,7 @@ private fun DisplayCapabilityContainer(
             tag = "Lat",
             value = "${gnssData?.lat}"
         )
+
         DisplayableCapability.Longitude -> TagAndValueContainer(
             tag = "Lon",
             value = "${gnssData?.lon}"
@@ -357,7 +373,8 @@ private fun InlineLeftPlayerScreen(player: SessionController) {
     val displayItems = player.profile.displayItems
     Row {
         Column(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
                 .fillMaxHeight(),
             verticalArrangement = Arrangement.Center
         ) {
@@ -372,7 +389,9 @@ private fun InlineLeftPlayerScreen(player: SessionController) {
             }
         }
         Box(
-            modifier = Modifier.weight(6f).fillMaxHeight(),
+            modifier = Modifier
+                .weight(6f)
+                .fillMaxHeight(),
             contentAlignment = Alignment.Center
         ) {
             Text(text = "Center Container")
@@ -444,6 +463,7 @@ fun InlineLeftPlayerScreenPreview() {
 class FakeSessionController(
     override val profile: SessionProfile
 ) : SessionController {
+    override val sessionEvents: SharedFlow<SessionEvent> = MutableSharedFlow()
 
     override val navLane: StateFlow<LoadingState<Int>> = MutableStateFlow(LoadingState.Loading())
     override val gnssFlow: SharedFlow<GnssData> = MutableSharedFlow()

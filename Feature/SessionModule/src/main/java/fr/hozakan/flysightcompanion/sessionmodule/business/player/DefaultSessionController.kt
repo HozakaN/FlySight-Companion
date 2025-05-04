@@ -1,6 +1,8 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.player
 
+import android.content.Context
 import fr.hozakan.flysightcompanion.audiomodule.AudioService
+import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
@@ -10,13 +12,16 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class DefaultSessionController(
+    context: Context,
     gnssSource: GnssSource,
     audioService: AudioService,
+    displayService: DisplayService,
     override val profile: SessionProfile
 ) : SessionController {
 
@@ -29,7 +34,24 @@ class DefaultSessionController(
     private val scope = CoroutineScope(SupervisorJob())
     private var startJob: Job? = null
 
-    private val audioController = AudioController(profile, profile.configFile, gnssFlow, audioService)
+    private val sessionComputationUnit = SessionComputationUnit(profile = profile)
+
+    private val audioController = AudioController(
+        profile,
+        profile.configFile,
+        audioService,
+        sessionComputationUnit.sessionEvents
+    )
+
+    private val videoController = VideoController(
+        context = context,
+        sessionProfile = profile,
+        displayService = displayService,
+//        selectedDisplay = profile.selectedDisplay,
+        sessionEvents = sessionComputationUnit.sessionEvents
+    )
+
+    override val sessionEvents: SharedFlow<SessionEvent> = sessionComputationUnit.sessionEvents
 
     init {
 //        start()
@@ -41,7 +63,7 @@ class DefaultSessionController(
             gnssFlow.collect { gnssData ->
                 if (gnssData == FakeGnssData) {
                     Timber.d("Hoz5 FakeGnssData detected; callback = $callback")
-//                    callback?.onDone()
+                    callback?.onDone()
                 } else {
                     eatData(gnssData)
                 }
@@ -72,7 +94,7 @@ class DefaultSessionController(
     }
 
     private fun eatData(gnssData: GnssData) {
-        audioController.handleNewData(gnssData)
+        sessionComputationUnit.handleNewData(gnssData)
     }
 
 }

@@ -7,6 +7,10 @@ import android.media.AudioManager
 import android.media.AudioTrack
 import android.media.SoundPool
 import android.speech.tts.TextToSpeech
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.sin
 
@@ -14,6 +18,9 @@ import kotlin.math.sin
 class DefaultAudioService(
     private val context: Context
 ) : AudioService {
+
+    private var currentFileNamePlayed: String? = null
+    private val scope = CoroutineScope(SupervisorJob())
 
     private var ttsReady = false
     private var ttsError = false
@@ -66,18 +73,27 @@ class DefaultAudioService(
     }
 
     override fun playFile(fileName: String) {
+        if (currentFileNamePlayed == fileName) {
+            return
+        }
+        currentFileNamePlayed = fileName
         // Implementation for playing a file
         val correctedFileName = if (fileName.first() in '0'..'9') {
             "raw_$fileName"
         } else {
             fileName
         }
-        context.resources.getIdentifier(correctedFileName, "raw", context.packageName).let { resId ->
-            val soundId = soundPool.load(context, resId, 1)
-            soundPool.setOnLoadCompleteListener { _, _, _ ->
-                soundPool.play(soundId, 1f, 1f, 1, 0, 1f)
+        context.resources.getIdentifier(correctedFileName, "raw", context.packageName)
+            .let { resId ->
+                val soundId = soundPool.load(context, resId, 1)
+                soundPool.setOnLoadCompleteListener { _, _, _ ->
+                    soundPool.play(soundId, 1f, 1f, 1, 0, 1f)
+                    scope.launch {
+                        delay(500)
+                        currentFileNamePlayed = null
+                    }
+                }
             }
-        }
     }
 
     override fun playText(speech: String, volume: Int, locale: Locale) {
@@ -91,7 +107,7 @@ class DefaultAudioService(
         val player = AudioTrack.Builder()
             .setAudioAttributes(
                 AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .build()
             )
@@ -103,6 +119,7 @@ class DefaultAudioService(
                     .build()
             )
             .setBufferSizeInBytes(tone.size * 2)
+            .setTransferMode(AudioTrack.MODE_STATIC)
             .build()
         player.write(tone, 0, tone.size)
         player.play()
@@ -126,7 +143,8 @@ class DefaultAudioService(
                 val freq = startFreq + i * freqIncrement
                 val angle = 2.0 * Math.PI * freq * i / AUDIO_SAMPLE_RATE
                 val sample = (sin(angle) * Short.MAX_VALUE * volume).toInt()
-                audioBuffer[i] = sample.coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
+                audioBuffer[i] =
+                    sample.coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
             }
 
             return audioBuffer
@@ -149,7 +167,8 @@ class DefaultAudioService(
                 val t = i.toDouble() / sampleRate
                 val theta = 2 * Math.PI * (startFreq * t + 0.5 * k * t * t)
                 val sample = (sin(theta) * Short.MAX_VALUE * volume).toInt()
-                audioBuffer[i] = sample.coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
+                audioBuffer[i] =
+                    sample.coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
             }
 
             return audioBuffer

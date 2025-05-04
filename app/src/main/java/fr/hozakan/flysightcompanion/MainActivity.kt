@@ -1,5 +1,6 @@
 package fr.hozakan.flysightcompanion
 
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -68,6 +69,8 @@ import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.dialogmodule.DialogHandler
 import fr.hozakan.flysightcompanion.dialogmodule.LocalDialogService
 import fr.hozakan.flysightcompanion.dialogmodule.MutableDialogService
+import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
+import fr.hozakan.flysightcompanion.externaldisplaymodule.ScreenExtensions
 import fr.hozakan.flysightcompanion.framework.compose.LocalMenuState
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.dagger.Injectable
@@ -100,7 +103,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import fr.hozakan.flysightcompanion.R as LocalR
 
-class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
+class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, Injectable {
 
     @Inject
     lateinit var androidInjector: DispatchingAndroidInjector<Any>
@@ -128,6 +131,9 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
 
     @Inject
     lateinit var audioService: AudioService
+
+    @Inject
+    lateinit var displayService: DisplayService
 
     override fun androidInjector(): AndroidInjector<Any> = androidInjector
 
@@ -160,7 +166,8 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                             usbService = usbService,
                             fsDeviceService = fsDeviceService,
                             loggerService = loggerService,
-                            audioService = audioService
+                            audioService = audioService,
+                            displayService = displayService
                         ) {
                             devScreenOpened = false
                         }
@@ -666,6 +673,14 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                     simpleTapDetected = true
                 }
             }
+        }
+    }
+
+    override fun lock(lock: Boolean) {
+        requestedOrientation = if (lock) {
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
     }
 }

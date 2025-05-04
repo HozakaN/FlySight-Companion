@@ -45,6 +45,7 @@ dependencies {
     implementation(project(":Tooling:DesignSystem"))
     implementation(project(":Tooling:ComposableCommons"))
     implementation(project(":Middleware:AudioModule"))
+    implementation(project(":Middleware:ExternalDisplayModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
