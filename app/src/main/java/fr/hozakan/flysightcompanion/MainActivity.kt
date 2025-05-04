@@ -21,7 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AreaChart
 import androidx.compose.material.icons.filled.Engineering
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -85,8 +85,8 @@ import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailMenuActi
 import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailScreen
 import fr.hozakan.flysightcompanion.recordsmodule.ui.list.ListRecordsScreen
 import fr.hozakan.flysightcompanion.recordsmodule.ui.plot.PlotSettingsScreen
-import fr.hozakan.flysightcompanion.sessionmodule.business.SessionPlayerService
-import fr.hozakan.flysightcompanion.sessionmodule.model.PlayerState
+import fr.hozakan.flysightcompanion.sessionmodule.business.SessionControllerService
+import fr.hozakan.flysightcompanion.sessionmodule.model.SessionControllerState
 import fr.hozakan.flysightcompanion.sessionmodule.ui.profile.SessionProfileScreen
 import fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session.PrepareSessionScreen
 import fr.hozakan.flysightcompanion.sessionmodule.ui.play.SessionPlayerScreen
@@ -123,7 +123,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
     lateinit var json: Gson
 
     @Inject
-    lateinit var sessionPlayerService: SessionPlayerService
+    lateinit var sessionControllerService: SessionControllerService
 
     override fun androidInjector(): AndroidInjector<Any> = androidInjector
 
@@ -147,7 +147,9 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
 
                     DialogHandler()
 
-                    val playerState by sessionPlayerService.state.collectAsState()
+                    val sessionControllerState by sessionControllerService.state.collectAsState()
+
+                    Timber.d("Hoz5 sessionControllerState: $sessionControllerState")
 
                     if (devScreenOpened) {
                         DevScreen(
@@ -159,8 +161,15 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                         }
                         return@CompositionLocalProvider
                     }
-                    if (playerState is PlayerState.Playing) {
+
+                    var isSessionControllerLaunched by remember { mutableStateOf(false) }
+                    if (sessionControllerState is SessionControllerState.Playing) {
                         SessionPlayerScreen()
+                        isSessionControllerLaunched = true
+                        return@CompositionLocalProvider
+                    } else if (isSessionControllerLaunched) {
+                        isSessionControllerLaunched = false
+                        navController.navigateUp()
                     }
                     Scaffold(
                         modifier = Modifier.tripleTapHandler {
@@ -178,7 +187,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                     }
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.PlayArrow,
+                                        imageVector = Icons.Default.RocketLaunch,
                                         contentDescription = ""
                                     )
                                 }

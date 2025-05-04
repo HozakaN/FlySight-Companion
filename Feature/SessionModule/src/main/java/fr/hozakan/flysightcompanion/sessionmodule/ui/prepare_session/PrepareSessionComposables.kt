@@ -381,7 +381,7 @@ fun SelectSourceScreen(
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 FText(
-                                    text = source.fileName
+                                    text = source.file.phoneFilePath
                                 )
                             }
                         }

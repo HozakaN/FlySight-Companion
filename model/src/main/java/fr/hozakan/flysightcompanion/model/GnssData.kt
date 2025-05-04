@@ -9,7 +9,10 @@ class GnssData(
     val hMsl: Int,
     val velN: Int,
     val velE: Int,
-    val velD: Int
+    val velD: Int,
+    val gpsFix: Int,
+    val vAcc: Int,
+    val gSpeed: Int
 ) {
     override fun toString(): String {
         return String.format(
@@ -25,3 +28,16 @@ class GnssData(
         )
     }
 }
+
+val FakeGnssData = GnssData(
+    iTow = 0u,
+    lon = 0,
+    lat = 0,
+    hMsl = 0,
+    velN = 0,
+    velE = 0,
+    velD = 0,
+    gpsFix = 0,
+    vAcc = 0,
+    gSpeed = 0
+)

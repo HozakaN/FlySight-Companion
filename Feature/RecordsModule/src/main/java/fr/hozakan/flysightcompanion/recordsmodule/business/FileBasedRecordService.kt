@@ -93,6 +93,8 @@ class FileBasedRecordService(
         val trackFile =
             File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${recordFile.phoneFilePath}")
         return if (trackFile.exists()) trackFile.readText() else null
+//        return javaClass.classLoader
+//            ?.getResource("9_2_temps.CSV")?.readText() ?: ""
     }
 
     override suspend fun analyzeRecord(recordFile: RecordFile): RecordAnalyze {
@@ -107,6 +109,10 @@ class FileBasedRecordService(
         )
         return analyze
     }
+
+//    override fun getFile(recordFile: RecordFile): File {
+//        return File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${recordFile.phoneFilePath}")
+//    }
 
     private fun getOrCreateRecordsFolder(): File {
         val folder =

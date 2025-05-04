@@ -10,6 +10,8 @@ import fr.hozakan.flysightcompanion.userpreferencesmodule.DatastoreUserPrefServi
 import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import fr.hozakan.flysightcompanion.BaseApplication
 import fr.hozakan.flysightcompanion.BuildConfig
+import fr.hozakan.flysightcompanion.audiomodule.AudioService
+import fr.hozakan.flysightcompanion.audiomodule.DefaultAudioService
 import fr.hozakan.flysightcompanion.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightcompanion.bluetoothmodule.DefaultBluetoothService
 import fr.hozakan.flysightcompanion.capabilitiesmodule.CapabilitiesService
@@ -31,9 +33,9 @@ import fr.hozakan.flysightcompanion.networkmodule.NetworkService
 import fr.hozakan.flysightcompanion.recordsmodule.business.FileBasedRecordService
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import fr.hozakan.flysightcompanion.sessionmodule.business.DefaultSessionProfilesService
-import fr.hozakan.flysightcompanion.sessionmodule.business.DefaultSessionPlayerService
+import fr.hozakan.flysightcompanion.sessionmodule.business.DefaultSessionControllerService
 import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
-import fr.hozakan.flysightcompanion.sessionmodule.business.SessionPlayerService
+import fr.hozakan.flysightcompanion.sessionmodule.business.SessionControllerService
 import fr.hozakan.flysightcompanion.usbmodule.DefaultUsbService
 import fr.hozakan.flysightcompanion.usbmodule.UsbService
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -180,11 +182,23 @@ class ServiceModule {
     @Singleton
     @Provides
     fun provideSessionPlayerService(
-        application: BaseApplication,
-        fsDeviceService: FsDeviceService
-    ) : SessionPlayerService = DefaultSessionPlayerService(
-        context = application.applicationContext,
-        fsDeviceService = fsDeviceService
+        fsDeviceService: FsDeviceService,
+        audioService: AudioService,
+        recordService: RecordService
+    ) : SessionControllerService = DefaultSessionControllerService(
+        fsDeviceService = fsDeviceService,
+        audioService = audioService,
+        recordService = recordService
     )
+
+    @Singleton
+    @Provides
+    fun provideAudioService(
+        application: BaseApplication
+    ): AudioService {
+        return DefaultAudioService(
+            application.applicationContext
+        )
+    }
 
 }

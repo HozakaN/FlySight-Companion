@@ -85,6 +85,7 @@ dependencies {
     implementation(project(":model"))
     implementation(project(":Tooling:framework"))
     implementation(project(":Middleware:BluetoothModule"))
+    implementation(project(":Middleware:AudioModule"))
     implementation(project(":Feature:FSDeviceModule"))
     implementation(project(":Tooling:UsbModule"))
     implementation(project(":Feature:ConfigFilesModule"))

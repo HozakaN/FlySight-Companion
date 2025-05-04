@@ -2,7 +2,6 @@ package fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
@@ -10,7 +9,7 @@ import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
-import fr.hozakan.flysightcompanion.sessionmodule.business.SessionPlayerService
+import fr.hozakan.flysightcompanion.sessionmodule.business.SessionControllerService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -24,7 +23,7 @@ class PrepareSessionViewModel @Inject constructor(
     fsDeviceService: FsDeviceService,
     recordService: RecordService,
     private val sessionProfilesService: SessionProfilesService,
-    private val sessionPlayerService: SessionPlayerService
+    private val sessionControllerService: SessionControllerService
 ) : ViewModel() {
 
     private val _state =
@@ -55,7 +54,7 @@ class PrepareSessionViewModel @Inject constructor(
         fsDeviceService.devices
             .combine(recordService.records) { devices, records ->
                 devices.map { device -> SessionSource.FlySight(device.volatileUuid, device.name) } +
-                        records.map { record -> SessionSource.Record(record.phoneFilePath) }
+                        records.map { record -> SessionSource.Record(record) }
             }
             .onEach { sources ->
                 _state.update {
@@ -99,7 +98,7 @@ class PrepareSessionViewModel @Inject constructor(
             val profile = _state.value.selectedProfile ?: return
             val source = _state.value.selectedSource ?: SessionSource.Local
             viewModelScope.launch {
-                sessionPlayerService.playSession(
+                sessionControllerService.playSession(
                     sessionProfile = profile,
                     sessionSource = source
                 )

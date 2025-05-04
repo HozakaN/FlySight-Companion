@@ -6,5 +6,7 @@ enum class DisplayableCapability {
     TotalSpeed,
     Elevation,
     Altitude,
-    DistanceToReferencePoint
+    DistanceToReferencePoint,
+    Latitude,
+    Longitude,
 }

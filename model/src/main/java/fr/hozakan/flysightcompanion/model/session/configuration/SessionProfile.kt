@@ -40,6 +40,16 @@ data class SessionProfile(
                     caseIndex = 0,
                     indexInCase = 1
                 ),
+                DisplayItem(
+                    displayableCapability = DisplayableCapability.Latitude,
+                    caseIndex = 0,
+                    indexInCase = 2
+                ),
+                DisplayItem(
+                    displayableCapability = DisplayableCapability.Longitude,
+                    caseIndex = 0,
+                    indexInCase = 3
+                ),
             )
         )
     }

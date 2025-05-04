@@ -7,13 +7,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,13 +28,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
+import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItem
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.ui.SpeedOrientation
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionPlayer
+import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionController
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -91,7 +90,7 @@ private fun SessionPlayerScreenInternal(state: SessionPlayerState) {
 
 @Composable
 private fun ThreeOnEachSidePlayerScreen(
-    player: SessionPlayer
+    player: SessionController
 ) {
     val displayItems = player.profile.displayItems
     Row {
@@ -105,18 +104,21 @@ private fun ThreeOnEachSidePlayerScreen(
                 displayItems.firstOrNull { it.caseIndex == 0 && it.indexInCase == 0 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
                 displayItems.firstOrNull { it.caseIndex == 0 && it.indexInCase == 1 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
                 displayItems.firstOrNull { it.caseIndex == 0 && it.indexInCase == 2 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
@@ -128,18 +130,21 @@ private fun ThreeOnEachSidePlayerScreen(
                 displayItems.firstOrNull { it.caseIndex == 1 && it.indexInCase == 0 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
                 displayItems.firstOrNull { it.caseIndex == 1 && it.indexInCase == 1 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
                 displayItems.firstOrNull { it.caseIndex == 1 && it.indexInCase == 2 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
@@ -151,18 +156,21 @@ private fun ThreeOnEachSidePlayerScreen(
                 displayItems.firstOrNull { it.caseIndex == 2 && it.indexInCase == 0 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
                 displayItems.firstOrNull { it.caseIndex == 2 && it.indexInCase == 1 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
                 displayItems.firstOrNull { it.caseIndex == 2 && it.indexInCase == 2 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
@@ -188,18 +196,21 @@ private fun ThreeOnEachSidePlayerScreen(
                 displayItems.firstOrNull { it.caseIndex == 3 && it.indexInCase == 0 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
                 displayItems.firstOrNull { it.caseIndex == 3 && it.indexInCase == 1 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
                 displayItems.firstOrNull { it.caseIndex == 3 && it.indexInCase == 2 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
@@ -211,18 +222,21 @@ private fun ThreeOnEachSidePlayerScreen(
                 displayItems.firstOrNull { it.caseIndex == 4 && it.indexInCase == 0 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
                 displayItems.firstOrNull { it.caseIndex == 4 && it.indexInCase == 1 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
                 displayItems.firstOrNull { it.caseIndex == 4 && it.indexInCase == 2 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
@@ -234,18 +248,21 @@ private fun ThreeOnEachSidePlayerScreen(
                 displayItems.firstOrNull { it.caseIndex == 5 && it.indexInCase == 0 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
                 displayItems.firstOrNull { it.caseIndex == 5 && it.indexInCase == 1 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
                 displayItems.firstOrNull { it.caseIndex == 5 && it.indexInCase == 2 }?.let { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
@@ -255,7 +272,12 @@ private fun ThreeOnEachSidePlayerScreen(
 }
 
 @Composable
-private fun DisplayCapabilityContainer(item: DisplayItem, player: SessionPlayer) {
+private fun DisplayCapabilityContainer(
+    item: DisplayItem,
+    config: ConfigFile,
+    player: SessionController
+) {
+    val gnssData: GnssData? by player.gnssFlow.collectAsState(initial = null)
     when (item.displayableCapability) {
         DisplayableCapability.HorizontalSpeed -> SpeedContainer(
             orientation = SpeedOrientation.Horizontal,
@@ -271,15 +293,24 @@ private fun DisplayCapabilityContainer(item: DisplayItem, player: SessionPlayer)
         )
         DisplayableCapability.Elevation -> TagAndValueContainer(
             tag = "Elv",
-            value = "145 m"
+            value = "${gnssData?.hMsl?.minus(config.dzElev)}"
         )
         DisplayableCapability.Altitude -> TagAndValueContainer(
             tag = "Alt",
-            value = "145 m"
+            value = "${gnssData?.hMsl}"
         )
         DisplayableCapability.DistanceToReferencePoint -> TagAndValueContainer(
             tag = "RefPt",
             value = "1425 m"
+        )
+
+        DisplayableCapability.Latitude -> TagAndValueContainer(
+            tag = "Lat",
+            value = "${gnssData?.lat}"
+        )
+        DisplayableCapability.Longitude -> TagAndValueContainer(
+            tag = "Lon",
+            value = "${gnssData?.lon}"
         )
     }
 }
@@ -300,7 +331,7 @@ private fun TagAndValueContainer(tag: String, value: String) {
 }
 
 @Composable
-private fun SpeedContainer(orientation: SpeedOrientation, player: SessionPlayer) {
+private fun SpeedContainer(orientation: SpeedOrientation, player: SessionController) {
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -322,7 +353,7 @@ private fun SpeedContainer(orientation: SpeedOrientation, player: SessionPlayer)
 }
 
 @Composable
-private fun InlineLeftPlayerScreen(player: SessionPlayer) {
+private fun InlineLeftPlayerScreen(player: SessionController) {
     val displayItems = player.profile.displayItems
     Row {
         Column(
@@ -334,6 +365,7 @@ private fun InlineLeftPlayerScreen(player: SessionPlayer) {
                 items(displayItems) { item ->
                     DisplayCapabilityContainer(
                         item = item,
+                        config = player.profile.configFile,
                         player = player
                     )
                 }
@@ -356,7 +388,7 @@ private fun InlineLeftPlayerScreen(player: SessionPlayer) {
 @Composable
 fun ThreeOnEachSidePlayerScreenPreview() {
     ThreeOnEachSidePlayerScreen(
-        player = FakeSessionPlayer(
+        player = FakeSessionController(
             profile = fakeProfile
         )
     )
@@ -370,7 +402,7 @@ fun ThreeOnEachSidePlayerScreenPreview() {
 @Composable
 fun InlineLeftPlayerScreenPreview() {
     InlineLeftPlayerScreen(
-        player = FakeSessionPlayer(
+        player = FakeSessionController(
             profile = fakeProfile.copy(
                 displayItems = listOf(
                     DisplayItem(
@@ -409,9 +441,9 @@ fun InlineLeftPlayerScreenPreview() {
     )
 }
 
-class FakeSessionPlayer(
+class FakeSessionController(
     override val profile: SessionProfile
-) : SessionPlayer {
+) : SessionController {
 
     override val navLane: StateFlow<LoadingState<Int>> = MutableStateFlow(LoadingState.Loading())
     override val gnssFlow: SharedFlow<GnssData> = MutableSharedFlow()
@@ -419,6 +451,7 @@ class FakeSessionPlayer(
     override fun pause() {}
 
     override fun play() {}
+    override fun play(callback: SessionController.SessionControllerCallback) {}
 
     override fun destroy() {}
 

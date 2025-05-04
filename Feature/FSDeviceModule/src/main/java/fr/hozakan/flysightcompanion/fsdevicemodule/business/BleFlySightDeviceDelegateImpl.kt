@@ -320,7 +320,10 @@ class BleFlySightDeviceDelegateImpl(
                                 hMsl = hMsl,
                                 velN = velN,
                                 velE = velE,
-                                velD = velD
+                                velD = velD,
+                                gpsFix = 0,
+                                vAcc = 0,
+                                gSpeed = 0
                             )
                             log("GNSS data : $gnssData")
                             _gnssFeed.emit(gnssData)
