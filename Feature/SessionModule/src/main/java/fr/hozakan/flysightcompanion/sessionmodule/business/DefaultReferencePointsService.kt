@@ -63,6 +63,12 @@ class DefaultReferencePointsService(
                         name = "Loudes target",
                         description = "Target at Loudes airfield",
                         coords = Coordinate(45.077200, 3.761141)
+                    ),
+                    ReferencePoint(
+                        id = UUID.randomUUID().toString(),
+                        name = "Beaufort NS4",
+                        description = "Beaufort North South 4th point",
+                        coords = Coordinate(34.733173, -76.668971)
                     )
                 )
             }
