@@ -2,7 +2,7 @@ package fr.hozakan.flysightcompanion.sessionmodule.business
 
 import android.content.Context
 import com.google.gson.Gson
-import fr.hozakan.flysightcompanion.dialogmodule.ConfigFileName
+import fr.hozakan.flysightcompanion.dialogmodule.ConfigFileNameDialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.ConfigFileNameDialog
 import fr.hozakan.flysightcompanion.dialogmodule.DialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.DialogService
@@ -43,7 +43,7 @@ class DefaultSessionProfilesService(
         var name = sessionProfile.name
         if (name.isBlank()) {
             when (val result = dialogService.displayDialog(ConfigFileNameDialog())) {
-                is ConfigFileName -> name = result.name
+                is ConfigFileNameDialogResult -> name = result.name
                 DialogResult.Dismiss -> return sessionProfile
                 else -> error("Save session config result should not have another type (${result::class.java})")
             }
@@ -115,7 +115,7 @@ class DefaultSessionProfilesService(
             name = "${sessionProfile.name} ($index)"
         }
         when (val result = dialogService.displayDialog(ConfigFileNameDialog(name))) {
-            is ConfigFileName -> name = result.name
+            is ConfigFileNameDialogResult -> name = result.name
             DialogResult.Dismiss -> return
             else -> error("Duplicate session config should not have another output")
         }

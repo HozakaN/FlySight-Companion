@@ -1,14 +1,20 @@
 package fr.hozakan.flysightcompanion.sessionmodule.ui.reference
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
+import fr.hozakan.flysightcompanion.sessionmodule.business.ReferencePointsService
 import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class ReferencePointListViewModel @Inject constructor(
-    private val sessionConfigurationService: SessionProfilesService
+    private val sessionConfigurationService: SessionProfilesService,
+    private val referencePointsService: ReferencePointsService
 ) : ViewModel() {
 
     private val _state =
@@ -22,8 +28,27 @@ class ReferencePointListViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     init {
+        referencePointsService.referencePoints
+            .onEach { refPoints ->
+                _state.value = _state.value.copy(
+                    referencePoints = refPoints,
+                    areReferencePointsSelectable = refPoints.isEmpty()
+                )
+            }
+            .launchIn(viewModelScope)
     }
 
     fun onReferencePointClicked(referencePoint: ReferencePoint) {}
-    fun onReferencePointDelete(referencePoint: ReferencePoint) {}
+
+    fun onReferencePointDelete(referencePoint: ReferencePoint) {
+        viewModelScope.launch {
+            referencePointsService.deleteReferencePoint(referencePoint)
+        }
+    }
+
+    fun onCreateReferencePointClicked() {
+        viewModelScope.launch {
+            referencePointsService.createReferencePoint()
+        }
+    }
 }

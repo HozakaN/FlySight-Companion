@@ -53,7 +53,13 @@ fun DialogHandler() {
                     dialItem.second.resume(DialogResult.Dismiss)
                 }
             }
-            else -> {}
+
+            is CreateReferencePointDialog -> {
+                dial.Content {
+                    dialog = null
+                    dialItem.second.resume(it)
+                }
+            }
         }
     }
 

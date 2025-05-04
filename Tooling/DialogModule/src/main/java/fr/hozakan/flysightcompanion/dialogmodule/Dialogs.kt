@@ -38,10 +38,14 @@ import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.model.DisplayableConfig
 import fr.hozakan.flysightcompanion.model.firmware.FirmwareUpdateStatus
+import fr.hozakan.flysightcompanion.model.session.configuration.Coordinate
+import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
 import kotlinx.coroutines.flow.StateFlow
+import java.util.UUID
 
-data class ConfigFileName(val name: String) : DialogResult
+data class ConfigFileNameDialogResult(val name: String) : DialogResult
 data class PickConfigurationDialogResult(val configFile: DisplayableConfig) : DialogResult
+data class CreateReferencePointDialogResult(val referencePoint: ReferencePoint) : DialogResult
 
 data class ConfigFileNameDialog(
     private val name: String? = null
@@ -79,7 +83,7 @@ data class ConfigFileNameDialog(
                         },
                         validateEnabled = configFileName.isNotBlank(),
                         onValidate = {
-                            onResult(ConfigFileName(configFileName))
+                            onResult(ConfigFileNameDialogResult(configFileName))
                         }
                     )
                 }
@@ -163,6 +167,121 @@ fun PickConfigurationDialogPreview() {
     }.Content {}
 }
 
+class CreateReferencePointDialog : DialogItem {
+
+    @Composable
+    override fun Content(onResult: (DialogResult) -> Unit) {
+        Dialog(
+            onDismissRequest = {
+                onResult(DialogResult.Dismiss)
+            }
+        ) {
+            Card {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    var isDirty by remember { mutableStateOf(false) }
+                    var name by remember { mutableStateOf("") }
+                    var description by remember { mutableStateOf("") }
+                    var latitude by remember { mutableStateOf(45.077200) }
+                    var longitude by remember { mutableStateOf(3.761141) }
+
+                    fun isValid(): Boolean {
+                        return name.isNotBlank() && description.isNotBlank()
+                    }
+
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = name,
+                        onValueChange = {
+                            if (it.length <= 5) {
+                                name = it
+                                isDirty = true
+                            }
+                        },
+                        label = {
+                            Text(text = "Name")
+                        },
+                        isError = isDirty && name.isBlank()
+                    )
+                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = description,
+                        onValueChange = {
+                            description = it
+                            isDirty = true
+                        },
+                        label = {
+                            Text(text = "Description")
+                        },
+                        isError = isDirty && description.isBlank()
+                    )
+                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = "$latitude",
+                        onValueChange = {
+                            it.toDoubleOrNull()?.let { newValue ->
+                                latitude = newValue
+                                isDirty = true
+                            }
+                        },
+                        label = {
+                            Text(text = "Latitude")
+                        },
+                        isError = false // isDirty && latitude.isBlank()
+                    )
+                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = "$longitude",
+                        onValueChange = {
+                            it.toDoubleOrNull()?.let { newValue ->
+                                longitude = newValue
+                                isDirty = true
+                            }
+                        },
+                        label = {
+                            Text(text = "Longitude")
+                        },
+                        isError = false // isDirty && longitude.isBlank()
+                    )
+                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+                    SimpleDialogActionBar(
+                        onCancel = {
+                            onResult(DialogResult.Dismiss)
+                        },
+                        validateEnabled = isValid(),
+                        onValidate = {
+                            onResult(
+                                CreateReferencePointDialogResult(
+                                    ReferencePoint(
+                                        id = UUID.randomUUID().toString(),
+                                        name = name,
+                                        description = description,
+                                        coords = Coordinate(
+                                            latitude = latitude,
+                                            longitude = longitude
+                                        )
+                                    )
+                                )
+                            )
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+}
+
+@Preview
+@Composable
+fun CreateReferencePointDialogPreview() {
+    CreateReferencePointDialog().Content { }
+}
+
 data class UpdateFirmwareDialog(
     val firmwareUpdateFlow: StateFlow<FirmwareUpdateStatus>
 ) : DialogItem {
@@ -200,9 +319,11 @@ data class UpdateFirmwareDialog(
                                     Timeout while checking the firmware version.
                                     Reconnect to check if it has been updated.
                                 """.trimIndent()
+
                                 FirmwareUpdateStatus.ErrorInfo.PushFirmwareError -> "Error while pushing the firmware"
                                 FirmwareUpdateStatus.ErrorInfo.Unknown -> "An error occurred"
                             }
+
                             is FirmwareUpdateStatus.PushingWithAmount -> {
                                 val factor = if (state.maxValue > 1_000_000) 1_000_000 else 1_000
                                 val maxValueText = if (state.maxValue > 1_000_000) {

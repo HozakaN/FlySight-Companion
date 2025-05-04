@@ -94,6 +94,7 @@ import fr.hozakan.flysightcompanion.sessionmodule.model.SessionControllerState
 import fr.hozakan.flysightcompanion.sessionmodule.ui.profile.SessionProfileScreen
 import fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session.PrepareSessionScreen
 import fr.hozakan.flysightcompanion.sessionmodule.ui.play.SessionPlayerScreen
+import fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session.PrepareSessionMenuActions
 import fr.hozakan.flysightcompanion.sessionmodule.ui.reference.ReferencePointListScreen
 import fr.hozakan.flysightcompanion.ui.DevScreen
 import fr.hozakan.flysightcompanion.usbmodule.UsbService
@@ -225,6 +226,10 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, 
                                     stringResource(R.string.screen_title_config_list)
                                 }
 
+                                AppScreen.Session.ReferencePointList.route -> {
+                                    stringResource(R.string.screen_title_manage_reference_points)
+                                }
+
                                 AppScreen.DeviceTab.DeviceFile.route -> {
                                     val filePath =
                                         currentBackStack.value?.arguments?.getString("filePath")
@@ -254,6 +259,7 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, 
                                         AppScreen.DeviceTab.DeviceDetail.route,
                                         AppScreen.ConfigTab.ConfigDetail.route,
                                         AppScreen.DeviceTab.DeviceConfig.route,
+                                        AppScreen.Session.ReferencePointList.route,
                                         AppScreen.Session.PrepareSession.route -> {
                                             IconButton(
                                                 onClick = {
@@ -328,6 +334,12 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, 
                                         AppScreen.RecordTab.RecordDetail.route -> {
                                             RecordDetailMenuActions {
                                                 navController.navigate(AppScreen.RecordTab.PlotSettings.route)
+                                            }
+                                        }
+
+                                        AppScreen.Session.PrepareSession.route -> {
+                                            PrepareSessionMenuActions {
+                                                navController.navigate(AppScreen.Session.ReferencePointList.route)
                                             }
                                         }
 

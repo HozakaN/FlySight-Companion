@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.EditLocationAlt
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -48,16 +49,16 @@ import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
 
 @Composable
-fun PickConfigMenuActions(
-//    onCreateConfigFile: () -> Unit
+fun PrepareSessionMenuActions(
+    onManageReferencePointsClicked: () -> Unit
 ) {
     IconButton(
-        onClick = {} //onCreateConfigFile
+        onClick = onManageReferencePointsClicked
     ) {
-//        Icon(
-//            imageVector = Icons.AutoMirrored.Filled.NoteAdd,
-//            contentDescription = stringResource(R.string.list_config_file_menu_action_new_config_file_content_description)
-//        )
+        Icon(
+            imageVector = Icons.Default.EditLocationAlt,
+            contentDescription = "Manage reference points"
+        )
     }
 }
 

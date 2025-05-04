@@ -1,7 +1,7 @@
 package fr.hozakan.flysightcompanion.configfilesmodule.business
 
 import android.content.Context
-import fr.hozakan.flysightcompanion.dialogmodule.ConfigFileName
+import fr.hozakan.flysightcompanion.dialogmodule.ConfigFileNameDialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.ConfigFileNameDialog
 import fr.hozakan.flysightcompanion.dialogmodule.DialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.DialogService
@@ -41,7 +41,7 @@ class DefaultConfigFileService(
         var name = configFile.name
         if (name.isBlank()) {
             when (val result = dialogService.displayDialog(ConfigFileNameDialog())) {
-                is ConfigFileName -> name = result.name
+                is ConfigFileNameDialogResult -> name = result.name
                 DialogResult.Dismiss -> return configFile
                 else -> error("Save config file result should not have another type (${result::class.java})")
             }
@@ -112,7 +112,7 @@ class DefaultConfigFileService(
             name = "${configFile.name} ($index)"
         }
         when (val result = dialogService.displayDialog(ConfigFileNameDialog(name))) {
-            is ConfigFileName -> name = result.name
+            is ConfigFileNameDialogResult -> name = result.name
             DialogResult.Dismiss -> return
             else -> error("Duplicate config file should not have another output")
         }

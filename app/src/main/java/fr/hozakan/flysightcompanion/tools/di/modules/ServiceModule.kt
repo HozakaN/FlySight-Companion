@@ -34,8 +34,10 @@ import fr.hozakan.flysightcompanion.networkmodule.KTorNetworkService
 import fr.hozakan.flysightcompanion.networkmodule.NetworkService
 import fr.hozakan.flysightcompanion.recordsmodule.business.FileBasedRecordService
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
+import fr.hozakan.flysightcompanion.sessionmodule.business.DefaultReferencePointsService
 import fr.hozakan.flysightcompanion.sessionmodule.business.DefaultSessionProfilesService
 import fr.hozakan.flysightcompanion.sessionmodule.business.DefaultSessionControllerService
+import fr.hozakan.flysightcompanion.sessionmodule.business.ReferencePointsService
 import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
 import fr.hozakan.flysightcompanion.sessionmodule.business.SessionControllerService
 import fr.hozakan.flysightcompanion.usbmodule.DefaultUsbService
@@ -218,6 +220,18 @@ class ServiceModule {
             application.applicationContext,
             activityLifecycleService,
             loggerService
+        )
+    }
+
+    @Singleton
+    @Provides
+    fun provideReferencePointsService(
+        application: BaseApplication,
+        dialogService: DialogService
+    ): ReferencePointsService {
+        return DefaultReferencePointsService(
+            application.applicationContext,
+            dialogService
         )
     }
 
