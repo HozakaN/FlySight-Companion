@@ -137,8 +137,15 @@ class DefaultConfigFileService(
     private suspend fun loadConfigFiles() {
         withContext(Dispatchers.IO) {
             val configFolder = getOrCreateConfigFilesFolder()
+            val beaufortConf =
+                javaClass.classLoader.getResource("CONFIG_beaufort_distance_temps.TXT")?.readText()
             val configFiles =
-                (configFolder.listFiles()?.mapNotNull { parseConfiguration(it.readLines()) }
+                (configFolder.listFiles()?.mapNotNull {
+                    parseConfiguration(beaufortConf?.lines() ?: emptyList()).copy(
+                        name = "my config"
+                    )
+//                    parseConfiguration(it.readLines())
+                }
                     ?: emptyList())
             _configs.update {
                 configFiles

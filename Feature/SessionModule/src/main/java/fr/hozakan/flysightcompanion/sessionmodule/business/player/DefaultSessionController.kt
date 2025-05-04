@@ -29,7 +29,7 @@ class DefaultSessionController(
     private val scope = CoroutineScope(SupervisorJob())
     private var startJob: Job? = null
 
-    private val audioController = AudioController(profile.configFile, gnssFlow, audioService)
+    private val audioController = AudioController(profile, profile.configFile, gnssFlow, audioService)
 
     init {
 //        start()
@@ -37,10 +37,11 @@ class DefaultSessionController(
 
     private fun start() {
         startJob = scope.launch {
+
             gnssFlow.collect { gnssData ->
                 if (gnssData == FakeGnssData) {
                     Timber.d("Hoz5 FakeGnssData detected; callback = $callback")
-                    callback?.onDone()
+//                    callback?.onDone()
                 } else {
                     eatData(gnssData)
                 }

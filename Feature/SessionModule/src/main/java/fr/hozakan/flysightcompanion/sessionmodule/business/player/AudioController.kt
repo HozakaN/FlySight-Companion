@@ -4,13 +4,21 @@ import fr.hozakan.flysightcompanion.audiomodule.AudioService
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.config.AlarmType
+import fr.hozakan.flysightcompanion.model.config.InitMode
+import fr.hozakan.flysightcompanion.model.config.Speech
+import fr.hozakan.flysightcompanion.model.config.SpeechMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
+import fr.hozakan.flysightcompanion.model.config.Volume
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import kotlinx.coroutines.flow.SharedFlow
+import timber.log.Timber
+import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
 class AudioController(
+    private val profile: SessionProfile,
     private val config: ConfigFile,
     private val gnssSource: SharedFlow<GnssData>,
     private val audioService: AudioService
@@ -27,6 +35,19 @@ class AudioController(
     private var previousSuppressTone = false
 
     private var prevHMSL: Int = 0
+
+    init {
+        flagSayAltitude = config.altitudeStep > 0 || config.speeches.any { it.mode == SpeechMode.AltitudeAboveDropzone }
+
+        if (config.initMode == InitMode.TestSpeechMode) {
+            audioService.playText("0123456789.-", Volume.Volume8.value, Locale.US)
+        } else if (config.initMode == InitMode.PlayFile) {
+            val fileName = config.initFile
+            if (fileName != null) {
+                audioService.playFile(fileName)
+            }
+        }
+    }
 
     fun handleNewData(gnssData: GnssData) {
         if (gnssData.gpsFix >= 3) {
@@ -110,6 +131,7 @@ class AudioController(
                 val alarmElevation = alarm.alarmElevation + config.dzElev
 
                 if (alarmElevation >= min && alarmElevation <= max) {
+                    Timber.d("Hoz6 alarm $alarm triggered")
                     when (alarm.alarmType) {
                         AlarmType.NoAlarm -> {}
                         AlarmType.Beep -> audioService.playBeep(config.toneVolume.value)
@@ -144,7 +166,12 @@ class AudioController(
                     val speech = numberToSpeech(step * config.altitudeStep)
                     audioService.playText(
                         speech,
-                        config.speechVolume.value
+                        config.toneVolume.value,
+                        if (profile.useUSForTTS) {
+                            Locale.US
+                        } else {
+                            Locale.getDefault()
+                        }
                     )
                 }
             }

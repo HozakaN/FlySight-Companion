@@ -15,7 +15,8 @@ data class SessionProfile(
     val referencePoint: ReferencePoint?,
     val displayGrid: DisplayGrid,
     val showGridLines: Boolean,
-    val displayItems: List<DisplayItem>
+    val displayItems: List<DisplayItem>,
+    val useUSForTTS: Boolean
 ) : DisplayableConfig {
     companion object {
         fun default() = SessionProfile(
@@ -29,6 +30,7 @@ data class SessionProfile(
             referencePoint = null,
             displayGrid = DisplayGrid.InlineLeft,
             showGridLines = true,
+            useUSForTTS = true,
             displayItems = listOf(
                 DisplayItem(
                     displayableCapability = DisplayableCapability.Altitude,

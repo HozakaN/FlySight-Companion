@@ -56,6 +56,7 @@ import com.google.gson.Gson
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
+import fr.hozakan.flysightcompanion.audiomodule.AudioService
 import fr.hozakan.flysightcompanion.configfilesmodule.ui.config_detail.ConfigDetailMenuActions
 import fr.hozakan.flysightcompanion.configfilesmodule.ui.config_detail.ConfigDetailScreen
 import fr.hozakan.flysightcompanion.configfilesmodule.ui.list_files.ListConfigFileMenuActions
@@ -125,6 +126,9 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
     @Inject
     lateinit var sessionControllerService: SessionControllerService
 
+    @Inject
+    lateinit var audioService: AudioService
+
     override fun androidInjector(): AndroidInjector<Any> = androidInjector
 
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalCoroutinesApi::class)
@@ -155,7 +159,8 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                         DevScreen(
                             usbService = usbService,
                             fsDeviceService = fsDeviceService,
-                            loggerService = loggerService
+                            loggerService = loggerService,
+                            audioService = audioService
                         ) {
                             devScreenOpened = false
                         }

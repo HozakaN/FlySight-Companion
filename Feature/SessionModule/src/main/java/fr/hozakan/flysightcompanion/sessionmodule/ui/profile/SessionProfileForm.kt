@@ -121,6 +121,7 @@ class SessionProfileForm(
             referencePoint = referencePoint,
             displayGrid = displayGrid,
             showGridLines = showGridLines,
+            useUSForTTS = true,
             displayItems = displayItems
         )
     }

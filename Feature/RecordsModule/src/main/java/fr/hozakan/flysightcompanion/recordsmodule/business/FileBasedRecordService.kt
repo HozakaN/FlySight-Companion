@@ -92,9 +92,9 @@ class FileBasedRecordService(
     override suspend fun loadRecordRawContent(recordFile: RecordFile): String? {
         val trackFile =
             File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${recordFile.phoneFilePath}")
-        return if (trackFile.exists()) trackFile.readText() else null
-//        return javaClass.classLoader
-//            ?.getResource("9_2_temps.CSV")?.readText() ?: ""
+//        return if (trackFile.exists()) trackFile.readText() else null
+        return javaClass.classLoader
+            ?.getResource("9_2_temps.CSV")?.readText() ?: ""
     }
 
     override suspend fun analyzeRecord(recordFile: RecordFile): RecordAnalyze {
