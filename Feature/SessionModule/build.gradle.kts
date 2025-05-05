@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -36,6 +37,18 @@ android {
     }
 }
 
+secrets {
+    // To add your Maps API key to this project:
+    // 1. If the secrets.properties file does not exist, create it in the same folder as the local.properties file.
+    // 2. Add this line, where YOUR_API_KEY is your API key:
+    //        MAPS_API_KEY=YOUR_API_KEY
+    propertiesFileName = "secrets.properties"
+
+    // A properties file containing default secret values. This file can be
+    // checked in version control.
+    defaultPropertiesFileName = "local.defaults.properties"
+}
+
 dependencies {
     implementation(project(":model"))
     implementation(project(":Feature:FSDeviceModule"))
@@ -46,6 +59,7 @@ dependencies {
     implementation(project(":Tooling:ComposableCommons"))
     implementation(project(":Middleware:AudioModule"))
     implementation(project(":Middleware:ExternalDisplayModule"))
+    implementation(project(":Feature:ConfigFilesModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -62,10 +76,12 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(project(":Feature:ConfigFilesModule"))
     debugImplementation(libs.androidx.ui.tooling)
 //    implementation(libs.androidx.material.icons.extended)
 //    implementation(libs.androidx.activity.compose)
+
+    //GMap
+    implementation(libs.maps.compose)
 
     //Tests
     testImplementation(project(":model"))

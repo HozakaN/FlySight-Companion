@@ -6,5 +6,6 @@ import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
 @Immutable
 data class ReferencePointListState(
     val referencePoints: List<ReferencePoint>,
-    val areReferencePointsSelectable: Boolean
+    val areReferencePointsSelectable: Boolean,
+    val selectedReferencePoint: ReferencePoint?
 )
