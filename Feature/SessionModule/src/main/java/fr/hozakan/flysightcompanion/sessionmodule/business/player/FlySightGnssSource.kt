@@ -10,4 +10,6 @@ class FlySightGnssSource(
 
     override val gnssFlow: SharedFlow<GnssData> = fsDevice.gnssFeed
 
+    override val timeMutableSource: TimeMutableSource? = null
+
 }

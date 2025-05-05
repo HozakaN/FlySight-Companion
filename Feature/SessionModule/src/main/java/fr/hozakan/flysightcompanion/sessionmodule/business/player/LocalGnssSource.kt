@@ -10,4 +10,6 @@ class LocalGnssSource : GnssSource {
     private val _gnssFlow = MutableSharedFlow<GnssData>()
     override val gnssFlow: SharedFlow<GnssData> = _gnssFlow.asSharedFlow()
 
+    override val timeMutableSource: TimeMutableSource? = null
+
 }

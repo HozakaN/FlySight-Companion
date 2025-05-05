@@ -1,11 +1,9 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.player
 
 import fr.hozakan.flysightcompanion.model.GnssData
-import fr.hozakan.flysightcompanion.model.config.AlarmType
 import fr.hozakan.flysightcompanion.model.config.InitMode
 import fr.hozakan.flysightcompanion.model.config.SpeechMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
-import fr.hozakan.flysightcompanion.model.config.Volume
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -15,8 +13,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.util.Locale
-import kotlin.compareTo
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -61,6 +57,10 @@ class SessionComputationUnit(
                 }
             }
         }
+    }
+
+    fun resetCauseUserInteraction() {
+        prevFlagHasFix = false
     }
 
     fun handleNewData(gnssData: GnssData) {

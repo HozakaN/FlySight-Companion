@@ -16,6 +16,8 @@ interface SessionController {
 
     val gnssFlow: SharedFlow<GnssData>
 
+    val timeMutableSource: TimeMutableSource?
+
     fun pause()
 
     fun play()

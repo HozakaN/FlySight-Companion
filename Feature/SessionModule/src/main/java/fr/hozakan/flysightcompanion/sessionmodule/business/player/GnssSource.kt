@@ -5,4 +5,5 @@ import kotlinx.coroutines.flow.SharedFlow
 
 interface GnssSource {
     val gnssFlow: SharedFlow<GnssData>
+    val timeMutableSource: TimeMutableSource?
 }

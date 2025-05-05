@@ -1,5 +1,6 @@
 package fr.hozakan.flysightcompanion.sessionmodule.ui.play
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,11 +21,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -42,6 +48,7 @@ import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.ui.SpeedOrientation
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionEvent
+import fr.hozakan.flysightcompanion.sessionmodule.business.player.TimeMutableSource
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -89,12 +96,52 @@ private fun SessionPlayerScreenInternal(state: SessionPlayerState) {
     val player = state.player
     if (player == null) return
     val displayGrid = player.profile.displayGrid
-    when (displayGrid) {
-        DisplayGrid.InlineLeft -> InlineLeftPlayerScreen(player = player)
-        DisplayGrid.InlineRight -> InlineLeftPlayerScreen(player = player)
-        DisplayGrid.TwoByTwo -> InlineLeftPlayerScreen(player = player)
-        DisplayGrid.TwoOnEachSide -> InlineLeftPlayerScreen(player = player)
-        DisplayGrid.ThreeOnEachSide -> ThreeOnEachSidePlayerScreen(player = player)
+    Box {
+        when (displayGrid) {
+            DisplayGrid.InlineLeft -> InlineLeftPlayerScreen(player = player)
+            DisplayGrid.InlineRight -> InlineLeftPlayerScreen(player = player)
+            DisplayGrid.TwoByTwo -> InlineLeftPlayerScreen(player = player)
+            DisplayGrid.TwoOnEachSide -> InlineLeftPlayerScreen(player = player)
+            DisplayGrid.ThreeOnEachSide -> ThreeOnEachSidePlayerScreen(player = player)
+        }
+        player.timeMutableSource?.let { source ->
+            TimeControlContainer(
+                timeMutableSource = source
+            )
+        }
+    }
+}
+
+@SuppressLint("DefaultLocale")
+@Composable
+private fun TimeControlContainer(timeMutableSource: TimeMutableSource) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        val sliderPosition by timeMutableSource.currentTime.collectAsState()
+        val startValue by timeMutableSource.startValue.collectAsState()
+        val endValue by timeMutableSource.endValue.collectAsState()
+        Column(
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Slider(
+                value = sliderPosition,
+                onValueChange = {
+                    timeMutableSource.moveTo(it)
+                },
+                colors = SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colorScheme.secondary,
+                    activeTrackColor = MaterialTheme.colorScheme.secondary,
+                    inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
+                ),
+                onValueChangeFinished = {
+                    timeMutableSource.start()
+                },
+                valueRange = startValue..endValue
+            )
+            Text(text = String.format("%.2f", sliderPosition))
+        }
     }
 }
 
@@ -467,6 +514,7 @@ class FakeSessionController(
 
     override val navLane: StateFlow<LoadingState<Int>> = MutableStateFlow(LoadingState.Loading())
     override val gnssFlow: SharedFlow<GnssData> = MutableSharedFlow()
+    override val timeMutableSource: TimeMutableSource? = null
 
     override fun pause() {}
 

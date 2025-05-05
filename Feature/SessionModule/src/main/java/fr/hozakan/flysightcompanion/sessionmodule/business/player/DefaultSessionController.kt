@@ -19,9 +19,9 @@ import timber.log.Timber
 
 class DefaultSessionController(
     context: Context,
-    gnssSource: GnssSource,
     audioService: AudioService,
     displayService: DisplayService,
+    private val gnssSource: GnssSource,
     override val profile: SessionProfile
 ) : SessionController {
 
@@ -30,6 +30,9 @@ class DefaultSessionController(
     override val navLane = _navLane.asStateFlow()
 
     override val gnssFlow = gnssSource.gnssFlow
+
+    override val timeMutableSource: TimeMutableSource?
+        get() = gnssSource.timeMutableSource
 
     private val scope = CoroutineScope(SupervisorJob())
     private var startJob: Job? = null
@@ -59,7 +62,14 @@ class DefaultSessionController(
 
     private fun start() {
         startJob = scope.launch {
-
+            timeMutableSource?.let { source ->
+                launch {
+                    source.userInteractionEvent
+                        .collect {
+                            sessionComputationUnit.resetCauseUserInteraction()
+                        }
+                }
+            }
             gnssFlow.collect { gnssData ->
                 if (gnssData == FakeGnssData) {
                     Timber.d("Hoz5 FakeGnssData detected; callback = $callback")
