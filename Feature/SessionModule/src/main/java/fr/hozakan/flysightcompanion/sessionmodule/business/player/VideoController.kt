@@ -19,7 +19,6 @@ class VideoController(
     private val sessionEvents: SharedFlow<SessionEvent>
 ) {
 
-    private var presentation: VideoPresentation? = null
     private val scope = CoroutineScope(SupervisorJob() + CoroutineName("VideoController"))
 
     init {

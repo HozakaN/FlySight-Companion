@@ -196,7 +196,6 @@ fun RecordDetailScreen(
                                 val chartHeight = size.height - padding * 2 - bottomScaleHeight
                                 val zeroWithOffset = Offset(padding, padding)
                                 val xScale = (chartWidth / (xMax - xMin)).toFloat()
-                                Timber.d("Hoz2 zeroWithOffset = $zeroWithOffset")
 
                                 val topRight = zeroWithOffset + Offset(chartWidth, 0f)
                                 val bottomLeft = zeroWithOffset + Offset(0f, chartHeight)

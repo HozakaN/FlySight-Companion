@@ -84,5 +84,7 @@ class DefaultSessionControllerService(
         job?.cancel()
         job = null
         _state.value = SessionControllerState.Idle
+        _sessionController.value?.destroy()
+        _sessionController.value = null
     }
 }

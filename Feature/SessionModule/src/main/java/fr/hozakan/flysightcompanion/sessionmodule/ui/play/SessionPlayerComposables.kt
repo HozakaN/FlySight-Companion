@@ -1,8 +1,14 @@
 package fr.hozakan.flysightcompanion.sessionmodule.ui.play
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,13 +16,21 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -26,14 +40,20 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -49,10 +69,14 @@ import fr.hozakan.flysightcompanion.model.ui.SpeedOrientation
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionEvent
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.TimeMutableSource
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @Composable
 fun SessionPlayerMenuActions(
@@ -85,28 +109,233 @@ fun SessionPlayerScreen() {
             color = MaterialTheme.colorScheme.surface
         ) {
             SessionPlayerScreenInternal(
-                state = state
+                state = state,
+                onExitClicked = {
+                    viewModel.onExitClicked()
+                }
             )
         }
     }
 }
 
 @Composable
-private fun SessionPlayerScreenInternal(state: SessionPlayerState) {
+private fun SessionPlayerScreenInternal(
+    state: SessionPlayerState,
+    onExitClicked: () -> Unit
+) {
     val player = state.player
     if (player == null) return
     val displayGrid = player.profile.displayGrid
-    Box {
-        when (displayGrid) {
-            DisplayGrid.InlineLeft -> InlineLeftPlayerScreen(player = player)
-            DisplayGrid.InlineRight -> InlineLeftPlayerScreen(player = player)
-            DisplayGrid.TwoByTwo -> InlineLeftPlayerScreen(player = player)
-            DisplayGrid.TwoOnEachSide -> InlineLeftPlayerScreen(player = player)
-            DisplayGrid.ThreeOnEachSide -> ThreeOnEachSidePlayerScreen(player = player)
+    var uiLocked by remember { mutableStateOf(true) }
+
+    Column {
+        var displayUnlockUi by remember { mutableStateOf(false) }
+        var counter by remember { mutableIntStateOf(0) }
+        var uiTouched by remember { mutableStateOf(false) }
+
+        LaunchedEffect(counter, uiTouched, uiLocked) {
+            if (uiLocked && !uiTouched && counter > 0) {
+                displayUnlockUi = true
+                while (displayUnlockUi && isActive) {
+                    delay(5_000)
+                    if (uiLocked && !uiTouched) {
+                        displayUnlockUi = false
+                    }
+                }
+            }
         }
-        player.timeMutableSource?.let { source ->
+
+        LaunchedEffect(uiLocked, counter, uiTouched) {
+            if (!uiLocked && !uiTouched) {
+                val intermediateCounter = counter
+                delay(10_000)
+                if (!uiLocked && intermediateCounter == counter && !uiTouched) {
+                    uiLocked = true
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .pointerInput(Unit) {
+                    detectTapGestures {
+                        if (!displayUnlockUi) {
+                            counter++
+                        }
+                    }
+                }
+        ) {
+            when (displayGrid) {
+                DisplayGrid.InlineLeft -> InlineLeftPlayerScreen(player = player)
+                DisplayGrid.InlineRight -> InlineLeftPlayerScreen(player = player)
+                DisplayGrid.TwoByTwo -> InlineLeftPlayerScreen(player = player)
+                DisplayGrid.TwoOnEachSide -> InlineLeftPlayerScreen(player = player)
+                DisplayGrid.ThreeOnEachSide -> ThreeOnEachSidePlayerScreen(player = player)
+            }
+            if (displayUnlockUi) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    LockContainer(
+                        locked = uiLocked,
+                        onUnlocked = {
+                            uiLocked = false
+                            displayUnlockUi = false
+                        },
+                        onUiTouchChanged = { touched ->
+                            uiTouched = touched
+                        }
+                    )
+                }
+            }
+            if (!uiLocked) {
+                LockedContent(
+                    onExitClicked = onExitClicked
+                )
+            }
+        }
+        val timeMutableSource = player.timeMutableSource
+        timeMutableSource?.let { source ->
             TimeControlContainer(
+                modifier = Modifier/*.weight(1f)*/,
                 timeMutableSource = source
+            )
+        }
+    }
+}
+
+@Composable
+private fun LockedContent(onExitClicked: () -> Unit) {
+    Box {
+        FloatingActionButton(
+            onClick = onExitClicked,
+            containerColor = MaterialTheme.colorScheme.error,
+        ) {
+            Icon(
+                imageVector = Icons.Default.PowerSettingsNew,
+                contentDescription = ""
+            )
+        }
+    }
+}
+
+@Composable
+fun LockContainer(
+    locked: Boolean,
+    onUnlocked: () -> Unit,
+    onUiTouchChanged: (Boolean) -> Unit
+) {
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+    ) {
+
+        val scope = rememberCoroutineScope()
+        val alphaPointerAnimatable = remember { Animatable(0.5f) }
+        val alphaCursiveAnimatable = remember { Animatable(0f) }
+
+        val translationX = remember { Animatable(0f) }
+        val containerWidth = with(LocalDensity.current) {
+            maxWidth.toPx()
+        }
+
+        //Cursive
+        val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
+        val color = remember(surfaceVariant) { surfaceVariant.copy(alpha = 0.5f) }
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .graphicsLayer {
+                    this.alpha = alphaCursiveAnimatable.value
+                }
+                .requiredSize(height = 60.dp, width = maxWidth),
+            shape = RoundedCornerShape(120.dp),
+            color = color,
+            border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outline)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Slide to unlock",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                )
+            }
+        }
+
+        //Pointer
+        Surface(
+            modifier = Modifier
+                .requiredSize(60.dp)
+                .graphicsLayer {
+                    this.alpha = alphaPointerAnimatable.value
+                    this.translationX = translationX.value
+                }
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = {
+                            scope.launch {
+                                launch {
+                                    alphaPointerAnimatable.animateTo(1f)
+                                }
+                                launch {
+                                    alphaCursiveAnimatable.animateTo(1f)
+                                }
+                            }
+                            onUiTouchChanged(true)
+                        },
+                        onDragEnd = {
+                            scope.launch {
+                                if (translationX.value >= containerWidth - 60.dp.toPx()) {
+                                    onUnlocked()
+                                }
+                                launch {
+                                    alphaPointerAnimatable.animateTo(0.5f)
+                                }
+                                launch {
+                                    //Do it in sequence
+                                    translationX.animateTo(0f)
+                                    alphaCursiveAnimatable.animateTo(0f)
+                                }
+                            }
+                            onUiTouchChanged(false)
+                        },
+                        onDragCancel = {
+                            scope.launch {
+                                launch {
+                                    alphaPointerAnimatable.animateTo(0.5f)
+                                }
+                                launch {
+                                    //Do it in sequence
+                                    translationX.animateTo(0f)
+                                    alphaCursiveAnimatable.animateTo(0f)
+                                }
+                            }
+                            onUiTouchChanged(false)
+                        },
+                        onDrag = { _, dragAmount ->
+                            scope.launch {
+                                translationX.snapTo(
+                                    (translationX.value + dragAmount.x).coerceAtLeast(
+                                        0f
+                                    ).coerceAtMost(containerWidth - 60.dp.toPx())
+                                )
+                            }
+                        }
+                    )
+                },
+            shape = CircleShape,
+            border = BorderStroke(width = 2.dp, color = Color.Red)
+        ) {
+            Icon(
+                modifier = Modifier.requiredSize(40.dp),
+                imageVector = if (locked) Icons.Default.Lock else Icons.Default.LockOpen,
+                contentDescription = ""
             )
         }
     }
@@ -114,9 +343,12 @@ private fun SessionPlayerScreenInternal(state: SessionPlayerState) {
 
 @SuppressLint("DefaultLocale")
 @Composable
-private fun TimeControlContainer(timeMutableSource: TimeMutableSource) {
+private fun TimeControlContainer(
+    modifier: Modifier = Modifier,
+    timeMutableSource: TimeMutableSource
+) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.BottomCenter
     ) {
         val sliderPosition by timeMutableSource.currentTime.collectAsState()
