@@ -5,6 +5,7 @@ import fr.hozakan.flysightcompanion.model.DisplayableConfig
 import fr.hozakan.flysightcompanion.model.defaultConfigFile
 
 data class SessionProfile(
+    val profileVersion: Int = LATEST_PROFILE_VERSION,
     override val name: String,
     val description: String,
     val sessionType: SessionType,
@@ -18,7 +19,9 @@ data class SessionProfile(
     val displayItems: List<DisplayItem>,
     val useUSForTTS: Boolean
 ) : DisplayableConfig {
+
     companion object {
+        private const val LATEST_PROFILE_VERSION: Int = 1
         fun default() = SessionProfile(
             name = "",
             description = "",

@@ -673,8 +673,33 @@ private fun InlineLeftPlayerScreen(player: SessionController) {
                 .fillMaxHeight(),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = "Center Container")
+            if (player.profile.showPerformanceLane) {
+                PerformanceLaneContainer(player)
+            }
+            if (player.profile.showMap) {
+                GMapContainer(player)
+            }
         }
+    }
+}
+
+@Composable
+private fun GMapContainer(sessionController: SessionController) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Map Container")
+    }
+}
+
+@Composable
+private fun PerformanceLaneContainer(sessionController: SessionController) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Performance Lane Container")
     }
 }
 
