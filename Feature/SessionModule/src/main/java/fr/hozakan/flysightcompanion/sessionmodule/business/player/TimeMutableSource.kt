@@ -11,6 +11,7 @@ interface TimeMutableSource {
 
     val userInteracting: StateFlow<Boolean>
     val userInteractionEvent: SharedFlow<Boolean>
+    val userInteractionEndEvent: SharedFlow<Float>
 
     fun moveTo(value: Float)
     fun start()

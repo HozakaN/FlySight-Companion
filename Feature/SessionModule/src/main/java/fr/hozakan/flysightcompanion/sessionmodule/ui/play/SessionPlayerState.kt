@@ -5,5 +5,5 @@ import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionControl
 
 @Stable
 data class SessionPlayerState(
-    val player: SessionController?
+    val controller: SessionController?
 )

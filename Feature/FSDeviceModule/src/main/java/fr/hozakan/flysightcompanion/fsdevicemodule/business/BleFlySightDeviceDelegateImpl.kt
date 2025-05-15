@@ -306,17 +306,22 @@ class BleFlySightDeviceDelegateImpl(
                         val buffer = ByteBuffer.wrap(value.sliceArray(1 until value.size))
                         buffer.order(ByteOrder.LITTLE_ENDIAN)
                         val iTow = buffer.int.toUInt() //getInt(bytes, 0).toUInt()
-                        val lon = buffer.int //getInt(bytes, 4)
-                        val lat = buffer.int //getInt(bytes, 8)
+                        val lon = buffer.int // Raw int32 longitude value
+                        val lat = buffer.int // Raw int32 latitude value
                         val hMsl = buffer.int //getInt(bytes, 12)
                         val velN = buffer.int //getInt(bytes, 16)
                         val velE = buffer.int //getInt(bytes, 20)
                         val velD = buffer.int //getInt(bytes, 24)
+                        
+                        // Convert int32 to decimal degrees with 1e-7 scaling factor
+                        val latitudeDouble = lat * 1e-7
+                        val longitudeDouble = lon * 1e-7
+                        
                         scope?.launch {
                             val gnssData = GnssData(
                                 iTow = iTow,
-                                lon = lon,
-                                lat = lat,
+                                lon = longitudeDouble, // Keep the raw integer for backward compatibility
+                                lat = latitudeDouble, // Keep the raw integer for backward compatibility
                                 hMsl = hMsl,
                                 velN = velN,
                                 velE = velE,
@@ -326,7 +331,7 @@ class BleFlySightDeviceDelegateImpl(
                                 speed = 0,
                                 gSpeed = 0
                             )
-                            log("GNSS data : $gnssData")
+                            log("GNSS data: $gnssData (lat=${latitudeDouble}, lon=${longitudeDouble})")
                             _gnssFeed.emit(gnssData)
                         }
                     }
@@ -920,7 +925,7 @@ class BleFlySightDeviceDelegateImpl(
     @SuppressLint("MissingPermission")
     private fun startGattServicesDiscovery() {
         scope?.launch {
-            Timber.d("Hoz3 startGattServicesDiscovery")
+            Timber.v("startGattServicesDiscovery")
             gatt?.discoverServices()
         }
     }

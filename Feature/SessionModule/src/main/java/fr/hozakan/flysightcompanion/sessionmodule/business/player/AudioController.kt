@@ -48,6 +48,9 @@ class AudioController(
                             }
                         )
                     }
+
+                    is SessionEvent.ExitFound -> {}
+                    is SessionEvent.PerformanceLaneStart -> {}
                 }
             }
             .launchIn(scope)

@@ -6,6 +6,7 @@ import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
+import fr.hozakan.flysightcompanion.model.records.DataPoint
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -14,6 +15,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -37,6 +39,7 @@ class DefaultSessionController(
     private val scope = CoroutineScope(SupervisorJob())
     private var startJob: Job? = null
 
+    private var gnssPoints = emptyList<GnssData>()
     private val sessionComputationUnit = SessionComputationUnit(profile = profile)
 
     private val audioController = AudioController(
@@ -66,7 +69,10 @@ class DefaultSessionController(
                 launch {
                     source.userInteractionEvent
                         .collect {
-                            sessionComputationUnit.resetCauseUserInteraction()
+                            val pickedTiming = source.userInteractionEndEvent.first()
+                            (gnssSource as? FileGnssSource)?.getGnssPointsUpToTime(pickedTiming.toLong())?.let { pastGnssData ->
+                                sessionComputationUnit.handleDataBatch(pastGnssData)
+                            }
                         }
                 }
             }
@@ -104,6 +110,11 @@ class DefaultSessionController(
     }
 
     private fun eatData(gnssData: GnssData) {
+        gnssPoints += gnssData
+        if (gnssPoints.size > 500) {
+            //drop after 500 points
+            gnssPoints = gnssPoints.take(500)
+        }
         sessionComputationUnit.handleNewData(gnssData)
     }
 

@@ -15,16 +15,16 @@ class SessionPlayerViewModel @Inject constructor(
     private val sessionControllerService: SessionControllerService
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(SessionPlayerState(player = null))
+    private val _state = MutableStateFlow(SessionPlayerState(controller = null))
 
     val state = _state.asStateFlow()
 
     init {
         sessionControllerService.sessionController
-            .onEach { player ->
+            .onEach { controller ->
                 _state.update {
                     it.copy(
-                        player = player
+                        controller = controller
                     )
                 }
             }

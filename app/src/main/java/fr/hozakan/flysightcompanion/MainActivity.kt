@@ -162,8 +162,6 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, 
 
                     val sessionControllerState by sessionControllerService.state.collectAsState()
 
-                    Timber.d("Hoz5 sessionControllerState: $sessionControllerState")
-
                     if (devScreenOpened) {
                         DevScreen(
                             usbService = usbService,
@@ -189,7 +187,6 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, 
                     Scaffold(
                         modifier = Modifier.tripleTapHandler {
                             devScreenOpened = true
-                            Timber.d("Hoz4 triple tap detected!")
                         },
                         floatingActionButton = {
                             if (currentBackStack.value?.destination?.route == AppScreen.DeviceTab.DeviceList.route ||

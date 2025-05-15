@@ -21,7 +21,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.math.abs
@@ -41,8 +42,8 @@ class SessionComputationUnit(
     private val scope = CoroutineScope(SupervisorJob() + CoroutineName("SessionComputationUnit"))
 
     private val exitDetector = ExitDetectorDelegate(
-        minAltAglMm = profile.exitDetectionWindowBottom * 1_000,
-        cfgExitAltAglMm = profile.exitDetectionWindowTop * 1_000,
+        minAltAglMeter = profile.exitDetectionWindowBottom,
+        cfgExitAltAglMeter = profile.exitDetectionWindowTop,
         upThreshCmps = profile.exitUpThresh,
         downThreshCmps = profile.exitDownThresh,
         numDown = max(profile.exitPointsDown, 0),
@@ -100,6 +101,13 @@ class SessionComputationUnit(
                 }
             }
         }
+
+        exitDetector.exitFound
+            .filterNotNull()
+            .onEach {
+                _sessionEvents.emit(SessionEvent.ExitFound(it))
+            }
+            .launchIn(scope)
     }
 
     fun resetCauseUserInteraction() {
@@ -122,20 +130,28 @@ class SessionComputationUnit(
                     if (_laneStartPoint.value == null) {
                         // Check if current time is at least timeAfterExit seconds after the exit point detection
                         // iTow is GPS time of week in milliseconds
-                        val timeAfterExitMs = profile.timeAfterExit * 1000 // Convert seconds to milliseconds
-                        
+                        val timeAfterExitMs = profile.timeAfterExit
+
                         // Handle iTow rollover (iTow is reset every week)
                         val currentTimeMs = gnssData.iTow.toInt()
                         val exitTimeMs = exitPoint.iTow.toInt()
+                        Timber.d("Hoz3 currentTimeMs: $currentTimeMs; exitTimeMs: $exitTimeMs")
                         val timeDiffMs = if (currentTimeMs >= exitTimeMs) {
                             currentTimeMs - exitTimeMs
                         } else {
                             // Handle week rollover (604800000 = 7*24*60*60*1000 ms in a week)
                             currentTimeMs + (604800000 - exitTimeMs)
                         }
-                        
+
+                        Timber.d("Hoz3 timeDiffMs: $timeDiffMs; timeAfterExitMs: $timeAfterExitMs")
                         if (timeDiffMs >= timeAfterExitMs) {
+                            Timber.d("Hoz3 laneStart, ${gnssData.lat}; ${gnssData.lon}; ${gnssData.hMsl}")
                             _laneStartPoint.value = gnssData
+                            scope.launch {
+                                _sessionEvents.emit(SessionEvent.PerformanceLaneStart(gnssData))
+                            }
+                        } else {
+                            Timber.d("Hoz3 Not enough time has passed since exit point detection")
                         }
                     }
                 }
@@ -147,6 +163,18 @@ class SessionComputationUnit(
         flagVerticalyAccurate = gnssData.vAcc < 10_000
         prevFlagHasFix = flagHasFix
         prevHMSL = gnssData.hMsl
+    }
+
+    fun handleDataBatch(gnssData: List<GnssData>) {
+        prevFlagHasFix = false
+        // Reset lane start point
+        _laneStartPoint.value = null
+
+        // Feed the exit detector with these points
+        exitDetector.clearAndProcessBatchData(gnssData)
+        gnssData.forEach { data ->
+            handleNewData(data)
+        }
     }
 
     private fun updateTones(gnssData: GnssData) {
@@ -421,7 +449,7 @@ class SessionComputationUnit(
             (velD * 1024) / speedMul to Int.MAX_VALUE triple Int.MAX_VALUE
 
         fun getGlideRatio(): Triple<Int, Int, Int> {
-            return if (velD != 0) {
+            return if (velD != 0 && gnssData.gSpeed != 0) {
                 10_000 * velD / gnssData.gSpeed to min * 100 triple max * 100
             } else {
                 Int.MAX_VALUE to Int.MAX_VALUE triple Int.MAX_VALUE
@@ -599,3 +627,4 @@ class SessionComputationUnit(
     }
 
 }
+

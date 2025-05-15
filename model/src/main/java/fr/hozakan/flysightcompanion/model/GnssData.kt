@@ -4,8 +4,8 @@ import java.util.Locale
 
 class GnssData(
     val iTow: UInt,
-    val lon: Int,
-    val lat: Int,
+    val lon: Double,
+    val lat: Double,
     val hMsl: Int,
     val velN: Int,
     val velE: Int,
@@ -32,8 +32,8 @@ class GnssData(
 
 val FakeGnssData = GnssData(
     iTow = 0u,
-    lon = 0,
-    lat = 0,
+    lon = 0.0,
+    lat = 0.0,
     hMsl = 0,
     velN = 0,
     velE = 0,

@@ -1,5 +1,6 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.player
 
+import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.config.Alarm
 import fr.hozakan.flysightcompanion.model.config.Volume
 import java.util.Locale
@@ -18,4 +19,12 @@ sealed class SessionEvent(
     data class PlayFileEvent(
         val fileName: String
     ) : SessionEvent("PlayFileEvent")
+
+    data class ExitFound(
+        val exit: GnssData
+    ) : SessionEvent("ExitFound")
+
+    data class PerformanceLaneStart(
+        val gnssData: GnssData
+    ) : SessionEvent("PerformanceLaneStart")
 }

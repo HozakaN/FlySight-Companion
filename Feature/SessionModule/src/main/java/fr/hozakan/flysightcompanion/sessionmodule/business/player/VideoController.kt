@@ -56,6 +56,8 @@ class VideoController(
 
             is SessionEvent.PlayFileEvent -> {}
             is SessionEvent.PlayTextEvent -> {}
+            is SessionEvent.ExitFound -> {}
+            is SessionEvent.PerformanceLaneStart -> {}
         }
     }
 }

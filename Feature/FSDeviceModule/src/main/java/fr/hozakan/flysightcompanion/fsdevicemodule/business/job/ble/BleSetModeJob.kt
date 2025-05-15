@@ -40,7 +40,7 @@ class BleSetModeJob(
                     value: ByteArray
                 ) {
                     super.onCharacteristicChanged(gatt, characteristic, value)
-                    Timber.d("Hoz4 onCharacteristicChanged: ${characteristic.uuid} (gattCharacteristic.uuid is ${gattCharacteristic.uuid}) ${value.bytesToHex()}")
+                    Timber.d("onCharacteristicChanged: ${characteristic.uuid} (gattCharacteristic.uuid is ${gattCharacteristic.uuid}) ${value.bytesToHex()}")
                     val cmdCode = value[0].toInt() and 0xFF
                     val cmd = Command.fromValue(cmdCode)
                     if (cmd == Command.ACK) {
@@ -65,7 +65,6 @@ class BleSetModeJob(
 
             gattTaskQueue.addTask(task)
             val returnValue = try {
-                Timber.d("Hoz3 timeout = $timeout")
                 if (timeout > 0L) {
                     withTimeout(timeout) {
                         resultDeferred.await()
@@ -74,11 +73,10 @@ class BleSetModeJob(
                     resultDeferred.await()
                 }
             } catch (e: TimeoutCancellationException) {
-                Timber.d("Hoz3 e = TimeoutCancellationException")
+                Timber.i(e.toString())
                 false
             } catch (e: Exception) {
                 Timber.e(e)
-                Timber.d("Hoz3 e = ${e.message}; ${e.javaClass.simpleName}")
                 false
             }
             gattTaskQueue -= gattCallback

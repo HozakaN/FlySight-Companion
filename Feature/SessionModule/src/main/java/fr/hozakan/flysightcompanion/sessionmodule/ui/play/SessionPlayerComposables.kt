@@ -2,6 +2,7 @@ package fr.hozakan.flysightcompanion.sessionmodule.ui.play
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -44,6 +45,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -54,13 +56,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.*
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.GnssData
+import fr.hozakan.flysightcompanion.model.config.Alarm
+import fr.hozakan.flysightcompanion.model.config.AlarmType
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItem
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
@@ -74,9 +86,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @Composable
 fun SessionPlayerMenuActions(
@@ -123,7 +135,7 @@ private fun SessionPlayerScreenInternal(
     state: SessionPlayerState,
     onExitClicked: () -> Unit
 ) {
-    val player = state.player
+    val player = state.controller
     if (player == null) return
     val displayGrid = player.profile.displayGrid
     var uiLocked by remember { mutableStateOf(true) }
@@ -167,10 +179,10 @@ private fun SessionPlayerScreenInternal(
                 }
         ) {
             when (displayGrid) {
-                DisplayGrid.InlineLeft -> InlineLeftPlayerScreen(player = player)
-                DisplayGrid.InlineRight -> InlineLeftPlayerScreen(player = player)
-                DisplayGrid.TwoByTwo -> InlineLeftPlayerScreen(player = player)
-                DisplayGrid.TwoOnEachSide -> InlineLeftPlayerScreen(player = player)
+                DisplayGrid.InlineLeft -> InlineLeftPlayerScreen(controller = player)
+                DisplayGrid.InlineRight -> InlineLeftPlayerScreen(controller = player)
+                DisplayGrid.TwoByTwo -> InlineLeftPlayerScreen(controller = player)
+                DisplayGrid.TwoOnEachSide -> InlineLeftPlayerScreen(controller = player)
                 DisplayGrid.ThreeOnEachSide -> ThreeOnEachSidePlayerScreen(player = player)
             }
             if (displayUnlockUi) {
@@ -648,8 +660,8 @@ private fun SpeedContainer(orientation: SpeedOrientation, player: SessionControl
 }
 
 @Composable
-private fun InlineLeftPlayerScreen(player: SessionController) {
-    val displayItems = player.profile.displayItems
+private fun InlineLeftPlayerScreen(controller: SessionController) {
+    val displayItems = controller.profile.displayItems
     Row {
         Column(
             modifier = Modifier
@@ -661,35 +673,227 @@ private fun InlineLeftPlayerScreen(player: SessionController) {
                 items(displayItems) { item ->
                     DisplayCapabilityContainer(
                         item = item,
-                        config = player.profile.configFile,
-                        player = player
+                        config = controller.profile.configFile,
+                        player = controller
                     )
                 }
             }
         }
-        Box(
+        SessionMainContainer(
             modifier = Modifier
                 .weight(6f)
                 .fillMaxHeight(),
-            contentAlignment = Alignment.Center
-        ) {
-            if (player.profile.showPerformanceLane) {
-                PerformanceLaneContainer(player)
+            controller = controller
+        )
+    }
+}
+
+@Composable
+private fun SessionMainContainer(
+    modifier: Modifier = Modifier,
+    controller: SessionController
+) {
+    val scope = rememberCoroutineScope()
+//    var showAlarmAnimation by remember { mutableStateOf(false) }
+    var alarmMessage by remember { mutableStateOf("") }
+
+    // Animation values
+    val scale = remember { Animatable(1f) }
+    val alpha = remember { Animatable(1f) }
+
+    LaunchedEffect(alarmMessage) {
+        val message = alarmMessage
+        if (message.isNotBlank()) {
+            launch {
+                // Reset animations to initial values
+                scale.snapTo(1f)
+                alpha.snapTo(1f)
+                // Run animations in parallel
+                launch {
+                    scale.animateTo(
+                        targetValue = 2.5f,
+                        animationSpec = tween(durationMillis = 2000)
+                    )
+                }
+
+                launch {
+                    // Start fading out after a short delay
+                    delay(500)
+                    alpha.animateTo(
+                        targetValue = 0f,
+                        animationSpec = tween(durationMillis = 1500)
+                    )
+                    // Hide alarm when animation completes
+                    alarmMessage = ""
+                }
             }
-            if (player.profile.showMap) {
-                GMapContainer(player)
+        }
+    }
+//
+//    // Function to trigger alarm animation
+//    fun triggerAlarmAnimation(message: String) {
+//        showAlarmAnimation = true
+//        alarmMessage = message
+//
+//        scope.launch {
+//            // Reset animations to initial values
+//            scale.snapTo(1f)
+//            alpha.snapTo(1f)
+//
+//            // Run animations in parallel
+//            launch {
+//                scale.animateTo(
+//                    targetValue = 2.5f,
+//                    animationSpec = tween(durationMillis = 2000)
+//                )
+//            }
+//
+//            launch {
+//                // Start fading out after a short delay
+//                delay(500)
+//                alpha.animateTo(
+//                    targetValue = 0f,
+//                    animationSpec = tween(durationMillis = 1500)
+//                )
+//                // Hide alarm when animation completes
+//                showAlarmAnimation = false
+//            }
+//        }
+//    }
+
+    LaunchedEffect(Unit) {
+        controller.sessionEvents.collectLatest { event ->
+            alarmMessage = when (val evt = event) {
+                is SessionEvent.AlarmEvent -> {
+                    when(evt.alarm.alarmType) {
+                        AlarmType.NoAlarm -> ""
+                        AlarmType.Beep -> ""
+                        AlarmType.ChirpUp -> ""
+                        AlarmType.ChirpDown -> ""
+                        AlarmType.PlayFile -> evt.alarm.alarmFile
+                    }
+                }
+                is SessionEvent.ExitFound -> "Exit detected"
+                is SessionEvent.PerformanceLaneStart -> "Lane start"
+                is SessionEvent.PlayFileEvent -> ""
+                is SessionEvent.PlayTextEvent -> ""
             }
+        }
+    }
+
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        if (controller.profile.showPerformanceLane) {
+            PerformanceLaneContainer(controller)
+        }
+        if (controller.profile.showMap) {
+            GMapContainer(controller)
+        }
+
+        // Visual alarm overlay
+        if (alarmMessage.isNotBlank()) {
+            Text(
+                text = alarmMessage,
+                color = Color.Red,
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .graphicsLayer {
+                        scaleX = scale.value
+                        scaleY = scale.value
+                        this.alpha = alpha.value
+                    }
+                    .padding(16.dp)
+            )
         }
     }
 }
 
 @Composable
 private fun GMapContainer(sessionController: SessionController) {
+    val gnssData by sessionController.gnssFlow.collectAsState(initial = null)
+
+    val cameraPositionState = rememberCameraPositionState()
+
+    LaunchedEffect(gnssData) {
+        val data = gnssData
+        if (data != null) {
+            cameraPositionState.move(
+                CameraUpdateFactory.newCameraPosition(
+                    CameraPosition.fromLatLngZoom(
+                        LatLng(data.lat, data.lon),
+                        13f
+                    )
+                )
+            )
+        }
+    }
+
     Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        modifier = Modifier
+            .fillMaxSize()
+            .border(1.dp, MaterialTheme.colorScheme.outline)
     ) {
-        Text("Map Container")
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState,
+            properties = MapProperties(
+                isMyLocationEnabled = false,
+                mapType = MapType.HYBRID,
+                isBuildingEnabled = false
+            ),
+            uiSettings = MapUiSettings(
+                zoomControlsEnabled = false,
+                compassEnabled = true,
+                mapToolbarEnabled = false
+            )
+        ) {
+            gnssData?.let { data ->
+                Marker(
+                    state = MarkerState(
+                        position = LatLng(
+                            data.lat.toDouble(),
+                            data.lon.toDouble()
+                        )
+                    ),
+                    title = "Current Position"
+                )
+            }
+
+            val jumpPath = remember { mutableStateListOf<LatLng>() }
+            LaunchedEffect(gnssData) {
+                gnssData?.let { data ->
+                    jumpPath.add(LatLng(data.lat.toDouble(), data.lon.toDouble()))
+                    if (jumpPath.size > 1000) {
+                        jumpPath.removeAt(0)
+                    }
+                }
+            }
+
+            if (jumpPath.size > 1) {
+                Polyline(
+                    points = jumpPath,
+                    color = Color.Red,
+                    width = 5f
+                )
+            }
+
+            sessionController.profile.referencePoint?.let { refPoint ->
+                Marker(
+                    state = MarkerState(
+                        position = LatLng(
+                            refPoint.coords.latitude,
+                            refPoint.coords.longitude
+                        )
+                    ),
+                    title = refPoint.name,
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+                )
+            }
+        }
     }
 }
 
@@ -725,7 +929,7 @@ fun ThreeOnEachSidePlayerScreenPreview() {
 @Composable
 fun InlineLeftPlayerScreenPreview() {
     InlineLeftPlayerScreen(
-        player = FakeSessionController(
+        controller = FakeSessionController(
             profile = fakeProfile.copy(
                 displayItems = listOf(
                     DisplayItem(
@@ -877,3 +1081,4 @@ private val fakeProfile = SessionProfile.default()
             ),
         )
     )
+

@@ -64,7 +64,7 @@ class GattTaskQueue(
             status: Int
         ) {
             super.onCharacteristicRead(gatt, characteristic, value, status)
-            Timber.d("Hoz4 onCharacteristicRead: ${characteristic.uuid} ${value.bytesToHex()}")
+            Timber.d("onCharacteristicRead: ${characteristic.uuid} ${value.bytesToHex()}")
 //            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 gattCallback.onCharacteristicRead(gatt, characteristic, value, status)
 //            } else {
@@ -73,9 +73,7 @@ class GattTaskQueue(
 //            }
             val task =
                 tasks.firstOrNull { it.characteristic.uuid == characteristic.uuid && it.gatt == gatt }
-            Timber.d("Hoz4 task: $task")
             if (task != null) {
-                Timber.d("Hoz4 task != null")
                 task.completion.complete(Unit)
                 tasks -= task
             }

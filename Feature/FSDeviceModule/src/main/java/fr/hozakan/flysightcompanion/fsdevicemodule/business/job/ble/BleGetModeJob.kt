@@ -39,7 +39,7 @@ class BleGetModeJob(
                     status: Int
                 ) {
                     super.onCharacteristicRead(gatt, characteristic, value, status)
-                    Timber.d("Hoz4 onCharacteristicRead: ${characteristic.uuid} (gattCharacteristic.uuid is ${gattCharacteristic.uuid}) ${value.bytesToHex()}")
+                    Timber.d("onCharacteristicRead: ${characteristic.uuid} (gattCharacteristic.uuid is ${gattCharacteristic.uuid}) ${value.bytesToHex()}")
                     if (characteristic.uuid == gattCharacteristic.uuid) {
                         val modeValue = value[0].toInt()
                         val mode = DeviceMode.fromValue(modeValue)
@@ -54,12 +54,10 @@ class BleGetModeJob(
 
             gattTaskQueue += gattCharacteristic.uuid to gattCallback
 
-//            val task = TaskBuilder.buildGetModeTask(gatt, gattCharacteristic) {}
             val task = GattTask.ReadTask(gatt, gattCharacteristic, {})
 
             gattTaskQueue.addTask(task)
             val returnValue = try {
-                Timber.d("Hoz3 timeout = $timeout")
                 if (timeout > 0L) {
                     withTimeout(timeout) {
                         resultDeferred.await()
@@ -68,11 +66,10 @@ class BleGetModeJob(
                     resultDeferred.await()
                 }
             } catch (e: TimeoutCancellationException) {
-                Timber.d("Hoz3 e = TimeoutCancellationException")
+                Timber.d(e.toString())
                 DeviceMode.Sleep
             } catch (e: Exception) {
                 Timber.e(e)
-                Timber.d("Hoz3 e = ${e.message}; ${e.javaClass.simpleName}")
                 DeviceMode.Sleep
             }
             gattTaskQueue -= gattCallback

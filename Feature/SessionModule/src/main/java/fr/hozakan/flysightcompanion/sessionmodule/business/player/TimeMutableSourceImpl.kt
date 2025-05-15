@@ -30,6 +30,10 @@ class TimeMutableSourceImpl() : TimeMutableSource {
 
     private val userInteractionContinuations = mutableListOf<CancellableContinuation<Boolean>>()
 
+    // New event to notify when user stops interacting
+    private val _userInteractionEndEvent = MutableSharedFlow<Float>()
+    override val userInteractionEndEvent: SharedFlow<Float> = _userInteractionEndEvent.asSharedFlow()
+
     fun setStartValue(value: Float) {
         _startValue.value = value
     }
@@ -50,6 +54,11 @@ class TimeMutableSourceImpl() : TimeMutableSource {
 
     override fun start() {
         _userInteracting.value = false
+        val currentTime = _currentValue.value
+        scope.launch {
+            _userInteractionEndEvent.emit(currentTime)
+        }
+
         val continuations = ArrayList(userInteractionContinuations)
         userInteractionContinuations.clear()
         continuations.forEach { continuation ->
