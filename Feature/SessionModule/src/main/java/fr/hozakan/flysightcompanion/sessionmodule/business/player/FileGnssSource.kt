@@ -72,6 +72,7 @@ class FileGnssSource(
                             velD = currentPoint.velD.toInt(),
                             gpsFix = currentPoint.numSV,
                             vAcc = currentPoint.vAcc.toInt(),
+                            speed = 0,
                             gSpeed = 0
                         )
                         val nextPoint = dataPoints.getOrNull(dataPoints.indexOf(currentPoint) + 1)

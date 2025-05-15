@@ -12,7 +12,8 @@ class GnssData(
     val velD: Int,
     val gpsFix: Int,
     val vAcc: Int,
-    val gSpeed: Int
+    val gSpeed: Int,
+    val speed: Int
 ) {
     override fun toString(): String {
         return String.format(
@@ -39,5 +40,6 @@ val FakeGnssData = GnssData(
     velD = 0,
     gpsFix = 0,
     vAcc = 0,
+    speed = 0,
     gSpeed = 0
 )

@@ -323,6 +323,7 @@ class BleFlySightDeviceDelegateImpl(
                                 velD = velD,
                                 gpsFix = 0,
                                 vAcc = 0,
+                                speed = 0,
                                 gSpeed = 0
                             )
                             log("GNSS data : $gnssData")

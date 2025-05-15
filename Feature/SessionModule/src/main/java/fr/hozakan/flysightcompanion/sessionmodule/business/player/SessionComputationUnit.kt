@@ -1,8 +1,14 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.player
 
+import fr.hozakan.flysightcompanion.framework.tooling.triple
+import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.config.InitMode
+import fr.hozakan.flysightcompanion.model.config.RateMode
+import fr.hozakan.flysightcompanion.model.config.Speech
 import fr.hozakan.flysightcompanion.model.config.SpeechMode
+import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
+import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import kotlinx.coroutines.CoroutineName
@@ -13,12 +19,16 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.div
 import kotlin.math.abs
+import kotlin.math.atan2
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.text.toDouble
+import kotlin.times
 
 class SessionComputationUnit(
-    profile: SessionProfile
+    private val profile: SessionProfile
 ) {
 
     private val _sessionEvents = MutableSharedFlow<SessionEvent>()
@@ -39,7 +49,24 @@ class SessionComputationUnit(
 
     private var previousSuppressTone = false
 
+    private var suppressAlt = false
+
+    private var suppressTone = false
+
+    private var speechCounter = 0
+
+//    private var currentSpeech = 0
+
     private var prevHMSL: Int = 0
+
+    private var tonePitch = 0
+    private var toneChirp = 0
+    private var toneRate = 0
+    private var toneHold = 0
+
+    private var x0 = Int.MAX_VALUE
+    private var x1 = 0
+    private var x2 = 0
 
     init {
         flagSayAltitude =
@@ -68,7 +95,7 @@ class SessionComputationUnit(
             flagHasFix = true
 
             updateAlarms(gnssData)
-//            updateTones(gnssData)
+            updateTones(gnssData)
 
             if (!flagBeepDone) {
                 flagFirstFix = true
@@ -82,15 +109,343 @@ class SessionComputationUnit(
         prevHMSL = gnssData.hMsl
     }
 
+    private fun updateTones(gnssData: GnssData) {
+        val velD = gnssData.velD / 10
+
+        var valTone = Int.MAX_VALUE
+        var minTone = config.toneMinimum
+        var maxTone = config.toneMaximum
+        var valRate = Int.MAX_VALUE
+        var minRate = config.rateMinimum
+        var maxRate = config.rateMaximum
+
+        val (var1, var2, var3) = getValues(
+            gnssData = gnssData,
+            toneMode = config.toneMode,
+            rateMode = null,
+            min = minTone,
+            max = maxTone
+        )
+        valTone = var1
+        minTone = var2
+        maxTone = var3
+
+        if (config.rateMode == RateMode.MagnitudeOf1) {
+            val (value, min, max) = getValues(
+                gnssData = gnssData,
+                toneMode = config.toneMode,
+                rateMode = null,
+                min = minRate,
+                max = maxRate
+            )
+            valRate = value
+            minRate = min
+            maxRate = max
+            if (valRate != Int.MAX_VALUE) {
+                valRate = abs(valRate)
+            }
+        } else if (config.rateMode == RateMode.ChangeInValue1) {
+            x2 = x1
+            x1 = x0
+            x0 = valTone
+
+            if (x0 != Int.MAX_VALUE &&
+                x1 != Int.MAX_VALUE &&
+                x2 != Int.MAX_VALUE &&
+                maxTone != minTone
+            ) {
+                //val_2 = (int32_t) 1000 * (x2 - x0) / (int32_t) (2 * config->rate);
+                //val_2 = (int32_t) 10000 * ABS(val_2) / ABS(max_1 - min_1);
+                valRate = 1_000 * (x2 - x0) / (2 * config.samplePeriod)
+                valRate = 10_000 * abs(valRate) / abs(maxTone - minTone)
+            }
+        } else {
+            val (value, min, max) = getValues(
+                gnssData = gnssData,
+                toneMode = null,
+                rateMode = config.rateMode,
+                min = minRate,
+                max = maxRate
+            )
+            valRate = value
+            minRate = min
+            maxRate = max
+
+
+        }
+
+        if (!suppressTone) {
+            if (abs(velD) >= config.verticalThreshold &&
+                gnssData.gSpeed >= config.horizontalThreshold
+            ) {
+                setTone( valTone, minTone, maxTone, valRate, minRate, maxRate)
+                if (config.speechRate != 0 &&
+                    config.speeches.isNotEmpty() &&
+                    speechCounter >= config.speechRate &&
+                    // (*speech_ptr == 0) &&
+                    !flagSayAltitude
+                ) {
+                    config.speeches.firstOrNull { speech ->
+                        speech.mode != SpeechMode.AltitudeAboveDropzone ||
+                                gnssData.hMsl - config.dzElev >= MIN_ALTITUDE * 1_000
+                    }?.let { speech ->
+                        speakValue(config, gnssData, speech)
+                    }
+//                    config.speeches.forEach { speech ->
+//                        if (speech.mode != SpeechMode.AltitudeAboveDropzone ||
+//                            gnssData.hMsl - config.dzElev >= MIN_ALTITUDE * 1_000
+//                        ) {
+//                            speakValue(config, gnssData, speech)
+//                        }
+////                        currentSpeech = (currentSpeech + 1).mod(config.speeches.size)
+//                    }
+                    speechCounter = 0
+                }
+            }
+        } else {
+            toneRate = 0
+        }
+
+        if (speechCounter < config.speechRate) {
+            speechCounter += config.samplePeriod
+        }
+    }
+
+    private fun setTone(
+        valTone: Int,
+        minTone: Int,
+        maxTone: Int,
+        valRate: Int,
+        minRate: Int,
+        maxRate: Int
+    ) {
+        fun under(value: Int, min: Int, max: Int) = if (min < max) value <= min else value >= max
+        fun over(value: Int, min: Int, max: Int) = if (min < max) value >= max else value <= min
+
+        if (valTone != Int.MAX_VALUE && valRate != Int.MAX_VALUE) {
+            toneRate = if (under(valRate, minRate, maxRate)) {
+                if (config.flatLineAtMinimumRate) {
+                    Int.MAX_VALUE
+                } else {
+                    config.rateMinimum
+                }
+            } else if (over(valRate, minRate, maxRate)) {
+                config.rateMaximum - 1
+            } else {
+                config.rateMinimum + (config.rateMaximum - config.rateMinimum) * (valRate - minRate) / (maxRate - minRate)
+            }
+            if (under(valTone, minTone, maxTone)) {
+                when (config.toneLimitBehaviour) {
+                    ToneLimitBehaviour.NoTone -> toneRate = 0
+                    ToneLimitBehaviour.MinMaxTone -> {
+                        tonePitch = TONE_MIN_PITCH
+                        toneChirp = 0
+                    }
+                    ToneLimitBehaviour.ChirpUpDown -> {
+                        tonePitch = TONE_MIN_PITCH
+                        toneChirp = TONE_MAX_PITCH - TONE_MIN_PITCH
+                    }
+                    ToneLimitBehaviour.ChirpDownUp -> {
+                        tonePitch = TONE_MAX_PITCH
+                        toneChirp = TONE_MIN_PITCH - TONE_MAX_PITCH
+                    }
+                }
+            } else if (over(valTone, minTone, maxTone)) {
+                when (config.toneLimitBehaviour) {
+                    ToneLimitBehaviour.NoTone -> toneRate = 0
+                    ToneLimitBehaviour.MinMaxTone -> {
+                        tonePitch = TONE_MAX_PITCH
+                        toneChirp = 0
+                    }
+                    ToneLimitBehaviour.ChirpUpDown -> {
+                        tonePitch = TONE_MAX_PITCH
+                        toneChirp = TONE_MIN_PITCH - TONE_MAX_PITCH
+                    }
+                    ToneLimitBehaviour.ChirpDownUp -> {
+                        tonePitch = TONE_MIN_PITCH
+                        toneChirp = TONE_MAX_PITCH - TONE_MIN_PITCH
+                    }
+                }
+            } else {
+                tonePitch = TONE_MIN_PITCH + (TONE_MAX_PITCH - TONE_MIN_PITCH) * (valTone - minTone) / (maxTone - minTone)
+                toneChirp = 0
+            }
+        } else {
+            toneRate = 0
+        }
+    }
+
+    private fun speakValue(
+        config: ConfigFile,
+        gnssData: GnssData,
+        speech: Speech
+    ) {
+        val velD = gnssData.velD / 10
+
+        var speedMul = getSpeedMultiplicator(config, gnssData)
+        var tVal = 0
+
+        speedMul = when (speech.unit) {
+            UnitSystem.Metric -> speedMul * 18204 / 65536
+            UnitSystem.Imperial -> speedMul * 29297 / 65536
+        }
+
+        // Format the value with the appropriate number of decimal places
+        val format = when {
+            speech.mode == SpeechMode.AltitudeAboveDropzone -> "%d"  // Integer for altitude
+            speech.value == 0 -> "%.0f" // No decimals
+            else -> "%.${speech.value}f" // User-specified number of decimals
+        }
+
+        val speechStr = when (speech.mode) {
+            SpeechMode.HorizontalSpeed -> format.format((gnssData.gSpeed * 1024) / speedMul / 100.0) // For 2 decimal places
+            SpeechMode.VerticalSpeed -> format.format((velD * 1024) / speedMul / 100.0) // For 2 decimal places
+            SpeechMode.GlideRatio -> if (velD != 0) {
+                format.format(100.0 * gnssData.gSpeed / velD / 100.0)
+            } else {
+                ""
+            }
+
+            SpeechMode.InverseGlideRatio -> if (velD != 0) {
+                format.format(100.0 * velD / gnssData.gSpeed / 100.0)
+            } else {
+                ""
+            }
+
+            SpeechMode.TotalSpeed -> format.format((gnssData.speed * 1024) / speedMul / 100.0)
+            SpeechMode.AltitudeAboveDropzone -> {
+                val stepSize = if (config.altitudeUnit == UnitSystem.Metric) {
+                    10_000 * config.altitudeStep
+                } else {
+                    3048 * config.altitudeStep
+                }
+                val step = ((gnssData.hMsl - config.dzElev) + 10 + stepSize / 2) / stepSize
+                (step * speech.value).toString() + " ${if (speech.unit == UnitSystem.Metric) "meters" else "feet"}"
+            }
+
+            SpeechMode.DiveAngle -> format.format(
+                atan2(
+                    velD.toDouble(),
+                    gnssData.gSpeed.toDouble()
+                ) * 180 / Math.PI
+            )
+        }
+
+        scope.launch {
+            _sessionEvents.emit(SessionEvent.PlayTextEvent(speechStr))
+        }
+
+
+    }
+
+    private fun getSpeedMultiplicator(
+        config: ConfigFile,
+        gnssData: GnssData
+    ): Int = if (config.useSAS) {
+        if (gnssData.hMsl < 0) {
+            sasTable[0]
+        } else {
+            1024
+        }
+    } else if (gnssData.hMsl >= 11534336L) {
+        sasTable[11]
+    } else {
+        val h = gnssData.hMsl / 1024
+        val i = h / 1024
+        val j = h.mod(1024)
+        val y1 = sasTable[i]
+        val y2 = sasTable[i + 1]
+        y1 + ((y2 - y1) * j) / 1024
+    }
+
+    private fun getValues(
+        gnssData: GnssData,
+        toneMode: ToneMode? = null,
+        rateMode: RateMode? = null,
+        min: Int,
+        max: Int
+    ): Triple<Int, Int, Int> {
+
+        val velD = gnssData.velD / 10
+
+        val speedMul = getSpeedMultiplicator(
+            config = config,
+            gnssData = gnssData
+        )
+        var tVal = 0
+
+        fun getHorizontalSpeed(): Triple<Int, Int, Int> =
+            (gnssData.gSpeed * 1024) / speedMul to Int.MAX_VALUE triple Int.MAX_VALUE
+
+        fun getVerticalSpeed(): Triple<Int, Int, Int> =
+            (velD * 1024) / speedMul to Int.MAX_VALUE triple Int.MAX_VALUE
+
+        fun getGlideRatio(): Triple<Int, Int, Int> {
+            return if (velD != 0) {
+                10_000 * velD / gnssData.gSpeed to min * 100 triple max * 100
+            } else {
+                Int.MAX_VALUE to Int.MAX_VALUE triple Int.MAX_VALUE
+            }
+        }
+
+        fun getInverseGlideRatio(): Triple<Int, Int, Int> {
+            return if (gnssData.gSpeed != 0) {
+                return 10_000 * velD / gnssData.gSpeed to min * 100 triple max * 100
+            } else {
+                Int.MAX_VALUE to Int.MAX_VALUE triple Int.MAX_VALUE
+            }
+        }
+
+        fun getTotalSpeed(): Triple<Int, Int, Int> {
+            return gnssData.gSpeed * 1024 / speedMul to Int.MAX_VALUE triple Int.MAX_VALUE
+        }
+
+        fun getDiveAngle(): Triple<Int, Int, Int> {
+            return (atan2(
+                velD.toDouble(),
+                gnssData.gSpeed.toDouble()
+            ) / Math.PI * 100).toInt() to Int.MAX_VALUE triple Int.MAX_VALUE
+        }
+
+        if (toneMode != null) {
+            return when (toneMode) {
+                ToneMode.HorizontalSpeed -> getHorizontalSpeed()
+                ToneMode.VerticalSpeed -> getVerticalSpeed()
+                ToneMode.GlideRatio -> getGlideRatio()
+                ToneMode.InverseGlideRatio -> getInverseGlideRatio()
+                ToneMode.TotalSpeed -> getTotalSpeed()
+                ToneMode.DiveAngle -> getDiveAngle()
+            }
+        } else if (rateMode != null) {
+            return when (rateMode) {
+                RateMode.HorizontalSpeed -> getHorizontalSpeed()
+                RateMode.VerticalSpeed -> getVerticalSpeed()
+                RateMode.GlideRatio -> getGlideRatio()
+                RateMode.InverseGlideRatio -> getInverseGlideRatio()
+                RateMode.TotalSpeed -> getTotalSpeed()
+                RateMode.MagnitudeOf1 -> error("Should not be here")
+                RateMode.ChangeInValue1 -> error("Should not be here")
+                RateMode.DiveAngle -> getDiveAngle()
+            }
+        }
+
+        return Triple(
+            Int.MAX_VALUE,
+            0,
+            0
+        )
+    }
+
+
     private fun updateAlarms(gnssData: GnssData) {
         val velD = gnssData.velD / 10
 
-        val suppressAlt = config.silenceWindows.any {
+        suppressAlt = config.silenceWindows.any {
             it.bottom + config.dzElev <= gnssData.hMsl &&
                     it.top + config.dzElev >= gnssData.hMsl
         }
 
-        var suppressTone = suppressAlt || config.alarms.any {
+        suppressTone = suppressAlt || config.alarms.any {
             val alarmElevation = it.alarmElevation + config.dzElev
             (gnssData.hMsl <= alarmElevation + config.windowAbove) &&
                     (gnssData.hMsl >= alarmElevation - config.windowBelow)
@@ -192,6 +547,15 @@ class SessionComputationUnit(
 
     companion object {
         private const val MIN_ALTITUDE = 1500L // Minimum announced altitude (m)
+
+        private const val TONE_MIN_PITCH = 220
+        private const val TONE_MAX_PITCH = 1760
+
+        private val sasTable = intArrayOf(
+            1024, 1077, 1135, 1197,
+            1265, 1338, 1418, 1505,
+            1600, 1704, 1818, 1944
+        )
     }
 
 }
