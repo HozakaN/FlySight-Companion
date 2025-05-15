@@ -17,6 +17,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightcompanion.composablecommons.DropdownContainer
+import fr.hozakan.flysightcompanion.composablecommons.NumberInputField
 import fr.hozakan.flysightcompanion.composablecommons.SimpleDialogActionBar
 import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.designsystem.extension.fromText
@@ -44,6 +46,7 @@ import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.model.ConfigFile
+import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
 
@@ -178,6 +181,82 @@ fun SessionProfileScreenInternal(
                         }
                     )
                 }
+
+                // Show Map switch
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 16.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                FText(
+                                    text = "Show grid lines",
+                                    configuration = FlySightTheme.typography.plainScreenTextLarge
+                                )
+                                Switch(
+                                    checked = form.showGridLines,
+                                    onCheckedChange = { form.updateShowGridLines(it) }
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                FText(
+                                    text = "Show map in background",
+                                    configuration = FlySightTheme.typography.plainScreenTextLarge
+                                )
+                                Switch(
+                                    checked = form.showMap,
+                                    onCheckedChange = { form.updateShowMap(it) }
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.requiredHeight(16.dp))
+
+                            FText(
+                                text = "Competition Window",
+                                configuration = FlySightTheme.typography.plainScreenTextLarge
+                            )
+
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                            // Competition Window
+                            NumberInputField(
+                                label = "Top (m)",
+                                value = form.competitionWindowTop,
+                                onValueChange = { form.updateCompetitionWindowTop(it) }
+                            )
+
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                            NumberInputField(
+                                label = "Bottom (m)",
+                                value = form.competitionWindowBottom,
+                                onValueChange = { form.updateCompetitionWindowBottom(it) }
+                            )
+                        }
+                    }
+                }
+
+                // Performance Lane section
+                item {
+                    PerformanceLaneContainer(form, state)
+                }
             }
             Row(
                 modifier = Modifier
@@ -245,6 +324,222 @@ fun SessionProfileScreenInternal(
             }
         }
     }
+}
+
+@Composable
+private fun PerformanceLaneContainer(form: SessionProfileForm, state: SessionProfileState) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                FText(
+                    text = "Performance Lane",
+                    configuration = FlySightTheme.typography.plainScreenTextLarge
+                )
+                Switch(
+                    checked = form.displayPerformanceLane,
+                    onCheckedChange = { form.updateDisplayPerformanceLane(it) }
+                )
+            }
+
+            if (form.displayPerformanceLane) {
+
+                if (form.showMap) {
+                    Spacer(modifier = Modifier.requiredHeight(16.dp))
+
+                    // Display options
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        FText(text = "Show in map")
+                        Switch(
+                            checked = form.displayPerformanceLaneInMap,
+                            onCheckedChange = { form.updateDisplayPerformanceLaneInMap(it) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                // Reference point picker
+                ReferencePointSelector(
+                    referencePoints = state.referencePoints,
+                    selectedReferencePoint = form.referencePoint,
+                    onReferencePointSelected = { form.updateReferencePoint(it) }
+                )
+
+                Spacer(modifier = Modifier.requiredHeight(16.dp))
+
+                // Performance Lane Width
+                NumberInputField(
+                    label = "Performance Lane Width (m)",
+                    value = form.performanceLaneWidth,
+                    onValueChange = { form.updatePerformanceLaneWidth(it) }
+                )
+
+                Spacer(modifier = Modifier.requiredHeight(16.dp))
+
+                FText(
+                    text = "Exit Detection Window",
+                    configuration = FlySightTheme.typography.plainScreenTextMedium
+                )
+
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                // Exit Detection Window
+                NumberInputField(
+                    label = "Top (m)",
+                    value = form.exitDetectionWindowTop,
+                    onValueChange = { form.updateExitDetectionWindowTop(it) }
+                )
+                FText(
+                    text = "Do not detect an exit if above this altitude (negative to disable this check)",
+                    configuration = FlySightTheme.typography.captionText,
+                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                )
+
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                NumberInputField(
+                    label = "Bottom (m)",
+                    value = form.exitDetectionWindowBottom,
+                    onValueChange = { form.updateExitDetectionWindowBottom(it) }
+                )
+                FText(
+                    text = "Do not detect an exit if below this altitude (negative to disable exit detection)",
+                    configuration = FlySightTheme.typography.captionText,
+                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                )
+
+                Spacer(modifier = Modifier.requiredHeight(16.dp))
+
+                FText(
+                    text = "Exit Detection Parameters",
+                    configuration = FlySightTheme.typography.plainScreenTextMedium
+                )
+
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                // Exit detection parameters
+                NumberInputField(
+                    label = "Consecutive points down (exit)",
+                    value = form.exitPointsDown,
+                    onValueChange = { form.updateExitPointsDown(it) }
+                )
+                FText(
+                    text = "Consecutive points down to indicate an exit",
+                    configuration = FlySightTheme.typography.captionText,
+                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                )
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                NumberInputField(
+                    label = "Consecutive points up (reset)",
+                    value = form.exitPointsUp,
+                    onValueChange = { form.updateExitPointsUp(it) }
+                )
+                FText(
+                    text = "Consecutive points up to reset the exit altitude",
+                    configuration = FlySightTheme.typography.captionText,
+                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                )
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                NumberInputField(
+                    label = "Down threshold (cm/s)",
+                    value = form.exitDownThresh,
+                    onValueChange = { form.updateExitDownThresh(it) }
+                )
+                FText(
+                    text = "Speed (cm/s) to indicate down (positive) (initialize exit altitude)",
+                    configuration = FlySightTheme.typography.captionText,
+                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                )
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                NumberInputField(
+                    label = "Up threshold (cm/s)",
+                    value = form.exitUpThresh,
+                    onValueChange = { form.updateExitUpThresh(it) }
+                )
+                FText(
+                    text = "Speed (cm/s) to indicate up (negative) (reset exit altitude)",
+                    configuration = FlySightTheme.typography.captionText,
+                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                )
+
+                Spacer(modifier = Modifier.requiredHeight(16.dp))
+
+                FText(
+                    text = "Alerts",
+                    configuration = FlySightTheme.typography.plainScreenTextMedium
+                )
+
+                Spacer(modifier = Modifier.requiredHeight(4.dp))
+
+                // Alert settings
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    FText(text = "Visual alert when exit detected")
+                    Switch(
+                        checked = form.showVisualAlertWhenExitDetected,
+                        onCheckedChange = { form.updateShowVisualAlertWhenExitDetected(it) }
+                    )
+                }
+
+                Spacer(modifier = Modifier.requiredHeight(4.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    FText(text = "Audio alert when exit detected")
+                    Switch(
+                        checked = form.playAudioAlertWhenExitDetected,
+                        onCheckedChange = { form.updatePlayAudioAlertWhenExitDetected(it) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReferencePointSelector(
+    referencePoints: List<ReferencePoint>,
+    selectedReferencePoint: ReferencePoint?,
+    onReferencePointSelected: (ReferencePoint?) -> Unit
+) {
+    val selectableValues = remember(referencePoints) {
+        referencePoints.map { it.name }
+    }
+
+    DropdownContainer(
+        label = "Reference Point",
+        selectedValue = selectedReferencePoint?.name ?: "Select a reference point",
+        options = selectableValues,
+        onSelectionChanged = { newSelection ->
+            onReferencePointSelected(referencePoints.firstOrNull { it.name == newSelection })
+        },
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 @Composable

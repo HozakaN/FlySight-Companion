@@ -42,6 +42,21 @@ class SessionProfileForm(
     internal var displayGrid by mutableStateOf(initialConfiguration.displayGrid)
     internal var showGridLines by mutableStateOf(initialConfiguration.showGridLines)
     internal var displayItems by mutableStateOf(initialConfiguration.displayItems)
+    internal var useUSForTTS by mutableStateOf(initialConfiguration.useUSForTTS)
+    
+    internal var performanceLaneWidth by mutableStateOf(initialConfiguration.performanceLaneWidth)
+    internal var competitionWindowTop by mutableStateOf(initialConfiguration.competitionWindowTop)
+    internal var competitionWindowBottom by mutableStateOf(initialConfiguration.competitionWindowBottom)
+    internal var exitDetectionWindowTop by mutableStateOf(initialConfiguration.exitDetectionWindowTop)
+    internal var exitDetectionWindowBottom by mutableStateOf(initialConfiguration.exitDetectionWindowBottom)
+    internal var showVisualAlertWhenExitDetected by mutableStateOf(initialConfiguration.showVisualAlertWhenExitDetected)
+    internal var playAudioAlertWhenExitDetected by mutableStateOf(initialConfiguration.playAudioAlertWhenExitDetected)
+    internal var showVisualAlertWhenNotInWindowBeforeExit by mutableStateOf(initialConfiguration.showVisualAlertWhenNotInWindowBeforeExit)
+
+    internal var exitPointsDown by mutableStateOf(initialConfiguration.exitPointsDown)
+    internal var exitPointsUp by mutableStateOf(initialConfiguration.exitPointsUp)
+    internal var exitDownThresh by mutableStateOf(initialConfiguration.exitDownThresh)
+    internal var exitUpThresh by mutableStateOf(initialConfiguration.exitUpThresh)
 
     fun updateSessionProfileName(fileName: String) {
         name = fileName
@@ -64,6 +79,9 @@ class SessionProfileForm(
 
     fun updateShowMap(showMap: Boolean) {
         this.showMap = showMap
+        if (!showMap) {
+            updateDisplayPerformanceLaneInMap(false)
+        }
         isDirty = true
     }
 
@@ -80,6 +98,7 @@ class SessionProfileForm(
     fun updateReferencePoint(referencePoint: ReferencePoint?) {
         this.referencePoint = referencePoint
         isDirty = true
+        checkValidity()
     }
 
     fun updateDisplayGrid(displayGrid: DisplayGrid) {
@@ -102,11 +121,77 @@ class SessionProfileForm(
         isDirty = true
     }
 
+    fun updateUseUSForTTS(useUSForTTS: Boolean) {
+        this.useUSForTTS = useUSForTTS
+        isDirty = true
+    }
+    
+    fun updatePerformanceLaneWidth(width: Int) {
+        this.performanceLaneWidth = width
+        isDirty = true
+    }
+    
+    fun updateCompetitionWindowTop(value: Int) {
+        this.competitionWindowTop = value
+        isDirty = true
+    }
+    
+    fun updateCompetitionWindowBottom(value: Int) {
+        this.competitionWindowBottom = value
+        isDirty = true
+    }
+    
+    fun updateExitDetectionWindowTop(value: Int) {
+        this.exitDetectionWindowTop = value
+        isDirty = true
+    }
+    
+    fun updateExitDetectionWindowBottom(value: Int) {
+        this.exitDetectionWindowBottom = value
+        isDirty = true
+    }
+    
+    fun updateShowVisualAlertWhenExitDetected(show: Boolean) {
+        this.showVisualAlertWhenExitDetected = show
+        isDirty = true
+    }
+    
+    fun updatePlayAudioAlertWhenExitDetected(play: Boolean) {
+        this.playAudioAlertWhenExitDetected = play
+        isDirty = true
+    }
+    
+    fun updateShowVisualAlertWhenNotInWindowBeforeExit(show: Boolean) {
+        this.showVisualAlertWhenNotInWindowBeforeExit = show
+        isDirty = true
+    }
+
+    fun updateExitPointsDown(value: Int) {
+        this.exitPointsDown = value
+        isDirty = true
+    }
+    
+    fun updateExitPointsUp(value: Int) {
+        this.exitPointsUp = value
+        isDirty = true
+    }
+    
+    fun updateExitDownThresh(value: Int) {
+        this.exitDownThresh = value
+        isDirty = true
+    }
+    
+    fun updateExitUpThresh(value: Int) {
+        this.exitUpThresh = value
+        isDirty = true
+    }
+
     private fun checkValidity() {
         isValid =
             name != null &&
                     description != null &&
-                    configFile != null
+                    configFile != null &&
+                    referencePoint != null
     }
 
     fun toSessionConfiguration(): SessionProfile? {
@@ -118,10 +203,22 @@ class SessionProfileForm(
             showMap = showMap,
             showPerformanceLane = displayPerformanceLane,
             showPerformanceLaneInMap = displayPerformanceLaneInMap,
+            performanceLaneWidth = performanceLaneWidth,
+            competitionWindowTop = competitionWindowTop,
+            competitionWindowBottom = competitionWindowBottom,
+            exitDetectionWindowTop = exitDetectionWindowTop,
+            exitDetectionWindowBottom = exitDetectionWindowBottom,
+            exitPointsDown = exitPointsDown,
+            exitPointsUp = exitPointsUp,
+            exitDownThresh = exitDownThresh,
+            exitUpThresh = exitUpThresh,
+            showVisualAlertWhenExitDetected = showVisualAlertWhenExitDetected,
+            playAudioAlertWhenExitDetected = playAudioAlertWhenExitDetected,
+            showVisualAlertWhenNotInWindowBeforeExit = showVisualAlertWhenNotInWindowBeforeExit,
             referencePoint = referencePoint,
             displayGrid = displayGrid,
             showGridLines = showGridLines,
-            useUSForTTS = true,
+            useUSForTTS = useUSForTTS,
             displayItems = displayItems
         )
     }

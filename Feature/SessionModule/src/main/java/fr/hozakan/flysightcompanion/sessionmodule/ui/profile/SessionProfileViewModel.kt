@@ -6,6 +6,7 @@ import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
+import fr.hozakan.flysightcompanion.sessionmodule.business.ReferencePointsService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -16,7 +17,8 @@ import javax.inject.Inject
 
 class SessionProfileViewModel @Inject constructor(
     private val sessionProfilesService: SessionProfilesService,
-    configFileService: ConfigFileService
+    configFileService: ConfigFileService,
+    referencePointsService: ReferencePointsService
 ) : ViewModel() {
 
     private val _state =
@@ -40,6 +42,17 @@ class SessionProfileViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         configFiles = configFiles
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+            
+        // Load reference points
+        referencePointsService.referencePoints
+            .onEach { referencePoints ->
+                _state.update {
+                    it.copy(
+                        referencePoints = referencePoints
                     )
                 }
             }

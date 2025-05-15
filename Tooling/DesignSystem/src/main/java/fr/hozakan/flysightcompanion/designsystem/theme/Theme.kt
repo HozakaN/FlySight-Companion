@@ -289,6 +289,14 @@ data class TextConfiguration(
         )
 
         @Stable
+        val captionText = TextConfiguration(
+            style = AppTypography.bodyMedium,
+            fontSize = TextUnit.Unspecified,
+            fontStyle = null,
+            fontWeight = null,
+        )
+
+        @Stable
         val PlainScreenButtonText = TextConfiguration(
             style = AppTypography.labelLarge,
             fontSize = TextUnit.Unspecified,
@@ -338,6 +346,10 @@ data class FlySightTypography(
     @Stable
     val plainScreenTextLarge: TextConfiguration,
     @Stable
+    val plainScreenTextMedium: TextConfiguration,
+    @Stable
+    val captionText: TextConfiguration,
+    @Stable
     val plainScreenButtonText: TextConfiguration
 )
 
@@ -351,6 +363,8 @@ val LocalFlySightTypography = staticCompositionLocalOf {
     FlySightTypography(
         cardTitle = TextConfiguration.Default,
         plainScreenTextLarge = TextConfiguration.PlainScreenTextLarge,
+        plainScreenTextMedium = TextConfiguration.PlainScreenTextMedium,
+        captionText = TextConfiguration.captionText,
         plainScreenButtonText = TextConfiguration.PlainScreenTextMedium
     )
 }
@@ -388,6 +402,8 @@ fun FlySightCompanionTheme(
     val flySightTypography = FlySightTypography(
         cardTitle = TextConfiguration.CardListItemTitleLarge,
         plainScreenTextLarge = TextConfiguration.PlainScreenTextLarge,
+        plainScreenTextMedium = TextConfiguration.PlainScreenTextMedium,
+        captionText = TextConfiguration.captionText,
         plainScreenButtonText = TextConfiguration.PlainScreenTextMedium
     )
 
