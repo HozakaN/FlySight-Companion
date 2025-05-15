@@ -135,7 +135,6 @@ class SessionComputationUnit(
                         // Handle iTow rollover (iTow is reset every week)
                         val currentTimeMs = gnssData.iTow.toInt()
                         val exitTimeMs = exitPoint.iTow.toInt()
-                        Timber.d("Hoz3 currentTimeMs: $currentTimeMs; exitTimeMs: $exitTimeMs")
                         val timeDiffMs = if (currentTimeMs >= exitTimeMs) {
                             currentTimeMs - exitTimeMs
                         } else {
@@ -143,15 +142,11 @@ class SessionComputationUnit(
                             currentTimeMs + (604800000 - exitTimeMs)
                         }
 
-                        Timber.d("Hoz3 timeDiffMs: $timeDiffMs; timeAfterExitMs: $timeAfterExitMs")
                         if (timeDiffMs >= timeAfterExitMs) {
-                            Timber.d("Hoz3 laneStart, ${gnssData.lat}; ${gnssData.lon}; ${gnssData.hMsl}")
                             _laneStartPoint.value = gnssData
                             scope.launch {
                                 _sessionEvents.emit(SessionEvent.PerformanceLaneStart(gnssData))
                             }
-                        } else {
-                            Timber.d("Hoz3 Not enough time has passed since exit point detection")
                         }
                     }
                 }
@@ -568,7 +563,6 @@ class SessionComputationUnit(
                 val alarmElevation = alarm.alarmElevation + config.dzElev
 
                 if (alarmElevation >= min && alarmElevation <= max) {
-                    Timber.d("Hoz6 alarm $alarm triggered")
                     scope.launch {
                         _sessionEvents.emit(SessionEvent.AlarmEvent(alarm))
                     }

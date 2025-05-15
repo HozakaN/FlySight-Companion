@@ -158,15 +158,15 @@ fun RecordDetailScreen(
                 val around200 = analyze.dataPoints.minBy {
                     abs(it.t - 200.0)
                 }
-                Timber.d(
-                    "Hoz2 closestToZero: x=${xValuePicker(closestToZero)}, y=${
-                        yValuePicker(
-                            closestToZero
-                        )
-                    } ${closestToZero.dateTime}"
-                )
-                Timber.d("Hoz2 around250: x=${xValuePicker(around250)}, y=${yValuePicker(around250)} ${around250.dateTime}")
-                Timber.d("Hoz2 around200: x=${xValuePicker(around200)}, y=${yValuePicker(around200)} ${around200.dateTime}")
+//                Timber.d(
+//                    "Hoz2 closestToZero: x=${xValuePicker(closestToZero)}, y=${
+//                        yValuePicker(
+//                            closestToZero
+//                        )
+//                    } ${closestToZero.dateTime}"
+//                )
+//                Timber.d("Hoz2 around250: x=${xValuePicker(around250)}, y=${yValuePicker(around250)} ${around250.dateTime}")
+//                Timber.d("Hoz2 around200: x=${xValuePicker(around200)}, y=${yValuePicker(around200)} ${around200.dateTime}")
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {

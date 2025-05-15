@@ -6,7 +6,6 @@ import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
-import fr.hozakan.flysightcompanion.model.records.DataPoint
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -14,7 +13,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -49,19 +50,18 @@ class DefaultSessionController(
         sessionComputationUnit.sessionEvents
     )
 
-    private val videoController = VideoController(
+    private val _videoController = VideoControllerImpl(
         context = context,
         sessionProfile = profile,
         displayService = displayService,
 //        selectedDisplay = profile.selectedDisplay,
         sessionEvents = sessionComputationUnit.sessionEvents
     )
+    override val videoController: VideoController = _videoController
+
+    override val exitDetected: StateFlow<GnssData?> = sessionComputationUnit.exitDetected
 
     override val sessionEvents: SharedFlow<SessionEvent> = sessionComputationUnit.sessionEvents
-
-    init {
-//        start()
-    }
 
     private fun start() {
         startJob = scope.launch {
@@ -72,13 +72,15 @@ class DefaultSessionController(
                             val pickedTiming = source.userInteractionEndEvent.first()
                             (gnssSource as? FileGnssSource)?.getGnssPointsUpToTime(pickedTiming.toLong())?.let { pastGnssData ->
                                 sessionComputationUnit.handleDataBatch(pastGnssData)
+                                pastGnssData.lastOrNull()?.let { data ->
+                                    videoController.moveTo(data)
+                                }
                             }
                         }
                 }
             }
             gnssFlow.collect { gnssData ->
                 if (gnssData == FakeGnssData) {
-                    Timber.d("Hoz5 FakeGnssData detected; callback = $callback")
                     callback?.onDone()
                 } else {
                     eatData(gnssData)

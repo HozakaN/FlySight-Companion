@@ -16,7 +16,11 @@ interface SessionController {
 
     val gnssFlow: SharedFlow<GnssData>
 
+    val exitDetected: StateFlow<GnssData?>
+
     val timeMutableSource: TimeMutableSource?
+
+    val videoController: VideoController
 
     fun pause()
 

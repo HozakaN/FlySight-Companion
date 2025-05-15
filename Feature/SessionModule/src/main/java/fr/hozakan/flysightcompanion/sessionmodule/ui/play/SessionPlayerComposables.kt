@@ -2,6 +2,7 @@ package fr.hozakan.flysightcompanion.sessionmodule.ui.play
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
@@ -65,6 +66,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.Dash
+import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
@@ -81,6 +84,8 @@ import fr.hozakan.flysightcompanion.model.ui.SpeedOrientation
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionEvent
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.TimeMutableSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.player.VideoController
+import fr.hozakan.flysightcompanion.sessionmodule.business.player.VideoControllerImpl
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -729,43 +734,12 @@ private fun SessionMainContainer(
             }
         }
     }
-//
-//    // Function to trigger alarm animation
-//    fun triggerAlarmAnimation(message: String) {
-//        showAlarmAnimation = true
-//        alarmMessage = message
-//
-//        scope.launch {
-//            // Reset animations to initial values
-//            scale.snapTo(1f)
-//            alpha.snapTo(1f)
-//
-//            // Run animations in parallel
-//            launch {
-//                scale.animateTo(
-//                    targetValue = 2.5f,
-//                    animationSpec = tween(durationMillis = 2000)
-//                )
-//            }
-//
-//            launch {
-//                // Start fading out after a short delay
-//                delay(500)
-//                alpha.animateTo(
-//                    targetValue = 0f,
-//                    animationSpec = tween(durationMillis = 1500)
-//                )
-//                // Hide alarm when animation completes
-//                showAlarmAnimation = false
-//            }
-//        }
-//    }
 
     LaunchedEffect(Unit) {
         controller.sessionEvents.collectLatest { event ->
             alarmMessage = when (val evt = event) {
                 is SessionEvent.AlarmEvent -> {
-                    when(evt.alarm.alarmType) {
+                    when (evt.alarm.alarmType) {
                         AlarmType.NoAlarm -> ""
                         AlarmType.Beep -> ""
                         AlarmType.ChirpUp -> ""
@@ -773,6 +747,7 @@ private fun SessionMainContainer(
                         AlarmType.PlayFile -> evt.alarm.alarmFile
                     }
                 }
+
                 is SessionEvent.ExitFound -> "Exit detected"
                 is SessionEvent.PerformanceLaneStart -> "Lane start"
                 is SessionEvent.PlayFileEvent -> ""
@@ -818,19 +793,30 @@ private fun GMapContainer(sessionController: SessionController) {
 
     val cameraPositionState = rememberCameraPositionState()
 
-    LaunchedEffect(gnssData) {
-        val data = gnssData
+
+    val perfLanes by sessionController.videoController.performanceLines.collectAsState()
+
+    val gpsData = gnssData
+    val cameraZoom by animateFloatAsState(
+        targetValue = if (sessionController.exitDetected.value == null || (gpsData != null && sessionController.profile.competitionWindowBottom > gpsData.hMsl)) 13f else 16f,
+        animationSpec = tween(durationMillis = 1_500)
+    )
+
+    LaunchedEffect(gpsData, cameraZoom) {
+        val data = gpsData
         if (data != null) {
             cameraPositionState.move(
                 CameraUpdateFactory.newCameraPosition(
                     CameraPosition.fromLatLngZoom(
                         LatLng(data.lat, data.lon),
-                        13f
+                        cameraZoom
                     )
                 )
             )
         }
     }
+
+
 
     Box(
         modifier = Modifier
@@ -851,12 +837,12 @@ private fun GMapContainer(sessionController: SessionController) {
                 mapToolbarEnabled = false
             )
         ) {
-            gnssData?.let { data ->
+            gpsData?.let { data ->
                 Marker(
                     state = MarkerState(
                         position = LatLng(
-                            data.lat.toDouble(),
-                            data.lon.toDouble()
+                            data.lat,
+                            data.lon
                         )
                     ),
                     title = "Current Position"
@@ -864,9 +850,9 @@ private fun GMapContainer(sessionController: SessionController) {
             }
 
             val jumpPath = remember { mutableStateListOf<LatLng>() }
-            LaunchedEffect(gnssData) {
-                gnssData?.let { data ->
-                    jumpPath.add(LatLng(data.lat.toDouble(), data.lon.toDouble()))
+            LaunchedEffect(gpsData) {
+                gpsData?.let { data ->
+                    jumpPath.add(LatLng(data.lat, data.lon))
                     if (jumpPath.size > 1000) {
                         jumpPath.removeAt(0)
                     }
@@ -892,6 +878,27 @@ private fun GMapContainer(sessionController: SessionController) {
                     title = refPoint.name,
                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
                 )
+            }
+
+            // Draw performance lanes
+            if (sessionController.profile.showPerformanceLaneInMap) {
+                perfLanes.forEach { lane ->
+                    val points = lane.points.map { coord ->
+                        LatLng(coord.latitude, coord.longitude)
+                    }
+
+                    if (points.size >= 2) {
+                        with(LocalDensity.current) {
+                            Polyline(
+                                points = points,
+                                color = if (lane.isReference) Color.Red else Color.Green,
+                                width = 2.dp.toPx(),
+                                pattern = if (lane.isReference) null else
+                                    listOf(Dash(20f), Gap(10f))
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -975,7 +982,9 @@ class FakeSessionController(
 
     override val navLane: StateFlow<LoadingState<Int>> = MutableStateFlow(LoadingState.Loading())
     override val gnssFlow: SharedFlow<GnssData> = MutableSharedFlow()
+    override val exitDetected: StateFlow<GnssData?> = MutableStateFlow(null)
     override val timeMutableSource: TimeMutableSource? = null
+    override val videoController: VideoController = fakeVideoController
 
     override fun pause() {}
 
@@ -984,6 +993,13 @@ class FakeSessionController(
 
     override fun destroy() {}
 
+}
+
+private val fakeVideoController = object : VideoController {
+    override val performanceLines: StateFlow<List<VideoControllerImpl.PerformanceLine>> =
+        MutableStateFlow(emptyList())
+
+    override fun moveTo(gnssData: GnssData) {}
 }
 
 private val fakeProfile = SessionProfile.default()

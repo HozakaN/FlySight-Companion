@@ -60,9 +60,18 @@ class FileGnssSource(
                     val gnssPointsWithTimestamps = dataPoints.map { dataPoint ->
                         val relativeTimeMilliseconds = dataPoint.dateTime.toInstant(ZoneOffset.UTC)
                             .toEpochMilli() - firstDataPointTime
-                        
+
+                        // Calculate GPS Time of Week (iTOW) in milliseconds
+                        // GPS week starts on Sunday at 00:00:00 UTC
+                        val dayOfWeek = dataPoint.dateTime.dayOfWeek.value % 7 // 0-based (Sunday = 0)
+                        val secondsInDay = dataPoint.dateTime.hour * 3600 +
+                                dataPoint.dateTime.minute * 60 +
+                                dataPoint.dateTime.second
+                        val msInDay = secondsInDay * 1000 + dataPoint.dateTime.nano / 1_000_000
+                        val iTow = (dayOfWeek * 24 * 3600 * 1000 + msInDay).toUInt()
+
                         val gnssData = GnssData(
-                            iTow = 0.toUInt(),
+                            iTow = iTow,
                             lon = dataPoint.longitude,
                             lat = dataPoint.latitude,
                             hMsl = dataPoint.hMSL.toInt(),
@@ -96,12 +105,12 @@ class FileGnssSource(
                         // Calculate GPS Time of Week (iTOW) in milliseconds
                         // GPS week starts on Sunday at 00:00:00 UTC
                         val dayOfWeek = currentPoint.dateTime.dayOfWeek.value % 7 // 0-based (Sunday = 0)
-                        val secondsInDay = currentPoint.dateTime.hour * 3600 + 
-                                          currentPoint.dateTime.minute * 60 + 
+                        val secondsInDay = currentPoint.dateTime.hour * 3600 +
+                                          currentPoint.dateTime.minute * 60 +
                                           currentPoint.dateTime.second
                         val msInDay = secondsInDay * 1000 + currentPoint.dateTime.nano / 1_000_000
                         val iTow = (dayOfWeek * 24 * 3600 * 1000 + msInDay).toUInt()
-                        
+
                         val dataToEmit = GnssData(
                             iTow = iTow,
                             lon = currentPoint.longitude,
