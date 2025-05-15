@@ -25,6 +25,7 @@ data class SessionProfile(
     val exitPointsUp: Int, //  Consecutive points up to reset the exit altitude
     val exitDownThresh: Int, // Speed (cm/s) to indicate down (positive) (initialize exit altitude)
     val exitUpThresh: Int, // Speed (cm/s) to indicate up (negative) (reset exit altitude)
+    val timeAfterExit: Int, // Lane start time after ext (ms) (negative to disable)
     val showVisualAlertWhenExitDetected: Boolean,
     val playAudioAlertWhenExitDetected: Boolean,
     val showVisualAlertWhenNotInWindowBeforeExit: Boolean,
@@ -54,6 +55,7 @@ data class SessionProfile(
             exitPointsUp = 50,
             exitDownThresh = 800,
             exitUpThresh = -800,
+            timeAfterExit = 10_000,
             showVisualAlertWhenExitDetected = true,
             playAudioAlertWhenExitDetected = false,
             showVisualAlertWhenNotInWindowBeforeExit = false,

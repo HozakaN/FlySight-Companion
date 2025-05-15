@@ -15,17 +15,19 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import kotlin.div
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.text.toDouble
-import kotlin.times
 
 class SessionComputationUnit(
     private val profile: SessionProfile
@@ -38,6 +40,20 @@ class SessionComputationUnit(
 
     private val scope = CoroutineScope(SupervisorJob() + CoroutineName("SessionComputationUnit"))
 
+    private val exitDetector = ExitDetectorDelegate(
+        minAltAglMm = profile.exitDetectionWindowBottom * 1_000,
+        cfgExitAltAglMm = profile.exitDetectionWindowTop * 1_000,
+        upThreshCmps = profile.exitUpThresh,
+        downThreshCmps = profile.exitDownThresh,
+        numDown = max(profile.exitPointsDown, 0),
+        numUp = max(profile.exitPointsUp, 0),
+        dzElevation = profile.configFile.dzElev
+    )
+
+    val exitDetected: StateFlow<GnssData?> = exitDetector.exitFound
+
+    private val _laneStartPoint = MutableStateFlow<GnssData?>(null)
+    val laneStartPoint: StateFlow<GnssData?> = _laneStartPoint.asStateFlow()
 
     private var flagHasFix = false
     private var prevFlagHasFix = false
@@ -99,6 +115,30 @@ class SessionComputationUnit(
 
             if (!flagBeepDone) {
                 flagFirstFix = true
+            }
+            exitDetector.handleNewData(gnssData = gnssData)
+            if (profile.showPerformanceLane) {
+                exitDetector.exitFound.value?.let { exitPoint ->
+                    if (_laneStartPoint.value == null) {
+                        // Check if current time is at least timeAfterExit seconds after the exit point detection
+                        // iTow is GPS time of week in milliseconds
+                        val timeAfterExitMs = profile.timeAfterExit * 1000 // Convert seconds to milliseconds
+                        
+                        // Handle iTow rollover (iTow is reset every week)
+                        val currentTimeMs = gnssData.iTow.toInt()
+                        val exitTimeMs = exitPoint.iTow.toInt()
+                        val timeDiffMs = if (currentTimeMs >= exitTimeMs) {
+                            currentTimeMs - exitTimeMs
+                        } else {
+                            // Handle week rollover (604800000 = 7*24*60*60*1000 ms in a week)
+                            currentTimeMs + (604800000 - exitTimeMs)
+                        }
+                        
+                        if (timeDiffMs >= timeAfterExitMs) {
+                            _laneStartPoint.value = gnssData
+                        }
+                    }
+                }
             }
         } else {
             flagHasFix = false

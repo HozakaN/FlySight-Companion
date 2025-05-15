@@ -57,6 +57,7 @@ class SessionProfileForm(
     internal var exitPointsUp by mutableStateOf(initialConfiguration.exitPointsUp)
     internal var exitDownThresh by mutableStateOf(initialConfiguration.exitDownThresh)
     internal var exitUpThresh by mutableStateOf(initialConfiguration.exitUpThresh)
+    internal var timeAfterExit by mutableStateOf(initialConfiguration.timeAfterExit)
 
     fun updateSessionProfileName(fileName: String) {
         name = fileName
@@ -186,6 +187,11 @@ class SessionProfileForm(
         isDirty = true
     }
 
+    fun updateTimeAfterExit(value: Int) {
+        this.timeAfterExit = value
+        isDirty = true
+    }
+
     private fun checkValidity() {
         isValid =
             name != null &&
@@ -212,6 +218,7 @@ class SessionProfileForm(
             exitPointsUp = exitPointsUp,
             exitDownThresh = exitDownThresh,
             exitUpThresh = exitUpThresh,
+            timeAfterExit = timeAfterExit,
             showVisualAlertWhenExitDetected = showVisualAlertWhenExitDetected,
             playAudioAlertWhenExitDetected = playAudioAlertWhenExitDetected,
             showVisualAlertWhenNotInWindowBeforeExit = showVisualAlertWhenNotInWindowBeforeExit,
