@@ -161,6 +161,7 @@ class SessionComputationUnit(
     }
 
     fun handleDataBatch(gnssData: List<GnssData>) {
+        Timber.d("Hoz3 handleDataBatch: ${gnssData.size}")
         prevFlagHasFix = false
         // Reset lane start point
         _laneStartPoint.value = null

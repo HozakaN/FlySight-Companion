@@ -55,7 +55,9 @@ class DefaultSessionController(
         sessionProfile = profile,
         displayService = displayService,
 //        selectedDisplay = profile.selectedDisplay,
-        sessionEvents = sessionComputationUnit.sessionEvents
+        sessionEvents = sessionComputationUnit.sessionEvents,
+        exitDetection = sessionComputationUnit.exitDetected,
+        laneStartDetection = sessionComputationUnit.laneStartPoint
     )
     override val videoController: VideoController = _videoController
 

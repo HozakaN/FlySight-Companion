@@ -59,7 +59,7 @@ class ExitDetectorDelegate(
     /**
      * Reset the detector to initial state
      */
-    fun reset() {
+    private fun reset() {
         exitAltValid = false
         direction = Direction.UP
         count = 0

@@ -25,7 +25,9 @@ class VideoControllerImpl(
     private val sessionProfile: SessionProfile,
     private val displayService: DisplayService,
 //    private val selectedDisplay: Display,
-    private val sessionEvents: SharedFlow<SessionEvent>
+    private val sessionEvents: SharedFlow<SessionEvent>,
+    private val exitDetection: StateFlow<GnssData?>,
+    private val laneStartDetection: StateFlow<GnssData?>
 ) : VideoController {
 
     private val scope = CoroutineScope(SupervisorJob() + CoroutineName("VideoController"))
@@ -55,6 +57,18 @@ class VideoControllerImpl(
                 handleDisplays(displays)
             }
             .launchIn(scope)
+        exitDetection
+            .onEach { exitDetection ->
+                exitPoint = exitDetection
+                updatePerformanceLanes()
+            }
+            .launchIn(scope)
+        laneStartDetection
+            .onEach { laneStartDetection ->
+                laneStartPoint = laneStartDetection
+                updatePerformanceLanes()
+            }
+            .launchIn(scope)
     }
 
     private fun handleDisplays(displays: List<Display>) {
@@ -79,14 +93,8 @@ class VideoControllerImpl(
 
             is SessionEvent.PlayFileEvent -> {}
             is SessionEvent.PlayTextEvent -> {}
-            is SessionEvent.ExitFound -> {
-                exitPoint = event.exit
-                updatePerformanceLanes()
-            }
-            is SessionEvent.PerformanceLaneStart -> {
-                laneStartPoint = event.gnssData
-                updatePerformanceLanes()
-            }
+            is SessionEvent.ExitFound -> {}
+            is SessionEvent.PerformanceLaneStart -> {}
         }
     }
 
@@ -94,7 +102,10 @@ class VideoControllerImpl(
 
         // Use dateTime for time comparison instead of separate timestamp fields
         val currentTime = gnssData.iTow
-        val exitTime = exitPoint?.iTow ?: return
+        val exitTime = exitPoint?.iTow ?: run {
+            _performanceLines.value = emptyList()
+            return
+        }
 
         if (currentTime - exitTime < 0.toUInt()) {
             // Current time is before exit detection
@@ -102,7 +113,11 @@ class VideoControllerImpl(
             _performanceLines.value = emptyList() // Clear lines
         }
 
-        val laneStartTime = laneStartPoint?.iTow ?: return
+        val laneStartTime = laneStartPoint?.iTow ?: run {
+            _performanceLines.value = emptyList()
+            return
+        }
+
         if (currentTime - laneStartTime < 0.toUInt()) {
             // Current time is before lane start
             laneStartPoint = null
@@ -126,7 +141,6 @@ class VideoControllerImpl(
         val startPoint = laneStartPoint
         val referencePoint = sessionProfile.referencePoint
 
-        Timber.d("Hoz3 updating performance lanes with startPoint: $startPoint, referencePoint: $referencePoint")
         if (startPoint == null || referencePoint == null) return
 
         val startCoord = Coordinate(
