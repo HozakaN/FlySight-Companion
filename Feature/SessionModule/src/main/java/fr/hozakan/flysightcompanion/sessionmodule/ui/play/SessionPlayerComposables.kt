@@ -1,15 +1,18 @@
 package fr.hozakan.flysightcompanion.sessionmodule.ui.play
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +22,9 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -60,6 +65,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -71,10 +77,8 @@ import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
-import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.GnssData
-import fr.hozakan.flysightcompanion.model.config.Alarm
 import fr.hozakan.flysightcompanion.model.config.AlarmType
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItem
@@ -94,6 +98,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import timber.log.Timber
+import kotlin.math.abs
 
 @Composable
 fun SessionPlayerMenuActions(
@@ -761,9 +767,12 @@ private fun SessionMainContainer(
         contentAlignment = Alignment.Center
     ) {
         if (controller.profile.showPerformanceLane) {
-            PerformanceLaneContainer(controller)
-        }
-        if (controller.profile.showMap) {
+            PerformanceLaneContainer(controller) {
+                if (controller.profile.showMap) {
+                    GMapContainer(controller)
+                }
+            }
+        } else if (controller.profile.showMap) {
             GMapContainer(controller)
         }
 
@@ -794,7 +803,7 @@ private fun GMapContainer(sessionController: SessionController) {
     val cameraPositionState = rememberCameraPositionState()
 
 
-    val perfLanes by sessionController.videoController.performanceLines.collectAsState()
+    val perfLanes by sessionController.performanceLanes.collectAsState()
 
     val gpsData = gnssData
     val cameraZoom by animateFloatAsState(
@@ -834,7 +843,14 @@ private fun GMapContainer(sessionController: SessionController) {
             uiSettings = MapUiSettings(
                 zoomControlsEnabled = false,
                 compassEnabled = true,
-                mapToolbarEnabled = false
+                mapToolbarEnabled = false,
+                indoorLevelPickerEnabled = false,
+                myLocationButtonEnabled = false,
+                rotationGesturesEnabled = false,
+                scrollGesturesEnabled = false,
+                scrollGesturesEnabledDuringRotateOrZoom = false,
+                tiltGesturesEnabled = false,
+                zoomGesturesEnabled = false
             )
         ) {
             gpsData?.let { data ->
@@ -904,13 +920,135 @@ private fun GMapContainer(sessionController: SessionController) {
     }
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-private fun PerformanceLaneContainer(sessionController: SessionController) {
-    Box(
+private fun PerformanceLaneContainer(
+    sessionController: SessionController,
+    content: @Composable BoxScope.() -> Unit = {}
+) {
+    val exitPoint by sessionController.exitDetected.collectAsState()
+    val laneStartPoint by sessionController.laneStartPoint.collectAsState()
+    val distanceFromLanes by sessionController.distanceToCenter.collectAsState()
+
+    // Define colors for different states
+    val gray = Color.Gray
+    val purple = Color.Magenta
+    val green = Color.Green
+
+    // Calculate bar colors based on state
+    val leftBarColor by animateColorAsState(
+        targetValue = when {
+            exitPoint == null -> gray // Not exited yet
+            laneStartPoint == null -> purple // Exited but no lane start
+            distanceFromLanes == null -> green // Lane started but no distance info
+            distanceFromLanes!! < -0.5f -> {
+                // Compute color gradient from green to red based on distance
+                // -0.5 = green, -0.95 = red
+                val normalizedValue = ((distanceFromLanes!! + 0.5f) / -0.45f).coerceIn(0f, 1f)
+                Color(
+                    red = normalizedValue,
+                    green = 1f - normalizedValue * 0.8f, // Keep some green component even at extreme values
+                    blue = 0f,
+                    alpha = 1f
+                )
+            }
+
+            else -> green // Inside lane or right side
+        }
+    )
+
+    val rightBarColor by animateColorAsState(
+        targetValue = when {
+            exitPoint == null -> gray // Not exited yet
+            laneStartPoint == null -> purple // Exited but no lane start
+            distanceFromLanes == null -> green // Lane started but no distance info
+            distanceFromLanes!! > 0.5f -> {
+                // Compute color gradient from green to red based on distance
+                // 0.5 = green, 0.95 = red
+                val normalizedValue = ((distanceFromLanes!! - 0.5f) / 0.45f).coerceIn(0f, 1f)
+                Color(
+                    red = normalizedValue,
+                    green = 1f - normalizedValue * 0.8f, // Keep some green component even at extreme values
+                    blue = 0f,
+                    alpha = 1f
+                )
+            }
+
+            else -> green // Inside lane or left side
+        }
+    )
+
+    Column(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Performance Lane Container")
+        Row(
+            modifier = Modifier.weight(1f)
+        ) {
+            // Left vertical bar
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .requiredWidth(40.dp)
+                    .background(leftBarColor, RoundedCornerShape(16.dp))
+            )
+            Spacer(modifier = Modifier.requiredWidth(16.dp))
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                content()
+            }
+            Spacer(modifier = Modifier.requiredWidth(16.dp))
+            // Right vertical bar
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .requiredWidth(40.dp)
+                    .background(rightBarColor, RoundedCornerShape(16.dp))
+            )
+        }
+        Spacer(modifier = Modifier.requiredHeight(16.dp))
+        // Optional: Position indicator showing where user is between lanes
+        distanceFromLanes?.let { distance ->
+            // Convert distance (-1 to 1) to slider value (0 to 1)
+            val sliderPosition = (distance + 1) / 2
+
+            // Calculate color based on proximity to edges
+            // Distance closer to 0 means center (green), closer to -1 or 1 means edges (red)
+            val proximityToEdge = abs(distance).coerceIn(0f, 1f)
+            val thumbColor = if (proximityToEdge > 0.5f) {
+                // Gradually transition from green to red as we approach the edge
+                val colorRatio = ((proximityToEdge - 0.5f) / 0.5f).coerceIn(0f, 1f)
+                Color(
+                    red = colorRatio,
+                    green = 1f - colorRatio * 0.8f,
+                    blue = 0f,
+                    alpha = 1f
+                )
+            } else {
+                // Center area is green
+                Color.Green
+            }
+
+            Slider(
+                value = sliderPosition,
+                onValueChange = {},
+                enabled = false,
+                valueRange = 0f..1f,
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .requiredHeight(16.dp),
+                colors = SliderDefaults.colors(
+                    thumbColor = thumbColor,
+                    disabledThumbColor = thumbColor,
+                    activeTrackColor = Color.DarkGray,
+                    inactiveTrackColor = Color.DarkGray,
+                    disabledActiveTrackColor = Color.DarkGray,
+                    disabledInactiveTrackColor = Color.DarkGray
+                )
+            )
+        }
     }
 }
 
@@ -979,12 +1117,15 @@ class FakeSessionController(
     override val profile: SessionProfile
 ) : SessionController {
     override val sessionEvents: SharedFlow<SessionEvent> = MutableSharedFlow()
-
-    override val navLane: StateFlow<LoadingState<Int>> = MutableStateFlow(LoadingState.Loading())
+    override val performanceLanes: StateFlow<List<VideoControllerImpl.PerformanceLine>> =
+        MutableStateFlow(emptyList())
     override val gnssFlow: SharedFlow<GnssData> = MutableSharedFlow()
     override val exitDetected: StateFlow<GnssData?> = MutableStateFlow(null)
+    override val laneStartPoint: StateFlow<GnssData?> = MutableStateFlow(null)
     override val timeMutableSource: TimeMutableSource? = null
     override val videoController: VideoController = fakeVideoController
+    override val distanceToCenter: StateFlow<Float?>
+        get() = TODO("Not yet implemented")
 
     override fun pause() {}
 
@@ -995,12 +1136,7 @@ class FakeSessionController(
 
 }
 
-private val fakeVideoController = object : VideoController {
-    override val performanceLines: StateFlow<List<VideoControllerImpl.PerformanceLine>> =
-        MutableStateFlow(emptyList())
-
-    override fun moveTo(gnssData: GnssData) {}
-}
+private val fakeVideoController = object : VideoController {}
 
 private val fakeProfile = SessionProfile.default()
     .copy(

@@ -489,7 +489,7 @@ private fun PerformanceLaneContainer(form: SessionProfileForm, state: SessionPro
                     onValueChange = { form.updateTimeAfterExit(it) }
                 )
                 FText(
-                    text = "Lane start time after ext (ms) (negative to disable)",
+                    text = "Lane start time after exit (ms) (negative to disable)",
                     configuration = FlySightTheme.typography.captionText,
                     modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
                 )

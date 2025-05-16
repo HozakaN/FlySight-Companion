@@ -148,6 +148,8 @@ class SessionComputationUnit(
                                 _sessionEvents.emit(SessionEvent.PerformanceLaneStart(gnssData))
                             }
                         }
+                    } else {
+
                     }
                 }
             }

@@ -1,6 +1,5 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.player
 
-import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import kotlinx.coroutines.flow.SharedFlow
@@ -12,15 +11,19 @@ interface SessionController {
 
     val profile: SessionProfile
 
-    val navLane: StateFlow<LoadingState<Int>>
+    val performanceLanes: StateFlow<List<VideoControllerImpl.PerformanceLine>>
 
     val gnssFlow: SharedFlow<GnssData>
 
     val exitDetected: StateFlow<GnssData?>
 
+    val laneStartPoint: StateFlow<GnssData?>
+
     val timeMutableSource: TimeMutableSource?
 
     val videoController: VideoController
+
+    val distanceToCenter: StateFlow<Float?>
 
     fun pause()
 
