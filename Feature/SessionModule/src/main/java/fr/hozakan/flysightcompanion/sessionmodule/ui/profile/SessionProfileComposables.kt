@@ -48,11 +48,11 @@ import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.model.ConfigFile
-import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
 import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
+import timber.log.Timber
 
 @Composable
 fun SessionProfileMenuActions(
@@ -87,23 +87,26 @@ fun SessionProfileScreen(
         onNavigateUp()
     }
 
-    val form = rememberSessionProfileForm(state.sessionProfile)
+    val form = rememberSessionProfileForm(initialConfiguration = state.sessionProfile)
+    Timber.d("Hoz3 form hashcode : ${form.hashCode()}")
 
     var displayGridConfiguration by rememberSaveable { mutableStateOf(false) }
 
+    LaunchedEffect(displayGridConfiguration) {
+        viewModel.lockDisplay(lock = displayGridConfiguration)
+    }
+
     if (displayGridConfiguration) {
-        LaunchedEffect(Unit) {
-            viewModel.lockDisplay(lock = true)
-        }
+        Timber.d("Hoz3 showing display grid configuration on form ${form.hashCode()}: ${form.displayItems}")
         DisplayGridConfigurationScreen(
             form = form,
             referencePoints = state.referencePoints,
-            onDismiss = { displayGridConfiguration = false }
+            onDismiss = {
+                Timber.d("Hoz3 dismissing display grid configuration on form ${form.hashCode()}: ${form.displayItems}")
+                displayGridConfiguration = false
+            }
         )
     } else {
-        LaunchedEffect(Unit) {
-            viewModel.lockDisplay(lock = false)
-        }
         SessionProfileScreenInternal(
             state = state,
             form = form,

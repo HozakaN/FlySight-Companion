@@ -468,6 +468,16 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, 
                         }
                     ) { paddingValues ->
                         Box(modifier = Modifier.padding(paddingValues)) {
+
+                            BackHandler {
+                                val currentRoute = currentBackStack.value?.destination?.route
+                                if (currentRoute == AppScreen.DeviceTab.DeviceList.route || currentRoute == AppScreen.ConfigTab.ConfigList.route) {
+                                    finish()
+                                } else {
+                                    navController.popBackStack()
+                                }
+                            }
+
                             NavHost(
                                 navController = navController,
                                 startDestination = AppScreen.DeviceTab.route
@@ -640,15 +650,6 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, 
                                     }
                                 }
                             }
-
-                            BackHandler {
-                                val currentRoute = currentBackStack.value?.destination?.route
-                                if (currentRoute == AppScreen.DeviceTab.DeviceList.route || currentRoute == AppScreen.ConfigTab.ConfigList.route) {
-                                    finish()
-                                } else {
-                                    navController.popBackStack()
-                                }
-                            }
                         }
                     }
                 }
@@ -747,12 +748,10 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, 
                 val layoutParams = window.attributes
                 if (originalBrightness < 0) {
                     originalBrightness = layoutParams.screenBrightness
-                    Timber.d("Hoz3 originalBrightness is ${layoutParams.screenBrightness}; $originalBrightness")
                 }
 
                 // Set screen brightness to maximum
                 layoutParams.screenBrightness = 1.0f  // 1.0f is maximum brightness
-                Timber.d("Hoz3 setting screen brightness to ${layoutParams.screenBrightness}")
                 window.attributes = layoutParams
                 window.apply {
                     attributes.apply {

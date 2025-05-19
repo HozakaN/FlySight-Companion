@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
@@ -54,6 +55,7 @@ import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItemBundl
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
 import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
+import timber.log.Timber
 
 @Composable
 fun DisplayGridConfigurationScreen(
@@ -61,21 +63,24 @@ fun DisplayGridConfigurationScreen(
     referencePoints: List<ReferencePoint>,
     onDismiss: () -> Unit
 ) {
+
+    BackHandler(enabled = true) {
+        onDismiss()
+    }
+
+
     Surface(
         modifier = Modifier
             .fillMaxSize(),
         color = MaterialTheme.colorScheme.surface
     ) {
 
-        BackHandler(enabled = true) {
-            onDismiss()
-        }
-
         var addItemClickedInfo by remember { mutableStateOf<Pair<Int, Int>?>(null) }
         var addDstToRefPoint by remember { mutableStateOf<Pair<Int, Int>?>(null) }
 
         when (form.displayGrid) {
-            DisplayGrid.InlineLeft -> InlineLeftLayout(
+            DisplayGrid.InlineLeft -> InlineLayout(
+                layoutDirection = InlineLayoutDirection.LEFT,
                 displayItems = form.displayItems,
                 onAddItemClicked = { caseIndex, indexInCase ->
                     addItemClickedInfo = caseIndex to indexInCase
@@ -85,7 +90,16 @@ fun DisplayGridConfigurationScreen(
                 }
             )
 
-            DisplayGrid.InlineRight -> InlineRightLayout()
+            DisplayGrid.InlineRight -> InlineLayout(
+                layoutDirection = InlineLayoutDirection.RIGHT,
+                displayItems = form.displayItems,
+                onAddItemClicked = { caseIndex, indexInCase ->
+                    addItemClickedInfo = caseIndex to indexInCase
+                },
+                onDeleteItemClicked = {
+                    form.removeDisplayItem(it)
+                }
+            )
             DisplayGrid.TwoByTwo -> TwoByTwoLayout()
             DisplayGrid.TwoOnEachSide -> TwoOnEachSideLayout()
             DisplayGrid.ThreeOnEachSide -> ThreeOnEachSideLayout()
@@ -195,8 +209,13 @@ fun AddItemDialogPreview() {
     )
 }
 
+enum class InlineLayoutDirection {
+    LEFT,
+    RIGHT
+}
 @Composable
-private fun InlineLeftLayout(
+private fun InlineLayout(
+    layoutDirection: InlineLayoutDirection,
     displayItems: List<DisplayItem>,
     onAddItemClicked: (Int, Int) -> Unit,
     onDeleteItemClicked: (DisplayItem) -> Unit
@@ -205,43 +224,9 @@ private fun InlineLeftLayout(
         modifier = Modifier.fillMaxSize()
             .windowInsetsPadding(WindowInsets.displayCutout)
     ) {
-        // Left column with weight 1
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .border(2.dp, Color.Green),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-//            for (i in 0 until 3) {
-//                DisplayItemsContainer(
-//                    val items = displayItems.filter { it.caseIndex == i }.sortedBy { it.indexInCase }
-            displayItems.forEach { item ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    FText(
-                        text = stringResource(item.displayableCapability.textResource),
-                        configuration = FlySightTheme.typography.sessionPlayerText,
-                        color = Color.Green
-                    )
-                    Spacer(modifier = Modifier.requiredWidth(8.dp))
-                    IconButton(onClick = {
-                        onDeleteItemClicked(item)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete Item"
-                        )
-                    }
-                }
-            }
-            //                )
-//            }
+        if (layoutDirection == InlineLayoutDirection.LEFT) {
+            InlineLayoutDisplayItems(displayItems, onDeleteItemClicked)
         }
-
-        // Main content with weight 6
         Column(
             modifier = Modifier
                 .weight(6f)
@@ -262,6 +247,51 @@ private fun InlineLeftLayout(
                 Text("Add item")
             }
         }
+
+        if (layoutDirection == InlineLayoutDirection.RIGHT) {
+            InlineLayoutDisplayItems(displayItems, onDeleteItemClicked)
+        }
+    }
+}
+
+@Composable
+private fun RowScope.InlineLayoutDisplayItems(
+    displayItems: List<DisplayItem>,
+    onDeleteItemClicked: (DisplayItem) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxHeight()
+            .border(2.dp, Color.Green),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+//            for (i in 0 until 3) {
+//                DisplayItemsContainer(
+//                    val items = displayItems.filter { it.caseIndex == i }.sortedBy { it.indexInCase }
+        displayItems.forEach { item ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FText(
+                    text = stringResource(item.displayableCapability.textResource),
+                    configuration = FlySightTheme.typography.sessionPlayerText,
+                    color = Color.Green
+                )
+                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                IconButton(onClick = {
+                    onDeleteItemClicked(item)
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete Item"
+                    )
+                }
+            }
+        }
+        //                )
+//            }
     }
 }
 

@@ -7,5 +7,5 @@ enum class DisplayGrid {
     TwoOnEachSide,
     ThreeOnEachSide;
 
-    companion object {}
+    companion object
 }

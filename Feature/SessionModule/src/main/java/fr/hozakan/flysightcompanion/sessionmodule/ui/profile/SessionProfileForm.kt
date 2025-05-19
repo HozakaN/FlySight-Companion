@@ -24,10 +24,13 @@ import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.config.Volume
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItem
+import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItemBundle
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
 import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
+import fr.hozakan.flysightcompanion.model.session.configuration.Coordinate
+import timber.log.Timber
 
 @Composable
 fun rememberSessionProfileForm(
@@ -118,15 +121,56 @@ class SessionProfileForm(
                     savedList.add(false) // ConfigFile doesn't exist
                 }
                 
+                // Save showMap, displayPerformanceLane, displayPerformanceLaneInMap
+                savedList.add(form.showMap)
+                savedList.add(form.displayPerformanceLane)
+                savedList.add(form.displayPerformanceLaneInMap)
+
+                // Save the whole ReferencePoint
+                val refPoint = form.referencePoint
+                if (refPoint != null) {
+                    savedList.add(true) // ReferencePoint exists
+                    savedList.add(refPoint.id)
+                    savedList.add(refPoint.name)
+                    savedList.add(refPoint.description)
+                    savedList.add(refPoint.coords.latitude)
+                    savedList.add(refPoint.coords.longitude)
+                } else {
+                    savedList.add(false) // No ReferencePoint
+                }
+
+                savedList.add(form.displayGrid.name)
+                savedList.add(form.showGridLines)
+                savedList.add(form.displayItems.size)
+                
+                // Save each DisplayItem
+                form.displayItems.forEach { displayItem ->
+                    savedList.add(displayItem.displayableCapability.name)
+                    savedList.add(displayItem.caseIndex)
+                    savedList.add(displayItem.indexInCase)
+                    
+                    // Handle DisplayItemBundle
+                    val bundle = displayItem.bag
+                    if (bundle == null) {
+                        savedList.add(false) // No bundle
+                    } else {
+                        savedList.add(true) // Has bundle
+                        when (bundle) {
+                            is DisplayItemBundle.DistanceToRefPointBundle -> {
+                                savedList.add("DistanceToRefPointBundle")
+                                // Save the entire ReferencePoint
+                                val refPoint = bundle.referencePoint
+                                savedList.add(refPoint.id)
+                                savedList.add(refPoint.name)
+                                savedList.add(refPoint.description)
+                                savedList.add(refPoint.coords.latitude)
+                                savedList.add(refPoint.coords.longitude)
+                            }
+                        }
+                    }
+                }
+                
                 savedList.addAll(listOf(
-                    form.showMap,
-                    form.displayPerformanceLane,
-                    form.displayPerformanceLaneInMap,
-                    form.referencePoint?.id ?: "",
-                    form.displayGrid.name,
-                    form.showGridLines,
-                    form.displayItems.size,
-                    // Each display item would need to be serialized here
                     form.useUSForTTS,
                     form.performanceLaneWidth,
                     form.competitionWindowTop,
@@ -264,17 +308,65 @@ class SessionProfileForm(
                     form.displayPerformanceLane = savedList[index++] as Boolean
                     form.displayPerformanceLaneInMap = savedList[index++] as Boolean
                     
-                    val referencePointId = savedList[index++] as String
-                    // form.referencePoint = getReferencePointById(referencePointId)
+                    // Restore the whole ReferencePoint
+                    val hasReferencePoint = savedList[index++] as Boolean
+                    if (hasReferencePoint) {
+                        val refId = savedList[index++] as String
+                        val refName = savedList[index++] as String
+                        val refDesc = savedList[index++] as String
+                        val latitude = savedList[index++] as Double
+                        val longitude = savedList[index++] as Double
+
+                        val coords = Coordinate(latitude, longitude)
+                        form.referencePoint = ReferencePoint(refId, refName, refDesc, coords)
+                    } else {
+                        form.referencePoint = null
+                    }
                     
                     val displayGridName = savedList[index++] as String
                     form.displayGrid = DisplayGrid.valueOf(displayGridName)
                     
                     form.showGridLines = savedList[index++] as Boolean
                     
-                    // Skip display items for now
+                    // Restore display items
                     val displayItemsSize = savedList[index++] as Int
-                    // Would need to restore each display item
+                    val displayItems = mutableListOf<DisplayItem>()
+                    
+                    for (i in 0 until displayItemsSize) {
+                        val capabilityName = savedList[index++] as String
+                        val capability = DisplayableCapability.valueOf(capabilityName)
+                        val caseIndex = savedList[index++] as Int
+                        val indexInCase = savedList[index++] as Int
+                        val hasBundle = savedList[index++] as Boolean
+                        
+                        var bundle: DisplayItemBundle? = null
+                        if (hasBundle) {
+                            val bundleType = savedList[index++] as String
+                            when (bundleType) {
+                                "DistanceToRefPointBundle" -> {
+                                    // Restore ReferencePoint
+                                    val refId = savedList[index++] as String
+                                    val refName = savedList[index++] as String
+                                    val refDesc = savedList[index++] as String
+                                    val latitude = savedList[index++] as Double
+                                    val longitude = savedList[index++] as Double
+                                    
+                                    val coords = Coordinate(latitude, longitude)
+                                    val refPoint = ReferencePoint(refId, refName, refDesc, coords)
+                                    bundle = DisplayItemBundle.DistanceToRefPointBundle(refPoint)
+                                }
+                            }
+                        }
+                        
+                        displayItems.add(DisplayItem(
+                            displayableCapability = capability,
+                            caseIndex = caseIndex,
+                            indexInCase = indexInCase,
+                            bag = bundle
+                        ))
+                    }
+                    
+                    form.displayItems = displayItems
                     
                     form.useUSForTTS = savedList[index++] as Boolean
                     form.performanceLaneWidth = savedList[index++] as Int
@@ -294,6 +386,7 @@ class SessionProfileForm(
                     form
                 } catch (e: Exception) {
                     // Fallback to default if restoration fails
+                    Timber.e(e, "Failed to restore SessionProfileForm")
                     SessionProfileForm()
                 }
             }
@@ -385,7 +478,14 @@ class SessionProfileForm(
         isDirty = true
     }
 
+
+    fun updateDisplayItems(displayItems: List<DisplayItem>) {
+        this.displayItems = displayItems
+        isDirty = true
+    }
+
     fun addDisplayItem(displayItem: DisplayItem) {
+        Timber.d("Hoz3 ${hashCode()} displayItem added $displayItem")
         this.displayItems += displayItem
         isDirty = true
     }
