@@ -46,7 +46,7 @@ fun versionCode(): Int {
 
 android {
     namespace = "fr.hozakan.flysightcompanion"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "fr.hozakan.flysightcompanion"

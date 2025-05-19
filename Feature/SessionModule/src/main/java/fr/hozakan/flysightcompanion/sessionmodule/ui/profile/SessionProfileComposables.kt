@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +48,8 @@ import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.model.ConfigFile
+import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
+import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
 import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
@@ -85,16 +89,35 @@ fun SessionProfileScreen(
 
     val form = rememberSessionProfileForm(state.sessionProfile)
 
-    SessionProfileScreenInternal(
-        state = state,
-        form = form,
-        saveConfigurationClicked = {
-            form.toSessionConfiguration()?.let { config ->
-                viewModel.saveSessionConfiguration(config)
+    var displayGridConfiguration by rememberSaveable { mutableStateOf(false) }
+
+    if (displayGridConfiguration) {
+        LaunchedEffect(Unit) {
+            viewModel.lockDisplay(lock = true)
+        }
+        DisplayGridConfigurationScreen(
+            form = form,
+            referencePoints = state.referencePoints,
+            onDismiss = { displayGridConfiguration = false }
+        )
+    } else {
+        LaunchedEffect(Unit) {
+            viewModel.lockDisplay(lock = false)
+        }
+        SessionProfileScreenInternal(
+            state = state,
+            form = form,
+            saveConfigurationClicked = {
+                form.toSessionConfiguration()?.let { config ->
+                    viewModel.saveSessionConfiguration(config)
+                }
+            },
+            onNavigateUp = onNavigateUp,
+            onConfigureDisplayGrid = {
+                displayGridConfiguration = true
             }
-        },
-        onNavigateUp = onNavigateUp
-    )
+        )
+    }
 }
 
 @Composable
@@ -102,7 +125,8 @@ fun SessionProfileScreenInternal(
     state: SessionProfileState,
     form: SessionProfileForm = rememberSessionProfileForm(),
     saveConfigurationClicked: (SessionProfileForm) -> Unit,
-    onNavigateUp: () -> Unit
+    onNavigateUp: () -> Unit,
+    onConfigureDisplayGrid: () -> Unit = {}
 ) {
     Surface(
         modifier = Modifier
@@ -179,6 +203,14 @@ fun SessionProfileScreenInternal(
                         onConfigFileSelected = {
                             form.updateConfigFile(it)
                         }
+                    )
+                }
+
+                // Display Grid Selector
+                item {
+                    DisplayGridSelectorCard(
+                        form = form,
+                        onConfigureDisplayGrid = onConfigureDisplayGrid
                     )
                 }
 
@@ -333,14 +365,53 @@ fun SessionProfileScreenInternal(
 }
 
 @Composable
-private fun PerformanceLaneContainer(form: SessionProfileForm, state: SessionProfileState) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // Main Performance Lane Card
-        PerformanceLaneCard(form, state)
+private fun DisplayGridSelectorCard(
+    form: SessionProfileForm,
+    onConfigureDisplayGrid: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            FText(
+                text = "Display Grid Configuration",
+                configuration = FlySightTheme.typography.plainScreenTextLarge
+            )
 
-        ExitDetectionCard(form)
+            Spacer(modifier = Modifier.requiredHeight(16.dp))
 
-        AlertsCard(form)
+            val context = LocalContext.current
+
+            DropdownContainer(
+                label = "Grid Type",
+                selectedValue = stringResource(form.displayGrid.textResource),
+                options = remember { DisplayGrid.entries.map { context.getString(it.textResource) } },
+                onSelectionChanged = { newSelection ->
+                    DisplayGrid.fromText(context, newSelection)?.let {
+                        form.updateDisplayGrid(it)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.requiredHeight(16.dp))
+
+            Button(
+                onClick = { onConfigureDisplayGrid() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                FText(
+                    text = "Configure Grid",
+                    configuration = FlySightTheme.typography.plainScreenTextLarge
+                )
+            }
+        }
     }
 }
 

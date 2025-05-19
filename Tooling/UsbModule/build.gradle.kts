@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "fr.hozakan.flysightcompanion.usbmodule"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26

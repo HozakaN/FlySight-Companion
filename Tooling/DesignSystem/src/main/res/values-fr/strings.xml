@@ -292,4 +292,22 @@
     <string name="session_configuration_source_local">GPS du téléphone</string>
     <string name="session_configuration_source_flysight">FlySight</string>
     <string name="session_configuration_source_file">fichier TRACK.CSV</string>
+
+    <string name="session_configuration_display_grid_inline_left">Alignés à gauche</string>
+    <string name="session_configuration_display_grid_inline_right">Alignés à droite</string>
+    <string name="session_configuration_display_grid_two_by_two">Grille 2x2</string>
+    <string name="session_configuration_display_grid_two_on_each_side">2 cases sur chaque côté</string>
+    <string name="session_configuration_display_grid_three_on_each_side">3 cases sur chaque côté</string>
+
+    <string name="session_configuration_displayable_capability_altitude">Altitude</string>
+    <string name="session_configuration_displayable_capability_horizontal_speed">HSpeed</string>
+    <string name="session_configuration_displayable_capability_vertical_speed">VSpeed</string>
+    <string name="session_configuration_displayable_capability_glide_ratio">Glide Ratio</string>
+    <string name="session_configuration_displayable_capability_inverse_glide_ratio">IGlide Ratio</string>
+    <string name="session_configuration_displayable_capability_total_speed">TSpeed</string>
+    <string name="session_configuration_displayable_capability_dive_angle">Dive Angle</string>
+    <string name="session_configuration_displayable_capability_elevation">Elevation</string>
+    <string name="session_configuration_displayable_capability_distance_to_ref_point">Dist to ref</string>
+    <string name="session_configuration_displayable_capability_latitude">latitude</string>
+    <string name="session_configuration_displayable_capability_longitude">longitude</string>
 </resources>

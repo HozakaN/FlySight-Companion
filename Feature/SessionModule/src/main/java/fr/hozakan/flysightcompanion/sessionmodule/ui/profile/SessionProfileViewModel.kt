@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
+import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.sessionmodule.business.ReferencePointsService
@@ -17,6 +18,7 @@ import javax.inject.Inject
 
 class SessionProfileViewModel @Inject constructor(
     private val sessionProfilesService: SessionProfilesService,
+    private val displayService: DisplayService,
     configFileService: ConfigFileService,
     referencePointsService: ReferencePointsService
 ) : ViewModel() {
@@ -114,6 +116,12 @@ class SessionProfileViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun lockDisplay(lock: Boolean) {
+        viewModelScope.launch {
+            displayService.lockDisplay(lock = lock)
         }
     }
 

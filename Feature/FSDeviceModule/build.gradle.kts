@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "fr.hozakan.flysightcompanion.fsdevicemodule"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26

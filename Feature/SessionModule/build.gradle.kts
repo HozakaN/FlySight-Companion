@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "fr.hozakan.flysightcompanion.sessionmodule"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -78,7 +78,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     debugImplementation(libs.androidx.ui.tooling)
 //    implementation(libs.androidx.material.icons.extended)
-//    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.activity.compose)
 
     //GMap
     implementation(libs.maps.compose)

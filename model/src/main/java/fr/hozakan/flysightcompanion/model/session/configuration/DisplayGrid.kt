@@ -5,5 +5,7 @@ enum class DisplayGrid {
     InlineRight,
     TwoByTwo,
     TwoOnEachSide,
-    ThreeOnEachSide
+    ThreeOnEachSide;
+
+    companion object {}
 }

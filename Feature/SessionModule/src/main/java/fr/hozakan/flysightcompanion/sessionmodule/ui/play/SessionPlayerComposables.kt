@@ -665,6 +665,19 @@ private fun DisplayCapabilityContainer(
             tag = "Lon",
             value = "${gnssData?.lon}"
         )
+
+        DisplayableCapability.GlideRatio -> TagAndValueContainer(
+            tag = "GR",
+            value = "${gnssData?.lon}"
+        )
+        DisplayableCapability.InverseGlideRatio -> TagAndValueContainer(
+            tag = "IGR",
+            value = "${gnssData?.lon}"
+        )
+        DisplayableCapability.DiveAngle -> TagAndValueContainer(
+            tag = "DiveA",
+            value = "${gnssData?.lon}"
+        )
     }
 }
 

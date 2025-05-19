@@ -5,10 +5,26 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import fr.hozakan.flysightcompanion.model.ConfigFile
+import fr.hozakan.flysightcompanion.model.config.Alarm
+import fr.hozakan.flysightcompanion.model.config.AlarmType
+import fr.hozakan.flysightcompanion.model.config.DynamicModel
+import fr.hozakan.flysightcompanion.model.config.InitMode
+import fr.hozakan.flysightcompanion.model.config.RateMode
+import fr.hozakan.flysightcompanion.model.config.SilenceWindow
+import fr.hozakan.flysightcompanion.model.config.Speech
+import fr.hozakan.flysightcompanion.model.config.SpeechMode
+import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
+import fr.hozakan.flysightcompanion.model.config.ToneMode
+import fr.hozakan.flysightcompanion.model.config.UnitSystem
+import fr.hozakan.flysightcompanion.model.config.Volume
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItem
+import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
 import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
@@ -17,7 +33,10 @@ import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
 fun rememberSessionProfileForm(
     initialConfiguration: SessionProfile = SessionProfile.default()
 ): SessionProfileForm {
-    return remember(initialConfiguration) {
+    return rememberSaveable(
+        initialConfiguration,
+        saver = SessionProfileForm.Saver
+    ) {
         SessionProfileForm(initialConfiguration)
     }
 }
@@ -26,6 +45,260 @@ fun rememberSessionProfileForm(
 class SessionProfileForm(
     initialConfiguration: SessionProfile = SessionProfile.default()
 ) {
+    companion object {
+        val Saver: Saver<SessionProfileForm, Any> = listSaver(
+            save = { form ->
+                val savedList = mutableListOf<Any>(
+                    form.isDirty,
+                    form.hasValidProfileName,
+                    form.isValid,
+                    form.name ?: "",
+                    form.description ?: ""
+                )
+                
+                // Save all ConfigFile fields
+                val configFile = form.configFile
+                if (configFile != null) {
+                    savedList.add(true) // ConfigFile exists flag
+                    savedList.add(configFile.name)
+                    savedList.add(configFile.description)
+                    savedList.add(configFile.group)
+                    savedList.add(configFile.dynamicModel.name)
+                    savedList.add(configFile.samplePeriod)
+                    savedList.add(configFile.toneMode.name)
+                    savedList.add(configFile.toneMinimum)
+                    savedList.add(configFile.toneMaximum)
+                    savedList.add(configFile.toneLimitBehaviour.name)
+                    savedList.add(configFile.toneVolume.name)
+                    savedList.add(configFile.rateMode.name)
+                    savedList.add(configFile.rateMinimumValue)
+                    savedList.add(configFile.rateMaximumValue)
+                    savedList.add(configFile.rateMinimum)
+                    savedList.add(configFile.rateMaximum)
+                    savedList.add(configFile.flatLineAtMinimumRate)
+                    savedList.add(configFile.speechRate)
+                    savedList.add(configFile.speechVolume.name)
+                    
+                    // Save speeches with all fields
+                    savedList.add(configFile.speeches.size)
+                    configFile.speeches.forEach { speech ->
+                        savedList.add(speech.mode.name)
+                        savedList.add(speech.unit.name)
+                        savedList.add(speech.value)
+                    }
+                    
+                    savedList.add(configFile.verticalThreshold)
+                    savedList.add(configFile.horizontalThreshold)
+                    savedList.add(configFile.tzOffset)
+                    savedList.add(configFile.useSAS)
+                    savedList.add(configFile.initMode.name)
+                    savedList.add(configFile.initFile ?: "")
+                    savedList.add(configFile.windowAbove)
+                    savedList.add(configFile.windowBelow)
+                    savedList.add(configFile.dzElev)
+                    
+                    // Save alarms with all fields
+                    savedList.add(configFile.alarms.size)
+                    configFile.alarms.forEach { alarm ->
+                        savedList.add(alarm.alarmType.name)
+                        savedList.add(alarm.alarmElevation)
+                        savedList.add(alarm.alarmFile)
+                    }
+                    
+                    savedList.add(configFile.altitudeUnit.name)
+                    savedList.add(configFile.altitudeStep)
+                    
+                    // Save silence windows with all fields
+                    savedList.add(configFile.silenceWindows.size)
+                    configFile.silenceWindows.forEach { silenceWindow ->
+                        savedList.add(silenceWindow.top)
+                        savedList.add(silenceWindow.bottom)
+                    }
+                } else {
+                    savedList.add(false) // ConfigFile doesn't exist
+                }
+                
+                savedList.addAll(listOf(
+                    form.showMap,
+                    form.displayPerformanceLane,
+                    form.displayPerformanceLaneInMap,
+                    form.referencePoint?.id ?: "",
+                    form.displayGrid.name,
+                    form.showGridLines,
+                    form.displayItems.size,
+                    // Each display item would need to be serialized here
+                    form.useUSForTTS,
+                    form.performanceLaneWidth,
+                    form.competitionWindowTop,
+                    form.competitionWindowBottom,
+                    form.exitDetectionWindowTop,
+                    form.exitDetectionWindowBottom,
+                    form.showVisualAlertWhenExitDetected,
+                    form.playAudioAlertWhenExitDetected,
+                    form.showVisualAlertWhenNotInWindowBeforeExit,
+                    form.exitPointsDown,
+                    form.exitPointsUp,
+                    form.exitDownThresh,
+                    form.exitUpThresh,
+                    form.timeAfterExit
+                ))
+                
+                savedList
+            },
+            restore = { savedList ->
+                try {
+                    // Create a form with default settings first
+                    val form = SessionProfileForm()
+                    
+                    // Then restore the saved state
+                    var index = 0
+                    form.isDirty = savedList[index++] as Boolean
+                    form.hasValidProfileName = savedList[index++] as Boolean
+                    form.isValid = savedList[index++] as Boolean
+                    form.name = savedList[index++] as String?
+                    form.description = savedList[index++] as String?
+                    
+                    // Restore ConfigFile from all saved fields
+                    val configFileExists = savedList[index++] as Boolean
+                    if (configFileExists) {
+                        val name = savedList[index++] as String
+                        val description = savedList[index++] as String
+                        val group = savedList[index++] as String
+                        val dynamicModel = DynamicModel.valueOf(savedList[index++] as String)
+                        val samplePeriod = savedList[index++] as Int
+                        val toneMode = ToneMode.valueOf(savedList[index++] as String)
+                        val toneMinimum = savedList[index++] as Int
+                        val toneMaximum = savedList[index++] as Int
+                        val toneLimitBehaviour = ToneLimitBehaviour.valueOf(savedList[index++] as String)
+                        val toneVolume = Volume.valueOf(savedList[index++] as String)
+                        val rateMode = RateMode.valueOf(savedList[index++] as String)
+                        val rateMinimumValue = savedList[index++] as Int
+                        val rateMaximumValue = savedList[index++] as Int
+                        val rateMinimum = savedList[index++] as Int
+                        val rateMaximum = savedList[index++] as Int
+                        val flatLineAtMinimumRate = savedList[index++] as Boolean
+                        val speechRate = savedList[index++] as Int
+                        val speechVolume = Volume.valueOf(savedList[index++] as String)
+                        
+                        // Restore speeches
+                        val speechesSize = savedList[index++] as Int
+                        val speeches = mutableListOf<Speech>()
+                        for (i in 0 until speechesSize) {
+                            val speechMode = SpeechMode.valueOf(savedList[index++] as String)
+                            val speechUnit = UnitSystem.valueOf(savedList[index++] as String)
+                            val speechValue = savedList[index++] as Int
+                            speeches.add(Speech(speechMode, speechUnit, speechValue))
+                        }
+                        
+                        val verticalThreshold = savedList[index++] as Int
+                        val horizontalThreshold = savedList[index++] as Int
+                        val tzOffset = savedList[index++] as Int
+                        val useSAS = savedList[index++] as Boolean
+                        val initMode = InitMode.valueOf(savedList[index++] as String)
+                        val initFile = (savedList[index++] as String).let { it.ifEmpty { null } }
+                        val windowAbove = savedList[index++] as Int
+                        val windowBelow = savedList[index++] as Int
+                        val dzElev = savedList[index++] as Int
+                        
+                        // Restore alarms
+                        val alarmsSize = savedList[index++] as Int
+                        val alarms = mutableListOf<Alarm>()
+                        for (i in 0 until alarmsSize) {
+                            val alarmType = AlarmType.valueOf(savedList[index++] as String)
+                            val alarmElevation = savedList[index++] as Int
+                            val alarmFile = savedList[index++] as String
+                            alarms.add(Alarm(alarmType, alarmElevation, alarmFile))
+                        }
+                        
+                        val altitudeUnit = UnitSystem.valueOf(savedList[index++] as String)
+                        val altitudeStep = savedList[index++] as Int
+                        
+                        // Restore silence windows
+                        val silenceWindowsSize = savedList[index++] as Int
+                        val silenceWindows = mutableListOf<SilenceWindow>()
+                        for (i in 0 until silenceWindowsSize) {
+                            val top = savedList[index++] as Int
+                            val bottom = savedList[index++] as Int
+                            silenceWindows.add(SilenceWindow(top, bottom))
+                        }
+                        
+                        form.configFile = ConfigFile(
+                            name = name,
+                            description = description,
+                            group = group,
+                            dynamicModel = dynamicModel,
+                            samplePeriod = samplePeriod,
+                            toneMode = toneMode,
+                            toneMinimum = toneMinimum,
+                            toneMaximum = toneMaximum,
+                            toneLimitBehaviour = toneLimitBehaviour,
+                            toneVolume = toneVolume,
+                            rateMode = rateMode,
+                            rateMinimumValue = rateMinimumValue,
+                            rateMaximumValue = rateMaximumValue,
+                            rateMinimum = rateMinimum,
+                            rateMaximum = rateMaximum,
+                            flatLineAtMinimumRate = flatLineAtMinimumRate,
+                            speechRate = speechRate,
+                            speechVolume = speechVolume,
+                            speeches = speeches,
+                            verticalThreshold = verticalThreshold,
+                            horizontalThreshold = horizontalThreshold,
+                            tzOffset = tzOffset,
+                            useSAS = useSAS,
+                            initMode = initMode,
+                            initFile = initFile,
+                            windowAbove = windowAbove,
+                            windowBelow = windowBelow,
+                            dzElev = dzElev,
+                            alarms = alarms,
+                            altitudeUnit = altitudeUnit,
+                            altitudeStep = altitudeStep,
+                            silenceWindows = silenceWindows
+                        )
+                    } else {
+                        form.configFile = null
+                    }
+                    
+                    form.showMap = savedList[index++] as Boolean
+                    form.displayPerformanceLane = savedList[index++] as Boolean
+                    form.displayPerformanceLaneInMap = savedList[index++] as Boolean
+                    
+                    val referencePointId = savedList[index++] as String
+                    // form.referencePoint = getReferencePointById(referencePointId)
+                    
+                    val displayGridName = savedList[index++] as String
+                    form.displayGrid = DisplayGrid.valueOf(displayGridName)
+                    
+                    form.showGridLines = savedList[index++] as Boolean
+                    
+                    // Skip display items for now
+                    val displayItemsSize = savedList[index++] as Int
+                    // Would need to restore each display item
+                    
+                    form.useUSForTTS = savedList[index++] as Boolean
+                    form.performanceLaneWidth = savedList[index++] as Int
+                    form.competitionWindowTop = savedList[index++] as Int
+                    form.competitionWindowBottom = savedList[index++] as Int
+                    form.exitDetectionWindowTop = savedList[index++] as Int
+                    form.exitDetectionWindowBottom = savedList[index++] as Int
+                    form.showVisualAlertWhenExitDetected = savedList[index++] as Boolean
+                    form.playAudioAlertWhenExitDetected = savedList[index++] as Boolean
+                    form.showVisualAlertWhenNotInWindowBeforeExit = savedList[index++] as Boolean
+                    form.exitPointsDown = savedList[index++] as Int
+                    form.exitPointsUp = savedList[index++] as Int
+                    form.exitDownThresh = savedList[index++] as Int
+                    form.exitUpThresh = savedList[index++] as Int
+                    form.timeAfterExit = savedList[index++] as Int
+                    
+                    form
+                } catch (e: Exception) {
+                    // Fallback to default if restoration fails
+                    SessionProfileForm()
+                }
+            }
+        )
+    }
 
     internal var isDirty by mutableStateOf(false)
     internal var hasValidProfileName by mutableStateOf(true)
@@ -116,6 +389,22 @@ class SessionProfileForm(
         this.displayItems += displayItem
         isDirty = true
     }
+//
+//    fun addDisplayableCapability(displayableCapability: DisplayableCapability) {
+//        val firstAvailableCase = displayItems.groupBy { it.caseIndex }.firstNotNullOfOrNull { entry ->
+//            if (entry.value.size < 3) entry.value else null
+//        }
+//        if (firstAvailableCase != null) {
+//
+//        }
+//        val newDisplayItem = DisplayItem(
+//            displayableCapability = displayableCapability,
+//            caseIndex = 0,
+//            indexInCase = 0
+//        )
+//        this.displayItems += newDisplayItem
+//        isDirty = true
+//    }
 
     fun removeDisplayItem(displayItem: DisplayItem) {
         this.displayItems -= displayItem

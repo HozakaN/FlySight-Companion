@@ -10,6 +10,8 @@ import fr.hozakan.flysightcompanion.model.config.SpeechMode
 import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
 import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
+import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
+import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
 
 val UnitSystem.unitNameResource: Int
@@ -132,3 +134,32 @@ val SessionSourceType.textResource: Int
 fun SessionSourceType.Companion.fromText(context: Context, text: String): SessionSourceType? {
     return SessionSourceType.entries.firstOrNull { context.getString(it.textResource) == text }
 }
+
+val DisplayGrid.textResource: Int
+    get() = when (this) {
+        DisplayGrid.InlineLeft -> R.string.session_configuration_display_grid_inline_left
+        DisplayGrid.InlineRight -> R.string.session_configuration_display_grid_inline_right
+        DisplayGrid.TwoByTwo -> R.string.session_configuration_display_grid_two_by_two
+        DisplayGrid.TwoOnEachSide -> R.string.session_configuration_display_grid_two_on_each_side
+        DisplayGrid.ThreeOnEachSide -> R.string.session_configuration_display_grid_three_on_each_side
+    }
+
+fun DisplayGrid.Companion.fromText(context: Context, text: String): DisplayGrid? {
+    return DisplayGrid.entries.firstOrNull { context.getString(it.textResource) == text }
+}
+
+val DisplayableCapability.textResource: Int
+    get() = when (this) {
+        DisplayableCapability.Altitude -> R.string.session_configuration_displayable_capability_altitude
+        DisplayableCapability.HorizontalSpeed -> R.string.session_configuration_displayable_capability_horizontal_speed
+        DisplayableCapability.VerticalSpeed -> R.string.session_configuration_displayable_capability_vertical_speed
+        DisplayableCapability.GlideRatio -> R.string.session_configuration_displayable_capability_glide_ratio
+        DisplayableCapability.InverseGlideRatio -> R.string.session_configuration_displayable_capability_inverse_glide_ratio
+        DisplayableCapability.TotalSpeed -> R.string.session_configuration_displayable_capability_total_speed
+        DisplayableCapability.DiveAngle -> R.string.session_configuration_displayable_capability_dive_angle
+        DisplayableCapability.Elevation -> R.string.session_configuration_displayable_capability_elevation
+        DisplayableCapability.DistanceToReferencePoint -> R.string.session_configuration_displayable_capability_distance_to_ref_point
+        DisplayableCapability.Latitude -> R.string.session_configuration_displayable_capability_latitude
+        DisplayableCapability.Longitude -> R.string.session_configuration_displayable_capability_longitude
+    }
+
