@@ -68,11 +68,11 @@ class DefaultSessionControllerService(
                 displayService = displayService,
                 profile = sessionProfile
             )
-            displayService.lockDisplay(true)
+//            displayService.lockDisplay(true)
             _sessionController.value?.play(object : SessionController.SessionControllerCallback {
                 override fun onDone() {
                     Timber.d("Hoz5 session done")
-                    displayService.lockDisplay(false)
+//                    displayService.lockDisplay(false)
 //                    _state.value = SessionControllerState.Idle
 //                    _sessionController.value = null
                 }
