@@ -87,4 +87,8 @@ class DefaultSessionControllerService(
         _sessionController.value?.destroy()
         _sessionController.value = null
     }
+
+    override fun resetExitDetection() {
+        _sessionController.value?.resetExitDetection()
+    }
 }

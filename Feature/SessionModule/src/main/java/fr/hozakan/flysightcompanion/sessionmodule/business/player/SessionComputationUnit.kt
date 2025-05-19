@@ -114,6 +114,10 @@ class SessionComputationUnit(
         prevFlagHasFix = false
     }
 
+    fun resetExitDetection() {
+        exitDetector.clearAndProcessBatchData(emptyList())
+    }
+
     fun handleNewData(gnssData: GnssData) {
         if (gnssData.gpsFix >= 3) {
             flagHasFix = true

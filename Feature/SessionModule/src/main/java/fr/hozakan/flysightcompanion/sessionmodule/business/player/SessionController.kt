@@ -29,7 +29,7 @@ interface SessionController {
 
     fun play()
     fun play(callback: SessionControllerCallback)
-
+    fun resetExitDetection()
     fun destroy()
 
     interface SessionControllerCallback {

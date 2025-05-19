@@ -37,6 +37,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -76,6 +78,9 @@ import com.google.android.gms.maps.model.Dash
 import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
+import fr.hozakan.flysightcompanion.designsystem.theme.FlySightCompanionTheme
+import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
+import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.GnssData
@@ -135,6 +140,9 @@ fun SessionPlayerScreen() {
                 state = state,
                 onExitClicked = {
                     viewModel.onExitClicked()
+                },
+                resetExitDetection = {
+                    viewModel.resetExitDetection()
                 }
             )
         }
@@ -144,7 +152,8 @@ fun SessionPlayerScreen() {
 @Composable
 private fun SessionPlayerScreenInternal(
     state: SessionPlayerState,
-    onExitClicked: () -> Unit
+    onExitClicked: () -> Unit,
+    resetExitDetection: () -> Unit
 ) {
     val player = state.controller
     if (player == null) return
@@ -216,7 +225,8 @@ private fun SessionPlayerScreenInternal(
             }
             if (!uiLocked) {
                 LockedContent(
-                    onExitClicked = onExitClicked
+                    onExitClicked = onExitClicked,
+                    resetExitDetection = resetExitDetection
                 )
             }
         }
@@ -231,8 +241,11 @@ private fun SessionPlayerScreenInternal(
 }
 
 @Composable
-private fun LockedContent(onExitClicked: () -> Unit) {
-    Box {
+private fun LockedContent(
+    onExitClicked: () -> Unit,
+    resetExitDetection: () -> Unit
+) {
+    Column {
         FloatingActionButton(
             onClick = onExitClicked,
             containerColor = MaterialTheme.colorScheme.error,
@@ -240,6 +253,18 @@ private fun LockedContent(onExitClicked: () -> Unit) {
             Icon(
                 imageVector = Icons.Default.PowerSettingsNew,
                 contentDescription = ""
+            )
+        }
+        Spacer(modifier = Modifier.requiredHeight(8.dp))
+        Button(
+            onClick = resetExitDetection,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.error
+            )
+        ) {
+            FText(
+                text = "Reset exit detection",
+                configuration = FlySightTheme.typography.plainScreenTextLarge
             )
         }
     }
@@ -1131,6 +1156,7 @@ class FakeSessionController(
 
     override fun play() {}
     override fun play(callback: SessionController.SessionControllerCallback) {}
+    override fun resetExitDetection() {}
 
     override fun destroy() {}
 

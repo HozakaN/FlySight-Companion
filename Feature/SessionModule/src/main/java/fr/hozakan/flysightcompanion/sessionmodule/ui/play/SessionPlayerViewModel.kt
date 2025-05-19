@@ -36,4 +36,10 @@ class SessionPlayerViewModel @Inject constructor(
             sessionControllerService.stopSession()
         }
     }
+
+    fun resetExitDetection() {
+        viewModelScope.launch {
+            sessionControllerService.resetExitDetection()
+        }
+    }
 }

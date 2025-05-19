@@ -11,4 +11,5 @@ interface SessionControllerService {
     val sessionController: StateFlow<SessionController?>
     suspend fun playSession(sessionProfile: SessionProfile, sessionSource: SessionSource)
     suspend fun stopSession()
+    fun resetExitDetection()
 }

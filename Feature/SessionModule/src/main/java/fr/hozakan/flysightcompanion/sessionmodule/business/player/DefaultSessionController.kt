@@ -96,7 +96,11 @@ class DefaultSessionController(
                 }
             }
             combine(exitDetected, laneStartPoint) { exitPoint, laneStartPoint ->
-                updatePerformanceLanes()
+                if (exitPoint != null && laneStartPoint != null) {
+                    updatePerformanceLanes()
+                } else {
+                    _performanceLanes.value = emptyList()
+                }
             }
                 .launchIn(scope)
             gnssFlow.collect { gnssData ->
@@ -125,6 +129,10 @@ class DefaultSessionController(
             this.callback = callback
             play()
         }
+    }
+
+    override fun resetExitDetection() {
+        sessionComputationUnit.resetExitDetection()
     }
 
     override fun destroy() {
