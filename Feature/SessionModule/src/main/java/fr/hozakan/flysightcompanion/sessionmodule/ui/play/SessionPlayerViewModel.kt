@@ -23,9 +23,6 @@ class SessionPlayerViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            displayService.lockDisplay(true)
-        }
         sessionControllerService.sessionController
             .onEach { controller ->
                 _state.update {
@@ -35,6 +32,12 @@ class SessionPlayerViewModel @Inject constructor(
                 }
             }
             .launchIn(viewModelScope)
+    }
+
+    fun lockDisplay() {
+        viewModelScope.launch {
+            displayService.lockDisplay(true)
+        }
     }
 
     fun onExitClicked() {

@@ -10,6 +10,7 @@ import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.updateTransition
@@ -694,6 +695,7 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, 
         }
     }
 
+    private var originalBrightness: Float = -1f
     override fun lock(lock: Boolean) {
         requestedOrientation = if (lock) {
             ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
@@ -708,7 +710,8 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     window.insetsController?.let {
                         it.hide(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
-                        it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                        it.systemBarsBehavior =
+                            WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                     }
                 } else {
                     @Suppress("DEPRECATION")
@@ -732,6 +735,49 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, 
 
                     @Suppress("DEPRECATION")
                     window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+                }
+            }
+
+            if (lock) {
+                Timber.d("Hoz3 lock screen")
+                // Keep screen on when locked
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON/* and WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN*/)
+
+                // Store original brightness if not already stored
+                val layoutParams = window.attributes
+                if (originalBrightness < 0) {
+                    originalBrightness = layoutParams.screenBrightness
+                    Timber.d("Hoz3 originalBrightness is ${layoutParams.screenBrightness}; $originalBrightness")
+                }
+
+                // Set screen brightness to maximum
+                layoutParams.screenBrightness = 1.0f  // 1.0f is maximum brightness
+                Timber.d("Hoz3 setting screen brightness to ${layoutParams.screenBrightness}")
+                window.attributes = layoutParams
+                window.apply {
+                    attributes.apply {
+                        screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
+                    }
+                    addFlags(WindowManager.LayoutParams.SCREEN_BRIGHTNESS_CHANGED)
+                }
+            } else {
+                Timber.d("Hoz3 unlock screen")
+                // Allow screen to turn off when unlocked
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON/* and WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN*/)
+
+                // Restore original brightness
+                if (originalBrightness >= 0) {
+                    val layoutParams = window.attributes
+                    layoutParams.screenBrightness = originalBrightness
+                    window.attributes = layoutParams
+                    originalBrightness = -1f
+                    window.apply {
+                        attributes.apply {
+                            screenBrightness = originalBrightness
+
+                        }
+                        addFlags(WindowManager.LayoutParams.SCREEN_BRIGHTNESS_CHANGED)
+                    }
                 }
             }
         }
