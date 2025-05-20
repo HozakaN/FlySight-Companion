@@ -155,6 +155,7 @@ class SessionComputationUnit(
                         if (timeDiffMs >= timeAfterExitMs) {
                             _laneStartPoint.value = gnssData
                             scope.launch {
+                                Timber.d("Hoz3 emitting PerformanceLaneStart with ${gnssData.iTow}")
                                 _sessionEvents.emit(SessionEvent.PerformanceLaneStart(gnssData))
                             }
                         }

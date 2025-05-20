@@ -152,9 +152,10 @@ class FileGnssSource(
      * Get all GNSS data points up to the specified time in milliseconds
      */
     fun getGnssPointsUpToTime(timeMilliseconds: Long): List<GnssData> {
-        return _allGnssPoints.value
+        val map = _allGnssPoints.value
             .filter { it.timeMilliseconds <= timeMilliseconds }
             .map { it.gnssData }
+        return map
     }
     
     data class GnssDataWithTimestamp(

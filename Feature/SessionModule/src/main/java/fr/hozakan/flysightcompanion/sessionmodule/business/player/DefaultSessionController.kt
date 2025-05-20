@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -89,7 +90,7 @@ class DefaultSessionController(
                     source.userInteractionEvent
                         .collect {
                             val pickedTiming = source.userInteractionEndEvent.first()
-                            (gnssSource as? FileGnssSource)?.getGnssPointsUpToTime(pickedTiming.toLong())
+                            (gnssSource as? FileGnssSource)?.getGnssPointsUpToTime(pickedTiming.toLong() * 1_000L)
                                 ?.let { pastGnssData ->
                                     sessionComputationUnit.handleDataBatch(pastGnssData)
                                     pastGnssData.lastOrNull()?.let { data ->
@@ -155,6 +156,7 @@ class DefaultSessionController(
     }
 
     private fun updatePerformanceLanes() {
+        Timber.d("Hoz3 updatePerformanceLanes ${_performanceLanes.value.size}, laneStartPoint = ${laneStartPoint.value}")
         if (_performanceLanes.value.isNotEmpty()) return
 //        if (!profile.showPerformanceLaneInMap) {
 //            _performanceLanes.value = emptyList()

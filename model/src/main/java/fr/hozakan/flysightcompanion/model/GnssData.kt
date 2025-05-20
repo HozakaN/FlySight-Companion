@@ -18,7 +18,8 @@ class GnssData(
     override fun toString(): String {
         return String.format(
             Locale.ROOT,
-            "%d, %.07f, %.07f, %.03f, %.03f, %.03f, %.03f",
+//            "%d, %.07f, %.07f, %.03f, %.03f, %.03f, %.03f",
+            "%d, %.07f, %.07f, %d, %d, %d, %d",
             iTow.toInt(),
             lon.toFloat(),
             lat.toFloat(),
