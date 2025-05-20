@@ -1,6 +1,6 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.player
 
-import fr.hozakan.flysightcompanion.framework.math.calculateHorizontalDistance
+import fr.hozakan.flysightcompanion.framework.math.computeHorizontalDistance
 import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.GnssData
@@ -30,11 +30,8 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.math.abs
 import kotlin.math.atan2
-import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 class SessionComputationUnit(
     private val profile: SessionProfile
@@ -171,7 +168,7 @@ class SessionComputationUnit(
                 val refPoint = bundle.referencePoint
 
                 // Calculate horizontal distance in nautical miles
-                val distance = calculateHorizontalDistance(
+                val distance = computeHorizontalDistance(
                     lat1 = gnssData.lat,
                     lon1 = gnssData.lon,
                     lat2 = refPoint.coords.latitude,

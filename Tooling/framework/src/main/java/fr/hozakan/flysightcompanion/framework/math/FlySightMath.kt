@@ -11,7 +11,7 @@ import kotlin.math.sqrt
  * Calculate the horizontal distance between two points using the Haversine formula
  * Returns distance in nautical miles
  */
-fun calculateHorizontalDistance(
+fun computeHorizontalDistance(
     lat1: Double, lon1: Double,
     lat2: Double, lon2: Double
 ): Double {
@@ -44,7 +44,7 @@ fun computeHeading(from: Coordinate, to: Coordinate): Double {
  * Calculate the signed perpendicular distance from a point to a line.
  * Returns negative for points to the left of the line, positive for points to the right.
  */
-fun calculateSignedDistanceToLine(
+fun computeSignedDistanceToLine(
     point: Coordinate,
     lineStart: Coordinate,
     lineEnd: Coordinate
@@ -75,8 +75,50 @@ fun calculateSignedDistanceToLine(
     // Calculate signed distance using cross product
     // (p-p1) × (p2-p1) / |p2-p1|
     val crossProduct = (x - x1) * dy - (y - y1) * dx
-    val lineLength = Math.sqrt(dx * dx + dy * dy)
+    val lineLength = sqrt(dx * dx + dy * dy)
 
     // Distance is positive if point is to the right of the line, negative if to the left
     return (crossProduct / lineLength).toFloat()
+}
+
+/**
+ * Calculate vertical speed between two points given their coordinates
+ * Returns vertical speed in meters per second (m/s)
+ * Positive values indicate ascent, negative values indicate descent
+ * 
+ * @param lat1 Latitude of the first point (degrees)
+ * @param lon1 Longitude of the first point (degrees)
+ * @param alt1 Altitude of the first point (meters)
+ * @param lat2 Latitude of the second point (degrees)
+ * @param lon2 Longitude of the second point (degrees)
+ * @param alt2 Altitude of the second point (meters)
+ * @param timeInterval Time between measurements in seconds
+ * @return Vertical speed in meters per second
+ */
+fun computeVerticalSpeed(
+    lat1: Double, lon1: Double, alt1: Double,
+    lat2: Double, lon2: Double, alt2: Double,
+    timeInterval: Double
+): Float {
+    // Calculate altitude difference (in meters)
+    val altitudeDifference = alt2 - alt1
+    
+    // Calculate vertical speed (altitude change divided by time)
+    val verticalSpeed = altitudeDifference / timeInterval
+    
+    return verticalSpeed.toFloat()
+}
+
+/**
+ * Simplified version of computeVerticalSpeed that takes only elevations and time
+ * Returns vertical speed in meters per second (m/s)
+ * 
+ * @param alt1 Altitude of the first point (meters)
+ * @param alt2 Altitude of the second point (meters)
+ * @param timeInterval Time between measurements in seconds
+ * @return Vertical speed in meters per second
+ */
+fun computeVerticalSpeed(alt1: Double, alt2: Double, timeInterval: Double): Float {
+    val altitudeDifference = alt2 - alt1
+    return (altitudeDifference / timeInterval).toFloat()
 }

@@ -205,11 +205,30 @@ private fun SessionPlayerScreenInternal(
                 }
         ) {
             when (displayGrid) {
-                DisplayGrid.InlineLeft -> InlineLeftPlayerScreen(controller = player)
-                DisplayGrid.InlineRight -> InlineLeftPlayerScreen(controller = player)
-                DisplayGrid.TwoByTwo -> InlineLeftPlayerScreen(controller = player)
-                DisplayGrid.TwoOnEachSide -> InlineLeftPlayerScreen(controller = player)
-                DisplayGrid.ThreeOnEachSide -> ThreeOnEachSidePlayerScreen(controller = player)
+                DisplayGrid.InlineLeft -> InlinePlayerScreen(
+                    inlinePlayerDirection = InlinePlayerDirection.Left,
+                    controller = player
+                )
+
+                DisplayGrid.InlineRight -> InlinePlayerScreen(
+                    inlinePlayerDirection = InlinePlayerDirection.Right,
+                    controller = player
+                )
+
+                DisplayGrid.TwoByTwo -> InlinePlayerScreen(
+                    inlinePlayerDirection = InlinePlayerDirection.Left,
+                    controller = player
+                )
+
+                DisplayGrid.TwoOnEachSide -> SideDisplayItemsPlayerScreen(
+                    controller = player,
+                    caseNumber = 2
+                )
+
+                DisplayGrid.ThreeOnEachSide -> SideDisplayItemsPlayerScreen(
+                    controller = player,
+                    caseNumber = 3
+                )
             }
             if (displayUnlockUi) {
                 Box(
@@ -432,16 +451,25 @@ private fun TimeControlContainer(
 }
 
 @Composable
-private fun ThreeOnEachSidePlayerScreen(
+private fun TwoByTwoGridPlayerScreen(
     controller: SessionController
 ) {
     val displayItems = controller.profile.displayItems
-    Row {
+    Row(
+//        horizontalArrangement = Arrangement.Center
+    ) {
         Column(
             modifier = Modifier.weight(1f)
         ) {
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
                 verticalArrangement = Arrangement.Center
             ) {
                 displayItems.firstOrNull { it.caseIndex == 0 && it.indexInCase == 0 }?.let { item ->
@@ -467,7 +495,14 @@ private fun ThreeOnEachSidePlayerScreen(
                 }
             }
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
                 verticalArrangement = Arrangement.Center
             ) {
                 displayItems.firstOrNull { it.caseIndex == 1 && it.indexInCase == 0 }?.let { item ->
@@ -492,8 +527,19 @@ private fun ThreeOnEachSidePlayerScreen(
                     )
                 }
             }
+        }
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
                 verticalArrangement = Arrangement.Center
             ) {
                 displayItems.firstOrNull { it.caseIndex == 2 && it.indexInCase == 0 }?.let { item ->
@@ -518,18 +564,15 @@ private fun ThreeOnEachSidePlayerScreen(
                     )
                 }
             }
-        }
-        SessionMainContainer(
-            modifier = Modifier
-                .weight(5f)
-                .fillMaxHeight(),
-            controller = controller
-        )
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
                 verticalArrangement = Arrangement.Center
             ) {
                 displayItems.firstOrNull { it.caseIndex == 3 && it.indexInCase == 0 }?.let { item ->
@@ -554,8 +597,184 @@ private fun ThreeOnEachSidePlayerScreen(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SideDisplayItemsPlayerScreen(
+    controller: SessionController,
+    caseNumber: Int
+) {
+    val displayItems = controller.profile.displayItems
+    Row {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
+                verticalArrangement = Arrangement.Center
+            ) {
+                displayItems.firstOrNull { it.caseIndex == 0 && it.indexInCase == 0 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                displayItems.firstOrNull { it.caseIndex == 0 && it.indexInCase == 1 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                if (caseNumber == 2) {
+                    displayItems.firstOrNull { it.caseIndex == 0 && it.indexInCase == 2 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
+                verticalArrangement = Arrangement.Center
+            ) {
+                displayItems.firstOrNull { it.caseIndex == 1 && it.indexInCase == 0 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                displayItems.firstOrNull { it.caseIndex == 1 && it.indexInCase == 1 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                if (caseNumber == 2) {
+                    displayItems.firstOrNull { it.caseIndex == 1 && it.indexInCase == 2 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
+                }
+            }
+            if (caseNumber == 3) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .then(
+                            if (controller.profile.showGridLines) {
+                                Modifier.border(width = 2.dp, color = Color.Green)
+                            } else {
+                                Modifier
+                            }
+                        ),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    displayItems.firstOrNull { it.caseIndex == 2 && it.indexInCase == 0 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
+                    displayItems.firstOrNull { it.caseIndex == 2 && it.indexInCase == 1 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.requiredWidth(8.dp))
+        SessionMainContainer(
+            modifier = Modifier
+                .weight(3f)
+                .fillMaxHeight(),
+            controller = controller
+        )
+        Spacer(modifier = Modifier.requiredWidth(8.dp))
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
+                verticalArrangement = Arrangement.Center
+            ) {
+                displayItems.firstOrNull { it.caseIndex == 3 && it.indexInCase == 0 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                displayItems.firstOrNull { it.caseIndex == 3 && it.indexInCase == 1 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                if (caseNumber == 2) {
+                    displayItems.firstOrNull { it.caseIndex == 3 && it.indexInCase == 2 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
                 verticalArrangement = Arrangement.Center
             ) {
                 displayItems.firstOrNull { it.caseIndex == 4 && it.indexInCase == 0 }?.let { item ->
@@ -572,38 +791,46 @@ private fun ThreeOnEachSidePlayerScreen(
                         player = controller
                     )
                 }
-                displayItems.firstOrNull { it.caseIndex == 4 && it.indexInCase == 2 }?.let { item ->
-                    DisplayCapabilityContainer(
-                        item = item,
-                        config = controller.profile.configFile,
-                        player = controller
-                    )
+                if (caseNumber == 2) {
+                    displayItems.firstOrNull { it.caseIndex == 4 && it.indexInCase == 2 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
                 }
             }
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center
-            ) {
-                displayItems.firstOrNull { it.caseIndex == 5 && it.indexInCase == 0 }?.let { item ->
-                    DisplayCapabilityContainer(
-                        item = item,
-                        config = controller.profile.configFile,
-                        player = controller
-                    )
-                }
-                displayItems.firstOrNull { it.caseIndex == 5 && it.indexInCase == 1 }?.let { item ->
-                    DisplayCapabilityContainer(
-                        item = item,
-                        config = controller.profile.configFile,
-                        player = controller
-                    )
-                }
-                displayItems.firstOrNull { it.caseIndex == 5 && it.indexInCase == 2 }?.let { item ->
-                    DisplayCapabilityContainer(
-                        item = item,
-                        config = controller.profile.configFile,
-                        player = controller
-                    )
+            if (caseNumber == 3) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .then(
+                            if (controller.profile.showGridLines) {
+                                Modifier.border(width = 2.dp, color = Color.Green)
+                            } else {
+                                Modifier
+                            }
+                        ),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    displayItems.firstOrNull { it.caseIndex == 5 && it.indexInCase == 0 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
+                    displayItems.firstOrNull { it.caseIndex == 5 && it.indexInCase == 1 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
                 }
             }
         }
@@ -645,9 +872,12 @@ private fun DisplayCapabilityContainer(
         )
 
         DisplayableCapability.DistanceToReferencePoint -> {
-            val refPointId = (item.bag as DisplayItemBundle.DistanceToRefPointBundle).referencePoint.id
+            val refPointId =
+                (item.bag as DisplayItemBundle.DistanceToRefPointBundle?)?.referencePoint?.id
             val refPointDistance by player.referencePointDistances
-                .map { map -> map.filter { mapEntry -> mapEntry.key == refPointId }.map { it.value } }.collectAsState(initial = emptyList())
+                .map { map ->
+                    map.filter { mapEntry -> mapEntry.key == refPointId }.map { it.value }
+                }.collectAsState(initial = emptyList())
             val distance = refPointDistance.firstOrNull()
 
             TagAndValueContainer(
@@ -670,10 +900,12 @@ private fun DisplayCapabilityContainer(
             tag = "GR",
             value = "${gnssData?.lon}"
         )
+
         DisplayableCapability.InverseGlideRatio -> TagAndValueContainer(
             tag = "IGR",
             value = "${gnssData?.lon}"
         )
+
         DisplayableCapability.DiveAngle -> TagAndValueContainer(
             tag = "DiveA",
             value = "${gnssData?.lon}"
@@ -684,14 +916,20 @@ private fun DisplayCapabilityContainer(
 @Composable
 private fun TagAndValueContainer(tag: String, value: String) {
     Row(
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = tag
+        FText(
+            text = tag,
+            configuration = FlySightTheme.typography.sessionPlayerText,
+            color = Color.Green
         )
         Spacer(modifier = Modifier.requiredWidth(8.dp))
-        Text(
-            text = value
+        FText(
+            text = value,
+            configuration = FlySightTheme.typography.sessionPlayerText,
+            color = Color.Green
         )
     }
 }
@@ -699,7 +937,9 @@ private fun TagAndValueContainer(tag: String, value: String) {
 @Composable
 private fun SpeedContainer(orientation: SpeedOrientation, player: SessionController) {
     Row(
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
@@ -710,22 +950,55 @@ private fun SpeedContainer(orientation: SpeedOrientation, player: SessionControl
                     SpeedOrientation.Vertical -> 90f
                     SpeedOrientation.Total -> 45f
                 }
-            }
+            },
+            tint = Color.Green
         )
-        Text(
-            text = "145 km/h"
+        val gnssData by player.gnssFlow.collectAsState(initial = null)
+
+        FText(
+            text = "${when (orientation) {
+                SpeedOrientation.Horizontal -> gnssData?.gSpeed
+                SpeedOrientation.Vertical -> 90f
+                SpeedOrientation.Total -> gnssData?.speed
+            }} km/h",
+            configuration = FlySightTheme.typography.sessionPlayerText,
+            color = Color.Green
         )
     }
 }
 
+enum class InlinePlayerDirection {
+    Left,
+    Right
+}
+
 @Composable
-private fun InlineLeftPlayerScreen(controller: SessionController) {
+private fun InlinePlayerScreen(
+    controller: SessionController,
+    inlinePlayerDirection: InlinePlayerDirection
+) {
     val displayItems = controller.profile.displayItems
     Row {
+        if (inlinePlayerDirection == InlinePlayerDirection.Right) {
+            SessionMainContainer(
+                modifier = Modifier
+                    .weight(4f)
+                    .fillMaxHeight()
+                    .padding(8.dp),
+                controller = controller
+            )
+        }
         Column(
             modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight(),
+                .fillMaxHeight()
+                .then(
+                    if (controller.profile.showGridLines) {
+                        Modifier.border(width = 2.dp, color = Color.Green)
+                    } else {
+                        Modifier
+                    }
+                ),
             verticalArrangement = Arrangement.Center
         ) {
             LazyColumn {
@@ -738,12 +1011,15 @@ private fun InlineLeftPlayerScreen(controller: SessionController) {
                 }
             }
         }
-        SessionMainContainer(
-            modifier = Modifier
-                .weight(6f)
-                .fillMaxHeight(),
-            controller = controller
-        )
+        if (inlinePlayerDirection == InlinePlayerDirection.Left) {
+            SessionMainContainer(
+                modifier = Modifier
+                    .weight(4f)
+                    .fillMaxHeight()
+                    .padding(8.dp),
+                controller = controller
+            )
+        }
     }
 }
 
@@ -752,8 +1028,6 @@ private fun SessionMainContainer(
     modifier: Modifier = Modifier,
     controller: SessionController
 ) {
-    val scope = rememberCoroutineScope()
-//    var showAlarmAnimation by remember { mutableStateOf(false) }
     var alarmMessage by remember { mutableStateOf("") }
 
     // Animation values
@@ -1107,7 +1381,22 @@ private fun PerformanceLaneContainer(
 )
 @Composable
 fun ThreeOnEachSidePlayerScreenPreview() {
-    ThreeOnEachSidePlayerScreen(
+    SideDisplayItemsPlayerScreen(
+        controller = FakeSessionController(
+            profile = fakeProfile
+        ),
+        caseNumber = 2
+    )
+}
+
+@Preview(
+    name = "Landscape Preview",
+    widthDp = 640,
+    heightDp = 360
+)
+@Composable
+fun TwoByTwoGridPlayerScreenPreview() {
+    TwoByTwoGridPlayerScreen(
         controller = FakeSessionController(
             profile = fakeProfile
         )
@@ -1121,7 +1410,8 @@ fun ThreeOnEachSidePlayerScreenPreview() {
 )
 @Composable
 fun InlineLeftPlayerScreenPreview() {
-    InlineLeftPlayerScreen(
+    InlinePlayerScreen(
+        inlinePlayerDirection = InlinePlayerDirection.Right,
         controller = FakeSessionController(
             profile = fakeProfile.copy(
                 displayItems = listOf(
@@ -1173,7 +1463,8 @@ class FakeSessionController(
     override val timeMutableSource: TimeMutableSource? = null
     override val videoController: VideoController = fakeVideoController
     override val distanceToCenter: StateFlow<Float?> = MutableStateFlow(null)
-    override val referencePointDistances: StateFlow<Map<String, Double>> = MutableStateFlow(emptyMap())
+    override val referencePointDistances: StateFlow<Map<String, Double>> =
+        MutableStateFlow(emptyMap())
 
     override fun pause() {}
 

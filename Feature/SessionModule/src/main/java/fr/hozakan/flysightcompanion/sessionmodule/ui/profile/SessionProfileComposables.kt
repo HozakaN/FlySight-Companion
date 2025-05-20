@@ -241,21 +241,23 @@ fun SessionProfileScreenInternal(
                                 )
                             }
 
-                            Spacer(modifier = Modifier.requiredHeight(8.dp))
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                FText(
-                                    text = "Show map in background",
-                                    configuration = FlySightTheme.typography.plainScreenTextLarge
-                                )
-                                Switch(
-                                    checked = form.showMap,
-                                    onCheckedChange = { form.updateShowMap(it) }
-                                )
+                            if (form.displayGrid != DisplayGrid.TwoByTwo) {
+                                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    FText(
+                                        text = "Show map in background",
+                                        configuration = FlySightTheme.typography.plainScreenTextLarge
+                                    )
+                                    Switch(
+                                        checked = form.showMap,
+                                        onCheckedChange = { form.updateShowMap(it) }
+                                    )
+                                }
                             }
 
                             Spacer(modifier = Modifier.requiredHeight(16.dp))
@@ -286,14 +288,18 @@ fun SessionProfileScreenInternal(
                 }
 
                 // Performance Lane section
-                item {
-                    PerformanceLaneCard(form, state)
+                if (form.displayGrid != DisplayGrid.TwoByTwo) {
+                    item {
+                        PerformanceLaneCard(form, state)
+                    }
                 }
                 item {
                     ExitDetectionCard(form)
                 }
-                item {
-                    AlertsCard(form)
+                if (form.displayGrid != DisplayGrid.TwoByTwo) {
+                    item {
+                        AlertsCard(form)
+                    }
                 }
             }
             Row(

@@ -3,7 +3,7 @@ package fr.hozakan.flysightcompanion.sessionmodule.business.player
 import android.content.Context
 import fr.hozakan.flysightcompanion.audiomodule.AudioService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
-import fr.hozakan.flysightcompanion.framework.math.calculateSignedDistanceToLine
+import fr.hozakan.flysightcompanion.framework.math.computeSignedDistanceToLine
 import fr.hozakan.flysightcompanion.framework.math.computeHeading
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
-import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -261,7 +260,7 @@ class DefaultSessionController(
         val centerLineEnd = centerLine.points.last()
 
         // Distance from point to line calculation (signed distance - negative is left, positive is right)
-        val distance = calculateSignedDistanceToLine(
+        val distance = computeSignedDistanceToLine(
             currentPosition,
             centerLineStart,
             centerLineEnd

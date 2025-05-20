@@ -1,7 +1,6 @@
 package fr.hozakan.flysightcompanion.sessionmodule.ui.profile
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -307,7 +305,7 @@ private fun RowScope.InlineLayoutDisplayItems(
             ) {
                 FText(
                     text = stringResource(item.displayableCapability.textResource),
-                    configuration = FlySightTheme.typography.sessionPlayerText,
+                    configuration = FlySightTheme.typography.sessionConfigurationText,
                     color = Color.Green
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -668,7 +666,7 @@ private fun DisplayItemsContainer(
                 ) {
                     FText(
                         text = stringResource(item.displayableCapability.textResource),
-                        configuration = FlySightTheme.typography.sessionPlayerText,
+                        configuration = FlySightTheme.typography.sessionConfigurationText,
                         color = Color.Green
                     )
                     Spacer(modifier = Modifier.weight(1f))
