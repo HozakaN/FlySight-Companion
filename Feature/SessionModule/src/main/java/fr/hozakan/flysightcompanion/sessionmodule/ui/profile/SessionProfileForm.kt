@@ -485,7 +485,6 @@ class SessionProfileForm(
     }
 
     fun addDisplayItem(displayItem: DisplayItem) {
-        Timber.d("Hoz3 ${hashCode()} displayItem added $displayItem")
         this.displayItems += displayItem
         isDirty = true
     }

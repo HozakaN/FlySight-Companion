@@ -20,12 +20,18 @@ class GnssData(
             Locale.ROOT,
             "%d, %.07f, %.07f, %.03f, %.03f, %.03f, %.03f",
             iTow.toInt(),
-            lon.toFloat() / 1e7,
-            lat.toFloat() / 1e7,
-            hMsl / 1e3,
-            velN / 1e3,
-            velE / 1e3,
-            velD / 1e3
+            lon.toFloat(),
+            lat.toFloat(),
+            hMsl,
+            velN,
+            velE,
+            velD,
+//            lon.toFloat() / 1e7,
+//            lat.toFloat() / 1e7,
+//            hMsl / 1e3,
+//            velN / 1e3,
+//            velE / 1e3,
+//            velD / 1e3
         )
     }
 }

@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -71,7 +70,8 @@ fun DisplayGridConfigurationScreen(
 
     Surface(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.displayCutout),
         color = MaterialTheme.colorScheme.surface
     ) {
 
@@ -100,9 +100,38 @@ fun DisplayGridConfigurationScreen(
                     form.removeDisplayItem(it)
                 }
             )
-            DisplayGrid.TwoByTwo -> TwoByTwoLayout()
-            DisplayGrid.TwoOnEachSide -> TwoOnEachSideLayout()
-            DisplayGrid.ThreeOnEachSide -> ThreeOnEachSideLayout()
+
+            DisplayGrid.TwoByTwo -> TwoByTwoLayout(
+                displayItems = form.displayItems,
+                onAddItemClicked = { caseIndex, indexInCase ->
+                    addItemClickedInfo = caseIndex to indexInCase
+                },
+                onDeleteItemClicked = {
+                    form.removeDisplayItem(it)
+                }
+            )
+
+            DisplayGrid.TwoOnEachSide -> TwoOrThreeOnEachSideLayout(
+                isThreeColumnLayout = false,
+                displayItems = form.displayItems,
+                onAddItemClicked = { caseIndex, indexInCase ->
+                    addItemClickedInfo = caseIndex to indexInCase
+                },
+                onDeleteItemClicked = {
+                    form.removeDisplayItem(it)
+                }
+            )
+
+            DisplayGrid.ThreeOnEachSide -> TwoOrThreeOnEachSideLayout(
+                isThreeColumnLayout = true,
+                displayItems = form.displayItems,
+                onAddItemClicked = { caseIndex, indexInCase ->
+                    addItemClickedInfo = caseIndex to indexInCase
+                },
+                onDeleteItemClicked = {
+                    form.removeDisplayItem(it)
+                }
+            )
         }
 
         if (addItemClickedInfo != null) {
@@ -114,11 +143,13 @@ fun DisplayGridConfigurationScreen(
                     if (item == DisplayableCapability.DistanceToReferencePoint) {
                         addDstToRefPoint = addItemClickedInfo
                     } else {
-                        form.addDisplayItem(DisplayItem(
-                            displayableCapability = item,
-                            caseIndex = addItemClickedInfo!!.first,
-                            indexInCase = addItemClickedInfo!!.second
-                        ))
+                        form.addDisplayItem(
+                            DisplayItem(
+                                displayableCapability = item,
+                                caseIndex = addItemClickedInfo!!.first,
+                                indexInCase = addItemClickedInfo!!.second
+                            )
+                        )
                     }
                     addItemClickedInfo = null
                 },
@@ -130,12 +161,14 @@ fun DisplayGridConfigurationScreen(
                     addDstToRefPoint = null
                 },
                 onItemPicked = { item ->
-                    form.addDisplayItem(DisplayItem(
-                        displayableCapability = DisplayableCapability.DistanceToReferencePoint,
-                        caseIndex = addDstToRefPoint!!.first,
-                        indexInCase = addDstToRefPoint!!.second,
-                        bag = DisplayItemBundle.dstToRefPt(item)
-                    ))
+                    form.addDisplayItem(
+                        DisplayItem(
+                            displayableCapability = DisplayableCapability.DistanceToReferencePoint,
+                            caseIndex = addDstToRefPoint!!.first,
+                            indexInCase = addDstToRefPoint!!.second,
+                            bag = DisplayItemBundle.dstToRefPt(item)
+                        )
+                    )
                     addDstToRefPoint = null
                 },
             )
@@ -213,6 +246,7 @@ enum class InlineLayoutDirection {
     LEFT,
     RIGHT
 }
+
 @Composable
 private fun InlineLayout(
     layoutDirection: InlineLayoutDirection,
@@ -222,7 +256,6 @@ private fun InlineLayout(
 ) {
     Row(
         modifier = Modifier.fillMaxSize()
-            .windowInsetsPadding(WindowInsets.displayCutout)
     ) {
         if (layoutDirection == InlineLayoutDirection.LEFT) {
             InlineLayoutDisplayItems(displayItems, onDeleteItemClicked)
@@ -267,11 +300,9 @@ private fun RowScope.InlineLayoutDisplayItems(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-//            for (i in 0 until 3) {
-//                DisplayItemsContainer(
-//                    val items = displayItems.filter { it.caseIndex == i }.sortedBy { it.indexInCase }
         displayItems.forEach { item ->
             Row(
+                modifier = Modifier.padding(start = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 FText(
@@ -279,7 +310,7 @@ private fun RowScope.InlineLayoutDisplayItems(
                     configuration = FlySightTheme.typography.sessionPlayerText,
                     color = Color.Green
                 )
-                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                Spacer(modifier = Modifier.weight(1f))
                 IconButton(onClick = {
                     onDeleteItemClicked(item)
                 }) {
@@ -290,52 +321,31 @@ private fun RowScope.InlineLayoutDisplayItems(
                 }
             }
         }
-        //                )
-//            }
     }
 }
 
 @Composable
-private fun InlineRightLayout() {
-    Row(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Main content with weight 6
-        Box(
-            modifier = Modifier
-                .weight(6f)
-                .fillMaxHeight()
-                .padding(end = 8.dp)
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .clip(RoundedCornerShape(4.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            FText(
-                text = "Main Content Area",
-                configuration = FlySightTheme.typography.plainScreenTextLarge
-            )
-        }
+private fun TwoByTwoLayout(
+    displayItems: List<DisplayItem>,
+    onAddItemClicked: (Int, Int) -> Unit,
+    onDeleteItemClicked: (DisplayItem) -> Unit
+) {
 
-        // Right column with weight 1
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                .padding(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Display items can be added here
-//            DisplayItemContainer("Item 1")
-//            DisplayItemContainer("Item 2")
-//            DisplayItemContainer("Item 3")
+    val items = remember(displayItems) {
+        displayItems.groupBy { item -> item.caseIndex }
+            .map { itemGroup -> itemGroup.value.sortedBy { item -> item.indexInCase } }.let {
+            if (it.size < 4) {
+                val mutableList = it.toMutableList()
+                (0..3).filter { index -> displayItems.none { displayItem -> displayItem.caseIndex == index } }.forEach { index ->
+                    mutableList.add(index, emptyList())
+                }
+                mutableList
+            } else {
+                it
+            }
         }
     }
-}
 
-@Composable
-private fun TwoByTwoLayout() {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -350,14 +360,16 @@ private fun TwoByTwoLayout() {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .padding(4.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .padding(8.dp)
+                    .border(width = 2.dp, color = Color.Green),
                 contentAlignment = Alignment.Center
             ) {
-                FText(
-                    text = "Top Left",
-                    configuration = FlySightTheme.typography.plainScreenTextLarge
+                GridDisplayItemsContainer(
+                    index = 0,
+                    isThreeColumnLayout = false,
+                    items,
+                    onDeleteItemClicked,
+                    onAddItemClicked
                 )
             }
 
@@ -366,14 +378,16 @@ private fun TwoByTwoLayout() {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .padding(4.dp)
-                    .background(MaterialTheme.colorScheme.tertiaryContainer)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .padding(8.dp)
+                    .border(width = 2.dp, color = Color.Green),
                 contentAlignment = Alignment.Center
             ) {
-                FText(
-                    text = "Top Right",
-                    configuration = FlySightTheme.typography.plainScreenTextLarge
+                GridDisplayItemsContainer(
+                    index = 2,
+                    isThreeColumnLayout = false,
+                    items,
+                    onDeleteItemClicked,
+                    onAddItemClicked
                 )
             }
         }
@@ -389,14 +403,16 @@ private fun TwoByTwoLayout() {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .padding(4.dp)
-                    .background(MaterialTheme.colorScheme.tertiaryContainer)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .padding(8.dp)
+                    .border(width = 2.dp, color = Color.Green),
                 contentAlignment = Alignment.Center
             ) {
-                FText(
-                    text = "Bottom Left",
-                    configuration = FlySightTheme.typography.plainScreenTextLarge
+                GridDisplayItemsContainer(
+                    index = 1,
+                    isThreeColumnLayout = false,
+                    items,
+                    onDeleteItemClicked,
+                    onAddItemClicked
                 )
             }
 
@@ -405,14 +421,16 @@ private fun TwoByTwoLayout() {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .padding(4.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .padding(8.dp)
+                    .border(width = 2.dp, color = Color.Green),
                 contentAlignment = Alignment.Center
             ) {
-                FText(
-                    text = "Bottom Right",
-                    configuration = FlySightTheme.typography.plainScreenTextLarge
+                GridDisplayItemsContainer(
+                    index = 3,
+                    isThreeColumnLayout = false,
+                    items,
+                    onDeleteItemClicked,
+                    onAddItemClicked
                 )
             }
         }
@@ -420,7 +438,68 @@ private fun TwoByTwoLayout() {
 }
 
 @Composable
-private fun TwoOnEachSideLayout() {
+private fun GridDisplayItemsContainer(
+    index: Int,
+    isThreeColumnLayout: Boolean,
+    items: List<List<DisplayItem>>,
+    onDeleteItemClicked: (DisplayItem) -> Unit,
+    onAddItemClicked: (Int, Int) -> Unit
+) {
+    val selectedItems = items.getOrNull(index)
+    if (selectedItems != null) {
+        DisplayItemsContainer(
+            isThreeColumnLayout = isThreeColumnLayout,
+            items = selectedItems,
+            onDeleteItemClicked = onDeleteItemClicked,
+            onAddItemClicked = {
+                Timber.d("Hoz3 adding item to $index at position ${selectedItems.size}")
+                onAddItemClicked(index, selectedItems.size)
+            }
+        )
+    } else {
+        Button(
+            modifier = Modifier
+                .padding(8.dp),
+            onClick = {
+                Timber.d("Hoz3 adding item to $index at position 0")
+                onAddItemClicked(index, 0)
+            }
+        ) {
+            FText(
+                text = "Add item",
+                configuration = FlySightTheme.typography.plainScreenTextLarge
+            )
+        }
+    }
+}
+
+@Composable
+private fun TwoOrThreeOnEachSideLayout(
+    isThreeColumnLayout: Boolean,
+    displayItems: List<DisplayItem>,
+    onAddItemClicked: (Int, Int) -> Unit,
+    onDeleteItemClicked: (DisplayItem) -> Unit
+) {
+
+    val items = remember(displayItems) {
+        displayItems.groupBy { item -> item.caseIndex }
+            .map { itemGroup -> itemGroup.value.sortedBy { item -> item.indexInCase } }.let {
+                if (it.size < 4) {
+                    val mutableList = it.toMutableList()
+                    (0..5).filter { index -> displayItems.none { displayItem -> displayItem.caseIndex == index } }.forEach { index ->
+                        mutableList.add(index, emptyList())
+                    }
+                    mutableList
+                } else {
+                    it
+                }
+            }
+    }
+
+    Timber.d("Hoz3 items size : ${items.size}}")
+    items.forEachIndexed { index, itemList ->
+        Timber.d("Hoz3 itemList size at index $index : ${itemList.size}}")
+    }
     Row(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -429,43 +508,69 @@ private fun TwoOnEachSideLayout() {
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
-                .padding(end = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+                .border(width = 2.dp, color = Color.Green),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Two centered boxes of the same size
             Box(
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxWidth()
-                    .padding(4.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .weight(1f)
+                    .border(width = 2.dp, color = Color.Green),
                 contentAlignment = Alignment.Center
             ) {
-                FText(text = "L1", configuration = FlySightTheme.typography.plainScreenTextLarge)
+                GridDisplayItemsContainer(
+                    index = 0,
+                    isThreeColumnLayout = isThreeColumnLayout,
+                    items,
+                    onDeleteItemClicked,
+                    onAddItemClicked
+                )
             }
 
+            // Two centered boxes of the same size
             Box(
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxWidth()
-                    .padding(4.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .weight(1f)
+                    .border(width = 2.dp, color = Color.Green),
                 contentAlignment = Alignment.Center
             ) {
-                FText(text = "L2", configuration = FlySightTheme.typography.plainScreenTextLarge)
+                GridDisplayItemsContainer(
+                    index = 1,
+                    isThreeColumnLayout = isThreeColumnLayout,
+                    items,
+                    onDeleteItemClicked,
+                    onAddItemClicked
+                )
+            }
+
+            if (isThreeColumnLayout) {
+
+                // Two centered boxes of the same size
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .border(width = 2.dp, color = Color.Green),
+                    contentAlignment = Alignment.Center
+                ) {
+                    GridDisplayItemsContainer(
+                        index = 2,
+                        isThreeColumnLayout = isThreeColumnLayout,
+                        items,
+                        onDeleteItemClicked,
+                        onAddItemClicked
+                    )
+                }
             }
         }
 
-        // Main content with weight 5
         Box(
             modifier = Modifier
-                .weight(5f)
+                .weight(3f)
                 .fillMaxHeight()
-                .padding(horizontal = 4.dp)
-                .background(MaterialTheme.colorScheme.primaryContainer)
+                .border(width = 2.dp, color = Color.Green)
                 .clip(RoundedCornerShape(4.dp)),
             contentAlignment = Alignment.Center
         ) {
@@ -480,178 +585,115 @@ private fun TwoOnEachSideLayout() {
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
-                .padding(start = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+                .border(width = 2.dp, color = Color.Green),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Two centered boxes of the same size
             Box(
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxWidth()
-                    .padding(4.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .weight(1f)
+                    .border(width = 2.dp, color = Color.Green),
                 contentAlignment = Alignment.Center
             ) {
-                FText(text = "R1", configuration = FlySightTheme.typography.plainScreenTextLarge)
+                GridDisplayItemsContainer(
+                    index = 3,
+                    isThreeColumnLayout = isThreeColumnLayout,
+                    items,
+                    onDeleteItemClicked,
+                    onAddItemClicked
+                )
             }
 
+            // Two centered boxes of the same size
             Box(
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxWidth()
-                    .padding(4.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .weight(1f)
+                    .border(width = 2.dp, color = Color.Green),
                 contentAlignment = Alignment.Center
             ) {
-                FText(text = "R2", configuration = FlySightTheme.typography.plainScreenTextLarge)
+                GridDisplayItemsContainer(
+                    index = 4,
+                    isThreeColumnLayout = isThreeColumnLayout,
+                    items,
+                    onDeleteItemClicked,
+                    onAddItemClicked
+                )
+            }
+
+            if (isThreeColumnLayout) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .border(width = 2.dp, color = Color.Green),
+                    contentAlignment = Alignment.Center
+                ) {
+                    GridDisplayItemsContainer(
+                        index = 5,
+                        isThreeColumnLayout = isThreeColumnLayout,
+                        items,
+                        onDeleteItemClicked,
+                        onAddItemClicked
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ThreeOnEachSideLayout() {
-    Row(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Left column with weight 1
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .padding(end = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Three centered boxes of the same size
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(4.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clip(RoundedCornerShape(4.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                FText(text = "L1", configuration = FlySightTheme.typography.plainScreenTextLarge)
-            }
-
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(4.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clip(RoundedCornerShape(4.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                FText(text = "L2", configuration = FlySightTheme.typography.plainScreenTextLarge)
-            }
-
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(4.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clip(RoundedCornerShape(4.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                FText(text = "L3", configuration = FlySightTheme.typography.plainScreenTextLarge)
-            }
-        }
-
-        // Main content with weight 5
-        Box(
-            modifier = Modifier
-                .weight(5f)
-                .fillMaxHeight()
-                .padding(horizontal = 4.dp)
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .clip(RoundedCornerShape(4.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            FText(
-                text = "Main Content",
-                configuration = FlySightTheme.typography.plainScreenTextLarge
-            )
-        }
-
-        // Right column with weight 1
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .padding(start = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Three centered boxes of the same size
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(4.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clip(RoundedCornerShape(4.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                FText(text = "R1", configuration = FlySightTheme.typography.plainScreenTextLarge)
-            }
-
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(4.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clip(RoundedCornerShape(4.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                FText(text = "R2", configuration = FlySightTheme.typography.plainScreenTextLarge)
-            }
-
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(4.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clip(RoundedCornerShape(4.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                FText(text = "R3", configuration = FlySightTheme.typography.plainScreenTextLarge)
-            }
-        }
-    }
-}
-
-@Composable
-private fun DisplayItemsContainer(items: List<DisplayItem>) {
+private fun DisplayItemsContainer(
+    isThreeColumnLayout: Boolean,
+    items: List<DisplayItem>,
+    onDeleteItemClicked: (DisplayItem) -> Unit,
+    onAddItemClicked: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1f),
-//            .border(width = 2.dp, color = Color.Green),
+            .padding(start = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .border(width = 2.dp, color = Color.Black)
-                .padding(8.dp),
+                .fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-//            items.forEach { item ->
-//                FText(
-//                    text = stringResource(item.displayableCapability.textResource),
-//                    configuration = FlySightTheme.typography.plainScreenTextMedium
-//                )
-//            }
+            items.take(if (isThreeColumnLayout) 2 else 3).forEach { item ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FText(
+                        text = stringResource(item.displayableCapability.textResource),
+                        configuration = FlySightTheme.typography.sessionPlayerText,
+                        color = Color.Green
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(onClick = {
+                        onDeleteItemClicked(item)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Item"
+                        )
+                    }
+                }
+            }
+            if (items.size < if (isThreeColumnLayout) 2 else 3) {
+                Button(
+                    modifier = Modifier
+                        .padding(8.dp),
+                    onClick = onAddItemClicked
+                ) {
+                    FText(
+                        text = "Add item",
+                        configuration = FlySightTheme.typography.plainScreenTextLarge
+                    )
+                }
+            }
         }
     }
 }
@@ -661,7 +703,11 @@ private fun DisplayItemsContainer(items: List<DisplayItem>) {
 fun PreviewDisplayGridConfigurationScreen() {
     DisplayGridConfigurationScreen(
         referencePoints = emptyList(),
-        form = rememberSessionProfileForm(initialConfiguration = SessionProfile.default()),
+        form = rememberSessionProfileForm(
+            initialConfiguration = SessionProfile.default().copy(
+                displayGrid = DisplayGrid.ThreeOnEachSide
+            )
+        ),
         onDismiss = {}
     )
 }

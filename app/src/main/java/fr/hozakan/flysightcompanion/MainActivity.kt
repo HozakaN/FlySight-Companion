@@ -740,7 +740,6 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, 
             }
 
             if (lock) {
-                Timber.d("Hoz3 lock screen")
                 // Keep screen on when locked
                 window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON/* and WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN*/)
 
@@ -760,7 +759,6 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, 
                     addFlags(WindowManager.LayoutParams.SCREEN_BRIGHTNESS_CHANGED)
                 }
             } else {
-                Timber.d("Hoz3 unlock screen")
                 // Allow screen to turn off when unlocked
                 window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON/* and WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN*/)
 

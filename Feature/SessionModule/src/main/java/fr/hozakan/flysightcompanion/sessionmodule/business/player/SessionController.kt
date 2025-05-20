@@ -25,6 +25,8 @@ interface SessionController {
 
     val distanceToCenter: StateFlow<Float?>
 
+    val referencePointDistances: StateFlow<Map<String, Double>>
+
     fun pause()
 
     fun play()

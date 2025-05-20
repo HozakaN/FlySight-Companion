@@ -1,5 +1,6 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.player
 
+import fr.hozakan.flysightcompanion.framework.math.calculateHorizontalDistance
 import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.GnssData
@@ -10,6 +11,8 @@ import fr.hozakan.flysightcompanion.model.config.SpeechMode
 import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
 import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
+import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItemBundle
+import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -27,8 +30,11 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 class SessionComputationUnit(
     private val profile: SessionProfile
@@ -36,6 +42,9 @@ class SessionComputationUnit(
 
     private val _sessionEvents = MutableSharedFlow<SessionEvent>()
     val sessionEvents: SharedFlow<SessionEvent> = _sessionEvents.asSharedFlow()
+
+    private val _referencePointDistances = MutableStateFlow<Map<String, Double>>(emptyMap())
+    val referencePointDistances: StateFlow<Map<String, Double>> = _referencePointDistances.asStateFlow()
 
     private val config = profile.configFile
 
@@ -152,11 +161,26 @@ class SessionComputationUnit(
                                 _sessionEvents.emit(SessionEvent.PerformanceLaneStart(gnssData))
                             }
                         }
-                    } else {
-
                     }
                 }
             }
+
+            val currentDistances = mutableMapOf<String, Double>()
+            profile.displayItems.filter { it.displayableCapability == DisplayableCapability.DistanceToReferencePoint }.forEach { displayItem ->
+                val bundle = displayItem.bag as? DisplayItemBundle.DistanceToRefPointBundle ?: return@forEach
+                val refPoint = bundle.referencePoint
+
+                // Calculate horizontal distance in nautical miles
+                val distance = calculateHorizontalDistance(
+                    lat1 = gnssData.lat,
+                    lon1 = gnssData.lon,
+                    lat2 = refPoint.coords.latitude,
+                    lon2 = refPoint.coords.longitude
+                )
+
+                currentDistances[refPoint.id] = distance
+            }
+            _referencePointDistances.value = currentDistances
         } else {
             flagHasFix = false
             //setRate(0)

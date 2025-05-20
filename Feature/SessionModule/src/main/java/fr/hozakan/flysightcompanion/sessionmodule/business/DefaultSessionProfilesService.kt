@@ -2,12 +2,22 @@ package fr.hozakan.flysightcompanion.sessionmodule.business
 
 import android.content.Context
 import com.google.gson.Gson
-import fr.hozakan.flysightcompanion.dialogmodule.ConfigFileNameDialogResult
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.JsonParseException
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
 import fr.hozakan.flysightcompanion.dialogmodule.ConfigFileNameDialog
+import fr.hozakan.flysightcompanion.dialogmodule.ConfigFileNameDialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.DialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.DialogService
 import fr.hozakan.flysightcompanion.dialogmodule.PickConfigurationDialog
 import fr.hozakan.flysightcompanion.dialogmodule.PickConfigurationDialogResult
+import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItemBundle
+import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +29,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.lang.reflect.Type
 
 class DefaultSessionProfilesService(
     private val context: Context,
@@ -27,7 +38,9 @@ class DefaultSessionProfilesService(
 
     private val serviceScope = CoroutineScope(SupervisorJob())
 
-    private val gson = Gson()
+    private val gson: Gson = GsonBuilder()
+        .registerTypeAdapter(DisplayItemBundle::class.java, DisplayItemBundleTypeAdapter())
+        .create()
 
     private val _sessionConfigurations = MutableStateFlow<List<SessionProfile>>(emptyList())
     override val sessionProfiles: StateFlow<List<SessionProfile>> =
@@ -36,6 +49,52 @@ class DefaultSessionProfilesService(
     init {
         serviceScope.launch {
             loadSessionConfigurations()
+        }
+    }
+
+    // Type adapter for DisplayItemBundle
+    private class DisplayItemBundleTypeAdapter : 
+            JsonSerializer<DisplayItemBundle>, 
+            JsonDeserializer<DisplayItemBundle> {
+            
+        override fun serialize(
+            src: DisplayItemBundle, 
+            typeOfSrc: Type, 
+            context: JsonSerializationContext
+        ): JsonElement {
+            val jsonObject = JsonObject()
+            
+            // Add a type field to identify which subclass it is
+            when (src) {
+                is DisplayItemBundle.DistanceToRefPointBundle -> {
+                    jsonObject.addProperty("type", "DistanceToRefPointBundle")
+                    // Serialize the reference point
+                    val refPoint = src.referencePoint
+                    jsonObject.add("referencePoint", context.serialize(refPoint))
+                }
+            }
+            
+            return jsonObject
+        }
+
+        override fun deserialize(
+            json: JsonElement, 
+            typeOfT: Type, 
+            context: JsonDeserializationContext
+        ): DisplayItemBundle {
+            val jsonObject = json.asJsonObject
+            val type = jsonObject.get("type").asString
+            
+            return when (type) {
+                "DistanceToRefPointBundle" -> {
+                    val refPoint = context.deserialize<ReferencePoint>(
+                        jsonObject.get("referencePoint"), 
+                        ReferencePoint::class.java
+                    )
+                    DisplayItemBundle.DistanceToRefPointBundle(refPoint)
+                }
+                else -> throw JsonParseException("Unknown DisplayItemBundle type: $type")
+            }
         }
     }
 
@@ -149,7 +208,8 @@ class DefaultSessionProfilesService(
         return gson.toJson(sessionProfile)
     }
 
-    private fun parseConfiguration(fileLines: List<String>): SessionProfile = gson.fromJson(fileLines.joinToString(separator = "\n"), SessionProfile::class.java)
+    private fun parseConfiguration(fileLines: List<String>): SessionProfile = 
+        gson.fromJson(fileLines.joinToString(separator = "\n"), SessionProfile::class.java)
 
     companion object {
         private const val SESSION_CONFIGS_FOLDER = "sessionConfigurations"

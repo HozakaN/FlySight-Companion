@@ -88,7 +88,6 @@ fun SessionProfileScreen(
     }
 
     val form = rememberSessionProfileForm(initialConfiguration = state.sessionProfile)
-    Timber.d("Hoz3 form hashcode : ${form.hashCode()}")
 
     var displayGridConfiguration by rememberSaveable { mutableStateOf(false) }
 
@@ -97,12 +96,10 @@ fun SessionProfileScreen(
     }
 
     if (displayGridConfiguration) {
-        Timber.d("Hoz3 showing display grid configuration on form ${form.hashCode()}: ${form.displayItems}")
         DisplayGridConfigurationScreen(
             form = form,
             referencePoints = state.referencePoints,
             onDismiss = {
-                Timber.d("Hoz3 dismissing display grid configuration on form ${form.hashCode()}: ${form.displayItems}")
                 displayGridConfiguration = false
             }
         )
