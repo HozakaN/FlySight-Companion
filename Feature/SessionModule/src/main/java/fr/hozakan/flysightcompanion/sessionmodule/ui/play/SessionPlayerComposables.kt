@@ -80,6 +80,10 @@ import com.google.maps.android.compose.*
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
+import fr.hozakan.flysightcompanion.framework.math.computeGlideRatio
+import fr.hozakan.flysightcompanion.framework.math.computeGroundSpeed
+import fr.hozakan.flysightcompanion.framework.math.computeInverseGlideRatio
+import fr.hozakan.flysightcompanion.framework.math.meterSecondToKmh
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.config.AlarmType
@@ -103,7 +107,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import kotlin.collections.emptyMap
 import kotlin.math.abs
 
@@ -216,8 +219,7 @@ private fun SessionPlayerScreenInternal(
                     controller = player
                 )
 
-                DisplayGrid.TwoByTwo -> InlinePlayerScreen(
-                    inlinePlayerDirection = InlinePlayerDirection.Left,
+                DisplayGrid.TwoByTwo -> TwoByTwoGridPlayerScreen(
                     controller = player
                 )
 
@@ -463,7 +465,8 @@ private fun TwoByTwoGridPlayerScreen(
             modifier = Modifier.weight(1f)
         ) {
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
                     .then(
                         if (controller.profile.showGridLines) {
                             Modifier.border(width = 2.dp, color = Color.Green)
@@ -496,7 +499,8 @@ private fun TwoByTwoGridPlayerScreen(
                 }
             }
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
                     .then(
                         if (controller.profile.showGridLines) {
                             Modifier.border(width = 2.dp, color = Color.Green)
@@ -533,7 +537,8 @@ private fun TwoByTwoGridPlayerScreen(
             modifier = Modifier.weight(1f)
         ) {
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
                     .then(
                         if (controller.profile.showGridLines) {
                             Modifier.border(width = 2.dp, color = Color.Green)
@@ -566,7 +571,8 @@ private fun TwoByTwoGridPlayerScreen(
                 }
             }
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
                     .then(
                         if (controller.profile.showGridLines) {
                             Modifier.border(width = 2.dp, color = Color.Green)
@@ -899,18 +905,76 @@ private fun DisplayCapabilityContainer(
 
         DisplayableCapability.GlideRatio -> TagAndValueContainer(
             tag = "GR",
-            value = "${gnssData?.lon}"
+            value = remember(gnssData?.velN, gnssData?.velE, gnssData?.velD) {
+                String.format(
+                    "%.2f", computeGlideRatio(
+                        gnssData?.velD ?: 0,
+                        computeGroundSpeed(
+                            gnssData?.velN?.toDouble() ?: 0.0,
+                            gnssData?.velE?.toDouble() ?: 0.0
+                        )
+                    )
+                )
+            }
         )
 
         DisplayableCapability.InverseGlideRatio -> TagAndValueContainer(
             tag = "IGR",
-            value = "${gnssData?.lon}"
+            value = remember(gnssData?.velN, gnssData?.velE, gnssData?.velD) {
+                String.format(
+                    "%.2f", computeInverseGlideRatio(
+                        gnssData?.velD ?: 0,
+                        computeGroundSpeed(
+                            gnssData?.velN?.toDouble() ?: 0.0,
+                            gnssData?.velE?.toDouble() ?: 0.0
+                        )
+                    )
+                )
+            }
         )
 
         DisplayableCapability.DiveAngle -> TagAndValueContainer(
             tag = "DiveA",
             value = "${gnssData?.lon}"
         )
+
+        DisplayableCapability.VelN -> TagAndValueContainer(
+            tag = "velN",
+            value = "${gnssData?.velN}"
+        )
+
+        DisplayableCapability.VelE -> TagAndValueContainer(
+            tag = "velE",
+            value = "${gnssData?.velE}"
+        )
+
+        DisplayableCapability.VelD -> TagAndValueContainer(
+            tag = "velD",
+            value = "${gnssData?.velD}"
+        )
+
+        DisplayableCapability.TimeInWindow -> {
+            val timer by player.timeInWindow.collectAsState()
+            TagAndValueContainer(
+                tag = "W Timer",
+                value = String.format("%.1f s", timer)
+            )
+        }
+
+        DisplayableCapability.DistanceInWindow -> {
+            val distance by player.distanceInWindow.collectAsState()
+            TagAndValueContainer(
+                tag = "W Distance",
+                value = String.format("%d m", distance)
+            )
+        }
+        DisplayableCapability.SpeedInWindow -> {
+            val speed by player.speedInWindow.collectAsState()
+            TagAndValueContainer(
+                tag = "W Speed",
+                value = String.format("%d km/h", speed)
+            )
+        }
     }
 }
 
@@ -957,11 +1021,13 @@ private fun SpeedContainer(orientation: SpeedOrientation, player: SessionControl
         val gnssData by player.gnssFlow.collectAsState(initial = null)
 
         FText(
-            text = "${when (orientation) {
-                SpeedOrientation.Horizontal -> gnssData?.gSpeed
-                SpeedOrientation.Vertical -> 90f
-                SpeedOrientation.Total -> gnssData?.speed
-            }} km/h",
+            text = "${
+                when (orientation) {
+                    SpeedOrientation.Horizontal -> remember(gnssData?.gSpeed) { gnssData?.gSpeed?.meterSecondToKmh() }
+                    SpeedOrientation.Vertical -> remember(gnssData?.velD) { gnssData?.velD?.meterSecondToKmh() }
+                    SpeedOrientation.Total -> remember(gnssData?.speed) { gnssData?.speed?.meterSecondToKmh() }
+                }
+            } km/h",
             configuration = FlySightTheme.typography.sessionPlayerText,
             color = Color.Green
         )
@@ -1081,6 +1147,8 @@ private fun SessionMainContainer(
                 is SessionEvent.PerformanceLaneStart -> "Lane start"
                 is SessionEvent.PlayFileEvent -> ""
                 is SessionEvent.PlayTextEvent -> ""
+                SessionEvent.CompetitionWindowEntered -> "Competition window entered"
+                SessionEvent.CompetitionWindowExited -> "Competition window exited"
             }
         }
     }
@@ -1466,6 +1534,9 @@ class FakeSessionController(
     override val distanceToCenter: StateFlow<Float?> = MutableStateFlow(null)
     override val referencePointDistances: StateFlow<Map<String, Double>> =
         MutableStateFlow(emptyMap())
+    override val timeInWindow: StateFlow<Float> = MutableStateFlow(0f)
+    override val distanceInWindow: StateFlow<Int> = MutableStateFlow(0)
+    override val speedInWindow: StateFlow<Int> = MutableStateFlow(0)
 
     override fun pause() {}
 

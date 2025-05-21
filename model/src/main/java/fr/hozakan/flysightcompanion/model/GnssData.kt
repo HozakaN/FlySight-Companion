@@ -7,13 +7,13 @@ class GnssData(
     val lon: Double,
     val lat: Double,
     val hMsl: Int,
-    val velN: Int,
-    val velE: Int,
-    val velD: Int,
+    val velN: Int, // m/s
+    val velE: Int, // m/s
+    val velD: Int, // m/s
     val gpsFix: Int,
     val vAcc: Int,
-    val gSpeed: Int,
-    val speed: Int
+    val gSpeed: Int, // m/s
+    val speed: Int // m/s
 ) {
     override fun toString(): String {
         return String.format(

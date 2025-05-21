@@ -1,5 +1,7 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.player
 
+import fr.hozakan.flysightcompanion.framework.math.computeGroundSpeed
+import fr.hozakan.flysightcompanion.framework.math.computeTotalSpeed
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.extensions.formatTime
@@ -20,6 +22,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.time.ZoneOffset
 import kotlin.math.abs
+import kotlin.math.sqrt
 
 class FileGnssSource(
     recordFile: RecordFile,
@@ -111,6 +114,19 @@ class FileGnssSource(
                         val msInDay = secondsInDay * 1000 + currentPoint.dateTime.nano / 1_000_000
                         val iTow = (dayOfWeek * 24 * 3600 * 1000 + msInDay).toUInt()
 
+                        // Calculate ground speed from velN and velE (Pythagorean theorem)
+                        val groundSpeed = computeGroundSpeed(
+                            currentPoint.velN,
+                            currentPoint.velE
+                        )
+
+                        // Calculate total speed (3D) from velN, velE and velD
+                        val totalSpeed = computeTotalSpeed(
+                            currentPoint.velN,
+                            currentPoint.velE,
+                            currentPoint.velD
+                        )
+
                         val dataToEmit = GnssData(
                             iTow = iTow,
                             lon = currentPoint.longitude,
@@ -121,8 +137,8 @@ class FileGnssSource(
                             velD = currentPoint.velD.toInt(),
                             gpsFix = currentPoint.numSV,
                             vAcc = currentPoint.vAcc.toInt(),
-                            speed = 0,
-                            gSpeed = 0
+                            speed = totalSpeed,     // Setting the 3D speed
+                            gSpeed = groundSpeed    // Setting the computed ground speed
                         )
                         
                         val nextPoint = dataPoints.getOrNull(dataPoints.indexOf(currentPoint) + 1)

@@ -12,4 +12,10 @@ enum class DisplayableCapability {
     DistanceToReferencePoint,
     Latitude,
     Longitude,
+    VelN,
+    VelE,
+    VelD,
+    TimeInWindow,
+    DistanceInWindow,
+    SpeedInWindow
 }

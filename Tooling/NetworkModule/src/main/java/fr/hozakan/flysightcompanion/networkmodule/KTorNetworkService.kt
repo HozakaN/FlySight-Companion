@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.net.UnknownHostException
 
 class KTorNetworkService(
     private val context: Context
@@ -58,30 +59,42 @@ class KTorNetworkService(
     }
 
     private suspend fun getAvailableFirmwares(): List<FirmwareVersion> {
-        val response = client.get {
-            url(githubTagPagesUrl)
-        }
-        val result: List<FirmwareVersion> = if (response.status == HttpStatusCode.OK) {
-            val content = response.readRawBytes().toString(Charsets.UTF_8)
-            val availableFirmwares = parseFirmwarePage(content)
-            availableFirmwares
-        } else {
-            emptyList()
-        }
-        return result
+        return try {
+            client.get {
+                url(githubTagPagesUrl)
+            }
+        } catch (ex: Exception) {
+            Timber.i(ex)
+            null
+        }?.let { response ->
+            val result: List<FirmwareVersion> = if (response.status == HttpStatusCode.OK) {
+                val content = response.readRawBytes().toString(Charsets.UTF_8)
+                val availableFirmwares = parseFirmwarePage(content)
+                availableFirmwares
+            } else {
+                emptyList()
+            }
+            result
+        } ?: emptyList()
     }
 
     private suspend fun getFirmwareCompatibilityMatrix(): FirmwareCompatibilityMatrix {
-        val response = client.get {
-            url(githubCompatibilityMatrixUrl)
-        }
-        val result: FirmwareCompatibilityMatrix = if (response.status == HttpStatusCode.OK) {
-            val content = response.readRawBytes().toString(Charsets.UTF_8)
-            parseCompatibilityMatrix(content)
-        } else {
-            FirmwareCompatibilityMatrix.placeholder
-        }
-        return result
+        return try {
+            client.get {
+                url(githubCompatibilityMatrixUrl)
+            }
+        } catch (ex: Exception) {
+            Timber.i(ex)
+            null
+        }?.let { response ->
+            val result: FirmwareCompatibilityMatrix = if (response.status == HttpStatusCode.OK) {
+                val content = response.readRawBytes().toString(Charsets.UTF_8)
+                parseCompatibilityMatrix(content)
+            } else {
+                FirmwareCompatibilityMatrix.placeholder
+            }
+            result
+        } ?: FirmwareCompatibilityMatrix.placeholder
     }
 
     private fun parseFirmwarePage(content: String): List<FirmwareVersion> {

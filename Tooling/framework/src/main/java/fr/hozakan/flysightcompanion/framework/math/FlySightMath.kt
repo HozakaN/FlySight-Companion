@@ -6,6 +6,67 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
+fun Int.meterSecondToKmh(): Int {
+    return (this * 3.6).toInt()
+}
+
+/**
+ * Calculate the glide ratio from vertical and horizontal speed
+ * @param verticalSpeed Vertical speed in meters per second (m/s)
+ * @param horizontalSpeed Horizontal speed in meters per second (m/s)
+ * Returns glide ratio as a float
+ */
+fun computeGlideRatio(
+    verticalSpeed: Int,
+    horizontalSpeed: Int,
+): Float {
+    return if (horizontalSpeed == 0) {
+        0f
+    } else {
+        horizontalSpeed.toFloat() / verticalSpeed.toFloat()
+    }
+}
+
+fun computeInverseGlideRatio(
+    verticalSpeed: Int,
+    horizontalSpeed: Int,
+): Float {
+    return if (verticalSpeed == 0) {
+        0f
+    } else {
+        verticalSpeed.toFloat() / horizontalSpeed.toFloat()
+    }
+}
+
+/**
+ * Calculate the total speed from north, east, and down velocity components
+ * Returns speed in meters per second (m/s)
+ */
+fun computeTotalSpeed(
+    velN: Double,
+    velE: Double,
+    velD: Double,
+): Int {
+    return sqrt(
+        (velN * velN +
+                velE * velE +
+                velD * velD)
+    ).toInt()
+}
+
+/**
+ * Calculate the ground speed from north and east velocity components
+ * Returns speed in meters per second (m/s)
+ */
+fun computeGroundSpeed(
+    velN: Double,
+    velE: Double,
+): Int {
+    return sqrt(
+        (velN * velN +
+                velE * velE)
+    ).toInt()
+}
 
 /**
  * Calculate the horizontal distance between two points using the Haversine formula
@@ -28,6 +89,14 @@ fun computeHorizontalDistance(
 
     // Return horizontal distance in nautical miles
     return earthRadiusNm * c
+}
+
+fun Double.fromNMToMeters(): Double {
+    return this * 1852.0
+}
+
+fun Double.fromNMToKm(): Double {
+    return this * 1.852
 }
 
 fun computeHeading(from: Coordinate, to: Coordinate): Double {
@@ -85,7 +154,7 @@ fun computeSignedDistanceToLine(
  * Calculate vertical speed between two points given their coordinates
  * Returns vertical speed in meters per second (m/s)
  * Positive values indicate ascent, negative values indicate descent
- * 
+ *
  * @param lat1 Latitude of the first point (degrees)
  * @param lon1 Longitude of the first point (degrees)
  * @param alt1 Altitude of the first point (meters)
@@ -102,17 +171,17 @@ fun computeVerticalSpeed(
 ): Float {
     // Calculate altitude difference (in meters)
     val altitudeDifference = alt2 - alt1
-    
+
     // Calculate vertical speed (altitude change divided by time)
     val verticalSpeed = altitudeDifference / timeInterval
-    
+
     return verticalSpeed.toFloat()
 }
 
 /**
  * Simplified version of computeVerticalSpeed that takes only elevations and time
  * Returns vertical speed in meters per second (m/s)
- * 
+ *
  * @param alt1 Altitude of the first point (meters)
  * @param alt2 Altitude of the second point (meters)
  * @param timeInterval Time between measurements in seconds

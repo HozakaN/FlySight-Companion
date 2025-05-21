@@ -10,6 +10,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import timber.log.Timber
 import java.util.Locale
 
 class AudioController(
@@ -51,6 +52,8 @@ class AudioController(
 
                     is SessionEvent.ExitFound -> {}
                     is SessionEvent.PerformanceLaneStart -> {}
+                    SessionEvent.CompetitionWindowEntered -> {}
+                    SessionEvent.CompetitionWindowExited -> {}
                 }
             }
             .launchIn(scope)

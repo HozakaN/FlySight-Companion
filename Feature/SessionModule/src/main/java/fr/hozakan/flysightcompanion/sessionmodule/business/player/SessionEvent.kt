@@ -27,4 +27,8 @@ sealed class SessionEvent(
     data class PerformanceLaneStart(
         val gnssData: GnssData
     ) : SessionEvent("PerformanceLaneStart")
+
+    data object CompetitionWindowEntered : SessionEvent("CompetitionWindowEntered")
+
+    data object CompetitionWindowExited : SessionEvent("CompetitionWindowExited")
 }

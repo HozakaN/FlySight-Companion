@@ -27,6 +27,10 @@ interface SessionController {
 
     val referencePointDistances: StateFlow<Map<String, Double>>
 
+    val timeInWindow: StateFlow<Float>
+    val distanceInWindow: StateFlow<Int>
+    val speedInWindow: StateFlow<Int>
+
     fun pause()
 
     fun play()

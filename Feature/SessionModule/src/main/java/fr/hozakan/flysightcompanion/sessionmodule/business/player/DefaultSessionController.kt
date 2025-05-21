@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -41,6 +40,12 @@ class DefaultSessionController(
     private val sessionComputationUnit = SessionComputationUnit(profile = profile)
 
     override val referencePointDistances: StateFlow<Map<String, Double>> = sessionComputationUnit.referencePointDistances
+
+    override val timeInWindow: StateFlow<Float> = sessionComputationUnit.timeInWindow
+
+    override val distanceInWindow: StateFlow<Int> = sessionComputationUnit.distanceInWindow
+
+    override val speedInWindow: StateFlow<Int> = sessionComputationUnit.speedInWindow
 
     override val timeMutableSource: TimeMutableSource?
         get() = gnssSource.timeMutableSource
@@ -137,7 +142,7 @@ class DefaultSessionController(
     }
 
     override fun resetExitDetection() {
-        sessionComputationUnit.resetExitDetection()
+        sessionComputationUnit.reset()
     }
 
     override fun destroy() {
@@ -156,7 +161,6 @@ class DefaultSessionController(
     }
 
     private fun updatePerformanceLanes() {
-        Timber.d("Hoz3 updatePerformanceLanes ${_performanceLanes.value.size}, laneStartPoint = ${laneStartPoint.value}")
         if (_performanceLanes.value.isNotEmpty()) return
 //        if (!profile.showPerformanceLaneInMap) {
 //            _performanceLanes.value = emptyList()

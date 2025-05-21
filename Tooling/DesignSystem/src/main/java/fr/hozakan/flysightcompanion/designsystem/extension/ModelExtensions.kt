@@ -161,5 +161,11 @@ val DisplayableCapability.textResource: Int
         DisplayableCapability.DistanceToReferencePoint -> R.string.session_configuration_displayable_capability_distance_to_ref_point
         DisplayableCapability.Latitude -> R.string.session_configuration_displayable_capability_latitude
         DisplayableCapability.Longitude -> R.string.session_configuration_displayable_capability_longitude
+        DisplayableCapability.VelN -> R.string.session_configuration_displayable_capability_vel_n
+        DisplayableCapability.VelE -> R.string.session_configuration_displayable_capability_vel_e
+        DisplayableCapability.VelD -> R.string.session_configuration_displayable_capability_vel_d
+        DisplayableCapability.TimeInWindow -> R.string.session_configuration_displayable_capability_time_in_window
+        DisplayableCapability.DistanceInWindow -> R.string.session_configuration_displayable_capability_distance_in_window
+        DisplayableCapability.SpeedInWindow -> R.string.session_configuration_displayable_capability_speed_in_window
     }
 

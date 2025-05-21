@@ -310,4 +310,10 @@
     <string name="session_configuration_displayable_capability_distance_to_ref_point">Dist to ref</string>
     <string name="session_configuration_displayable_capability_latitude">latitude</string>
     <string name="session_configuration_displayable_capability_longitude">longitude</string>
+    <string name="session_configuration_displayable_capability_vel_n">Velocity North</string>
+    <string name="session_configuration_displayable_capability_vel_e">Velocity East</string>
+    <string name="session_configuration_displayable_capability_vel_d">Velocity Down</string>
+    <string name="session_configuration_displayable_capability_time_in_window">Temps dans la fenêtre de compétition</string>
+    <string name="session_configuration_displayable_capability_distance_in_window">Distance dans la fenêtre de compétition</string>
+    <string name="session_configuration_displayable_capability_speed_in_window">Vitesse dans la fenêtre de compétition</string>
 </resources>

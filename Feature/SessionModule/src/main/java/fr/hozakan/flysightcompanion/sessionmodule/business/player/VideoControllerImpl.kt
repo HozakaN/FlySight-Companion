@@ -95,6 +95,8 @@ class VideoControllerImpl(
             is SessionEvent.PlayTextEvent -> {}
             is SessionEvent.ExitFound -> {}
             is SessionEvent.PerformanceLaneStart -> {}
+            SessionEvent.CompetitionWindowEntered -> {}
+            SessionEvent.CompetitionWindowExited -> {}
         }
     }
 //

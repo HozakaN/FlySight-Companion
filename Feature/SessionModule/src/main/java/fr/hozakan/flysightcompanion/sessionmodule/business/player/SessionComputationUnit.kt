@@ -1,6 +1,8 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.player
 
 import fr.hozakan.flysightcompanion.framework.math.computeHorizontalDistance
+import fr.hozakan.flysightcompanion.framework.math.fromNMToKm
+import fr.hozakan.flysightcompanion.framework.math.fromNMToMeters
 import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.GnssData
@@ -41,7 +43,8 @@ class SessionComputationUnit(
     val sessionEvents: SharedFlow<SessionEvent> = _sessionEvents.asSharedFlow()
 
     private val _referencePointDistances = MutableStateFlow<Map<String, Double>>(emptyMap())
-    val referencePointDistances: StateFlow<Map<String, Double>> = _referencePointDistances.asStateFlow()
+    val referencePointDistances: StateFlow<Map<String, Double>> =
+        _referencePointDistances.asStateFlow()
 
     private val config = profile.configFile
 
@@ -58,6 +61,21 @@ class SessionComputationUnit(
     )
 
     val exitDetected: StateFlow<GnssData?> = exitDetector.exitFound
+
+    private val _competitionWindowStart = MutableStateFlow<GnssData?>(null)
+    val competitionWindowStart: StateFlow<GnssData?> = _competitionWindowStart.asStateFlow()
+
+    private val _competitionWindowEnd = MutableStateFlow<GnssData?>(null)
+    val competitionWindowEnd: StateFlow<GnssData?> = _competitionWindowEnd.asStateFlow()
+
+    private val _timeInWindow = MutableStateFlow(0f)
+    val timeInWindow: StateFlow<Float> = _timeInWindow.asStateFlow()
+
+    private val _distanceInWindow = MutableStateFlow(0)
+    val distanceInWindow: StateFlow<Int> = _distanceInWindow.asStateFlow()
+
+    private val _speedInWindow = MutableStateFlow(0)
+    val speedInWindow: StateFlow<Int> = _speedInWindow.asStateFlow()
 
     private val _laneStartPoint = MutableStateFlow<GnssData?>(null)
     val laneStartPoint: StateFlow<GnssData?> = _laneStartPoint.asStateFlow()
@@ -120,7 +138,14 @@ class SessionComputationUnit(
         prevFlagHasFix = false
     }
 
-    fun resetExitDetection() {
+    fun reset() {
+        _competitionWindowStart.value = null
+        _competitionWindowEnd.value = null
+        _timeInWindow.value = 0f
+        _distanceInWindow.value = 0
+        _speedInWindow.value = 0
+        _competitionWindowStart.value = null
+        _competitionWindowEnd.value = null
         exitDetector.clearAndProcessBatchData(emptyList())
     }
 
@@ -155,7 +180,6 @@ class SessionComputationUnit(
                         if (timeDiffMs >= timeAfterExitMs) {
                             _laneStartPoint.value = gnssData
                             scope.launch {
-                                Timber.d("Hoz3 emitting PerformanceLaneStart with ${gnssData.iTow}")
                                 _sessionEvents.emit(SessionEvent.PerformanceLaneStart(gnssData))
                             }
                         }
@@ -164,20 +188,22 @@ class SessionComputationUnit(
             }
 
             val currentDistances = mutableMapOf<String, Double>()
-            profile.displayItems.filter { it.displayableCapability == DisplayableCapability.DistanceToReferencePoint }.forEach { displayItem ->
-                val bundle = displayItem.bag as? DisplayItemBundle.DistanceToRefPointBundle ?: return@forEach
-                val refPoint = bundle.referencePoint
+            profile.displayItems.filter { it.displayableCapability == DisplayableCapability.DistanceToReferencePoint }
+                .forEach { displayItem ->
+                    val bundle = displayItem.bag as? DisplayItemBundle.DistanceToRefPointBundle
+                        ?: return@forEach
+                    val refPoint = bundle.referencePoint
 
-                // Calculate horizontal distance in nautical miles
-                val distance = computeHorizontalDistance(
-                    lat1 = gnssData.lat,
-                    lon1 = gnssData.lon,
-                    lat2 = refPoint.coords.latitude,
-                    lon2 = refPoint.coords.longitude
-                )
+                    // Calculate horizontal distance in nautical miles
+                    val distance = computeHorizontalDistance(
+                        lat1 = gnssData.lat,
+                        lon1 = gnssData.lon,
+                        lat2 = refPoint.coords.latitude,
+                        lon2 = refPoint.coords.longitude
+                    )
 
-                currentDistances[refPoint.id] = distance
-            }
+                    currentDistances[refPoint.id] = distance
+                }
             _referencePointDistances.value = currentDistances
         } else {
             flagHasFix = false
@@ -270,7 +296,7 @@ class SessionComputationUnit(
             if (abs(velD) >= config.verticalThreshold &&
                 gnssData.gSpeed >= config.horizontalThreshold
             ) {
-                setTone( valTone, minTone, maxTone, valRate, minRate, maxRate)
+                setTone(valTone, minTone, maxTone, valRate, minRate, maxRate)
                 if (config.speechRate != 0 &&
                     config.speeches.isNotEmpty() &&
                     speechCounter >= config.speechRate &&
@@ -333,10 +359,12 @@ class SessionComputationUnit(
                         tonePitch = TONE_MIN_PITCH
                         toneChirp = 0
                     }
+
                     ToneLimitBehaviour.ChirpUpDown -> {
                         tonePitch = TONE_MIN_PITCH
                         toneChirp = TONE_MAX_PITCH - TONE_MIN_PITCH
                     }
+
                     ToneLimitBehaviour.ChirpDownUp -> {
                         tonePitch = TONE_MAX_PITCH
                         toneChirp = TONE_MIN_PITCH - TONE_MAX_PITCH
@@ -349,17 +377,20 @@ class SessionComputationUnit(
                         tonePitch = TONE_MAX_PITCH
                         toneChirp = 0
                     }
+
                     ToneLimitBehaviour.ChirpUpDown -> {
                         tonePitch = TONE_MAX_PITCH
                         toneChirp = TONE_MIN_PITCH - TONE_MAX_PITCH
                     }
+
                     ToneLimitBehaviour.ChirpDownUp -> {
                         tonePitch = TONE_MIN_PITCH
                         toneChirp = TONE_MAX_PITCH - TONE_MIN_PITCH
                     }
                 }
             } else {
-                tonePitch = TONE_MIN_PITCH + (TONE_MAX_PITCH - TONE_MIN_PITCH) * (valTone - minTone) / (maxTone - minTone)
+                tonePitch =
+                    TONE_MIN_PITCH + (TONE_MAX_PITCH - TONE_MIN_PITCH) * (valTone - minTone) / (maxTone - minTone)
                 toneChirp = 0
             }
         } else {
@@ -595,6 +626,48 @@ class SessionComputationUnit(
                     scope.launch {
                         _sessionEvents.emit(SessionEvent.AlarmEvent(alarm))
                     }
+                }
+            }
+
+            if (exitDetector.exitFound.value != null) {
+                if (_competitionWindowStart.value == null) {
+                    if (gnssData.hMsl <= profile.competitionWindowTop + config.dzElev) {
+                        _competitionWindowStart.value = gnssData
+                        scope.launch {
+                            _sessionEvents.emit(SessionEvent.CompetitionWindowEntered)
+                        }
+                    }
+                } else if (_competitionWindowEnd.value == null) {
+                    if (gnssData.hMsl <= profile.competitionWindowBottom + config.dzElev) {
+                        _competitionWindowEnd.value = gnssData
+                        _timeInWindow.value =
+                            (gnssData.iTow - _competitionWindowStart.value!!.iTow).toFloat() / 1_000f
+                        _distanceInWindow.value =
+                            computeHorizontalDistance(
+                                lat1 = gnssData.lat,
+                                lon1 = gnssData.lon,
+                                lat2 = _competitionWindowStart.value!!.lat,
+                                lon2 = _competitionWindowStart.value!!.lon
+                            ).fromNMToMeters().toInt()
+                        _speedInWindow.value =
+                            (_distanceInWindow.value / _timeInWindow.value * 3.6).toInt()
+                        scope.launch {
+                            _sessionEvents.emit(SessionEvent.CompetitionWindowExited)
+                        }
+                    }
+                }
+                if (_competitionWindowStart.value != null && _competitionWindowEnd.value == null) {
+                    _timeInWindow.value =
+                        (gnssData.iTow - _competitionWindowStart.value!!.iTow).toFloat() / 1_000f
+                    _distanceInWindow.value =
+                        computeHorizontalDistance(
+                            lat1 = gnssData.lat,
+                            lon1 = gnssData.lon,
+                            lat2 = _competitionWindowStart.value!!.lat,
+                            lon2 = _competitionWindowStart.value!!.lon
+                        ).fromNMToMeters().toInt()
+                    _speedInWindow.value =
+                        (_distanceInWindow.value / _timeInWindow.value * 3.6).toInt()
                 }
             }
 

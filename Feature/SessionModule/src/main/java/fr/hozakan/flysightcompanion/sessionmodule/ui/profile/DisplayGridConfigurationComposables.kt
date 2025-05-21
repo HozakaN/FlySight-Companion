@@ -450,7 +450,6 @@ private fun GridDisplayItemsContainer(
             items = selectedItems,
             onDeleteItemClicked = onDeleteItemClicked,
             onAddItemClicked = {
-                Timber.d("Hoz3 adding item to $index at position ${selectedItems.size}")
                 onAddItemClicked(index, selectedItems.size)
             }
         )
@@ -459,7 +458,6 @@ private fun GridDisplayItemsContainer(
             modifier = Modifier
                 .padding(8.dp),
             onClick = {
-                Timber.d("Hoz3 adding item to $index at position 0")
                 onAddItemClicked(index, 0)
             }
         ) {
@@ -494,10 +492,6 @@ private fun TwoOrThreeOnEachSideLayout(
             }
     }
 
-    Timber.d("Hoz3 items size : ${items.size}}")
-    items.forEachIndexed { index, itemList ->
-        Timber.d("Hoz3 itemList size at index $index : ${itemList.size}}")
-    }
     Row(
         modifier = Modifier.fillMaxSize()
     ) {
