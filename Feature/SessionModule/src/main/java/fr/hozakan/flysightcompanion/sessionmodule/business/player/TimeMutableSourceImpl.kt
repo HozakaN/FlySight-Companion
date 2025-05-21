@@ -29,10 +29,14 @@ class TimeMutableSourceImpl() : TimeMutableSource {
     override val userInteractionEvent: SharedFlow<Boolean> = _userInteractionEvent.asSharedFlow()
 
     private val userInteractionContinuations = mutableListOf<CancellableContinuation<Boolean>>()
+    private val pauseContinuations = mutableListOf<CancellableContinuation<Unit>>()
 
     // New event to notify when user stops interacting
     private val _userInteractionEndEvent = MutableSharedFlow<Float>()
     override val userInteractionEndEvent: SharedFlow<Float> = _userInteractionEndEvent.asSharedFlow()
+
+    private val _paused = MutableStateFlow(false)
+    override val paused: StateFlow<Boolean> = _paused.asStateFlow()
 
     fun setStartValue(value: Float) {
         _startValue.value = value
@@ -53,6 +57,7 @@ class TimeMutableSourceImpl() : TimeMutableSource {
     }
 
     override fun start() {
+        _paused.value = false
         _userInteracting.value = false
         val currentTime = _currentValue.value
         scope.launch {
@@ -66,6 +71,18 @@ class TimeMutableSourceImpl() : TimeMutableSource {
                 continuation.resume(true)
             }
         }
+
+        val pauses = ArrayList(pauseContinuations)
+        pauseContinuations.clear()
+        pauses.forEach { continuation ->
+            if (continuation.isActive) {
+                continuation.resume(Unit)
+            }
+        }
+    }
+
+    override fun pause() {
+        _paused.value = true
     }
 
     suspend fun awaitUserInteractionEnd(): Boolean {
@@ -78,6 +95,17 @@ class TimeMutableSourceImpl() : TimeMutableSource {
             }
         }
         return false
+    }
+
+    override suspend fun awaitPauseEnd() {
+        if (_paused.value) {
+            return suspendCancellableCoroutine { continuation ->
+                pauseContinuations += continuation
+                continuation.invokeOnCancellation {
+                    pauseContinuations -= continuation
+                }
+            }
+        }
     }
 
     fun setCurrentTime(time: Float) {

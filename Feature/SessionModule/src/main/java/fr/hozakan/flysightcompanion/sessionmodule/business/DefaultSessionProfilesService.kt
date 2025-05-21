@@ -209,7 +209,10 @@ class DefaultSessionProfilesService(
     }
 
     private fun parseConfiguration(fileLines: List<String>): SessionProfile = 
-        gson.fromJson(fileLines.joinToString(separator = "\n"), SessionProfile::class.java)
+        gson.fromJson(fileLines.joinToString(separator = "\n"), SessionProfile::class.java).copy(
+            displayFlareDetector = true,
+            showMap = false
+        )
 
     companion object {
         private const val SESSION_CONFIGS_FOLDER = "sessionConfigurations"

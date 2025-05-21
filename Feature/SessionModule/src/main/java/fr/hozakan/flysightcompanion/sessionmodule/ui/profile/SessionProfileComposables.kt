@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightcompanion.composablecommons.DropdownContainer
+import fr.hozakan.flysightcompanion.composablecommons.ExpandableColumn
 import fr.hozakan.flysightcompanion.composablecommons.NumberInputField
 import fr.hozakan.flysightcompanion.composablecommons.SimpleDialogActionBar
 import fr.hozakan.flysightcompanion.designsystem.R
@@ -293,12 +294,167 @@ fun SessionProfileScreenInternal(
                         PerformanceLaneCard(form, state)
                     }
                 }
+
+                // Flare Detection Card
                 item {
-                    ExitDetectionCard(form)
+                    FlareDetectionCard(form)
                 }
+
                 if (form.displayGrid != DisplayGrid.TwoByTwo) {
                     item {
                         AlertsCard(form)
+                    }
+                }
+
+                // Advanced section with Performance Lane Width and Exit Detection
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        ExpandableColumn(
+                            expanded = false,
+                            headerComposable = { _ ->
+                                FText(
+                                    text = "Advanced",
+                                    configuration = FlySightTheme.typography.plainScreenTextLarge
+                                )
+                            },
+                            contentPaddingValues = PaddingValues(
+                                start = 16.dp,
+                                end = 16.dp,
+                                bottom = 16.dp
+                            )
+                        ) {
+                            // Performance Lane Width
+                            if (form.displayPerformanceLane && form.displayGrid != DisplayGrid.TwoByTwo) {
+                                FText(
+                                    text = "Performance Lane",
+                                    configuration = FlySightTheme.typography.plainScreenTextMedium
+                                )
+
+                                Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                                NumberInputField(
+                                    label = "Performance Lane Width (m)",
+                                    value = form.performanceLaneWidth,
+                                    onValueChange = { form.updatePerformanceLaneWidth(it) }
+                                )
+
+                                Spacer(modifier = Modifier.requiredHeight(16.dp))
+                            }
+
+                            // Exit Detection Parameters
+                            FText(
+                                text = "Exit Detection",
+                                configuration = FlySightTheme.typography.plainScreenTextMedium
+                            )
+
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                            FText(
+                                text = "Exit Detection Window",
+                                configuration = FlySightTheme.typography.plainScreenTextMedium
+                            )
+
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                            // Exit Detection Window
+                            NumberInputField(
+                                label = "Top (m)",
+                                value = form.exitDetectionWindowTop,
+                                onValueChange = { form.updateExitDetectionWindowTop(it) }
+                            )
+                            FText(
+                                text = "Do not detect an exit if above this altitude (negative to disable this check)",
+                                configuration = FlySightTheme.typography.captionText,
+                                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                            )
+
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                            NumberInputField(
+                                label = "Bottom (m)",
+                                value = form.exitDetectionWindowBottom,
+                                onValueChange = { form.updateExitDetectionWindowBottom(it) }
+                            )
+                            FText(
+                                text = "Do not detect an exit if below this altitude (negative to disable exit detection)",
+                                configuration = FlySightTheme.typography.captionText,
+                                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                            )
+
+                            Spacer(modifier = Modifier.requiredHeight(16.dp))
+
+                            FText(
+                                text = "Exit Detection Parameters",
+                                configuration = FlySightTheme.typography.plainScreenTextMedium
+                            )
+
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                            // Exit detection parameters
+                            NumberInputField(
+                                label = "Consecutive points down (exit)",
+                                value = form.exitPointsDown,
+                                onValueChange = { form.updateExitPointsDown(it) }
+                            )
+                            FText(
+                                text = "Consecutive points down to indicate an exit",
+                                configuration = FlySightTheme.typography.captionText,
+                                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                            )
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                            NumberInputField(
+                                label = "Consecutive points up (reset)",
+                                value = form.exitPointsUp,
+                                onValueChange = { form.updateExitPointsUp(it) }
+                            )
+                            FText(
+                                text = "Consecutive points up to reset the exit altitude",
+                                configuration = FlySightTheme.typography.captionText,
+                                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                            )
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                            NumberInputField(
+                                label = "Down threshold (cm/s)",
+                                value = form.exitDownThresh,
+                                onValueChange = { form.updateExitDownThresh(it) }
+                            )
+                            FText(
+                                text = "Speed (cm/s) to indicate down (positive) (initialize exit altitude)",
+                                configuration = FlySightTheme.typography.captionText,
+                                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                            )
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                            NumberInputField(
+                                label = "Up threshold (cm/s)",
+                                value = form.exitUpThresh,
+                                onValueChange = { form.updateExitUpThresh(it) }
+                            )
+                            FText(
+                                text = "Speed (cm/s) to indicate up (negative) (reset exit altitude)",
+                                configuration = FlySightTheme.typography.captionText,
+                                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                            )
+
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+                            NumberInputField(
+                                label = "Time after exit (s)",
+                                value = form.timeAfterExit,
+                                onValueChange = { form.updateTimeAfterExit(it) }
+                            )
+                            FText(
+                                text = "Lane start time after exit (ms) (negative to disable)",
+                                configuration = FlySightTheme.typography.captionText,
+                                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -413,7 +569,7 @@ private fun DisplayGridSelectorCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 FText(
-                    text = "Configure Grid",
+                    text = "Configure HUD",
                     configuration = FlySightTheme.typography.plainScreenTextLarge
                 )
             }
@@ -474,22 +630,13 @@ private fun PerformanceLaneCard(form: SessionProfileForm, state: SessionProfileS
                     selectedReferencePoint = form.referencePoint,
                     onReferencePointSelected = { form.updateReferencePoint(it) }
                 )
-
-                Spacer(modifier = Modifier.requiredHeight(16.dp))
-
-                // Performance Lane Width
-                NumberInputField(
-                    label = "Performance Lane Width (m)",
-                    value = form.performanceLaneWidth,
-                    onValueChange = { form.updatePerformanceLaneWidth(it) }
-                )
             }
         }
     }
 }
 
 @Composable
-private fun ExitDetectionCard(form: SessionProfileForm) {
+private fun FlareDetectionCard(form: SessionProfileForm) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -501,113 +648,57 @@ private fun ExitDetectionCard(form: SessionProfileForm) {
                 .padding(16.dp)
         ) {
             FText(
-                text = "Exit Detection",
+                text = "Flare Detection",
                 configuration = FlySightTheme.typography.plainScreenTextLarge
             )
 
             Spacer(modifier = Modifier.requiredHeight(16.dp))
 
-            FText(
-                text = "Exit Detection Window",
-                configuration = FlySightTheme.typography.plainScreenTextMedium
-            )
+            // Flare Detection switch
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                FText(text = "Enable flare detection")
+                Switch(
+                    checked = form.displayFlareDetector,
+                    onCheckedChange = { form.updateDisplayFlareDetector(it) }
+                )
+            }
 
             Spacer(modifier = Modifier.requiredHeight(8.dp))
 
-            // Exit Detection Window
-            NumberInputField(
-                label = "Top (m)",
-                value = form.exitDetectionWindowTop,
-                onValueChange = { form.updateExitDetectionWindowTop(it) }
-            )
+            // Add explanation text for flare detection
             FText(
-                text = "Do not detect an exit if above this altitude (negative to disable this check)",
+                text = "When enabled, the app will automatically detect flares during your jump and provide statistics.",
                 configuration = FlySightTheme.typography.captionText,
                 modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
             )
 
-            Spacer(modifier = Modifier.requiredHeight(8.dp))
+            // Only show this option if flare detection is enabled
+            if (form.displayFlareDetector) {
+                Spacer(modifier = Modifier.requiredHeight(16.dp))
 
-            NumberInputField(
-                label = "Bottom (m)",
-                value = form.exitDetectionWindowBottom,
-                onValueChange = { form.updateExitDetectionWindowBottom(it) }
-            )
-            FText(
-                text = "Do not detect an exit if below this altitude (negative to disable exit detection)",
-                configuration = FlySightTheme.typography.captionText,
-                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
-            )
+                // Display All Flares After Jump switch
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    FText(text = "Show all flares after jump")
+                    Switch(
+                        checked = form.displayAllFlaresAfterJump,
+                        onCheckedChange = { form.updateDisplayAllFlaresAfterJump(it) }
+                    )
+                }
 
-            Spacer(modifier = Modifier.requiredHeight(16.dp))
-
-            FText(
-                text = "Exit Detection Parameters",
-                configuration = FlySightTheme.typography.plainScreenTextMedium
-            )
-
-            Spacer(modifier = Modifier.requiredHeight(8.dp))
-
-            // Exit detection parameters
-            NumberInputField(
-                label = "Consecutive points down (exit)",
-                value = form.exitPointsDown,
-                onValueChange = { form.updateExitPointsDown(it) }
-            )
-            FText(
-                text = "Consecutive points down to indicate an exit",
-                configuration = FlySightTheme.typography.captionText,
-                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
-            )
-            Spacer(modifier = Modifier.requiredHeight(8.dp))
-
-            NumberInputField(
-                label = "Consecutive points up (reset)",
-                value = form.exitPointsUp,
-                onValueChange = { form.updateExitPointsUp(it) }
-            )
-            FText(
-                text = "Consecutive points up to reset the exit altitude",
-                configuration = FlySightTheme.typography.captionText,
-                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
-            )
-            Spacer(modifier = Modifier.requiredHeight(8.dp))
-
-            NumberInputField(
-                label = "Down threshold (cm/s)",
-                value = form.exitDownThresh,
-                onValueChange = { form.updateExitDownThresh(it) }
-            )
-            FText(
-                text = "Speed (cm/s) to indicate down (positive) (initialize exit altitude)",
-                configuration = FlySightTheme.typography.captionText,
-                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
-            )
-            Spacer(modifier = Modifier.requiredHeight(8.dp))
-
-            NumberInputField(
-                label = "Up threshold (cm/s)",
-                value = form.exitUpThresh,
-                onValueChange = { form.updateExitUpThresh(it) }
-            )
-            FText(
-                text = "Speed (cm/s) to indicate up (negative) (reset exit altitude)",
-                configuration = FlySightTheme.typography.captionText,
-                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
-            )
-
-            Spacer(modifier = Modifier.requiredHeight(8.dp))
-
-            NumberInputField(
-                label = "Time after exit (s)",
-                value = form.timeAfterExit,
-                onValueChange = { form.updateTimeAfterExit(it) }
-            )
-            FText(
-                text = "Lane start time after exit (ms) (negative to disable)",
-                configuration = FlySightTheme.typography.captionText,
-                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
-            )
+                FText(
+                    text = "Display a summary of all detected flares at the end of your jump.",
+                    configuration = FlySightTheme.typography.captionText,
+                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                )
+            }
         }
     }
 }

@@ -6,8 +6,10 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +38,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -60,8 +64,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PointMode
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -87,12 +96,14 @@ import fr.hozakan.flysightcompanion.framework.math.meterSecondToKmh
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.config.AlarmType
+import fr.hozakan.flysightcompanion.model.session.Flare
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItem
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItemBundle
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.ui.SpeedOrientation
+import fr.hozakan.flysightcompanion.sessionmodule.business.player.FlareState
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionEvent
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.TimeMutableSource
@@ -431,23 +442,54 @@ private fun TimeControlContainer(
         val startValue by timeMutableSource.startValue.collectAsState()
         val endValue by timeMutableSource.endValue.collectAsState()
         Column(
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier
+                .padding(8.dp)
         ) {
-            Slider(
-                value = sliderPosition,
-                onValueChange = {
-                    timeMutableSource.moveTo(it)
-                },
-                colors = SliderDefaults.colors(
-                    thumbColor = MaterialTheme.colorScheme.secondary,
-                    activeTrackColor = MaterialTheme.colorScheme.secondary,
-                    inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
-                ),
-                onValueChangeFinished = {
-                    timeMutableSource.start()
-                },
-                valueRange = startValue..endValue
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Slider(
+                    modifier = Modifier.weight(1f),
+                    value = sliderPosition,
+                    onValueChange = {
+                        timeMutableSource.moveTo(it)
+                    },
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.secondary,
+                        activeTrackColor = MaterialTheme.colorScheme.secondary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
+                    ),
+                    onValueChangeFinished = {
+                        timeMutableSource.start()
+                    },
+                    valueRange = startValue..endValue
+                )
+                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                val paused by timeMutableSource.paused.collectAsState()
+                Box(
+                    modifier = Modifier
+                        .requiredSize(56.dp)
+                        .clickable {
+                            if (paused) {
+                                timeMutableSource.start()
+                            } else {
+                                timeMutableSource.pause()
+                            }
+                        }
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (paused) {
+                            Icons.Default.PlayArrow
+                        } else {
+                            Icons.Default.Pause
+                        },
+                        contentDescription = ""
+                    )
+                }
+            }
             Text(text = String.format("%.2f", sliderPosition))
         }
     }
@@ -889,7 +931,8 @@ private fun DisplayCapabilityContainer(
 
             TagAndValueContainer(
                 tag = "RefPt",
-                value = if (distance != null) String.format("%.2f NM", distance) else "-- NM"
+                value = if (distance != null) String.format("%.2f", distance) else "--",
+                suffix = "NM"
             )
         }
 
@@ -957,7 +1000,8 @@ private fun DisplayCapabilityContainer(
             val timer by player.timeInWindow.collectAsState()
             TagAndValueContainer(
                 tag = "W Timer",
-                value = String.format("%.1f s", timer)
+                value = String.format("%.1f", timer),
+                suffix = "s"
             )
         }
 
@@ -965,21 +1009,41 @@ private fun DisplayCapabilityContainer(
             val distance by player.distanceInWindow.collectAsState()
             TagAndValueContainer(
                 tag = "W Distance",
-                value = String.format("%d m", distance)
+                value = String.format("%d", distance),
+                suffix = "m"
             )
         }
+
         DisplayableCapability.SpeedInWindow -> {
             val speed by player.speedInWindow.collectAsState()
             TagAndValueContainer(
                 tag = "W Speed",
-                value = String.format("%d km/h", speed)
+                value = String.format("%d", speed),
+                suffix ="km/h"
+            )
+        }
+
+        DisplayableCapability.FlareCount -> {
+            val flares by player.registeredFlares.collectAsState()
+            TagAndValueContainer(
+                tag = "Flares",
+                value = "${flares.size}"
+            )
+        }
+
+        DisplayableCapability.LastFlareResult -> {
+            val flares by player.registeredFlares.collectAsState()
+            val lastFlare = flares.lastOrNull()
+            TagAndValueContainer(
+                tag = "UP",
+                value = "${lastFlare?.gain ?: "--"}"
             )
         }
     }
 }
 
 @Composable
-private fun TagAndValueContainer(tag: String, value: String) {
+private fun TagAndValueContainer(tag: String, value: String, suffix: String = "") {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -993,9 +1057,16 @@ private fun TagAndValueContainer(tag: String, value: String) {
         Spacer(modifier = Modifier.requiredWidth(8.dp))
         FText(
             text = value,
-            configuration = FlySightTheme.typography.sessionPlayerText,
+            configuration = FlySightTheme.typography.sessionPlayerValue,
             color = Color.Green
         )
+        if (suffix.isNotBlank()) {
+            FText(
+                text = value,
+                configuration = FlySightTheme.typography.sessionPlayerText,
+                color = Color.Green
+            )
+        }
     }
 }
 
@@ -1027,7 +1098,13 @@ private fun SpeedContainer(orientation: SpeedOrientation, player: SessionControl
                     SpeedOrientation.Vertical -> remember(gnssData?.velD) { gnssData?.velD?.meterSecondToKmh() }
                     SpeedOrientation.Total -> remember(gnssData?.speed) { gnssData?.speed?.meterSecondToKmh() }
                 }
-            } km/h",
+            }",
+            configuration = FlySightTheme.typography.sessionPlayerValue,
+            color = Color.Green
+        )
+
+        FText(
+            text = " km/h",
             configuration = FlySightTheme.typography.sessionPlayerText,
             color = Color.Green
         )
@@ -1167,6 +1244,20 @@ private fun SessionMainContainer(
             GMapContainer(controller)
         }
 
+        if (controller.profile.displayFlareDetector) {
+            val flareState by controller.currentFlareState.collectAsState()
+            when (flareState) {
+                is FlareState.FlareDone,
+                is FlareState.Flaring -> {
+                    FlareContainer(
+                        flareState
+                    )
+                }
+
+                FlareState.Idle -> {}
+            }
+        }
+
         // Visual alarm overlay
         if (alarmMessage.isNotBlank()) {
             Text(
@@ -1188,6 +1279,235 @@ private fun SessionMainContainer(
 }
 
 @Composable
+private fun FlareContainer(
+    flareState: FlareState
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        when (flareState) {
+            is FlareState.FlareDone -> {}
+            is FlareState.Flaring -> {
+                OngoingFlareContainer2(
+                    flareState.flareData
+                )
+            }
+
+            else -> {}
+        }
+    }
+}
+
+@Composable
+private fun OngoingFlareContainer2(data: List<GnssData>) {
+    if (data.isEmpty()) return
+
+    // Start altitude and time - from the first data point
+    val startAltitude = remember(data) { data.firstOrNull()?.hMsl ?: 0 }
+    val startTime = remember(data) { data.firstOrNull()?.iTow?.toInt() ?: 0 }
+
+    // Calculate max altitude gain
+//    val maxGain = data.maxOfOrNull { it.hMsl - startAltitude } ?: 0
+//    Timber.d("Hoz4 ${data.size} maxGain = $maxGain; startAltitude = $startAltitude, maxAltitude = ${data.maxOfOrNull { it.hMsl }}")
+
+    // Calculate current gain (from the last data point)
+    val currentGain = data.lastOrNull()?.let { it.hMsl - startAltitude } ?: 0
+
+    // Calculate max time difference (in seconds)
+
+    // Use Animatable for height representation
+//    val heightRepresentation = remember { Animatable(25f) }
+//    val pickedMax = max(currentGain, maxGain)
+//    val heightRepresentation32 by animateIntAsState(
+//        when {
+//            pickedMax > 30 -> (pickedMax + 20)
+//            pickedMax > 15 -> 40
+//            else -> 25
+//        }
+//    )
+//    val widthRepresentation = remember { Animatable(10f) }
+//    val widthRepresentation2 by animateIntAsState(
+//        when {
+//            maxTimeDiff < 8 -> 10
+//            maxTimeDiff >= 8 && maxTimeDiff < 13 -> 15
+//            maxTimeDiff >= 13 -> (maxTimeDiff + 3).toInt()
+//            else -> 10
+//        }
+//    )
+
+//    // Update the height representation when maxGain changes
+//    LaunchedEffect(maxGain) {
+//        val targetValue = when {
+//            maxGain > 35 -> (maxGain + 20).toFloat()
+//            maxGain > 20 -> 40f
+//            else -> 25f
+//        }
+//
+//        heightRepresentation.animateTo(
+//            targetValue = targetValue
+//        )
+//    }
+//
+//    LaunchedEffect(maxTimeDiff) {
+//        val targetValue = when {
+//            maxTimeDiff < 8 -> 10f
+//            maxTimeDiff >= 8 && maxTimeDiff < 13 -> 15f
+//            maxTimeDiff >= 13 -> maxTimeDiff + 3f
+//            else -> 10f
+//        }
+//
+//        widthRepresentation.animateTo(
+//            targetValue = targetValue
+//        )
+//    }
+
+    // Convert dp to px for line width
+    val lineWidthPx = with(LocalDensity.current) { 16.dp.toPx() }
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        val canvasWidth = size.width
+        val canvasHeight = size.height
+
+        val maxGain = data.maxOfOrNull { it.hMsl - startAltitude } ?: 0
+        val heightRepresentation = when {
+            maxGain > 70 -> 150f
+            else -> 90f
+        }
+
+        val lastTime = data.lastOrNull()?.iTow?.toInt() ?: startTime
+        val diffMs = if (lastTime >= startTime) {
+            lastTime - startTime
+        } else {
+            // Handle week rollover (604800000 = 7*24*60*60*1000 ms in a week)
+            lastTime + (604800000 - startTime)
+        }
+        val maxTimeDiff = (diffMs / 1000f)
+        val widthRepresentation =
+            when {
+                maxTimeDiff < 10 -> 12
+                maxTimeDiff >= 10 && maxTimeDiff < 17 -> 20
+                maxTimeDiff >= 17 -> 30
+                else -> 12
+            }
+
+        // How much is 1m in pixels
+        val heightFactor = canvasHeight / heightRepresentation
+
+        // Draw axis lines
+//        drawLine(
+//            color = Color.Gray,
+//            start = Offset(0f, canvasHeight),
+//            end = Offset(canvasWidth, canvasHeight),
+//            strokeWidth = 2f
+//        )
+//
+//        drawLine(
+//            color = Color.Gray,
+//            start = Offset(0f, 0f),
+//            end = Offset(0f, canvasHeight),
+//            strokeWidth = 2f
+//        )
+        // Draw height markers every 10m
+//        val markerInterval = 10
+//        for (i in 0..(heightRepresentation.toInt() / markerInterval) * markerInterval step markerInterval) {
+////            val y = canvasHeight - (i.toFloat() / heightRepresentation.value * canvasHeight)
+//            val y = canvasHeight - (i.toFloat() * heightFactor)
+//
+//            // Draw marker text
+//            drawContext.canvas.nativeCanvas.drawText(
+//                "$i m",
+//                -35f,
+//                y,
+//                android.graphics.Paint().apply {
+//                    color = android.graphics.Color.GRAY
+//                    textSize = 30f
+//                }
+//            )
+//        }
+
+        // Draw time markers every 5 seconds
+//        for (i in 0..widthRepresentation step 5) {
+//            val x = (i / widthRepresentation) * canvasWidth
+//
+//            // Draw vertical marker line
+//            drawLine(
+//                color = Color.Gray.copy(alpha = 0.5f),
+//                start = Offset(x, canvasHeight),
+//                end = Offset(x, canvasHeight + 5f),
+//                strokeWidth = 1f
+//            )
+//
+//            // Draw marker text
+//            drawContext.canvas.nativeCanvas.drawText(
+//                "${i}s",
+//                x,
+//                canvasHeight + 20f,
+//                android.graphics.Paint().apply {
+//                    color = android.graphics.Color.GREEN
+//                    textSize = 30f
+//                    textAlign = android.graphics.Paint.Align.CENTER
+//                }
+//            )
+//        }
+
+        // If we have more than one data point, draw the gain line
+        if (data.size > 1) {
+            // Create points for the line
+            val points = data.map { gnssData ->
+                val gain = gnssData.hMsl - startAltitude
+
+                // Calculate the x position based on time (0 to 20 seconds)
+                val timeDiffMs = if (gnssData.iTow.toInt() >= startTime) {
+                    gnssData.iTow.toInt() - startTime
+                } else {
+                    // Handle week rollover
+                    gnssData.iTow.toInt() + (604800000 - startTime)
+                }
+
+                val timeDiffSec = timeDiffMs / 1000f
+                val x =
+                    (timeDiffSec / widthRepresentation.toFloat()) * canvasWidth // Scale to canvas width
+//                val y = canvasHeight - (gain.toFloat() / heightRepresentation.value) * canvasHeight
+                val y = canvasHeight - (gain.toFloat() * heightFactor)
+
+                Offset(x, y)
+            }
+
+            // Draw the gain line connecting all points
+            if (points.size >= 2) {
+                drawPoints(
+                    points = points,
+                    pointMode = PointMode.Polygon,
+                    color = Color.Green,
+                    strokeWidth = 20.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+
+                // Draw gain text at the right of the last point
+                val lastPoint = points.last()
+
+                val distanceToLine = 8.dp.toPx()
+                drawContext.canvas.nativeCanvas.drawText(
+                    "+${maxGain} m",
+                    lastPoint.x + distanceToLine,
+                    lastPoint.y - distanceToLine,
+                    android.graphics.Paint().apply {
+                        color = android.graphics.Color.GREEN
+                        textSize = 30.sp.toPx()
+                        textAlign = android.graphics.Paint.Align.LEFT
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun GMapContainer(sessionController: SessionController) {
     val gnssData by sessionController.gnssFlow.collectAsState(initial = null)
 
@@ -1198,7 +1518,7 @@ private fun GMapContainer(sessionController: SessionController) {
 
     val gpsData = gnssData
     val cameraZoom by animateFloatAsState(
-        targetValue = if (sessionController.exitDetected.value == null || (gpsData != null && sessionController.profile.competitionWindowBottom > gpsData.hMsl)) 13f else 16f,
+        targetValue = if (sessionController.exitFound.value == null || (gpsData != null && sessionController.profile.competitionWindowBottom > gpsData.hMsl)) 13f else 16f,
         animationSpec = tween(durationMillis = 1_500)
     )
 
@@ -1317,7 +1637,7 @@ private fun PerformanceLaneContainer(
     sessionController: SessionController,
     content: @Composable BoxScope.() -> Unit = {}
 ) {
-    val exitPoint by sessionController.exitDetected.collectAsState()
+    val exitPoint by sessionController.exitFound.collectAsState()
     val laneStartPoint by sessionController.laneStartPoint.collectAsState()
     val distanceFromLanes by sessionController.distanceToCenter.collectAsState()
 
@@ -1527,7 +1847,6 @@ class FakeSessionController(
     override val performanceLanes: StateFlow<List<VideoControllerImpl.PerformanceLine>> =
         MutableStateFlow(emptyList())
     override val gnssFlow: SharedFlow<GnssData> = MutableSharedFlow()
-    override val exitDetected: StateFlow<GnssData?> = MutableStateFlow(null)
     override val laneStartPoint: StateFlow<GnssData?> = MutableStateFlow(null)
     override val timeMutableSource: TimeMutableSource? = null
     override val videoController: VideoController = fakeVideoController
@@ -1542,9 +1861,12 @@ class FakeSessionController(
 
     override fun play() {}
     override fun play(callback: SessionController.SessionControllerCallback) {}
-    override fun resetExitDetection() {}
+    override fun resetDetectors() {}
 
     override fun destroy() {}
+    override val currentFlareState: StateFlow<FlareState> = MutableStateFlow(FlareState.Idle)
+    override val registeredFlares: StateFlow<List<Flare>> = MutableStateFlow(emptyList())
+    override val exitFound: StateFlow<GnssData?> = MutableStateFlow(null)
 
 }
 
@@ -1645,5 +1967,4 @@ private val fakeProfile = SessionProfile.default()
             ),
         )
     )
-
 

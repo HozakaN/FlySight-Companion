@@ -5,7 +5,7 @@ import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
-interface SessionController {
+interface SessionController : ExitDetector, FlareDetector {
 
     val sessionEvents: SharedFlow<SessionEvent>
 
@@ -14,8 +14,6 @@ interface SessionController {
     val performanceLanes: StateFlow<List<VideoControllerImpl.PerformanceLine>>
 
     val gnssFlow: SharedFlow<GnssData>
-
-    val exitDetected: StateFlow<GnssData?>
 
     val laneStartPoint: StateFlow<GnssData?>
 
@@ -35,7 +33,7 @@ interface SessionController {
 
     fun play()
     fun play(callback: SessionControllerCallback)
-    fun resetExitDetection()
+    fun resetDetectors()
     fun destroy()
 
     interface SessionControllerCallback {

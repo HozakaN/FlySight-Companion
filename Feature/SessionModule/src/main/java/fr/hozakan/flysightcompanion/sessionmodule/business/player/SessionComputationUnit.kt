@@ -1,7 +1,6 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.player
 
 import fr.hozakan.flysightcompanion.framework.math.computeHorizontalDistance
-import fr.hozakan.flysightcompanion.framework.math.fromNMToKm
 import fr.hozakan.flysightcompanion.framework.math.fromNMToMeters
 import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.model.ConfigFile
@@ -36,7 +35,8 @@ import kotlin.math.max
 import kotlin.math.min
 
 class SessionComputationUnit(
-    private val profile: SessionProfile
+    private val profile: SessionProfile,
+    private val exitDetector: ExitDetector
 ) {
 
     private val _sessionEvents = MutableSharedFlow<SessionEvent>()
@@ -49,16 +49,6 @@ class SessionComputationUnit(
     private val config = profile.configFile
 
     private val scope = CoroutineScope(SupervisorJob() + CoroutineName("SessionComputationUnit"))
-
-    private val exitDetector = ExitDetectorDelegate(
-        minAltAglMeter = profile.exitDetectionWindowBottom,
-        cfgExitAltAglMeter = profile.exitDetectionWindowTop,
-        upThreshCmps = profile.exitUpThresh,
-        downThreshCmps = profile.exitDownThresh,
-        numDown = max(profile.exitPointsDown, 0),
-        numUp = max(profile.exitPointsUp, 0),
-        dzElevation = profile.configFile.dzElev
-    )
 
     val exitDetected: StateFlow<GnssData?> = exitDetector.exitFound
 
@@ -146,7 +136,7 @@ class SessionComputationUnit(
         _speedInWindow.value = 0
         _competitionWindowStart.value = null
         _competitionWindowEnd.value = null
-        exitDetector.clearAndProcessBatchData(emptyList())
+//        exitDetector.clearAndProcessBatchData(emptyList())
     }
 
     fun handleNewData(gnssData: GnssData) {
@@ -159,7 +149,6 @@ class SessionComputationUnit(
             if (!flagBeepDone) {
                 flagFirstFix = true
             }
-            exitDetector.handleNewData(gnssData = gnssData)
             if (profile.showPerformanceLane) {
                 exitDetector.exitFound.value?.let { exitPoint ->
                     if (_laneStartPoint.value == null) {
@@ -215,13 +204,12 @@ class SessionComputationUnit(
     }
 
     fun handleDataBatch(gnssData: List<GnssData>) {
-        Timber.d("Hoz3 handleDataBatch: ${gnssData.size}")
+        reset()
         prevFlagHasFix = false
         // Reset lane start point
         _laneStartPoint.value = null
 
         // Feed the exit detector with these points
-        exitDetector.clearAndProcessBatchData(gnssData)
         gnssData.forEach { data ->
             handleNewData(data)
         }

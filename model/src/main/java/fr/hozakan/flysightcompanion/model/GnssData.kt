@@ -35,6 +35,37 @@ class GnssData(
 //            velD / 1e3
         )
     }
+
+    fun readableTime(): String {
+        // iTow is GPS Time of Week in milliseconds
+        // Convert iTow back to time components
+        val iTowMs = iTow.toInt()
+        
+        // Extract day of week (0 = Sunday, 1 = Monday, etc.)
+        val dayOfWeek = iTowMs / (24 * 3600 * 1000)
+        val msInDay = iTowMs % (24 * 3600 * 1000)
+        
+        // Extract hours, minutes, seconds and milliseconds
+        val hours = msInDay / (3600 * 1000)
+        val minutes = (msInDay % (3600 * 1000)) / (60 * 1000)
+        val seconds = (msInDay % (60 * 1000)) / 1000
+        val milliseconds = msInDay % 1000
+        
+        // Day names
+        val dayNames = arrayOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+        val dayName = dayNames[dayOfWeek]
+        
+        // Format the time as hh:mm:ss.ms
+        return String.format(
+            Locale.ROOT,
+            "%s %02d:%02d:%02d.%03d",
+            dayName,
+            hours,
+            minutes,
+            seconds,
+            milliseconds
+        )
+    }
 }
 
 val FakeGnssData = GnssData(

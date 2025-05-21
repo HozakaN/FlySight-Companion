@@ -305,6 +305,14 @@ data class TextConfiguration(
         )
 
         @Stable
+        val SessionPlayerValue = TextConfiguration(
+            style = AppTypography.bodyLarge,
+            fontSize = 30.sp,
+            fontStyle = null,
+            fontWeight = FontWeight.ExtraBold,
+        )
+
+        @Stable
         val captionText = TextConfiguration(
             style = AppTypography.bodyMedium,
             fontSize = TextUnit.Unspecified,
@@ -370,7 +378,9 @@ data class FlySightTypography(
     @Stable
     val sessionConfigurationText: TextConfiguration,
     @Stable
-    val sessionPlayerText: TextConfiguration
+    val sessionPlayerText: TextConfiguration,
+    @Stable
+    val sessionPlayerValue: TextConfiguration
 )
 
 val LocalFlySightColorScheme = staticCompositionLocalOf {
@@ -387,7 +397,8 @@ val LocalFlySightTypography = staticCompositionLocalOf {
         captionText = TextConfiguration.captionText,
         plainScreenButtonText = TextConfiguration.PlainScreenTextMedium,
         sessionConfigurationText = TextConfiguration.SessionConfigurationText,
-        sessionPlayerText = TextConfiguration.SessionPlayerText
+        sessionPlayerText = TextConfiguration.SessionPlayerText,
+        sessionPlayerValue = TextConfiguration.SessionPlayerValue
     )
 }
 
@@ -428,7 +439,8 @@ fun FlySightCompanionTheme(
         captionText = TextConfiguration.captionText,
         plainScreenButtonText = TextConfiguration.PlainScreenTextMedium,
         sessionConfigurationText = TextConfiguration.SessionConfigurationText,
-        sessionPlayerText = TextConfiguration.SessionPlayerText
+        sessionPlayerText = TextConfiguration.SessionPlayerText,
+        sessionPlayerValue = TextConfiguration.SessionPlayerValue
     )
 
     CompositionLocalProvider(

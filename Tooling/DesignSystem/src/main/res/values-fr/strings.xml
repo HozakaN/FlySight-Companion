@@ -316,4 +316,6 @@
     <string name="session_configuration_displayable_capability_time_in_window">Temps dans la fenêtre de compétition</string>
     <string name="session_configuration_displayable_capability_distance_in_window">Distance dans la fenêtre de compétition</string>
     <string name="session_configuration_displayable_capability_speed_in_window">Vitesse dans la fenêtre de compétition</string>
+    <string name="session_configuration_displayable_capability_flare_count">Compteur de resources</string>
+    <string name="session_configuration_displayable_capability_last_flare_result">Résultat de la dernière resource</string>
 </resources>

@@ -29,17 +29,25 @@ class DefaultSessionController(
     context: Context,
     audioService: AudioService,
     displayService: DisplayService,
+    private val exitDetectorDelegate: MutableExitDetector,
+    private val flareDetectorDelegate: MutableFlareDetector,
     private val gnssSource: GnssSource,
     override val profile: SessionProfile
-) : SessionController {
+) : SessionController,
+    ExitDetector by exitDetectorDelegate,
+    FlareDetector by flareDetectorDelegate {
 
     private var callback: SessionController.SessionControllerCallback? = null
 
     override val gnssFlow = gnssSource.gnssFlow
 
-    private val sessionComputationUnit = SessionComputationUnit(profile = profile)
+    private val sessionComputationUnit = SessionComputationUnit(
+        profile = profile,
+        exitDetector = exitDetectorDelegate,
+    )
 
-    override val referencePointDistances: StateFlow<Map<String, Double>> = sessionComputationUnit.referencePointDistances
+    override val referencePointDistances: StateFlow<Map<String, Double>> =
+        sessionComputationUnit.referencePointDistances
 
     override val timeInWindow: StateFlow<Float> = sessionComputationUnit.timeInWindow
 
@@ -73,8 +81,6 @@ class DefaultSessionController(
     )
     override val videoController: VideoController = _videoController
 
-    override val exitDetected: StateFlow<GnssData?> = sessionComputationUnit.exitDetected
-
     override val laneStartPoint: StateFlow<GnssData?> = sessionComputationUnit.laneStartPoint
 
     override val sessionEvents: SharedFlow<SessionEvent> = sessionComputationUnit.sessionEvents
@@ -98,6 +104,9 @@ class DefaultSessionController(
                             (gnssSource as? FileGnssSource)?.getGnssPointsUpToTime(pickedTiming.toLong() * 1_000L)
                                 ?.let { pastGnssData ->
                                     sessionComputationUnit.handleDataBatch(pastGnssData)
+                                    exitDetectorDelegate.clearAndProcessExitDetectionData(pastGnssData)
+                                    flareDetectorDelegate.clearAndProcessFlareDetectionData(pastGnssData)
+                                    //FIXME May be an issue since performanceLane is moving when playing with the slider
                                     pastGnssData.lastOrNull()?.let { data ->
                                         moveTo(data)
                                     }
@@ -105,7 +114,7 @@ class DefaultSessionController(
                         }
                 }
             }
-            combine(exitDetected, laneStartPoint) { exitPoint, laneStartPoint ->
+            combine(sessionComputationUnit.exitDetected, laneStartPoint) { exitPoint, laneStartPoint ->
                 if (exitPoint != null && laneStartPoint != null) {
                     updatePerformanceLanes()
                 } else {
@@ -141,7 +150,9 @@ class DefaultSessionController(
         }
     }
 
-    override fun resetExitDetection() {
+    override fun resetDetectors() {
+        exitDetectorDelegate.clearAndProcessExitDetectionData(emptyList())
+        flareDetectorDelegate.clearAndProcessFlareDetectionData(emptyList())
         sessionComputationUnit.reset()
     }
 
@@ -206,7 +217,7 @@ class DefaultSessionController(
     }
 
     private fun moveTo(gnssData: GnssData) {
-        val exitPoint = exitDetected.value
+        val exitPoint = sessionComputationUnit.exitDetected.value
         // Use dateTime for time comparison instead of separate timestamp fields
         val currentTime = gnssData.iTow
         val exitTime = exitPoint?.iTow ?: run {

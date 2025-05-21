@@ -17,5 +17,7 @@ enum class DisplayableCapability {
     VelD,
     TimeInWindow,
     DistanceInWindow,
-    SpeedInWindow
+    SpeedInWindow,
+    FlareCount,
+    LastFlareResult
 }

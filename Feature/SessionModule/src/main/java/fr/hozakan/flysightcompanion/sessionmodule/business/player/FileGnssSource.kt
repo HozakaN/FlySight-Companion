@@ -152,6 +152,7 @@ class FileGnssSource(
                                 _timeMutableSource.setCurrentTime(_timeMutableSource.currentTime.value + timeDiff / 1_000f)
                                 delay(timeDiff)
                             }
+                            _timeMutableSource.awaitPauseEnd()
                         } else {
                             if (!hasEmittedDataEnd) {
                                 _gnssFlow.emit(FakeGnssData)

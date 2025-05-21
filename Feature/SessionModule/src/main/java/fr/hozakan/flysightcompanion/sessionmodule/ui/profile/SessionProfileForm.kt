@@ -184,7 +184,9 @@ class SessionProfileForm(
                     form.exitPointsUp,
                     form.exitDownThresh,
                     form.exitUpThresh,
-                    form.timeAfterExit
+                    form.timeAfterExit,
+                    form.displayFlareDetector,
+                    form.displayAllFlaresAfterJump
                 ))
                 
                 savedList
@@ -383,6 +385,14 @@ class SessionProfileForm(
                     form.exitUpThresh = savedList[index++] as Int
                     form.timeAfterExit = savedList[index++] as Int
                     
+                    // Add displayFlareDetector if available (might not be in older saved states)
+                    if (index < savedList.size) {
+                        form.displayFlareDetector = savedList[index++] as Boolean
+                    }
+                    if (index < savedList.size) {
+                        form.displayAllFlaresAfterJump = savedList[index++] as Boolean
+                    }
+
                     form
                 } catch (e: Exception) {
                     // Fallback to default if restoration fails
@@ -424,6 +434,8 @@ class SessionProfileForm(
     internal var exitDownThresh by mutableStateOf(initialConfiguration.exitDownThresh)
     internal var exitUpThresh by mutableStateOf(initialConfiguration.exitUpThresh)
     internal var timeAfterExit by mutableStateOf(initialConfiguration.timeAfterExit)
+    internal var displayFlareDetector by mutableStateOf(initialConfiguration.displayFlareDetector)
+    internal var displayAllFlaresAfterJump by mutableStateOf(initialConfiguration.displayAllFlaresAfterJump)
 
     fun updateSessionProfileName(fileName: String) {
         name = fileName
@@ -580,6 +592,16 @@ class SessionProfileForm(
         isDirty = true
     }
 
+    fun updateDisplayFlareDetector(value: Boolean) {
+        this.displayFlareDetector = value
+        isDirty = true
+    }
+
+    fun updateDisplayAllFlaresAfterJump(value: Boolean) {
+        this.displayAllFlaresAfterJump = value
+        isDirty = true
+    }
+
     private fun checkValidity() {
         isValid =
             name != null &&
@@ -614,7 +636,9 @@ class SessionProfileForm(
             displayGrid = displayGrid,
             showGridLines = showGridLines,
             useUSForTTS = useUSForTTS,
-            displayItems = displayItems
+            displayItems = displayItems,
+            displayFlareDetector = displayFlareDetector,
+            displayAllFlaresAfterJump = displayAllFlaresAfterJump
         )
     }
 }

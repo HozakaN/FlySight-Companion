@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
 interface TimeMutableSource {
+    val paused: StateFlow<Boolean>
     val startValue: StateFlow<Float>
     val endValue: StateFlow<Float>
 
@@ -15,4 +16,6 @@ interface TimeMutableSource {
 
     fun moveTo(value: Float)
     fun start()
+    fun pause()
+    suspend fun awaitPauseEnd()
 }

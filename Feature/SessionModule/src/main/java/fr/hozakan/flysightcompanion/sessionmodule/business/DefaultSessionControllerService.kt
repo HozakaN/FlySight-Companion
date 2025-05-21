@@ -13,6 +13,8 @@ import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.DefaultSessionController
+import fr.hozakan.flysightcompanion.sessionmodule.business.player.ExitDetectorDelegate
+import fr.hozakan.flysightcompanion.sessionmodule.business.player.FlareDetectorDelegate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.math.max
 
 class DefaultSessionControllerService(
     private val context: Context,
@@ -61,11 +64,28 @@ class DefaultSessionControllerService(
                     )
                 }
             }
+
+            val exitDetector = ExitDetectorDelegate(
+                gnssFlow = gnssSource.gnssFlow,
+                minAltAglMeter = sessionProfile.exitDetectionWindowBottom,
+                cfgExitAltAglMeter = sessionProfile.exitDetectionWindowTop,
+                upThreshCmps = sessionProfile.exitUpThresh,
+                downThreshCmps = sessionProfile.exitDownThresh,
+                numDown = max(sessionProfile.exitPointsDown, 0),
+                numUp = max(sessionProfile.exitPointsUp, 0),
+                dzElevation = sessionProfile.configFile.dzElev
+            )
+
             _sessionController.value = DefaultSessionController(
                 context = context,
-                gnssSource = gnssSource,
                 audioService = audioService,
                 displayService = displayService,
+                exitDetectorDelegate = exitDetector,
+                flareDetectorDelegate = FlareDetectorDelegate(
+                    gnssFlow = gnssSource.gnssFlow,
+                    exitDetectionFlow = exitDetector.exitFound
+                ),
+                gnssSource = gnssSource,
                 profile = sessionProfile
             )
 //            displayService.lockDisplay(true)
@@ -89,6 +109,6 @@ class DefaultSessionControllerService(
     }
 
     override fun resetExitDetection() {
-        _sessionController.value?.resetExitDetection()
+        _sessionController.value?.resetDetectors()
     }
 }

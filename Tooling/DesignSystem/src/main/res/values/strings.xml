@@ -316,5 +316,7 @@
     <string name="session_configuration_displayable_capability_time_in_window">Time in competition window</string>
     <string name="session_configuration_displayable_capability_distance_in_window">Distance in competition window</string>
     <string name="session_configuration_displayable_capability_speed_in_window">Speed in competition window</string>
+    <string name="session_configuration_displayable_capability_flare_count">Flare count</string>
+    <string name="session_configuration_displayable_capability_last_flare_result">Last flare result</string>
 
 </resources>
