@@ -7,6 +7,7 @@ import fr.hozakan.flysightcompanion.framework.service.applifecycle.ActivityLifec
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 private const val ACTIVITY_OPERATIONS_FRAGMENT_TAG = "activityOperationsFragment"
 

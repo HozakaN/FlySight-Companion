@@ -3,7 +3,10 @@ package fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
+import fr.hozakan.flysightcompanion.framework.service.permission.AndroidPermissionsService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
+import fr.hozakan.flysightcompanion.locationmodule.LocationAvailabilityState
+import fr.hozakan.flysightcompanion.locationmodule.LocationService
 import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
@@ -23,7 +26,9 @@ class PrepareSessionViewModel @Inject constructor(
     fsDeviceService: FsDeviceService,
     recordService: RecordService,
     private val sessionProfilesService: SessionProfilesService,
-    private val sessionControllerService: SessionControllerService
+    private val sessionControllerService: SessionControllerService,
+    private val locationService: LocationService,
+    private val permissionsService: AndroidPermissionsService
 ) : ViewModel() {
 
     private val _state =
@@ -35,7 +40,8 @@ class PrepareSessionViewModel @Inject constructor(
                 selectedSourceType = SessionSourceType.Local,
                 selectedSource = null,
                 availableSources = emptyList(),
-                doneEvent = null
+                doneEvent = null,
+                locationAvailabilityState = LocationAvailabilityState.ForegroundLocationNotAllowed
             )
         )
 
@@ -51,6 +57,7 @@ class PrepareSessionViewModel @Inject constructor(
                 }
             }
             .launchIn(viewModelScope)
+        
         fsDeviceService.devices
             .combine(recordService.records) { devices, records ->
                 devices.map { device -> SessionSource.FlySight(device.volatileUuid, device.name) } +
@@ -60,6 +67,16 @@ class PrepareSessionViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         availableSources = sources
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+            
+        locationService.locationAvailabilityState
+            .onEach { locationState ->
+                _state.update {
+                    it.copy(
+                        locationAvailabilityState = locationState
                     )
                 }
             }
@@ -145,4 +162,42 @@ class PrepareSessionViewModel @Inject constructor(
         }
     }
 
+    fun requestLocationPermission() {
+        viewModelScope.launch {
+            val granted = permissionsService.requestForegroundLocationPermission()
+            updateLocationAvailabilityState()
+//            if (granted) {
+//                checkLocationSettings()
+//            }
+        }
+    }
+    
+    fun checkLocationSettings() {
+        viewModelScope.launch {
+            val enabled = locationService.isLocationSettingsEnabled()
+            if (!enabled) {
+                locationService.ensureLocationSettingsEnabled()
+            }
+            updateLocationAvailabilityState()
+        }
+    }
+
+    private suspend fun updateLocationAvailabilityState() {
+        _state.update {
+            it.copy(
+                locationAvailabilityState = checkLocationAvailabilityState()
+            )
+        }
+    }
+
+    private suspend fun checkLocationAvailabilityState(): LocationAvailabilityState =
+        if (permissionsService.hasForegroundLocationPermission()) {
+            if (locationService.isLocationSettingsEnabled()) {
+                LocationAvailabilityState.LocationAvailable
+            } else {
+                LocationAvailabilityState.SettingNotEnabled
+            }
+        } else {
+            LocationAvailabilityState.ForegroundLocationNotAllowed
+        }
 }

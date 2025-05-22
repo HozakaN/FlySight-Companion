@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
+import timber.log.Timber
 import kotlin.coroutines.resume
 
 class AsyncOperationsFragment : Fragment() {
@@ -29,8 +30,10 @@ class AsyncOperationsFragment : Fragment() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        Timber.d("Hoz3 ongoing permission request result with requestCode $requestCode; permissions = ${permissions.joinToString(separator = "; ")}, grantResults = ${grantResults.joinToString(separator = "; ")}}")
         if (pendingPermissionsJobs.containsKey(requestCode)) {
             val job = pendingPermissionsJobs[requestCode]
+            Timber.d("Hoz3 ongoing permision request result job found : $job")
             pendingPermissionsJobs.remove(requestCode)
             job?.let {
                 it(grantResults.isNotEmpty() && grantResults.none { result -> result == -1 })
@@ -50,7 +53,6 @@ class AsyncOperationsFragment : Fragment() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun requestPermission(permissions: ArrayList<String>, callback: (Boolean) -> Unit) {
         val newIndex = requestCodeCounter++
         pendingPermissionsJobs[newIndex] = callback

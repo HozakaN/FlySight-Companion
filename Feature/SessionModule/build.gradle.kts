@@ -60,6 +60,7 @@ dependencies {
     implementation(project(":Middleware:AudioModule"))
     implementation(project(":Middleware:ExternalDisplayModule"))
     implementation(project(":Feature:ConfigFilesModule"))
+    implementation(project(":Middleware:LocationModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

@@ -10,13 +10,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -52,6 +56,7 @@ import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
+import fr.hozakan.flysightcompanion.locationmodule.LocationAvailabilityState
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
@@ -103,7 +108,9 @@ fun PrepareSessionScreen(
         },
         onSourceSelected = {
             viewModel.onSourceSelected(it)
-        }
+        },
+        onRequestLocationPermission = { viewModel.requestLocationPermission() },
+        onCheckLocationSettings = { viewModel.checkLocationSettings() }
     )
 }
 
@@ -118,7 +125,9 @@ fun PrepareSessionScreenInternal(
     onSourceTypeSelected: (SessionSourceType) -> Unit,
     onSourceSelected: (SessionSource) -> Unit,
     onPrevClicked: () -> Unit,
-    onNextClicked: () -> Unit
+    onNextClicked: () -> Unit,
+    onRequestLocationPermission: () -> Unit,
+    onCheckLocationSettings: () -> Unit
 ) {
 
     val phase = state.prepareSessionPhase
@@ -148,10 +157,13 @@ fun PrepareSessionScreenInternal(
                 availableSources = state.availableSources,
                 selectedSourceType = state.selectedSourceType,
                 selectedSource = state.selectedSource,
+                locationAvailabilityState = state.locationAvailabilityState,
                 onSourceTypeSelected = onSourceTypeSelected,
                 onSourceSelected = onSourceSelected,
                 onPrevClicked = onPrevClicked,
-                onNextClicked = onNextClicked
+                onNextClicked = onNextClicked,
+                onRequestLocationPermission = onRequestLocationPermission,
+                onCheckLocationSettings = onCheckLocationSettings
             )
         }
     }
@@ -409,10 +421,13 @@ fun SelectSourceScreen(
     availableSources: List<SessionSource>,
     selectedSourceType: SessionSourceType,
     selectedSource: SessionSource?,
+    locationAvailabilityState: LocationAvailabilityState,
     onSourceTypeSelected: (SessionSourceType) -> Unit,
     onSourceSelected: (SessionSource) -> Unit,
     onPrevClicked: () -> Unit,
-    onNextClicked: () -> Unit
+    onNextClicked: () -> Unit,
+    onRequestLocationPermission: () -> Unit,
+    onCheckLocationSettings: () -> Unit
 ) {
     Column(
         modifier = Modifier.padding(8.dp),
@@ -437,66 +452,17 @@ fun SelectSourceScreen(
             availableSources.filter { it.sessionSourceType == selectedSourceType }
         }
         Spacer(modifier = Modifier.requiredHeight(8.dp))
+        
         when (selectedSourceType) {
-            SessionSourceType.Local -> {
-                Column(
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Smartphone,
-                            contentDescription = ""
-                        )
-                        Spacer(modifier = Modifier.requiredWidth(8.dp))
-                        FText(
-                            text = "Onboard GPS",
-                            configuration = FlySightTheme.typography.cardTitle
-                        )
-                    }
-                    Spacer(modifier = Modifier.requiredHeight(8.dp))
-                    FText(
-                        text = """Use the GPS from your phone as the source of data.
-                            |No need to use a FlySight.
-                                    """.trimMargin()
-                            .trim()
-                    )
-                    Spacer(modifier = Modifier.requiredHeight(8.dp))
-                }
-            }
-
-            SessionSourceType.FlySight -> {
-
-            }
-
-            SessionSourceType.Record -> {
-                Column(
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Description,
-                            contentDescription = ""
-                        )
-                        Spacer(modifier = Modifier.requiredWidth(8.dp))
-                        FText(
-                            text = "TRACK.CSV file",
-                            configuration = FlySightTheme.typography.cardTitle
-                        )
-                    }
-                    Spacer(modifier = Modifier.requiredHeight(8.dp))
-                    FText(
-                        text = """We use a TRACK.CSV file generated by a FlySight from a previous session.
-                                        |This allows to check and adjust a profile before using it up there.
-                                    """.trimMargin()
-                            .trim()
-                    )
-                }
-            }
+            SessionSourceType.Local -> LocalSourceTypeContent(
+                locationAvailabilityState = locationAvailabilityState,
+                onRequestLocationPermission = onRequestLocationPermission,
+                onCheckLocationSettings = onCheckLocationSettings
+            )
+            SessionSourceType.FlySight -> FlySightSourceTypeContent()
+            SessionSourceType.Record -> RecordSourceTypeContent()
         }
+        
         Spacer(modifier = Modifier.requiredHeight(8.dp))
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -547,14 +513,185 @@ fun SelectSourceScreen(
                 }
             }
         }
+        
+        val nextEnabled = when {
+            selectedSourceType == SessionSourceType.Local && 
+                    locationAvailabilityState != LocationAvailabilityState.LocationAvailable -> false
+            selectedSource != null || selectedSourceType == SessionSourceType.Local -> true
+            else -> false
+        }
+        
         PrevNextBar(
             prevEnabled = true,
             onPrevClicked = onPrevClicked,
-            nextEnabled = selectedSource != null || selectedSourceType == SessionSourceType.Local,
+            nextEnabled = nextEnabled,
             onNextClicked = onNextClicked,
             showStepCounter = true,
             currentStep = 2,
             maxStep = 2
+        )
+    }
+}
+
+@Composable
+fun LocalSourceTypeContent(
+    locationAvailabilityState: LocationAvailabilityState,
+    onRequestLocationPermission: () -> Unit,
+    onCheckLocationSettings: () -> Unit
+) {
+    Column(
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Smartphone,
+                contentDescription = ""
+            )
+            Spacer(modifier = Modifier.requiredWidth(8.dp))
+            FText(
+                text = "Onboard GPS",
+                configuration = FlySightTheme.typography.cardTitle
+            )
+        }
+        Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+        FText(
+            text = """Use the GPS from your phone as the source of data.
+                        |No need to use a FlySight.
+                        |Location services are enabled and ready to use.
+                        """.trimMargin()
+                .trim()
+        )
+        when (locationAvailabilityState) {
+            LocationAvailabilityState.ForegroundLocationNotAllowed -> {
+                Spacer(modifier = Modifier.requiredHeight(56.dp))
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = "",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.requiredWidth(8.dp))
+                        FText(
+                            text = "Location permission not granted",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+                    Button(
+                        onClick = onRequestLocationPermission,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = ""
+                        )
+                        Spacer(modifier = Modifier.requiredWidth(8.dp))
+                        FText(
+                            text = "Grant Location Permission"
+                        )
+                    }
+                }
+            }
+            
+            LocationAvailabilityState.SettingNotEnabled -> {
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = "",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.requiredWidth(8.dp))
+                        FText(
+                            text = "Location service not enabled",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+                    Button(
+                        onClick = onCheckLocationSettings,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = ""
+                        )
+                        Spacer(modifier = Modifier.requiredWidth(8.dp))
+                        FText(
+                            text = "Enable Location Services"
+                        )
+                    }
+                }
+            }
+            
+            LocationAvailabilityState.LocationAvailable -> {}
+        }
+    }
+}
+
+@Composable
+fun FlySightSourceTypeContent() {
+    Column(
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                modifier = Modifier.requiredSize(24.dp),
+                painter = painterResource(R.drawable.flysight_logo_only_2),
+                contentDescription = ""
+            )
+            Spacer(modifier = Modifier.requiredWidth(8.dp))
+            FText(
+                text = "FlySight Device",
+                configuration = FlySightTheme.typography.cardTitle
+            )
+        }
+        Spacer(modifier = Modifier.requiredHeight(8.dp))
+        FText(
+            text = """Connect to your FlySight device via Bluetooth to receive real-time data.
+                |Select your device from the list below.
+                """.trimMargin()
+                .trim()
+        )
+        Spacer(modifier = Modifier.requiredHeight(8.dp))
+    }
+}
+
+@Composable
+fun RecordSourceTypeContent() {
+    Column(
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Description,
+                contentDescription = ""
+            )
+            Spacer(modifier = Modifier.requiredWidth(8.dp))
+            FText(
+                text = "TRACK.CSV file",
+                configuration = FlySightTheme.typography.cardTitle
+            )
+        }
+        Spacer(modifier = Modifier.requiredHeight(8.dp))
+        FText(
+            text = """We use a TRACK.CSV file generated by a FlySight from a previous session.
+                    |This allows to check and adjust a profile before using it up there.
+                """.trimMargin()
+                .trim()
         )
     }
 }

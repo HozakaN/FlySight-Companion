@@ -3,20 +3,27 @@ package fr.hozakan.flysightcompanion.framework.service.permission
 import android.Manifest
 import android.app.Activity
 import android.app.Application
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import fr.hozakan.flysightcompanion.framework.service.ListenableService
 import fr.hozakan.flysightcompanion.framework.service.MonitorableService
+import fr.hozakan.flysightcompanion.framework.service.applifecycle.ActivityLifecycleService
 import fr.hozakan.flysightcompanion.framework.service.applifecycle.SimpleActivityLifecycleCallbacks
 import fr.hozakan.flysightcompanion.framework.service.async.ActivityOperationsService
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
+import timber.log.Timber
 import kotlin.coroutines.resume
 
 class FrameworkAndroidPermissionsService(
     private val delegate: MonitorableService<PermissionEvent>,
     private val application: Application,
+    private val activityLifecycleService: ActivityLifecycleService,
     private val activityOperationsService: ActivityOperationsService
 ) : AndroidPermissionsService, ListenableService<PermissionEvent> by delegate {
 
@@ -47,7 +54,7 @@ class FrameworkAndroidPermissionsService(
     private fun checkLocationPermissions() {
         if (ContextCompat.checkSelfPermission(
                 application.applicationContext,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_COARSE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             if (!hasLocationPermission) {
@@ -65,7 +72,7 @@ class FrameworkAndroidPermissionsService(
     override fun hasForegroundLocationPermission(): Boolean = with(
         ContextCompat.checkSelfPermission(
             application.applicationContext,
-            Manifest.permission.ACCESS_FINE_LOCATION
+            locationPermission
         ) == PackageManager.PERMISSION_GRANTED
     ) {
         if (this) {
@@ -128,14 +135,14 @@ class FrameworkAndroidPermissionsService(
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    override suspend fun requestForegroundLocationPermission(): Boolean =
+    /*override*/ suspend fun requestForegroundLocationPermission2(): Boolean =
         suspendCancellableCoroutine { continuation: CancellableContinuation<Boolean> ->
             if (hasForegroundLocationPermission()) {
                 continuation.resume(true)
                 return@suspendCancellableCoroutine
             }
             activityOperationsService.usePermissions(
-                Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_COARSE_LOCATION
             ) {
                 if (it) {
                     freeForegroundLocationCoroutines()
@@ -145,8 +152,60 @@ class FrameworkAndroidPermissionsService(
                     continuation.resume(it)
                 }
             }
-            continuation.invokeOnCancellation {}
+            continuation.invokeOnCancellation {
+                Timber.d("Hoz3 cancelled foreground location permission request")
+            }
         }
+
+    override suspend fun requestForegroundLocationPermission(): Boolean {
+        val hasForegroundLocation = hasForegroundLocationPermission()
+        if (hasForegroundLocation) return true
+
+        val activity = activityLifecycleService.awaitActivity()
+//        val permission = Manifest.permission.ACCESS_FINE_LOCATION
+        val permission = Manifest.permission.ACCESS_COARSE_LOCATION
+//        val permission = listOf(
+//            Manifest.permission.ACCESS_FINE_LOCATION,
+//            Manifest.permission.ACCESS_COARSE_LOCATION
+//        )
+//        val shouldShowRationale = activity.shouldShowRequestPermissionRationale(locationPermission)
+//        val shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
+        val hasPermission =  //if (!shouldShowRationale) {
+//            activityOperationsService.requestPermissions(*permission.toTypedArray())
+            activityOperationsService.requestPermission(permission)
+//        } else {
+//            fun openAppSettings(activity: Activity) {
+//                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+//                val uri = Uri.fromParts("package", activity.packageName, null)
+//                intent.data = uri
+//                activity.startActivity(intent)
+//            }
+//            openAppSettings(activity)
+//            activityLifecycleService.awaitNextResume()
+//            hasForegroundLocationPermission()
+//        }
+
+        if (hasPermission) {
+            freeForegroundLocationCoroutines()
+            delegate(PermissionEvent.LocationPermissionChanged(true))
+        } else {
+            //            val shouldShowRequestPermissionRationale =
+//                activity.shouldShowRequestPermissionRationale(locationPermission)
+//            if (shouldShowRequestPermissionRationale) {
+//
+//            }
+            fun openAppSettings(activity: Activity) {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                val uri = Uri.fromParts("package", activity.packageName, null)
+                intent.data = uri
+                activity.startActivity(intent)
+            }
+            openAppSettings(activity)
+            activityLifecycleService.awaitNextResume()
+            hasForegroundLocationPermission()
+        }
+        return hasPermission
+    }
 
     override suspend fun requestBackgroundLocationPermission(): Boolean {
         val hasBackgroundLocation = hasBackgroundLocationPermission()
@@ -203,39 +262,6 @@ class FrameworkAndroidPermissionsService(
                 Manifest.permission.ACCESS_FINE_LOCATION
             )
         }
-//        activityOperationsService.requestPermissions(
-//            Manifest.permission.BLUETOOTH_CONNECT,
-//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-//                Manifest.permission.BLUETOOTH_SCAN
-//            } else {
-//                Manifest.permission.ACCESS_FINE_LOCATION
-//            },
-//            Manifest.permission.BLUETOOTH
-//        )
-//        if (hasPermission && Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-//            hasPermission = requestForegroundLocationPermission()
-
-        /*
-
-override fun hasBluetoothPermission(): Boolean {
-    return ContextCompat.checkSelfPermission(
-        application.applicationContext,
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            Manifest.permission.BLUETOOTH_CONNECT
-        } else {
-            Manifest.permission.BLUETOOTH
-        },
-    ) == PackageManager.PERMISSION_GRANTED &&
-            (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || (ContextCompat.checkSelfPermission(
-                application.applicationContext,
-                Manifest.permission.BLUETOOTH_SCAN
-            ) == PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(
-                        application.applicationContext,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    ) == PackageManager.PERMISSION_GRANTED))
-         */
-//        }
         if (hasPermission) {
             freeBluetoothCoroutines()
             delegate(PermissionEvent.BluetoothPermissionChanged(true))
@@ -330,6 +356,15 @@ override fun hasBluetoothPermission(): Boolean {
                 it.resume(Unit)
             }
         }
+    }
+
+    companion object {
+//        val locationPermission = Manifest.permission.ACCESS_FINE_LOCATION
+        val locationPermission = Manifest.permission.ACCESS_COARSE_LOCATION
+//        val locationPermission = listOf(
+//            Manifest.permission.ACCESS_COARSE_LOCATION,
+//            Manifest.permission.ACCESS_FINE_LOCATION
+//        )
     }
 
 }

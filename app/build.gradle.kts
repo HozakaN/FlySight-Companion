@@ -99,6 +99,7 @@ dependencies {
     implementation(project(":Tooling:LoggerModule"))
     implementation(project(":Feature:SessionModule"))
     implementation(project(":Business:CapabilitiesModule"))
+    implementation(project(":Middleware:LocationModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -118,6 +119,9 @@ dependencies {
     implementation(libs.dagger.android.support)
     kapt(libs.dagger.android.processor)
     kapt(libs.dagger.compiler)
+
+    // Google Play services location API
+    implementation(libs.play.services.location)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

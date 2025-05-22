@@ -1,5 +1,7 @@
 package fr.hozakan.flysightcompanion
 
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
@@ -62,6 +64,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.common.api.ResolvableApiException
 import com.google.gson.Gson
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
@@ -92,6 +95,7 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail.DeviceDetail
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.file.DeviceFileScreen
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesMenuActions
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
+import fr.hozakan.flysightcompanion.locationmodule.LocationCheckerActivity
 import fr.hozakan.flysightcompanion.loggermodule.LoggerService
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailMenuActions
@@ -107,14 +111,17 @@ import fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session.PrepareSess
 import fr.hozakan.flysightcompanion.sessionmodule.ui.reference.ReferencePointListScreen
 import fr.hozakan.flysightcompanion.ui.DevScreen
 import fr.hozakan.flysightcompanion.usbmodule.UsbService
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.resume
 import fr.hozakan.flysightcompanion.R as LocalR
 
-class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, Injectable {
+class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActivity, HasAndroidInjector, Injectable {
 
     @Inject
     lateinit var androidInjector: DispatchingAndroidInjector<Any>
@@ -147,6 +154,10 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, 
     lateinit var displayService: DisplayService
 
     override fun androidInjector(): AndroidInjector<Any> = androidInjector
+
+    private var currentLocationRequestId = 10010
+
+    private val locationContinuations = mutableMapOf<Int, CancellableContinuation<Boolean>>()
 
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -779,4 +790,25 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, HasAndroidInjector, 
             }
         }
     }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode in locationContinuations.keys) {
+            handleCheckSettings(requestCode, resultCode, data)
+        }
+    }
+
+    private fun handleCheckSettings(requestCode: Int, resultCode: Int, data: Intent?) {
+        val continuation = locationContinuations.remove(requestCode)
+        continuation?.resume(resultCode == RESULT_OK)
+    }
+
+
+    override suspend fun enableLocation(resolvableApiException: ResolvableApiException): Boolean =
+        suspendCancellableCoroutine { continuation ->
+            val requestId = currentLocationRequestId
+            currentLocationRequestId++
+            locationContinuations[requestId] = continuation
+            resolvableApiException.startResolutionForResult(this, requestId)
+        }
 }

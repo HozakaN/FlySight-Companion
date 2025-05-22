@@ -3,6 +3,7 @@ package fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session
 import androidx.compose.runtime.Stable
 import com.qorvo.uwbtestapp.framework.coroutines.flow.FlowEvent
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
+import fr.hozakan.flysightcompanion.locationmodule.LocationAvailabilityState
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
@@ -15,6 +16,6 @@ data class PrepareSessionState(
     val selectedSourceType: SessionSourceType,
     val selectedSource: SessionSource?,
     val availableSources: List<SessionSource>,
-    val doneEvent: FlowEvent<Boolean>?
+    val doneEvent: FlowEvent<Boolean>?,
+    val locationAvailabilityState: LocationAvailabilityState = LocationAvailabilityState.ForegroundLocationNotAllowed
 )
-

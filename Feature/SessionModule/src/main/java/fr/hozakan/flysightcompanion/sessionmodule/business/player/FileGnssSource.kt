@@ -4,7 +4,6 @@ import fr.hozakan.flysightcompanion.framework.math.computeGroundSpeed
 import fr.hozakan.flysightcompanion.framework.math.computeTotalSpeed
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
-import fr.hozakan.flysightcompanion.model.extensions.formatTime
 import fr.hozakan.flysightcompanion.model.records.RecordFile
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import fr.hozakan.flysightcompanion.recordsmodule.business.analyze.DefaultRecordParser
@@ -19,10 +18,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.time.ZoneOffset
 import kotlin.math.abs
-import kotlin.math.sqrt
 
 class FileGnssSource(
     recordFile: RecordFile,

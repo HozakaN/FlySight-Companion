@@ -1,5 +1,6 @@
 package fr.hozakan.flysightcompanion.tools.di.modules
 
+import android.content.Context
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
@@ -24,10 +25,13 @@ import fr.hozakan.flysightcompanion.externaldisplaymodule.DefaultDisplayService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.framework.service.applifecycle.ActivityLifecycleService
 import fr.hozakan.flysightcompanion.framework.service.async.ActivityOperationsService
+import fr.hozakan.flysightcompanion.framework.service.permission.AndroidPermissionsService
 import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
 import fr.hozakan.flysightcompanion.framework.service.versionning.DefaultAppVersionService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.DefaultFsDeviceService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
+import fr.hozakan.flysightcompanion.locationmodule.GPlayLocationService
+import fr.hozakan.flysightcompanion.locationmodule.LocationService
 import fr.hozakan.flysightcompanion.loggermodule.DefaultLoggerService
 import fr.hozakan.flysightcompanion.loggermodule.LoggerService
 import fr.hozakan.flysightcompanion.networkmodule.KTorNetworkService
@@ -232,6 +236,21 @@ class ServiceModule {
         return DefaultReferencePointsService(
             application.applicationContext,
             dialogService
+        )
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideLocationService(
+        context: Context,
+        activityLifecycleService: ActivityLifecycleService,
+        androidPermissionsService: AndroidPermissionsService
+    ): LocationService {
+        return GPlayLocationService(
+            context,
+            activityLifecycleService,
+            androidPermissionsService
         )
     }
 
