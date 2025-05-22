@@ -19,10 +19,13 @@
     <string name="misc_neutral">Neutral</string>
     <string name="misc_back">Back</string>
 
+    <string name="misc_named_delete">Delete %s ?</string>
+
     <string name="misc_upload">Upload</string>
 
     <string name="misc_delete">Delete</string>
     <string name="misc_duplicate">Duplicate</string>
+    <string name="misc_edit">Edit</string>
     <string name="misc_confirm">Confirm</string>
 
     <string name="misc_unit_name_metric">Metric</string>

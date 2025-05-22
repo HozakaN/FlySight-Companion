@@ -19,10 +19,13 @@
     <string name="misc_neutral">Neutre</string>
     <string name="misc_back">Menu parent</string>
 
+    <string name="misc_named_delete">Effacer %s ?</string>
+
     <string name="misc_upload">Enregistrer</string>
 
     <string name="misc_delete">Supprimer</string>
     <string name="misc_duplicate">Dupliquer</string>
+    <string name="misc_edit">Éditer</string>
     <string name="misc_confirm">Confirmer</string>
 
     <string name="misc_unit_name_metric">Système métrique</string>

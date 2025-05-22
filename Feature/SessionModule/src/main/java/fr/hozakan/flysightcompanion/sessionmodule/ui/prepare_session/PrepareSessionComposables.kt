@@ -15,11 +15,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.EditLocationAlt
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +30,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -37,8 +41,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightcompanion.composablecommons.DropdownContainer
+import fr.hozakan.flysightcompanion.composablecommons.SimpleDialogActionBar
 import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.designsystem.extension.fromText
 import fr.hozakan.flysightcompanion.designsystem.extension.textResource
@@ -88,6 +94,8 @@ fun PrepareSessionScreen(
         onSessionConfigurationSelected = { viewModel.onSessionProfileSelected(it) },
         onCreateConfigurationClicked = onCreateConfigurationClicked,
         onEditConfigurationClicked = onEditConfigurationClicked,
+        onDuplicateConfigurationClicked = { viewModel.duplicateSessionProfile(it) },
+        onDeleteConfigurationClicked = { viewModel.deleteSessionProfile(it) },
         onNextClicked = { viewModel.onNextClicked() },
         onPrevClicked = { viewModel.onPrevClicked() },
         onSourceTypeSelected = {
@@ -105,6 +113,8 @@ fun PrepareSessionScreenInternal(
     onSessionConfigurationSelected: (SessionProfile) -> Unit,
     onCreateConfigurationClicked: () -> Unit,
     onEditConfigurationClicked: (SessionProfile) -> Unit,
+    onDuplicateConfigurationClicked: (SessionProfile) -> Unit,
+    onDeleteConfigurationClicked: (SessionProfile) -> Unit,
     onSourceTypeSelected: (SessionSourceType) -> Unit,
     onSourceSelected: (SessionSource) -> Unit,
     onPrevClicked: () -> Unit,
@@ -129,7 +139,9 @@ fun PrepareSessionScreenInternal(
                 },
                 onNextClicked = onNextClicked,
                 onCreateConfigurationClicked = onCreateConfigurationClicked,
-                onEditConfigurationClicked = onEditConfigurationClicked
+                onEditConfigurationClicked = onEditConfigurationClicked,
+                onDuplicateConfigurationClicked = onDuplicateConfigurationClicked,
+                onDeleteConfigurationClicked = onDeleteConfigurationClicked
             )
 
             PrepareSessionPhase.SelectSource -> SelectSourceScreen(
@@ -152,7 +164,9 @@ fun SelectProfileScreen(
     onSessionProfileSelected: (SessionProfile) -> Unit,
     onNextClicked: () -> Unit,
     onCreateConfigurationClicked: () -> Unit,
-    onEditConfigurationClicked: (SessionProfile) -> Unit
+    onEditConfigurationClicked: (SessionProfile) -> Unit,
+    onDuplicateConfigurationClicked: (SessionProfile) -> Unit,
+    onDeleteConfigurationClicked: (SessionProfile) -> Unit
 ) {
     when (sessionProfiles) {
         is LoadingState.Error -> {}
@@ -207,32 +221,14 @@ fun SelectProfileScreen(
                             }
                         }
                         items(sessionProfiles.value) { profile ->
-                            Card(
-                                border = if (profile.name == selectedProfile?.name) {
-                                    BorderStroke(
-                                        width = 2.dp,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                } else {
-                                    null
-                                },
-                                onClick = {
-                                    onSessionProfileSelected(profile)
-                                }
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .requiredHeight(80.dp)
-                                        .padding(8.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    FText(
-                                        text = profile.name,
-                                        configuration = FlySightTheme.typography.plainScreenTextLarge
-                                    )
-                                }
-                            }
+                            SessionProfileItem(
+                                profile = profile,
+                                isSelected = profile.name == selectedProfile?.name,
+                                onClick = { onSessionProfileSelected(profile) },
+                                onEditClick = { onEditConfigurationClicked(profile) },
+                                onDuplicateClick = { onDuplicateConfigurationClicked(profile) },
+                                onDeleteClick = { onDeleteConfigurationClicked(profile) }
+                            )
                         }
                     }
                     PrevNextBar(
@@ -259,6 +255,149 @@ fun SelectProfileScreen(
                 FText(
                     text = "Loading...",
                     configuration = FlySightTheme.typography.plainScreenTextLarge
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SessionProfileItem(
+    profile: SessionProfile,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDuplicateClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    var menuExpanded by remember { mutableStateOf(false) }
+    var deleteDialogOpened by remember { mutableStateOf(false) }
+    
+    Card(
+        border = if (isSelected) {
+            BorderStroke(width = 2.dp, color = MaterialTheme.colorScheme.primary)
+        } else {
+            null
+        },
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                FText(
+                    text = profile.name,
+                    configuration = FlySightTheme.typography.plainScreenTextLarge
+                )
+                
+                if (profile.description?.isNotBlank() == true) {
+                    Spacer(modifier = Modifier.requiredHeight(4.dp))
+                    FText(
+                        text = profile.description,
+                        configuration = FlySightTheme.typography.captionText
+                    )
+                }
+            }
+            
+            Box {
+                IconButton(
+                    onClick = { menuExpanded = true }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = ""
+                    )
+                }
+                
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = stringResource(R.string.misc_edit)
+                            )
+                        },
+                        onClick = {
+                            menuExpanded = false
+                            onEditClick()
+                        }
+                    )
+                    
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = stringResource(R.string.misc_duplicate)
+                            )
+                        },
+                        onClick = {
+                            menuExpanded = false
+                            onDuplicateClick()
+                        }
+                    )
+                    
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = stringResource(R.string.misc_delete)
+                            )
+                        },
+                        onClick = {
+                            menuExpanded = false
+                            deleteDialogOpened = true
+                        }
+                    )
+                }
+            }
+        }
+    }
+    
+    if (deleteDialogOpened) {
+        DeleteProfileDialog(
+            profile = profile,
+            onConfirm = {
+                onDeleteClick()
+                deleteDialogOpened = false
+            },
+            onCancel = {
+                deleteDialogOpened = false
+            }
+        )
+    }
+}
+
+@Composable
+fun DeleteProfileDialog(
+    profile: SessionProfile,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onCancel
+    ) {
+        Card {
+            Column(
+                modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
+            ) {
+                Text(
+                    text = stringResource(
+                        R.string.misc_named_delete,
+                        profile.name
+                    )
+                )
+                SimpleDialogActionBar(
+                    onCancel = onCancel,
+                    onValidate = onConfirm,
+                    validateButtonText = stringResource(R.string.misc_delete).uppercase()
                 )
             }
         }

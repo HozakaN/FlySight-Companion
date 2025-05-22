@@ -69,6 +69,13 @@ class PrepareSessionViewModel @Inject constructor(
     fun deleteSessionProfile(sessionProfile: SessionProfile) {
         viewModelScope.launch {
             sessionProfilesService.deleteProfile(sessionProfile)
+            if (sessionProfile == _state.value.selectedProfile) {
+                _state.update {
+                    it.copy(
+                        selectedProfile = null
+                    )
+                }
+            }
         }
     }
 
