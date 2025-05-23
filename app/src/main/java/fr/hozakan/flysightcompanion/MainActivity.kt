@@ -636,9 +636,6 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActiv
                                                         it.name
                                                     )
                                                 )
-                                            },
-                                            onSessionReady = { profile, source ->
-
                                             }
                                         )
                                     }

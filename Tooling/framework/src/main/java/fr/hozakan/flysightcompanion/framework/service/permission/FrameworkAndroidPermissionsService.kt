@@ -152,9 +152,7 @@ class FrameworkAndroidPermissionsService(
                     continuation.resume(it)
                 }
             }
-            continuation.invokeOnCancellation {
-                Timber.d("Hoz3 cancelled foreground location permission request")
-            }
+            continuation.invokeOnCancellation {}
         }
 
     override suspend fun requestForegroundLocationPermission(): Boolean {
@@ -162,38 +160,13 @@ class FrameworkAndroidPermissionsService(
         if (hasForegroundLocation) return true
 
         val activity = activityLifecycleService.awaitActivity()
-//        val permission = Manifest.permission.ACCESS_FINE_LOCATION
         val permission = Manifest.permission.ACCESS_COARSE_LOCATION
-//        val permission = listOf(
-//            Manifest.permission.ACCESS_FINE_LOCATION,
-//            Manifest.permission.ACCESS_COARSE_LOCATION
-//        )
-//        val shouldShowRationale = activity.shouldShowRequestPermissionRationale(locationPermission)
-//        val shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
-        val hasPermission =  //if (!shouldShowRationale) {
-//            activityOperationsService.requestPermissions(*permission.toTypedArray())
-            activityOperationsService.requestPermission(permission)
-//        } else {
-//            fun openAppSettings(activity: Activity) {
-//                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-//                val uri = Uri.fromParts("package", activity.packageName, null)
-//                intent.data = uri
-//                activity.startActivity(intent)
-//            }
-//            openAppSettings(activity)
-//            activityLifecycleService.awaitNextResume()
-//            hasForegroundLocationPermission()
-//        }
+        val hasPermission = activityOperationsService.requestPermission(permission)
 
         if (hasPermission) {
             freeForegroundLocationCoroutines()
             delegate(PermissionEvent.LocationPermissionChanged(true))
         } else {
-            //            val shouldShowRequestPermissionRationale =
-//                activity.shouldShowRequestPermissionRationale(locationPermission)
-//            if (shouldShowRequestPermissionRationale) {
-//
-//            }
             fun openAppSettings(activity: Activity) {
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                 val uri = Uri.fromParts("package", activity.packageName, null)

@@ -4,6 +4,8 @@ import android.content.Context
 import fr.hozakan.flysightcompanion.audiomodule.AudioService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
+import fr.hozakan.flysightcompanion.fsdevicemodule.business.MutableFlySightDevice
+import fr.hozakan.flysightcompanion.locationmodule.LocationService
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.FileGnssSource
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.FlySightGnssSource
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.LocalGnssSource
@@ -30,7 +32,8 @@ class DefaultSessionControllerService(
     private val fsDeviceService: FsDeviceService,
     private val audioService: AudioService,
     private val recordService: RecordService,
-    private val displayService: DisplayService
+    private val displayService: DisplayService,
+    private val locationService: LocationService
 ) : SessionControllerService {
 
     private val _state = MutableStateFlow<SessionControllerState>(SessionControllerState.Idle)
@@ -51,11 +54,14 @@ class DefaultSessionControllerService(
         _state.value = SessionControllerState.Playing(sessionProfile)
         job = scope.launch {
             val gnssSource = when (sessionSource) {
-                SessionSource.Local -> LocalGnssSource()
+                SessionSource.Local -> LocalGnssSource(
+                    locationService = locationService
+                )
                 is SessionSource.FlySight -> {
-                    val fsName = sessionSource.fsId
-                    val fsDevice = fsDeviceService.devices.value.firstOrNull { it.name == fsName } ?: return@launch
-                    FlySightGnssSource(fsDevice)
+                    val fsDevice = fsDeviceService.devices.value.firstOrNull { it.volatileUuid == sessionSource.fsId } ?: return@launch
+                    FlySightGnssSource(
+                        fsDevice = fsDevice as MutableFlySightDevice
+                    )
                 }
                 is SessionSource.Record -> {
                     FileGnssSource(

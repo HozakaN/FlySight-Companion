@@ -22,6 +22,8 @@ import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigParser
 import fr.hozakan.flysightcompanion.configfilesmodule.business.DefaultConfigParser
 import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.framework.extension.bytesToHex
+import fr.hozakan.flysightcompanion.framework.math.computeGroundSpeed
+import fr.hozakan.flysightcompanion.framework.math.computeTotalSpeed
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleDirectoryFetcher
@@ -316,20 +318,34 @@ class BleFlySightDeviceDelegateImpl(
                         // Convert int32 to decimal degrees with 1e-7 scaling factor
                         val latitudeDouble = lat * 1e-7
                         val longitudeDouble = lon * 1e-7
-                        
+
+
+                        // Calculate ground speed from velN and velE (Pythagorean theorem)
+                        val groundSpeed = computeGroundSpeed(
+                            velN / 1_000.0,
+                            velE / 1_000.0
+                        )
+
+                        // Calculate total speed (3D) from velN, velE and velD
+                        val totalSpeed = computeTotalSpeed(
+                            velN / 1_000.0,
+                            velE / 1_000.0,
+                            velD / 1_000.0
+                        )
+
                         scope?.launch {
                             val gnssData = GnssData(
                                 iTow = iTow,
                                 lon = longitudeDouble, // Keep the raw integer for backward compatibility
                                 lat = latitudeDouble, // Keep the raw integer for backward compatibility
-                                hMsl = hMsl,
-                                velN = velN,
-                                velE = velE,
-                                velD = velD,
+                                hMsl = hMsl / 1_000, // Convert from mm to meters
+                                velN = velN / 1_000,
+                                velE = velE / 1_000,
+                                velD = velD / 1_000,
                                 gpsFix = 0,
-                                vAcc = 0,
-                                speed = 0,
-                                gSpeed = 0
+                                vAcc = 0 / 1_000,
+                                speed = totalSpeed,
+                                gSpeed = groundSpeed
                             )
                             log("GNSS data: $gnssData (lat=${latitudeDouble}, lon=${longitudeDouble})")
                             _gnssFeed.emit(gnssData)

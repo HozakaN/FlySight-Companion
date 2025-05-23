@@ -6,7 +6,7 @@ class GnssData(
     val iTow: UInt,
     val lon: Double,
     val lat: Double,
-    val hMsl: Int,
+    val hMsl: Int, // m
     val velN: Int, // m/s
     val velE: Int, // m/s
     val velD: Int, // m/s

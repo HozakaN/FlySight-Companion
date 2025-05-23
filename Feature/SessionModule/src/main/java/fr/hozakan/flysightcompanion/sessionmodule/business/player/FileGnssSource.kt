@@ -70,6 +70,19 @@ class FileGnssSource(
                         val msInDay = secondsInDay * 1000 + dataPoint.dateTime.nano / 1_000_000
                         val iTow = (dayOfWeek * 24 * 3600 * 1000 + msInDay).toUInt()
 
+                        // Calculate ground speed from velN and velE (Pythagorean theorem)
+                        val groundSpeed = computeGroundSpeed(
+                            dataPoint.velN,
+                            dataPoint.velE
+                        )
+
+                        // Calculate total speed (3D) from velN, velE and velD
+                        val totalSpeed = computeTotalSpeed(
+                            dataPoint.velN,
+                            dataPoint.velE,
+                            dataPoint.velD
+                        )
+
                         val gnssData = GnssData(
                             iTow = iTow,
                             lon = dataPoint.longitude,
@@ -80,8 +93,8 @@ class FileGnssSource(
                             velD = dataPoint.velD.toInt(),
                             gpsFix = dataPoint.numSV,
                             vAcc = dataPoint.vAcc.toInt(),
-                            speed = 0,
-                            gSpeed = 0
+                            speed = totalSpeed,
+                            gSpeed = groundSpeed
                         )
                         
                         GnssDataWithTimestamp(gnssData, relativeTimeMilliseconds)
@@ -95,6 +108,7 @@ class FileGnssSource(
                             hasEmittedDataEnd = false
                         }
                         val currentTime = _timeMutableSource.currentTime.value
+                        //TODO improve by picking in gnssPointsWithTimestamps instead of recreating GnssData objects
                         val currentPoint = dataPoints.minBy {
                             abs(
                                 (it.dateTime.toInstant(ZoneOffset.UTC)

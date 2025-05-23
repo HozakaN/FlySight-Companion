@@ -118,6 +118,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import kotlin.collections.emptyMap
 import kotlin.math.abs
 
@@ -177,6 +178,7 @@ private fun SessionPlayerScreenInternal(
     resetExitDetection: () -> Unit
 ) {
     val player = state.controller
+    Timber.d("Hoz3 player null ? $player")
     if (player == null) return
     val displayGrid = player.profile.displayGrid
     var uiLocked by remember { mutableStateOf(true) }

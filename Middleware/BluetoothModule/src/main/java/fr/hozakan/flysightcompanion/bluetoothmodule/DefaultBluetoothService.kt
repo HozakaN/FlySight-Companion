@@ -96,7 +96,7 @@ class DefaultBluetoothService(
                                     val manufacturerId = data2.bytesToHex().run {
                                         substring(2, length - 2)
                                     }
-                                    if (manufacturerId == "DB09" && result.isConnectable/* && result.device.bondState == BluetoothDevice.BOND_BONDED*/) {
+                                    if (manufacturerId == "DB09" && result.isConnectable && result.device.bondState == BluetoothDevice.BOND_BONDED) {
                                         devices += result.device
                                         if (!isClosedForSend) {
                                             send(LoadingState.Loading(devices))

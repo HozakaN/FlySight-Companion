@@ -78,21 +78,13 @@ fun PrepareSessionMenuActions(
 @Composable
 fun PrepareSessionScreen(
     onCreateConfigurationClicked: () -> Unit,
-    onEditConfigurationClicked: (SessionProfile) -> Unit,
-    onSessionReady: (SessionProfile, SessionSource?) -> Unit
+    onEditConfigurationClicked: (SessionProfile) -> Unit
 ) {
     val factory = LocalViewModelFactory.current
 
     val viewModel: PrepareSessionViewModel = viewModel(factory = factory)
 
     val state by viewModel.state.collectAsState()
-
-    if (state.doneEvent?.getContentIfNotHandled() == true) {
-        val selectedProfile = state.selectedProfile
-        if (selectedProfile != null) {
-            onSessionReady(selectedProfile, state.selectedSource)
-        }
-    }
 
     PrepareSessionScreenInternal(
         state = state,
@@ -661,6 +653,8 @@ fun FlySightSourceTypeContent() {
         FText(
             text = """Connect to your FlySight device via Bluetooth to receive real-time data.
                 |Select your device from the list below.
+                |
+                |You need to power on the FlySight to receive data from it.
                 """.trimMargin()
                 .trim()
         )

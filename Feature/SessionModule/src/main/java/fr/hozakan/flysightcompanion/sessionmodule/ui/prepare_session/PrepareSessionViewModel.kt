@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 class PrepareSessionViewModel @Inject constructor(
@@ -57,9 +58,10 @@ class PrepareSessionViewModel @Inject constructor(
                 }
             }
             .launchIn(viewModelScope)
-        
+
         fsDeviceService.devices
             .combine(recordService.records) { devices, records ->
+                Timber.d("Hoz3 devices: $devices")
                 devices.map { device -> SessionSource.FlySight(device.volatileUuid, device.name) } +
                         records.map { record -> SessionSource.Record(record) }
             }
@@ -71,7 +73,7 @@ class PrepareSessionViewModel @Inject constructor(
                 }
             }
             .launchIn(viewModelScope)
-            
+
         locationService.locationAvailabilityState
             .onEach { locationState ->
                 _state.update {
@@ -117,8 +119,12 @@ class PrepareSessionViewModel @Inject constructor(
                     prepareSessionPhase = PrepareSessionPhase.SelectSource
                 )
             }
-        } else if (_state.value.prepareSessionPhase == PrepareSessionPhase.SelectSource &&
-            (_state.value.selectedSource != null || _state.value.selectedSourceType == SessionSourceType.Local)) {
+        } else if (
+            _state.value.prepareSessionPhase == PrepareSessionPhase.SelectSource &&
+            _state.value.selectedSource != null ||
+            (_state.value.selectedSourceType == SessionSourceType.Local &&
+                    _state.value.locationAvailabilityState != LocationAvailabilityState.ForegroundLocationNotAllowed)
+        ) {
             val profile = _state.value.selectedProfile ?: return
             val source = _state.value.selectedSource ?: SessionSource.Local
             viewModelScope.launch {
@@ -171,7 +177,7 @@ class PrepareSessionViewModel @Inject constructor(
 //            }
         }
     }
-    
+
     fun checkLocationSettings() {
         viewModelScope.launch {
             val enabled = locationService.isLocationSettingsEnabled()
