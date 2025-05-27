@@ -167,7 +167,7 @@ val DisplayableCapability.textResource: Int
         DisplayableCapability.TimeInWindow -> R.string.session_configuration_displayable_capability_time_in_window
         DisplayableCapability.DistanceInWindow -> R.string.session_configuration_displayable_capability_distance_in_window
         DisplayableCapability.SpeedInWindow -> R.string.session_configuration_displayable_capability_speed_in_window
-        DisplayableCapability.FlareCount -> R.string.session_configuration_displayable_capability_speed_in_window
-        DisplayableCapability.LastFlareResult -> R.string.session_configuration_displayable_capability_speed_in_window
+        DisplayableCapability.FlareCount -> R.string.session_configuration_displayable_capability_flare_count
+        DisplayableCapability.LastFlareResult -> R.string.session_configuration_displayable_capability_last_flare_result
     }
 

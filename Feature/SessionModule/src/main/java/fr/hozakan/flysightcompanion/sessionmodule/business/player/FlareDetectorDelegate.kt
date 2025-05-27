@@ -182,7 +182,7 @@ class FlareDetectorDelegate(
                 // Update the flare state to Flaring
                 val filteredFlareData = flareData.filter { it.iTow <= initialDownAlt.iTow }
                 val altitudeGain = gnssData.hMsl - initialUpAltitude!!.hMsl
-                Timber.i("Flare ending. Gained $altitudeGain meters of altitude since flare started")
+                Timber.i("Flare ending. $altitudeGain meters above flare start")
                 _currentFlareState.value = FlareState.Flaring(
                     flareData = filteredFlareData
                 )
@@ -190,7 +190,7 @@ class FlareDetectorDelegate(
                     val maxHeight = flareData.maxBy { it.hMsl }
                     val flare = Flare(
                         flareData = flareData.filter { it.iTow <= maxHeight.iTow },
-                        gain = altitudeGain
+                        gain = maxHeight.hMsl - initialUpAltitude!!.hMsl
                     )
                     Timber.i("Flare ended! start altitude : ${initialUpAltitude!!.hMsl} m, end altitude : ${maxHeight.hMsl} m, gain = ${maxHeight.hMsl - initialUpAltitude!!.hMsl} m")
                     _currentFlareState.value = FlareState.FlareDone(flare)

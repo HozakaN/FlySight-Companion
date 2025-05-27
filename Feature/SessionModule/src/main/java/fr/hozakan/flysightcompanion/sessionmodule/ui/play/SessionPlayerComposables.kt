@@ -914,12 +914,14 @@ private fun DisplayCapabilityContainer(
 
         DisplayableCapability.Elevation -> TagAndValueContainer(
             tag = "Elv",
-            value = "${gnssData?.hMsl?.minus(config.dzElev)}"
+            value = "${gnssData?.hMsl?.minus(config.dzElev)}",
+            suffix = "m"
         )
 
         DisplayableCapability.Altitude -> TagAndValueContainer(
             tag = "Alt",
-            value = "${gnssData?.hMsl}"
+            value = "${gnssData?.hMsl}",
+            suffix = "m"
         )
 
         DisplayableCapability.DistanceToReferencePoint -> {
@@ -980,22 +982,26 @@ private fun DisplayCapabilityContainer(
 
         DisplayableCapability.DiveAngle -> TagAndValueContainer(
             tag = "DiveA",
-            value = "${gnssData?.lon}"
+            value = "${gnssData?.lon}",
+            suffix = "°"
         )
 
         DisplayableCapability.VelN -> TagAndValueContainer(
             tag = "velN",
-            value = "${gnssData?.velN}"
+            value = "${gnssData?.velN}",
+            suffix = "m/s"
         )
 
         DisplayableCapability.VelE -> TagAndValueContainer(
             tag = "velE",
-            value = "${gnssData?.velE}"
+            value = "${gnssData?.velE}",
+            suffix = "m/s"
         )
 
         DisplayableCapability.VelD -> TagAndValueContainer(
             tag = "velD",
-            value = "${gnssData?.velD}"
+            value = "${gnssData?.velD}",
+            suffix = "m/s"
         )
 
         DisplayableCapability.TimeInWindow -> {
@@ -1038,7 +1044,8 @@ private fun DisplayCapabilityContainer(
             val lastFlare = flares.lastOrNull()
             TagAndValueContainer(
                 tag = "UP",
-                value = "${lastFlare?.gain ?: "--"}"
+                value = "${lastFlare?.gain ?: "--"}",
+                suffix = "m"
             )
         }
     }
@@ -1064,7 +1071,7 @@ private fun TagAndValueContainer(tag: String, value: String, suffix: String = ""
         )
         if (suffix.isNotBlank()) {
             FText(
-                text = value,
+                text = suffix,
                 configuration = FlySightTheme.typography.sessionPlayerText,
                 color = Color.Green
             )
