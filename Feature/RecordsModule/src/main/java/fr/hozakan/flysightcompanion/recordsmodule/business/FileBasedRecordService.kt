@@ -92,18 +92,18 @@ class FileBasedRecordService(
     override suspend fun loadRecordRawContent(recordFile: RecordFile): String? {
         val trackFile =
             File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${recordFile.phoneFilePath}")
-//        return if (trackFile.exists()) trackFile.readText() else null
-        return javaClass.classLoader
-            ?.getResource("9_2_temps.CSV")?.readText() ?: ""
+        return if (trackFile.exists()) trackFile.readText() else null
+//        return javaClass.classLoader
+//            ?.getResource("RECORD_beaufort_jump_9_2_temps.CSV")?.readText() ?: ""
     }
 
     override suspend fun analyzeRecord(recordFile: RecordFile): RecordAnalyze {
         val rawContent = loadRecordRawContent(recordFile) ?: return RecordAnalyze.error("Record is empty")
-        val fileContent = javaClass.classLoader
-            ?.getResource("9_2_temps.CSV")?.readText() ?: ""
+//        val fileContent = javaClass.classLoader
+//            ?.getResource("RECORD_beaufort_jump_9_2_temps.CSV")?.readText() ?: ""
         val parser = DefaultRecordParser()
         val analyzer = DefaultRecordAnalyzer()
-        val dataPoints = parser.parse(fileContent.lines())
+        val dataPoints = parser.parse(rawContent.lines())
         val analyze = analyzer.analyze(
             dataPoints = dataPoints,
         )
@@ -117,8 +117,22 @@ class FileBasedRecordService(
     private fun getOrCreateRecordsFolder(): File {
         val folder =
             File("${context.filesDir.absolutePath}${File.separator}$RECORDS_FOLDER")
-        val success = folder.exists() || folder.mkdir()
+        val success = folder.exists() ||  (folder.mkdir() && addDefaultResults())
         return if (success) folder else throw IllegalAccessException("Cannot access app folder")
+    }
+
+    private fun addDefaultResults(): Boolean {
+        scope.launch(Dispatchers.IO) {
+        val fileContent = javaClass.classLoader
+            ?.getResource("RECORD_beaufort_jump_9_2_temps.CSV")?.readText() ?: ""
+            createRecord(
+                recordFile = RecordFile(
+                    dateTime = LocalDateTime.parse("24-11-23_20-38-56", dateTimeFormatter)
+                ),
+                trackFileContent = fileContent
+            )
+        }
+        return true
     }
 
     companion object {

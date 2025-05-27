@@ -61,7 +61,7 @@ data class ConfigFile(
 ) : DisplayableConfig
 
 val defaultConfigFile = ConfigFile(
-    name = "",
+    name = "Default config",
     description = "",
     group = "",
     dynamicModel = DynamicModel.Airborne2g,

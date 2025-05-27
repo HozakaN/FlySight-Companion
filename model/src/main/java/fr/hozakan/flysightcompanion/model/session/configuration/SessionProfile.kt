@@ -41,7 +41,7 @@ data class SessionProfile(
     companion object {
         private const val LATEST_PROFILE_VERSION: Int = 1
         fun default() = SessionProfile(
-            name = "",
+            name = "Default profile",
             description = "",
             sessionType = SessionType.Visual,
             configFile = defaultConfigFile(),

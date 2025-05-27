@@ -61,7 +61,7 @@ class PrepareSessionViewModel @Inject constructor(
 
         fsDeviceService.devices
             .combine(recordService.records) { devices, records ->
-                Timber.d("Hoz3 devices: $devices")
+                Timber.d("devices: $devices")
                 devices.map { device -> SessionSource.FlySight(device.volatileUuid, device.name) } +
                         records.map { record -> SessionSource.Record(record) }
             }

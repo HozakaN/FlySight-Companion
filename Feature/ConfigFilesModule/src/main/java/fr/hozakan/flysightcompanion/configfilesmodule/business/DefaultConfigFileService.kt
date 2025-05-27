@@ -127,24 +127,38 @@ class DefaultConfigFileService(
         return configEncoder.encodeConfig(configFile)
     }
 
-    private fun getOrCreateConfigFilesFolder(): File {
+    private suspend fun getOrCreateConfigFilesFolder(): File {
         val folder =
             File("${context.filesDir.absolutePath}${File.separator}$CONFIG_FILES_FOLDER")
-        val success = folder.exists() || folder.mkdir()
+        val success = folder.exists() || (folder.mkdir() && addDefaultConfigs())
         return if (success) folder else throw IllegalAccessException("Cannot access app folder")
+    }
+
+    private suspend fun addDefaultConfigs(): Boolean {
+        withContext(Dispatchers.IO) {
+            val beaufortConf =
+                javaClass.classLoader.getResource("Beaufort time-distance.TXT")?.readText()
+            val readyConfigFile = parseConfiguration(beaufortConf?.lines() ?: emptyList())
+            val fileContent =
+                buildFileContent(readyConfigFile)
+            val file =
+                File("${context.filesDir.absolutePath}${File.separator}$CONFIG_FILES_FOLDER${File.separator}Beaufort time-distance.TXT")
+            file.writeText(fileContent)
+        }
+        return true
     }
 
     private suspend fun loadConfigFiles() {
         withContext(Dispatchers.IO) {
             val configFolder = getOrCreateConfigFilesFolder()
-            val beaufortConf =
-                javaClass.classLoader.getResource("CONFIG_beaufort_distance_temps.TXT")?.readText()
+//            val beaufortConf =
+//                javaClass.classLoader.getResource("Beaufort time-distance.TXT")?.readText()
             val configFiles =
                 (configFolder.listFiles()?.mapNotNull {
-                    parseConfiguration(beaufortConf?.lines() ?: emptyList()).copy(
-                        name = "my config"
-                    )
-//                    parseConfiguration(it.readLines())
+//                    parseConfiguration(it?.lines() ?: emptyList()).copy(
+//                        name = "my config"
+//                    )
+                    parseConfiguration(it.readLines())
                 }
                     ?: emptyList())
             _configs.update {

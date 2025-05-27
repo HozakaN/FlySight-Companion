@@ -1,0 +1,158 @@
+{
+  "competitionWindowBottom": 1500,
+  "competitionWindowTop": 2500,
+  "configFile": {
+    "alarms": [
+      {
+        "alarmElevation": 3500,
+        "alarmFile": "base",
+        "alarmType": "PlayFile"
+      },
+      {
+        "alarmElevation": 3300,
+        "alarmFile": "dive",
+        "alarmType": "PlayFile"
+      },
+      {
+        "alarmElevation": 2800,
+        "alarmFile": "1",
+        "alarmType": "PlayFile"
+      },
+      {
+        "alarmElevation": 2700,
+        "alarmFile": "2",
+        "alarmType": "PlayFile"
+      },
+      {
+        "alarmElevation": 2600,
+        "alarmFile": "3",
+        "alarmType": "PlayFile"
+      },
+      {
+        "alarmElevation": 2500,
+        "alarmFile": "base",
+        "alarmType": "PlayFile"
+      },
+      {
+        "alarmElevation": 1650,
+        "alarmFile": "1",
+        "alarmType": "PlayFile"
+      },
+      {
+        "alarmElevation": 1600,
+        "alarmFile": "2",
+        "alarmType": "PlayFile"
+      },
+      {
+        "alarmElevation": 1550,
+        "alarmFile": "3",
+        "alarmType": "PlayFile"
+      },
+      {
+        "alarmElevation": 1500,
+        "alarmFile": "base",
+        "alarmType": "PlayFile"
+      }
+    ],
+    "altitudeStep": 0,
+    "altitudeUnit": "Metric",
+    "description": "",
+    "dynamicModel": "Airborne2g",
+    "dzElev": 3,
+    "flatLineAtMinimumRate": false,
+    "group": "",
+    "horizontalThreshold": 0,
+    "initFile": "distance",
+    "initMode": "PlayFile",
+    "name": "Beaufort time-distance",
+    "rateMaximum": 0,
+    "rateMaximumValue": 1500,
+    "rateMinimum": 0,
+    "rateMinimumValue": 300,
+    "rateMode": "ChangeInValue1",
+    "samplePeriod": 200,
+    "silenceWindows": [
+      {
+        "bottom": 0,
+        "top": 1500
+      },
+      {
+        "bottom": 2500,
+        "top": 4500
+      }
+    ],
+    "speechRate": 5,
+    "speechVolume": "Volume8",
+    "speeches": [
+      {
+        "mode": "VerticalSpeed",
+        "unit": "Metric",
+        "value": 0
+      }
+    ],
+    "toneLimitBehaviour": "MinMaxTone",
+    "toneMaximum": 300,
+    "toneMinimum": 0,
+    "toneMode": "GlideRatio",
+    "toneVolume": "Volume0",
+    "tzOffset": 0,
+    "useSAS": true,
+    "verticalThreshold": 1000,
+    "windowAbove": 50,
+    "windowBelow": 30
+  },
+  "description": "",
+  "displayAllFlaresAfterJump": false,
+  "displayFlareDetector": true,
+  "displayGrid": "InlineLeft",
+  "displayItems": [
+    {
+      "caseIndex": 0,
+      "displayableCapability": "Altitude",
+      "indexInCase": 0
+    },
+    {
+      "caseIndex": 0,
+      "displayableCapability": "Elevation",
+      "indexInCase": 1
+    },
+    {
+      "caseIndex": 0,
+      "displayableCapability": "Latitude",
+      "indexInCase": 2
+    },
+    {
+      "caseIndex": 0,
+      "displayableCapability": "Longitude",
+      "indexInCase": 3
+    }
+  ],
+  "exitDetectionWindowBottom": 2900,
+  "exitDetectionWindowTop": 3350,
+  "exitDownThresh": 800,
+  "exitPointsDown": 5,
+  "exitPointsUp": 50,
+  "exitUpThresh": -800,
+  "name": "Beaufort temps North-south 4",
+  "performanceLaneWidth": 200,
+  "playAudioAlertWhenExitDetected": false,
+  "profileVersion": 1,
+  "referencePoint": {
+    "coords": {
+      "latitude": 34.733173,
+      "longitude": -76.668971
+    },
+    "description": "Beaufort North South 4th point",
+    "id": "f9af9c33-b096-4bfa-8193-fb6aac530ef0",
+    "name": "Beaufort NS4"
+  },
+  "sessionType": "Visual",
+  "showGridLines": true,
+  "showMap": true,
+  "showPerformanceLane": true,
+  "showPerformanceLaneInMap": true,
+  "showVisualAlertWhenExitDetected": true,
+  "showVisualAlertWhenNotInWindowBeforeExit": false,
+  "timeAfterExit": 10000,
+  "useUSForTTS": true
+}

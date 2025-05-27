@@ -1,6 +1,9 @@
 ; For information on configuring FlySight, please go to
 ;     http://flysight.ca/wiki
 
+Name:          Beaufort time-distance
+Description:   Beaufort time and distance configuration file
+
 ; GPS settings
 
 Model:          7 ; Dynamic model

@@ -42,13 +42,13 @@ class DefaultSessionProfilesService(
         .registerTypeAdapter(DisplayItemBundle::class.java, DisplayItemBundleTypeAdapter())
         .create()
 
-    private val _sessionConfigurations = MutableStateFlow<List<SessionProfile>>(emptyList())
+    private val _sessionProfiles = MutableStateFlow<List<SessionProfile>>(emptyList())
     override val sessionProfiles: StateFlow<List<SessionProfile>> =
-        _sessionConfigurations.asStateFlow()
+        _sessionProfiles.asStateFlow()
 
     init {
         serviceScope.launch {
-            loadSessionConfigurations()
+            loadSessionProfiles()
         }
     }
 
@@ -108,20 +108,20 @@ class DefaultSessionProfilesService(
             }
         }
         val readyConfigFile = sessionProfile.copy(name = name)
-        _sessionConfigurations.update {
+        _sessionProfiles.update {
             it + readyConfigFile
         }
         val fileContent = withContext(Dispatchers.IO) {
             buildFileContent(readyConfigFile)
         }
         val file =
-            File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${readyConfigFile.name}.txt")
+            File("${getOrCreateProfilesFolder().absolutePath}${File.separator}${readyConfigFile.name}.TXT")
         file.writeText(fileContent)
         return readyConfigFile
     }
 
     override suspend fun updateProfile(oldConf: SessionProfile, newConf: SessionProfile) {
-        _sessionConfigurations.update { configs ->
+        _sessionProfiles.update { configs ->
             val index = configs.indexOfFirst { it.name == oldConf.name }
             (configs - configs.first { it.name == oldConf.name }).run {
                 toMutableList().also { mutableList -> mutableList.add(index, newConf) }
@@ -131,27 +131,27 @@ class DefaultSessionProfilesService(
             buildFileContent(newConf)
         }
         val file =
-            File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${newConf.name}.txt")
+            File("${getOrCreateProfilesFolder().absolutePath}${File.separator}${newConf.name}.TXT")
         file.writeText(fileContent)
 
         if (oldConf.name != newConf.name) {
             val oldFile =
-                File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${oldConf.name}.txt")
+                File("${getOrCreateProfilesFolder().absolutePath}${File.separator}${oldConf.name}.TXT")
             oldFile.delete()
         }
     }
 
     override suspend fun deleteProfile(sessionProfile: SessionProfile) {
         val file =
-            File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${sessionProfile.name}.txt")
+            File("${getOrCreateProfilesFolder().absolutePath}${File.separator}${sessionProfile.name}.TXT")
         file.delete()
-        _sessionConfigurations.update {
+        _sessionProfiles.update {
             it - sessionProfile
         }
     }
 
     override suspend fun userPickProfile(): SessionProfile? {
-        val configs = _sessionConfigurations.value
+        val configs = _sessionProfiles.value
         if (configs.isEmpty()) return null
         val dialogItem = PickConfigurationDialog {
             configs
@@ -169,7 +169,7 @@ class DefaultSessionProfilesService(
     override suspend fun duplicateProfile(sessionProfile: SessionProfile) {
         var index = 1
         var name = "${sessionProfile.name} ($index)"
-        while (_sessionConfigurations.value.any { it.name == name }) {
+        while (_sessionProfiles.value.any { it.name == name }) {
             index++
             name = "${sessionProfile.name} ($index)"
         }
@@ -185,21 +185,37 @@ class DefaultSessionProfilesService(
         )
     }
 
-    private fun getOrCreateConfigFilesFolder(): File {
+    private suspend fun getOrCreateProfilesFolder(): File {
         val folder =
-            File("${context.filesDir.absolutePath}${File.separator}$SESSION_CONFIGS_FOLDER")
-        val success = folder.exists() || folder.mkdir()
+            File("${context.filesDir.absolutePath}${File.separator}$SESSION_PROFILES_FOLDER")
+        val success = folder.exists() || (folder.mkdir() && addDefaultConfigs())
         return if (success) folder else throw IllegalAccessException("Cannot access app folder")
     }
 
-    private suspend fun loadSessionConfigurations() {
+    private suspend fun addDefaultConfigs(): Boolean {
         withContext(Dispatchers.IO) {
-            val configFolder = getOrCreateConfigFilesFolder()
-            val sessionConfigurations =
-                (configFolder.listFiles()?.mapNotNull { parseConfiguration(it.readLines()) }
+            val beaufortSession =
+                javaClass.classLoader.getResource("Beaufort temps North-south 4.TXT")?.readText() ?: ""
+            val beaufortSession2 = buildFileContent(SessionProfile.default())
+
+//            val profileJson = parseConfiguration(beaufortSession.lines())
+//            val fileContent =
+//                buildFileContent(profileJson)
+            val file =
+                File("${context.filesDir.absolutePath}${File.separator}$SESSION_PROFILES_FOLDER${File.separator}Beaufort temps North-south 4.TXT")
+            file.writeText(beaufortSession)
+        }
+        return true
+    }
+
+    private suspend fun loadSessionProfiles() {
+        withContext(Dispatchers.IO) {
+            val profilesFolder = getOrCreateProfilesFolder()
+            val sessionProfiles =
+                (profilesFolder.listFiles()?.mapNotNull { parseProfile(it.readLines()) }
                     ?: emptyList())
-            _sessionConfigurations.update {
-                sessionConfigurations
+            _sessionProfiles.update {
+                sessionProfiles
             }
         }
     }
@@ -208,13 +224,13 @@ class DefaultSessionProfilesService(
         return gson.toJson(sessionProfile)
     }
 
-    private fun parseConfiguration(fileLines: List<String>): SessionProfile = 
-        gson.fromJson(fileLines.joinToString(separator = "\n"), SessionProfile::class.java).copy(
+    private fun parseProfile(fileLines: List<String>): SessionProfile =
+        gson.fromJson(fileLines.joinToString(separator = "\n"), SessionProfile::class.java)/*.copy(
             displayFlareDetector = true,
             showMap = false
-        )
+        )*/
 
     companion object {
-        private const val SESSION_CONFIGS_FOLDER = "sessionConfigurations"
+        private const val SESSION_PROFILES_FOLDER = "session_profiles"
     }
 }
