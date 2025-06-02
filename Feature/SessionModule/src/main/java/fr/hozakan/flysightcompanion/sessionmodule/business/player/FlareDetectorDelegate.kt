@@ -67,11 +67,11 @@ class FlareDetectorDelegate(
     }
 
     override fun clearAndProcessFlareDetectionData(gnssDataList: List<GnssData>) {
-        if (exitDetectionFlow.value == null) return
-
         // Reset detector state
         reset()
         _registeredFlares.value = emptyList()
+
+        if (exitDetectionFlow.value == null) return
 
         // Process all points up to the rewind index
         gnssDataList

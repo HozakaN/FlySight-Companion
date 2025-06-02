@@ -276,7 +276,7 @@ internal fun ListFlySightDevicesScreenInternal(
                         onRequestBluetoothPermissionClicked()
                     }
                 ) {
-                    Text(text = stringResource(R.string.misc_request_permission))
+                    Text(text = stringResource(R.string.misc_grant_permission))
                 }
             }
         } else if (state.bluetoothState != BluetoothService.BluetoothState.Available) {

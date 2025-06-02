@@ -31,7 +31,7 @@
     <string name="misc_unit_name_metric">Metric</string>
     <string name="misc_unit_name_imperial">Imperial</string>
 
-    <string name="misc_request_permission">Request permission</string>
+    <string name="misc_grant_permission">Grant permission</string>
 
     <string name="misc_enable_bluetooth">Enable bluetooth</string>
 
