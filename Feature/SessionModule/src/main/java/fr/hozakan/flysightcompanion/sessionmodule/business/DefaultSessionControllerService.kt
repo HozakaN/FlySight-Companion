@@ -115,6 +115,8 @@ class DefaultSessionControllerService(
     }
 
     override fun resetExitDetection() {
-        _sessionController.value?.resetDetectors()
+        scope.launch {
+            _sessionController.value?.resetDetectors()
+        }
     }
 }

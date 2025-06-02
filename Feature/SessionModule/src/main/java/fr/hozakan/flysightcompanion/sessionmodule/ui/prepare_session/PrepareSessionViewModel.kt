@@ -52,7 +52,6 @@ class PrepareSessionViewModel @Inject constructor(
         sessionProfilesService.sessionProfiles
             .onEach {
                 _state.update { aState ->
-                    Timber.d("Hoz4 new session profiles: $it")
                     aState.copy(
                         sessionProfiles = LoadingState.Loaded(it),
                         selectedProfile = if (aState.selectedProfile != null) {

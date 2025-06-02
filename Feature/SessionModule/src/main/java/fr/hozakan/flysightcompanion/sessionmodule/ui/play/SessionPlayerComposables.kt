@@ -178,7 +178,6 @@ private fun SessionPlayerScreenInternal(
     resetExitDetection: () -> Unit
 ) {
     val player = state.controller
-    Timber.d("Hoz3 player null ? $player")
     if (player == null) return
     val displayGrid = player.profile.displayGrid
     var uiLocked by remember { mutableStateOf(true) }
@@ -1870,7 +1869,7 @@ class FakeSessionController(
 
     override fun play() {}
     override fun play(callback: SessionController.SessionControllerCallback) {}
-    override fun resetDetectors() {}
+    override suspend fun resetDetectors() {}
 
     override fun destroy() {}
     override val currentFlareState: StateFlow<FlareState> = MutableStateFlow(FlareState.Idle)

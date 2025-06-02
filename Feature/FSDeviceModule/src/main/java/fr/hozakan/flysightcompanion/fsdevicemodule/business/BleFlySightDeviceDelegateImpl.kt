@@ -1019,7 +1019,7 @@ class BleFlySightDeviceDelegateImpl(
     }
 
     private fun log(message: String) {
-        Timber.d("Hoz3 : $message")
+        Timber.d(message)
         _logs.update {
             it + message
         }

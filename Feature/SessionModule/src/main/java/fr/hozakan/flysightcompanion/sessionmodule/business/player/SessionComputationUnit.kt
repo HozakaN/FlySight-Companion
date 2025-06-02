@@ -159,12 +159,12 @@ class SessionComputationUnit(
                         // Handle iTow rollover (iTow is reset every week)
                         val currentTimeMs = gnssData.iTow.toInt()
                         val exitTimeMs = exitPoint.iTow.toInt()
-                        val timeDiffMs = if (currentTimeMs >= exitTimeMs) {
+                        val timeDiffMs = /*if (currentTimeMs >= exitTimeMs) {*/
                             currentTimeMs - exitTimeMs
-                        } else {
-                            // Handle week rollover (604800000 = 7*24*60*60*1000 ms in a week)
-                            currentTimeMs + (604800000 - exitTimeMs)
-                        }
+//                        } else {
+//                            // Handle week rollover (604800000 = 7*24*60*60*1000 ms in a week)
+//                            currentTimeMs + (604800000 - exitTimeMs)
+//                        }
 
                         if (timeDiffMs >= timeAfterExitMs) {
                             _laneStartPoint.value = gnssData
@@ -203,7 +203,7 @@ class SessionComputationUnit(
         prevHMSL = gnssData.hMsl
     }
 
-    fun handleDataBatch(gnssData: List<GnssData>) {
+    suspend fun handleDataBatch(gnssData: List<GnssData>) {
         reset()
         prevFlagHasFix = false
         // Reset lane start point

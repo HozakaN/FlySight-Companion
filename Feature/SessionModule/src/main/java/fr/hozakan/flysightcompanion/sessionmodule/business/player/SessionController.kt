@@ -33,7 +33,7 @@ interface SessionController : ExitDetector, FlareDetector {
 
     fun play()
     fun play(callback: SessionControllerCallback)
-    fun resetDetectors()
+    suspend fun resetDetectors()
     fun destroy()
 
     interface SessionControllerCallback {

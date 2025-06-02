@@ -116,12 +116,9 @@ class DefaultSessionController(
                 }
             }
             combine(sessionComputationUnit.exitDetected, laneStartPoint) { exitPoint, laneStartPoint ->
-                Timber.d("Hoz3 Exit point: $exitPoint, Lane start point: $laneStartPoint")
                 if (exitPoint != null && laneStartPoint != null) {
-                    Timber.d("Hoz3 Exit point and lane start point are not null, updating performance lanes")
                     updatePerformanceLanes()
                 } else {
-                    Timber.d("Hoz3 Exit point or lane start point is null, clearing performance lanes")
                     _performanceLanes.value = emptyList()
                 }
             }
@@ -154,7 +151,7 @@ class DefaultSessionController(
         }
     }
 
-    override fun resetDetectors() {
+    override suspend fun resetDetectors() {
         exitDetectorDelegate.clearAndProcessExitDetectionData(emptyList())
         flareDetectorDelegate.clearAndProcessFlareDetectionData(emptyList())
         sessionComputationUnit.reset()

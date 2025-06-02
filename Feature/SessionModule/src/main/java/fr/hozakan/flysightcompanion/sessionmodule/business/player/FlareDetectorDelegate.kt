@@ -66,7 +66,7 @@ class FlareDetectorDelegate(
             .launchIn(scope)
     }
 
-    override fun clearAndProcessFlareDetectionData(gnssDataList: List<GnssData>) {
+    override suspend fun clearAndProcessFlareDetectionData(gnssDataList: List<GnssData>) {
         // Reset detector state
         reset()
         _registeredFlares.value = emptyList()

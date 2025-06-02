@@ -86,7 +86,7 @@ class ExitDetectorDelegate(
         _exitFound.value = null
     }
 
-    override fun clearAndProcessExitDetectionData(gnssDataList: List<GnssData>) {
+    override suspend fun clearAndProcessExitDetectionData(gnssDataList: List<GnssData>) {
         // Reset detector state
         reset()
         

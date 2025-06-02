@@ -5,5 +5,5 @@ import fr.hozakan.flysightcompanion.model.session.Flare
 import kotlinx.coroutines.flow.StateFlow
 
 interface MutableFlareDetector : FlareDetector {
-    fun clearAndProcessFlareDetectionData(gnssDataList: List<GnssData>)
+    suspend fun clearAndProcessFlareDetectionData(gnssDataList: List<GnssData>)
 }
