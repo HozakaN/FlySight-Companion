@@ -316,9 +316,9 @@
     <string name="session_configuration_displayable_capability_vel_n">Velocity North</string>
     <string name="session_configuration_displayable_capability_vel_e">Velocity East</string>
     <string name="session_configuration_displayable_capability_vel_d">Velocity Down</string>
-    <string name="session_configuration_displayable_capability_time_in_window">Time in competition window</string>
-    <string name="session_configuration_displayable_capability_distance_in_window">Distance in competition window</string>
-    <string name="session_configuration_displayable_capability_speed_in_window">Speed in competition window</string>
+    <string name="session_configuration_displayable_capability_time_in_window">PPC time</string>
+    <string name="session_configuration_displayable_capability_distance_in_window">PPC distance</string>
+    <string name="session_configuration_displayable_capability_speed_in_window">PPC Speed</string>
     <string name="session_configuration_displayable_capability_flare_count">Flare count</string>
     <string name="session_configuration_displayable_capability_last_flare_result">Last flare result</string>
 

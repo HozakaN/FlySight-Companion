@@ -1006,7 +1006,7 @@ private fun DisplayCapabilityContainer(
         DisplayableCapability.TimeInWindow -> {
             val timer by player.timeInWindow.collectAsState()
             TagAndValueContainer(
-                tag = "W Timer",
+                tag = "PPC time",
                 value = String.format("%.1f", timer),
                 suffix = "s"
             )
@@ -1015,7 +1015,7 @@ private fun DisplayCapabilityContainer(
         DisplayableCapability.DistanceInWindow -> {
             val distance by player.distanceInWindow.collectAsState()
             TagAndValueContainer(
-                tag = "W Distance",
+                tag = "PPC distance",
                 value = String.format("%d", distance),
                 suffix = "m"
             )
@@ -1024,7 +1024,7 @@ private fun DisplayCapabilityContainer(
         DisplayableCapability.SpeedInWindow -> {
             val speed by player.speedInWindow.collectAsState()
             TagAndValueContainer(
-                tag = "W Speed",
+                tag = "PPC speed",
                 value = String.format("%d", speed),
                 suffix ="km/h"
             )

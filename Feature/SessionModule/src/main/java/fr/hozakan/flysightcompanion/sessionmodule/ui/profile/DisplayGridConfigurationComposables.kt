@@ -292,7 +292,7 @@ private fun RowScope.InlineLayoutDisplayItems(
 ) {
     Column(
         modifier = Modifier
-            .weight(1f)
+            .weight(3f)
             .fillMaxHeight()
             .border(2.dp, Color.Green),
         verticalArrangement = Arrangement.Center,
