@@ -1,0 +1,1858 @@
+package fr.hozakan.flysightcompanion.sessionmodule.ui.play
+
+import android.annotation.SuppressLint
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PointMode
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.Dash
+import com.google.android.gms.maps.model.Gap
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.Polyline
+import com.google.maps.android.compose.rememberCameraPositionState
+import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
+import fr.hozakan.flysightcompanion.designsystem.widget.FText
+import fr.hozakan.flysightcompanion.framework.math.computeGlideRatio
+import fr.hozakan.flysightcompanion.framework.math.computeGroundSpeed
+import fr.hozakan.flysightcompanion.framework.math.computeInverseGlideRatio
+import fr.hozakan.flysightcompanion.framework.math.meterSecondToKmh
+import fr.hozakan.flysightcompanion.model.ConfigFile
+import fr.hozakan.flysightcompanion.model.GnssData
+import fr.hozakan.flysightcompanion.model.config.AlarmType
+import fr.hozakan.flysightcompanion.model.session.Flare
+import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
+import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItem
+import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItemBundle
+import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
+import fr.hozakan.flysightcompanion.model.ui.SpeedOrientation
+import fr.hozakan.flysightcompanion.sessionmodule.business.player.FlareState
+import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionController
+import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionEvent
+import fr.hozakan.flysightcompanion.sessionmodule.business.player.TimeMutableSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.player.VideoController
+import fr.hozakan.flysightcompanion.sessionmodule.business.player.VideoControllerImpl
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlin.math.abs
+
+
+@Composable
+fun HudSessionPlayer(
+    controller: SessionController,
+    onExitClicked: () -> Unit,
+    resetExitDetection: () -> Unit
+) {
+    val displayGrid = controller.profile.displayGrid
+    var uiLocked by remember { mutableStateOf(true) }
+
+    Column {
+        var displayUnlockUi by remember { mutableStateOf(false) }
+        var counter by remember { mutableIntStateOf(0) }
+        var uiTouched by remember { mutableStateOf(false) }
+
+        LaunchedEffect(counter, uiTouched, uiLocked) {
+            if (uiLocked && !uiTouched && counter > 0) {
+                displayUnlockUi = true
+                while (displayUnlockUi && isActive) {
+                    delay(5_000)
+                    if (uiLocked && !uiTouched) {
+                        displayUnlockUi = false
+                    }
+                }
+            }
+        }
+
+        LaunchedEffect(uiLocked, counter, uiTouched) {
+            if (!uiLocked && !uiTouched) {
+                val intermediateCounter = counter
+                delay(10_000)
+                if (!uiLocked && intermediateCounter == counter && !uiTouched) {
+                    uiLocked = true
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .pointerInput(Unit) {
+                    detectTapGestures {
+                        if (!displayUnlockUi) {
+                            counter++
+                        }
+                    }
+                }
+        ) {
+            when (displayGrid) {
+                DisplayGrid.InlineLeft -> InlinePlayerScreen(
+                    inlinePlayerDirection = InlinePlayerDirection.Left,
+                    controller = controller
+                )
+
+                DisplayGrid.InlineRight -> InlinePlayerScreen(
+                    inlinePlayerDirection = InlinePlayerDirection.Right,
+                    controller = controller
+                )
+
+                DisplayGrid.TwoByTwo -> TwoByTwoGridPlayerScreen(
+                    controller = controller
+                )
+
+                DisplayGrid.TwoOnEachSide -> SideDisplayItemsPlayerScreen(
+                    controller = controller,
+                    caseNumber = 2
+                )
+
+                DisplayGrid.ThreeOnEachSide -> SideDisplayItemsPlayerScreen(
+                    controller = controller,
+                    caseNumber = 3
+                )
+            }
+            if (displayUnlockUi) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    LockContainer(
+                        locked = uiLocked,
+                        onUnlocked = {
+                            uiLocked = false
+                            displayUnlockUi = false
+                        },
+                        onUiTouchChanged = { touched ->
+                            uiTouched = touched
+                        }
+                    )
+                }
+            }
+            if (!uiLocked) {
+                LockedContent(
+                    onExitClicked = onExitClicked,
+                    resetExitDetection = resetExitDetection
+                )
+            }
+        }
+        val timeMutableSource = controller.timeMutableSource
+        timeMutableSource?.let { source ->
+            TimeControlContainer(
+                modifier = Modifier/*.weight(1f)*/,
+                timeMutableSource = source
+            )
+        }
+    }
+}
+
+
+@Composable
+fun LockContainer(
+    locked: Boolean,
+    onUnlocked: () -> Unit,
+    onUiTouchChanged: (Boolean) -> Unit
+) {
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+    ) {
+
+        val scope = rememberCoroutineScope()
+        val alphaPointerAnimatable = remember { Animatable(0.5f) }
+        val alphaCursiveAnimatable = remember { Animatable(0f) }
+
+        val translationX = remember { Animatable(0f) }
+        val containerWidth = with(LocalDensity.current) {
+            maxWidth.toPx()
+        }
+
+        //Cursive
+        val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
+        val color = remember(surfaceVariant) { surfaceVariant.copy(alpha = 0.5f) }
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .graphicsLayer {
+                    this.alpha = alphaCursiveAnimatable.value
+                }
+                .requiredSize(height = 60.dp, width = maxWidth),
+            shape = RoundedCornerShape(120.dp),
+            color = color,
+            border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outline)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Slide to unlock",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                )
+            }
+        }
+
+        //Pointer
+        Surface(
+            modifier = Modifier
+                .requiredSize(60.dp)
+                .graphicsLayer {
+                    this.alpha = alphaPointerAnimatable.value
+                    this.translationX = translationX.value
+                }
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = {
+                            scope.launch {
+                                launch {
+                                    alphaPointerAnimatable.animateTo(1f)
+                                }
+                                launch {
+                                    alphaCursiveAnimatable.animateTo(1f)
+                                }
+                            }
+                            onUiTouchChanged(true)
+                        },
+                        onDragEnd = {
+                            scope.launch {
+                                if (translationX.value >= containerWidth - 60.dp.toPx()) {
+                                    onUnlocked()
+                                }
+                                launch {
+                                    alphaPointerAnimatable.animateTo(0.5f)
+                                }
+                                launch {
+                                    //Do it in sequence
+                                    translationX.animateTo(0f)
+                                    alphaCursiveAnimatable.animateTo(0f)
+                                }
+                            }
+                            onUiTouchChanged(false)
+                        },
+                        onDragCancel = {
+                            scope.launch {
+                                launch {
+                                    alphaPointerAnimatable.animateTo(0.5f)
+                                }
+                                launch {
+                                    //Do it in sequence
+                                    translationX.animateTo(0f)
+                                    alphaCursiveAnimatable.animateTo(0f)
+                                }
+                            }
+                            onUiTouchChanged(false)
+                        },
+                        onDrag = { _, dragAmount ->
+                            scope.launch {
+                                translationX.snapTo(
+                                    (translationX.value + dragAmount.x).coerceAtLeast(
+                                        0f
+                                    ).coerceAtMost(containerWidth - 60.dp.toPx())
+                                )
+                            }
+                        }
+                    )
+                },
+            shape = CircleShape,
+            border = BorderStroke(width = 2.dp, color = Color.Red)
+        ) {
+            Icon(
+                modifier = Modifier.requiredSize(40.dp),
+                imageVector = if (locked) Icons.Default.Lock else Icons.Default.LockOpen,
+                contentDescription = ""
+            )
+        }
+    }
+}
+
+@SuppressLint("DefaultLocale")
+@Composable
+private fun TimeControlContainer(
+    modifier: Modifier = Modifier,
+    timeMutableSource: TimeMutableSource
+) {
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        val sliderPosition by timeMutableSource.currentTime.collectAsState()
+        val startValue by timeMutableSource.startValue.collectAsState()
+        val endValue by timeMutableSource.endValue.collectAsState()
+        Column(
+            modifier = Modifier
+                .padding(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Slider(
+                    modifier = Modifier.weight(1f),
+                    value = sliderPosition,
+                    onValueChange = {
+                        timeMutableSource.moveTo(it)
+                    },
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.secondary,
+                        activeTrackColor = MaterialTheme.colorScheme.secondary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
+                    ),
+                    onValueChangeFinished = {
+                        timeMutableSource.start()
+                    },
+                    valueRange = startValue..endValue
+                )
+                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                val paused by timeMutableSource.paused.collectAsState()
+                Box(
+                    modifier = Modifier
+                        .requiredSize(56.dp)
+                        .clickable {
+                            if (paused) {
+                                timeMutableSource.start()
+                            } else {
+                                timeMutableSource.pause()
+                            }
+                        }
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (paused) {
+                            Icons.Default.PlayArrow
+                        } else {
+                            Icons.Default.Pause
+                        },
+                        contentDescription = ""
+                    )
+                }
+            }
+            Text(text = String.format("%.2f", sliderPosition))
+        }
+    }
+}
+
+@Composable
+private fun TwoByTwoGridPlayerScreen(
+    controller: SessionController
+) {
+    val displayItems = controller.profile.displayItems
+    Row(
+//        horizontalArrangement = Arrangement.Center
+    ) {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
+                verticalArrangement = Arrangement.Center
+            ) {
+                displayItems.firstOrNull { it.caseIndex == 0 && it.indexInCase == 0 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                displayItems.firstOrNull { it.caseIndex == 0 && it.indexInCase == 1 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                displayItems.firstOrNull { it.caseIndex == 0 && it.indexInCase == 2 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
+                verticalArrangement = Arrangement.Center
+            ) {
+                displayItems.firstOrNull { it.caseIndex == 1 && it.indexInCase == 0 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                displayItems.firstOrNull { it.caseIndex == 1 && it.indexInCase == 1 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                displayItems.firstOrNull { it.caseIndex == 1 && it.indexInCase == 2 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+            }
+        }
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
+                verticalArrangement = Arrangement.Center
+            ) {
+                displayItems.firstOrNull { it.caseIndex == 2 && it.indexInCase == 0 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                displayItems.firstOrNull { it.caseIndex == 2 && it.indexInCase == 1 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                displayItems.firstOrNull { it.caseIndex == 2 && it.indexInCase == 2 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
+                verticalArrangement = Arrangement.Center
+            ) {
+                displayItems.firstOrNull { it.caseIndex == 3 && it.indexInCase == 0 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                displayItems.firstOrNull { it.caseIndex == 3 && it.indexInCase == 1 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                displayItems.firstOrNull { it.caseIndex == 3 && it.indexInCase == 2 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SideDisplayItemsPlayerScreen(
+    controller: SessionController,
+    caseNumber: Int
+) {
+    val displayItems = controller.profile.displayItems
+    Row {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
+                verticalArrangement = Arrangement.Center
+            ) {
+                displayItems.firstOrNull { it.caseIndex == 0 && it.indexInCase == 0 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                displayItems.firstOrNull { it.caseIndex == 0 && it.indexInCase == 1 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                if (caseNumber == 2) {
+                    displayItems.firstOrNull { it.caseIndex == 0 && it.indexInCase == 2 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
+                verticalArrangement = Arrangement.Center
+            ) {
+                displayItems.firstOrNull { it.caseIndex == 1 && it.indexInCase == 0 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                displayItems.firstOrNull { it.caseIndex == 1 && it.indexInCase == 1 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                if (caseNumber == 2) {
+                    displayItems.firstOrNull { it.caseIndex == 1 && it.indexInCase == 2 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
+                }
+            }
+            if (caseNumber == 3) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .then(
+                            if (controller.profile.showGridLines) {
+                                Modifier.border(width = 2.dp, color = Color.Green)
+                            } else {
+                                Modifier
+                            }
+                        ),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    displayItems.firstOrNull { it.caseIndex == 2 && it.indexInCase == 0 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
+                    displayItems.firstOrNull { it.caseIndex == 2 && it.indexInCase == 1 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.requiredWidth(8.dp))
+        SessionMainContainer(
+            modifier = Modifier
+                .weight(3f)
+                .fillMaxHeight(),
+            controller = controller
+        )
+        Spacer(modifier = Modifier.requiredWidth(8.dp))
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
+                verticalArrangement = Arrangement.Center
+            ) {
+                displayItems.firstOrNull { it.caseIndex == 3 && it.indexInCase == 0 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                displayItems.firstOrNull { it.caseIndex == 3 && it.indexInCase == 1 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                if (caseNumber == 2) {
+                    displayItems.firstOrNull { it.caseIndex == 3 && it.indexInCase == 2 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (controller.profile.showGridLines) {
+                            Modifier.border(width = 2.dp, color = Color.Green)
+                        } else {
+                            Modifier
+                        }
+                    ),
+                verticalArrangement = Arrangement.Center
+            ) {
+                displayItems.firstOrNull { it.caseIndex == 4 && it.indexInCase == 0 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                displayItems.firstOrNull { it.caseIndex == 4 && it.indexInCase == 1 }?.let { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+                if (caseNumber == 2) {
+                    displayItems.firstOrNull { it.caseIndex == 4 && it.indexInCase == 2 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
+                }
+            }
+            if (caseNumber == 3) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .then(
+                            if (controller.profile.showGridLines) {
+                                Modifier.border(width = 2.dp, color = Color.Green)
+                            } else {
+                                Modifier
+                            }
+                        ),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    displayItems.firstOrNull { it.caseIndex == 5 && it.indexInCase == 0 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
+                    displayItems.firstOrNull { it.caseIndex == 5 && it.indexInCase == 1 }
+                        ?.let { item ->
+                            DisplayCapabilityContainer(
+                                item = item,
+                                config = controller.profile.configFile,
+                                player = controller
+                            )
+                        }
+                }
+            }
+        }
+    }
+}
+
+@SuppressLint("DefaultLocale")
+@Composable
+private fun DisplayCapabilityContainer(
+    item: DisplayItem,
+    config: ConfigFile,
+    player: SessionController
+) {
+    val gnssData: GnssData? by player.gnssFlow.collectAsState(initial = null)
+    when (item.displayableCapability) {
+        DisplayableCapability.HorizontalSpeed -> SpeedContainer(
+            orientation = SpeedOrientation.Horizontal,
+            player = player
+        )
+
+        DisplayableCapability.VerticalSpeed -> SpeedContainer(
+            orientation = SpeedOrientation.Vertical,
+            player = player
+        )
+
+        DisplayableCapability.TotalSpeed -> SpeedContainer(
+            orientation = SpeedOrientation.Total,
+            player = player
+        )
+
+        DisplayableCapability.Elevation -> TagAndValueContainer(
+            tag = "Elv",
+            value = "${gnssData?.hMsl?.minus(config.dzElev)}",
+            suffix = "m"
+        )
+
+        DisplayableCapability.Altitude -> TagAndValueContainer(
+            tag = "Alt",
+            value = "${gnssData?.hMsl}",
+            suffix = "m"
+        )
+
+        DisplayableCapability.DistanceToReferencePoint -> {
+            val refPointId =
+                (item.bag as DisplayItemBundle.DistanceToRefPointBundle?)?.referencePoint?.id
+            val refPointDistance by player.referencePointDistances
+                .map { map ->
+                    map.filter { mapEntry -> mapEntry.key == refPointId }.map { it.value }
+                }.collectAsState(initial = emptyList())
+            val distance = refPointDistance.firstOrNull()
+
+            TagAndValueContainer(
+                tag = "RefPt",
+                value = if (distance != null) String.format("%.2f", distance) else "--",
+                suffix = "NM"
+            )
+        }
+
+        DisplayableCapability.Latitude -> TagAndValueContainer(
+            tag = "Lat",
+            value = "${gnssData?.lat}"
+        )
+
+        DisplayableCapability.Longitude -> TagAndValueContainer(
+            tag = "Lon",
+            value = "${gnssData?.lon}"
+        )
+
+        DisplayableCapability.GlideRatio -> TagAndValueContainer(
+            tag = "GR",
+            value = remember(gnssData?.velN, gnssData?.velE, gnssData?.velD) {
+                String.format(
+                    "%.2f", computeGlideRatio(
+                        gnssData?.velD ?: 0,
+                        computeGroundSpeed(
+                            gnssData?.velN?.toDouble() ?: 0.0,
+                            gnssData?.velE?.toDouble() ?: 0.0
+                        )
+                    )
+                )
+            }
+        )
+
+        DisplayableCapability.InverseGlideRatio -> TagAndValueContainer(
+            tag = "IGR",
+            value = remember(gnssData?.velN, gnssData?.velE, gnssData?.velD) {
+                String.format(
+                    "%.2f", computeInverseGlideRatio(
+                        gnssData?.velD ?: 0,
+                        computeGroundSpeed(
+                            gnssData?.velN?.toDouble() ?: 0.0,
+                            gnssData?.velE?.toDouble() ?: 0.0
+                        )
+                    )
+                )
+            }
+        )
+
+        DisplayableCapability.DiveAngle -> TagAndValueContainer(
+            tag = "DiveA",
+            value = "${gnssData?.lon}",
+            suffix = "°"
+        )
+
+        DisplayableCapability.VelN -> TagAndValueContainer(
+            tag = "velN",
+            value = "${gnssData?.velN}",
+            suffix = "m/s"
+        )
+
+        DisplayableCapability.VelE -> TagAndValueContainer(
+            tag = "velE",
+            value = "${gnssData?.velE}",
+            suffix = "m/s"
+        )
+
+        DisplayableCapability.VelD -> TagAndValueContainer(
+            tag = "velD",
+            value = "${gnssData?.velD}",
+            suffix = "m/s"
+        )
+
+        DisplayableCapability.TimeInWindow -> {
+            val timer by player.timeInWindow.collectAsState()
+            TagAndValueContainer(
+                tag = "PPC time",
+                value = String.format("%.1f", timer),
+                suffix = "s"
+            )
+        }
+
+        DisplayableCapability.DistanceInWindow -> {
+            val distance by player.distanceInWindow.collectAsState()
+            TagAndValueContainer(
+                tag = "PPC distance",
+                value = String.format("%d", distance),
+                suffix = "m"
+            )
+        }
+
+        DisplayableCapability.SpeedInWindow -> {
+            val speed by player.speedInWindow.collectAsState()
+            TagAndValueContainer(
+                tag = "PPC speed",
+                value = String.format("%d", speed),
+                suffix = "km/h"
+            )
+        }
+
+        DisplayableCapability.FlareCount -> {
+            val flares by player.registeredFlares.collectAsState()
+            TagAndValueContainer(
+                tag = "Flares",
+                value = "${flares.size}"
+            )
+        }
+
+        DisplayableCapability.LastFlareResult -> {
+            val flares by player.registeredFlares.collectAsState()
+            val lastFlare = flares.lastOrNull()
+            TagAndValueContainer(
+                tag = "UP",
+                value = "${lastFlare?.gain ?: "--"}",
+                suffix = "m"
+            )
+        }
+    }
+}
+
+enum class InlinePlayerDirection {
+    Left,
+    Right
+}
+
+@Composable
+private fun InlinePlayerScreen(
+    controller: SessionController,
+    inlinePlayerDirection: InlinePlayerDirection
+) {
+    val displayItems = controller.profile.displayItems
+    Row {
+        if (inlinePlayerDirection == InlinePlayerDirection.Right) {
+            SessionMainContainer(
+                modifier = Modifier
+                    .weight(4f)
+                    .fillMaxHeight()
+                    .padding(8.dp),
+                controller = controller
+            )
+        }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .then(
+                    if (controller.profile.showGridLines) {
+                        Modifier.border(width = 2.dp, color = Color.Green)
+                    } else {
+                        Modifier
+                    }
+                ),
+            verticalArrangement = Arrangement.Center
+        ) {
+            LazyColumn {
+                items(displayItems) { item ->
+                    DisplayCapabilityContainer(
+                        item = item,
+                        config = controller.profile.configFile,
+                        player = controller
+                    )
+                }
+            }
+        }
+        if (inlinePlayerDirection == InlinePlayerDirection.Left) {
+            SessionMainContainer(
+                modifier = Modifier
+                    .weight(4f)
+                    .fillMaxHeight()
+                    .padding(8.dp),
+                controller = controller
+            )
+        }
+    }
+}
+
+@Composable
+private fun SessionMainContainer(
+    modifier: Modifier = Modifier,
+    controller: SessionController
+) {
+    var alarmMessage by remember { mutableStateOf("") }
+
+    // Animation values
+    val scale = remember { Animatable(1f) }
+    val alpha = remember { Animatable(1f) }
+
+    LaunchedEffect(alarmMessage) {
+        val message = alarmMessage
+        if (message.isNotBlank()) {
+            launch {
+                // Reset animations to initial values
+                scale.snapTo(1f)
+                alpha.snapTo(1f)
+                // Run animations in parallel
+                launch {
+                    scale.animateTo(
+                        targetValue = 2.5f,
+                        animationSpec = tween(durationMillis = 2000)
+                    )
+                }
+
+                launch {
+                    // Start fading out after a short delay
+                    delay(500)
+                    alpha.animateTo(
+                        targetValue = 0f,
+                        animationSpec = tween(durationMillis = 1500)
+                    )
+                    // Hide alarm when animation completes
+                    alarmMessage = ""
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        controller.sessionEvents.collectLatest { event ->
+            alarmMessage = when (val evt = event) {
+                is SessionEvent.AlarmEvent -> {
+                    when (evt.alarm.alarmType) {
+                        AlarmType.NoAlarm -> ""
+                        AlarmType.Beep -> ""
+                        AlarmType.ChirpUp -> ""
+                        AlarmType.ChirpDown -> ""
+                        AlarmType.PlayFile -> evt.alarm.alarmFile
+                    }
+                }
+
+                is SessionEvent.ExitFound -> "Exit detected"
+                is SessionEvent.PerformanceLaneStart -> "Lane start"
+                is SessionEvent.PlayFileEvent -> ""
+                is SessionEvent.PlayTextEvent -> ""
+                SessionEvent.CompetitionWindowEntered -> "Competition window entered"
+                SessionEvent.CompetitionWindowExited -> "Competition window exited"
+            }
+        }
+    }
+
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        if (controller.profile.showPerformanceLane) {
+            PerformanceLaneContainer(controller) {
+                if (controller.profile.showMap) {
+                    GMapContainer(controller)
+                }
+            }
+        } else if (controller.profile.showMap) {
+            GMapContainer(controller)
+        }
+
+        if (controller.profile.displayFlareDetector) {
+            val flareState by controller.currentFlareState.collectAsState()
+            when (flareState) {
+                is FlareState.FlareDone,
+                is FlareState.Flaring -> {
+                    FlareContainer(
+                        flareState
+                    )
+                }
+
+                FlareState.Idle -> {}
+            }
+        }
+
+        // Visual alarm overlay
+        if (alarmMessage.isNotBlank()) {
+            Text(
+                text = alarmMessage,
+                color = Color.Red,
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .graphicsLayer {
+                        scaleX = scale.value
+                        scaleY = scale.value
+                        this.alpha = alpha.value
+                    }
+                    .padding(16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun FlareContainer(
+    flareState: FlareState
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        when (flareState) {
+            is FlareState.FlareDone -> {}
+            is FlareState.Flaring -> {
+                OngoingFlareContainer2(
+                    flareState.flareData
+                )
+            }
+
+            else -> {}
+        }
+    }
+}
+
+@Composable
+private fun OngoingFlareContainer2(data: List<GnssData>) {
+    if (data.isEmpty()) return
+
+    // Start altitude and time - from the first data point
+    val startAltitude = remember(data) { data.firstOrNull()?.hMsl ?: 0 }
+    val startTime = remember(data) { data.firstOrNull()?.iTow?.toInt() ?: 0 }
+
+    // Calculate max altitude gain
+//    val maxGain = data.maxOfOrNull { it.hMsl - startAltitude } ?: 0
+//    Timber.d("Hoz4 ${data.size} maxGain = $maxGain; startAltitude = $startAltitude, maxAltitude = ${data.maxOfOrNull { it.hMsl }}")
+
+    // Calculate current gain (from the last data point)
+    val currentGain = data.lastOrNull()?.let { it.hMsl - startAltitude } ?: 0
+
+    // Calculate max time difference (in seconds)
+
+    // Use Animatable for height representation
+//    val heightRepresentation = remember { Animatable(25f) }
+//    val pickedMax = max(currentGain, maxGain)
+//    val heightRepresentation32 by animateIntAsState(
+//        when {
+//            pickedMax > 30 -> (pickedMax + 20)
+//            pickedMax > 15 -> 40
+//            else -> 25
+//        }
+//    )
+//    val widthRepresentation = remember { Animatable(10f) }
+//    val widthRepresentation2 by animateIntAsState(
+//        when {
+//            maxTimeDiff < 8 -> 10
+//            maxTimeDiff >= 8 && maxTimeDiff < 13 -> 15
+//            maxTimeDiff >= 13 -> (maxTimeDiff + 3).toInt()
+//            else -> 10
+//        }
+//    )
+
+//    // Update the height representation when maxGain changes
+//    LaunchedEffect(maxGain) {
+//        val targetValue = when {
+//            maxGain > 35 -> (maxGain + 20).toFloat()
+//            maxGain > 20 -> 40f
+//            else -> 25f
+//        }
+//
+//        heightRepresentation.animateTo(
+//            targetValue = targetValue
+//        )
+//    }
+//
+//    LaunchedEffect(maxTimeDiff) {
+//        val targetValue = when {
+//            maxTimeDiff < 8 -> 10f
+//            maxTimeDiff >= 8 && maxTimeDiff < 13 -> 15f
+//            maxTimeDiff >= 13 -> maxTimeDiff + 3f
+//            else -> 10f
+//        }
+//
+//        widthRepresentation.animateTo(
+//            targetValue = targetValue
+//        )
+//    }
+
+    // Convert dp to px for line width
+    val lineWidthPx = with(LocalDensity.current) { 16.dp.toPx() }
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        val canvasWidth = size.width
+        val canvasHeight = size.height
+
+        val maxGain = data.maxOfOrNull { it.hMsl - startAltitude } ?: 0
+        val heightRepresentation = when {
+            maxGain > 70 -> 150f
+            else -> 90f
+        }
+
+        val lastTime = data.lastOrNull()?.iTow?.toInt() ?: startTime
+        val diffMs = if (lastTime >= startTime) {
+            lastTime - startTime
+        } else {
+            // Handle week rollover (604800000 = 7*24*60*60*1000 ms in a week)
+            lastTime + (604800000 - startTime)
+        }
+        val maxTimeDiff = (diffMs / 1000f)
+        val widthRepresentation =
+            when {
+                maxTimeDiff < 10 -> 12
+                maxTimeDiff >= 10 && maxTimeDiff < 17 -> 20
+                maxTimeDiff >= 17 -> 30
+                else -> 12
+            }
+
+        // How much is 1m in pixels
+        val heightFactor = canvasHeight / heightRepresentation
+
+        // Draw axis lines
+//        drawLine(
+//            color = Color.Gray,
+//            start = Offset(0f, canvasHeight),
+//            end = Offset(canvasWidth, canvasHeight),
+//            strokeWidth = 2f
+//        )
+//
+//        drawLine(
+//            color = Color.Gray,
+//            start = Offset(0f, 0f),
+//            end = Offset(0f, canvasHeight),
+//            strokeWidth = 2f
+//        )
+        // Draw height markers every 10m
+//        val markerInterval = 10
+//        for (i in 0..(heightRepresentation.toInt() / markerInterval) * markerInterval step markerInterval) {
+////            val y = canvasHeight - (i.toFloat() / heightRepresentation.value * canvasHeight)
+//            val y = canvasHeight - (i.toFloat() * heightFactor)
+//
+//            // Draw marker text
+//            drawContext.canvas.nativeCanvas.drawText(
+//                "$i m",
+//                -35f,
+//                y,
+//                android.graphics.Paint().apply {
+//                    color = android.graphics.Color.GRAY
+//                    textSize = 30f
+//                }
+//            )
+//        }
+
+        // Draw time markers every 5 seconds
+//        for (i in 0..widthRepresentation step 5) {
+//            val x = (i / widthRepresentation) * canvasWidth
+//
+//            // Draw vertical marker line
+//            drawLine(
+//                color = Color.Gray.copy(alpha = 0.5f),
+//                start = Offset(x, canvasHeight),
+//                end = Offset(x, canvasHeight + 5f),
+//                strokeWidth = 1f
+//            )
+//
+//            // Draw marker text
+//            drawContext.canvas.nativeCanvas.drawText(
+//                "${i}s",
+//                x,
+//                canvasHeight + 20f,
+//                android.graphics.Paint().apply {
+//                    color = android.graphics.Color.GREEN
+//                    textSize = 30f
+//                    textAlign = android.graphics.Paint.Align.CENTER
+//                }
+//            )
+//        }
+
+        // If we have more than one data point, draw the gain line
+        if (data.size > 1) {
+            // Create points for the line
+            val points = data.map { gnssData ->
+                val gain = gnssData.hMsl - startAltitude
+
+                // Calculate the x position based on time (0 to 20 seconds)
+                val timeDiffMs = if (gnssData.iTow.toInt() >= startTime) {
+                    gnssData.iTow.toInt() - startTime
+                } else {
+                    // Handle week rollover
+                    gnssData.iTow.toInt() + (604800000 - startTime)
+                }
+
+                val timeDiffSec = timeDiffMs / 1000f
+                val x =
+                    (timeDiffSec / widthRepresentation.toFloat()) * canvasWidth // Scale to canvas width
+//                val y = canvasHeight - (gain.toFloat() / heightRepresentation.value) * canvasHeight
+                val y = canvasHeight - (gain.toFloat() * heightFactor)
+
+                Offset(x, y)
+            }
+
+            // Draw the gain line connecting all points
+            if (points.size >= 2) {
+                drawPoints(
+                    points = points,
+                    pointMode = PointMode.Polygon,
+                    color = Color.Green,
+                    strokeWidth = 20.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+
+                // Draw gain text at the right of the last point
+                val lastPoint = points.last()
+
+                val distanceToLine = 8.dp.toPx()
+                drawContext.canvas.nativeCanvas.drawText(
+                    "+${maxGain} m",
+                    lastPoint.x + distanceToLine,
+                    lastPoint.y - distanceToLine,
+                    android.graphics.Paint().apply {
+                        color = android.graphics.Color.GREEN
+                        textSize = 30.sp.toPx()
+                        textAlign = android.graphics.Paint.Align.LEFT
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun GMapContainer(sessionController: SessionController) {
+    val gnssData by sessionController.gnssFlow.collectAsState(initial = null)
+
+    val cameraPositionState = rememberCameraPositionState()
+
+
+    val perfLanes by sessionController.performanceLanes.collectAsState()
+
+    val gpsData = gnssData
+    val cameraZoom by animateFloatAsState(
+        targetValue = if (sessionController.exitFound.value == null || (gpsData != null && sessionController.profile.competitionWindowBottom > gpsData.hMsl)) 13f else 16f,
+        animationSpec = tween(durationMillis = 1_500)
+    )
+
+    LaunchedEffect(gpsData, cameraZoom) {
+        val data = gpsData
+        if (data != null) {
+            cameraPositionState.move(
+                CameraUpdateFactory.newCameraPosition(
+                    CameraPosition.fromLatLngZoom(
+                        LatLng(data.lat, data.lon),
+                        cameraZoom
+                    )
+                )
+            )
+        }
+    }
+
+
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .border(1.dp, MaterialTheme.colorScheme.outline)
+    ) {
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState,
+            properties = MapProperties(
+                isMyLocationEnabled = false,
+                mapType = MapType.HYBRID,
+                isBuildingEnabled = false
+            ),
+            uiSettings = MapUiSettings(
+                zoomControlsEnabled = false,
+                compassEnabled = true,
+                mapToolbarEnabled = false,
+                indoorLevelPickerEnabled = false,
+                myLocationButtonEnabled = false,
+                rotationGesturesEnabled = false,
+                scrollGesturesEnabled = false,
+                scrollGesturesEnabledDuringRotateOrZoom = false,
+                tiltGesturesEnabled = false,
+                zoomGesturesEnabled = false
+            )
+        ) {
+            gpsData?.let { data ->
+                Marker(
+                    state = MarkerState(
+                        position = LatLng(
+                            data.lat,
+                            data.lon
+                        )
+                    ),
+                    title = "Current Position"
+                )
+            }
+
+            val jumpPath = remember { mutableStateListOf<LatLng>() }
+            LaunchedEffect(gpsData) {
+                gpsData?.let { data ->
+                    jumpPath.add(LatLng(data.lat, data.lon))
+                    if (jumpPath.size > 1000) {
+                        jumpPath.removeAt(0)
+                    }
+                }
+            }
+
+            if (jumpPath.size > 1) {
+                Polyline(
+                    points = jumpPath,
+                    color = Color.Red,
+                    width = 5f
+                )
+            }
+
+            sessionController.profile.referencePoint?.let { refPoint ->
+                Marker(
+                    state = MarkerState(
+                        position = LatLng(
+                            refPoint.coords.latitude,
+                            refPoint.coords.longitude
+                        )
+                    ),
+                    title = refPoint.name,
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+                )
+            }
+
+            // Draw performance lanes
+            if (sessionController.profile.showPerformanceLaneInMap) {
+                perfLanes.forEach { lane ->
+                    val points = lane.points.map { coord ->
+                        LatLng(coord.latitude, coord.longitude)
+                    }
+
+                    if (points.size >= 2) {
+                        with(LocalDensity.current) {
+                            Polyline(
+                                points = points,
+                                color = if (lane.isReference) Color.Red else Color.Green,
+                                width = 2.dp.toPx(),
+                                pattern = if (lane.isReference) null else
+                                    listOf(Dash(20f), Gap(10f))
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@SuppressLint("UnusedBoxWithConstraintsScope")
+@Composable
+private fun PerformanceLaneContainer(
+    sessionController: SessionController,
+    content: @Composable BoxScope.() -> Unit = {}
+) {
+    val exitPoint by sessionController.exitFound.collectAsState()
+    val laneStartPoint by sessionController.laneStartPoint.collectAsState()
+    val distanceFromLanes by sessionController.distanceToCenter.collectAsState()
+
+    // Define colors for different states
+    val gray = Color.Gray
+    val purple = Color.Magenta
+    val green = Color.Green
+
+    // Calculate bar colors based on state
+    val leftBarColor by animateColorAsState(
+        targetValue = when {
+            exitPoint == null -> gray // Not exited yet
+            laneStartPoint == null -> purple // Exited but no lane start
+            distanceFromLanes == null -> green // Lane started but no distance info
+            distanceFromLanes!! < -0.5f -> {
+                // Compute color gradient from green to red based on distance
+                // -0.5 = green, -0.95 = red
+                val normalizedValue = ((distanceFromLanes!! + 0.5f) / -0.45f).coerceIn(0f, 1f)
+                Color(
+                    red = normalizedValue,
+                    green = 1f - normalizedValue * 0.8f, // Keep some green component even at extreme values
+                    blue = 0f,
+                    alpha = 1f
+                )
+            }
+
+            else -> green // Inside lane or right side
+        }
+    )
+
+    val rightBarColor by animateColorAsState(
+        targetValue = when {
+            exitPoint == null -> gray // Not exited yet
+            laneStartPoint == null -> purple // Exited but no lane start
+            distanceFromLanes == null -> green // Lane started but no distance info
+            distanceFromLanes!! > 0.5f -> {
+                // Compute color gradient from green to red based on distance
+                // 0.5 = green, 0.95 = red
+                val normalizedValue = ((distanceFromLanes!! - 0.5f) / 0.45f).coerceIn(0f, 1f)
+                Color(
+                    red = normalizedValue,
+                    green = 1f - normalizedValue * 0.8f, // Keep some green component even at extreme values
+                    blue = 0f,
+                    alpha = 1f
+                )
+            }
+
+            else -> green // Inside lane or left side
+        }
+    )
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            modifier = Modifier.weight(1f)
+        ) {
+            // Left vertical bar
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .requiredWidth(40.dp)
+                    .background(leftBarColor, RoundedCornerShape(16.dp))
+            )
+            Spacer(modifier = Modifier.requiredWidth(16.dp))
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                content()
+            }
+            Spacer(modifier = Modifier.requiredWidth(16.dp))
+            // Right vertical bar
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .requiredWidth(40.dp)
+                    .background(rightBarColor, RoundedCornerShape(16.dp))
+            )
+        }
+        Spacer(modifier = Modifier.requiredHeight(16.dp))
+        // Optional: Position indicator showing where user is between lanes
+        distanceFromLanes?.let { distance ->
+            // Convert distance (-1 to 1) to slider value (0 to 1)
+            val sliderPosition = (distance + 1) / 2
+
+            // Calculate color based on proximity to edges
+            // Distance closer to 0 means center (green), closer to -1 or 1 means edges (red)
+            val proximityToEdge = abs(distance).coerceIn(0f, 1f)
+            val thumbColor = if (proximityToEdge > 0.5f) {
+                // Gradually transition from green to red as we approach the edge
+                val colorRatio = ((proximityToEdge - 0.5f) / 0.5f).coerceIn(0f, 1f)
+                Color(
+                    red = colorRatio,
+                    green = 1f - colorRatio * 0.8f,
+                    blue = 0f,
+                    alpha = 1f
+                )
+            } else {
+                // Center area is green
+                Color.Green
+            }
+
+            Slider(
+                value = sliderPosition,
+                onValueChange = {},
+                enabled = false,
+                valueRange = 0f..1f,
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .requiredHeight(16.dp),
+                colors = SliderDefaults.colors(
+                    thumbColor = thumbColor,
+                    disabledThumbColor = thumbColor,
+                    activeTrackColor = Color.DarkGray,
+                    inactiveTrackColor = Color.DarkGray,
+                    disabledActiveTrackColor = Color.DarkGray,
+                    disabledInactiveTrackColor = Color.DarkGray
+                )
+            )
+        }
+    }
+}
+
+@Preview(
+    name = "Landscape Preview",
+    widthDp = 640,
+    heightDp = 360
+)
+@Composable
+fun ThreeOnEachSidePlayerScreenPreview() {
+    SideDisplayItemsPlayerScreen(
+        controller = FakeSessionController(
+            profile = fakeProfile
+        ),
+        caseNumber = 2
+    )
+}
+
+@Preview(
+    name = "Landscape Preview",
+    widthDp = 640,
+    heightDp = 360
+)
+@Composable
+fun TwoByTwoGridPlayerScreenPreview() {
+    TwoByTwoGridPlayerScreen(
+        controller = FakeSessionController(
+            profile = fakeProfile
+        )
+    )
+}
+
+@Preview(
+    name = "Landscape Preview",
+    widthDp = 640,
+    heightDp = 360
+)
+@Composable
+fun InlineLeftPlayerScreenPreview() {
+    InlinePlayerScreen(
+        inlinePlayerDirection = InlinePlayerDirection.Right,
+        controller = FakeSessionController(
+            profile = fakeProfile.copy(
+                displayItems = listOf(
+                    DisplayItem(
+                        displayableCapability = DisplayableCapability.HorizontalSpeed,
+                        caseIndex = 0,
+                        indexInCase = 0
+                    ),
+                    DisplayItem(
+                        displayableCapability = DisplayableCapability.VerticalSpeed,
+                        caseIndex = 0,
+                        indexInCase = 1
+                    ),
+                    DisplayItem(
+                        displayableCapability = DisplayableCapability.TotalSpeed,
+                        caseIndex = 0,
+                        indexInCase = 2
+                    ),
+                    DisplayItem(
+                        displayableCapability = DisplayableCapability.Altitude,
+                        caseIndex = 1,
+                        indexInCase = 0
+                    ),
+                    DisplayItem(
+                        displayableCapability = DisplayableCapability.Elevation,
+                        caseIndex = 1,
+                        indexInCase = 1
+                    ),
+                    DisplayItem(
+                        displayableCapability = DisplayableCapability.DistanceToReferencePoint,
+                        caseIndex = 1,
+                        indexInCase = 2
+                    )
+                )
+            )
+        )
+    )
+}
+
+class FakeSessionController(
+    override val profile: SessionProfile
+) : SessionController {
+    override val sessionEvents: SharedFlow<SessionEvent> = MutableSharedFlow()
+    override val type: SessionType = SessionType.Hud
+    override val performanceLanes: StateFlow<List<VideoControllerImpl.PerformanceLine>> =
+        MutableStateFlow(emptyList())
+    override val gnssFlow: SharedFlow<GnssData> = MutableSharedFlow()
+    override val laneStartPoint: StateFlow<GnssData?> = MutableStateFlow(null)
+    override val timeMutableSource: TimeMutableSource? = null
+    override val videoController: VideoController = fakeVideoController
+    override val distanceToCenter: StateFlow<Float?> = MutableStateFlow(null)
+    override val referencePointDistances: StateFlow<Map<String, Double>> =
+        MutableStateFlow(emptyMap())
+    override val timeInWindow: StateFlow<Float> = MutableStateFlow(0f)
+    override val distanceInWindow: StateFlow<Int> = MutableStateFlow(0)
+    override val speedInWindow: StateFlow<Int> = MutableStateFlow(0)
+
+    override fun pause() {}
+
+    override fun play() {}
+    override fun play(callback: SessionController.SessionControllerCallback) {}
+    override suspend fun resetDetectors() {}
+
+    override fun destroy() {}
+    override val currentFlareState: StateFlow<FlareState> = MutableStateFlow(FlareState.Idle)
+    override val registeredFlares: StateFlow<List<Flare>> = MutableStateFlow(emptyList())
+    override val exitFound: StateFlow<GnssData?> = MutableStateFlow(null)
+
+}
+
+private val fakeVideoController = object : VideoController {}
+
+private val fakeProfile = SessionProfile.default()
+    .copy(
+        displayItems = listOf(
+            DisplayItem(
+                displayableCapability = DisplayableCapability.HorizontalSpeed,
+                caseIndex = 0,
+                indexInCase = 0
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.VerticalSpeed,
+                caseIndex = 0,
+                indexInCase = 1
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.TotalSpeed,
+                caseIndex = 0,
+                indexInCase = 2
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.Altitude,
+                caseIndex = 1,
+                indexInCase = 0
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.Elevation,
+                caseIndex = 1,
+                indexInCase = 1
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.DistanceToReferencePoint,
+                caseIndex = 1,
+                indexInCase = 2
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.Altitude,
+                caseIndex = 2,
+                indexInCase = 0
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.Elevation,
+                caseIndex = 2,
+                indexInCase = 1
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.DistanceToReferencePoint,
+                caseIndex = 2,
+                indexInCase = 2
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.Altitude,
+                caseIndex = 3,
+                indexInCase = 0
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.Elevation,
+                caseIndex = 3,
+                indexInCase = 1
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.DistanceToReferencePoint,
+                caseIndex = 3,
+                indexInCase = 2
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.Altitude,
+                caseIndex = 4,
+                indexInCase = 0
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.Elevation,
+                caseIndex = 4,
+                indexInCase = 1
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.DistanceToReferencePoint,
+                caseIndex = 4,
+                indexInCase = 2
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.Altitude,
+                caseIndex = 5,
+                indexInCase = 0
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.Elevation,
+                caseIndex = 5,
+                indexInCase = 1
+            ),
+            DisplayItem(
+                displayableCapability = DisplayableCapability.DistanceToReferencePoint,
+                caseIndex = 5,
+                indexInCase = 2
+            ),
+        )
+    )
+
+
+@Composable
+private fun LockedContent(
+    onExitClicked: () -> Unit,
+    resetExitDetection: () -> Unit
+) {
+    Column {
+        FloatingActionButton(
+            onClick = onExitClicked,
+            containerColor = MaterialTheme.colorScheme.error,
+        ) {
+            Icon(
+                imageVector = Icons.Default.PowerSettingsNew,
+                contentDescription = ""
+            )
+        }
+        Spacer(modifier = Modifier.requiredHeight(8.dp))
+        Button(
+            onClick = resetExitDetection,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.error
+            )
+        ) {
+            FText(
+                text = "Reset exit detection",
+                configuration = FlySightTheme.typography.plainScreenTextLarge
+            )
+        }
+    }
+}

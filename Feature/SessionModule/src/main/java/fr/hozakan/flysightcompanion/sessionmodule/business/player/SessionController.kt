@@ -2,12 +2,14 @@ package fr.hozakan.flysightcompanion.sessionmodule.business.player
 
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
 interface SessionController : ExitDetector, FlareDetector {
 
     val sessionEvents: SharedFlow<SessionEvent>
+    val type: SessionType
 
     val profile: SessionProfile
 

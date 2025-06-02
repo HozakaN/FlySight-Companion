@@ -7,6 +7,7 @@ import fr.hozakan.flysightcompanion.locationmodule.LocationAvailabilityState
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
 
 @Stable
 data class PrepareSessionState(
@@ -16,6 +17,8 @@ data class PrepareSessionState(
     val selectedSourceType: SessionSourceType,
     val selectedSource: SessionSource?,
     val availableSources: List<SessionSource>,
+    val availableSessionTypes: List<SessionType>,
+    val selectedSessionType: SessionType,
     val doneEvent: FlowEvent<Boolean>?,
     val locationAvailabilityState: LocationAvailabilityState = LocationAvailabilityState.ForegroundLocationNotAllowed
 )

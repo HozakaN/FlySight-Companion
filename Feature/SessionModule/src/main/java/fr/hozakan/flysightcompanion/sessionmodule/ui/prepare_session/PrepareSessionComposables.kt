@@ -1,5 +1,7 @@
 package fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session
 
+import androidx.annotation.DrawableRes
+import androidx.annotation.IdRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -60,6 +62,7 @@ import fr.hozakan.flysightcompanion.locationmodule.LocationAvailabilityState
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
 
 @Composable
 fun PrepareSessionMenuActions(
@@ -88,11 +91,11 @@ fun PrepareSessionScreen(
 
     PrepareSessionScreenInternal(
         state = state,
-        onSessionConfigurationSelected = { viewModel.onSessionProfileSelected(it) },
-        onCreateConfigurationClicked = onCreateConfigurationClicked,
-        onEditConfigurationClicked = onEditConfigurationClicked,
-        onDuplicateConfigurationClicked = { viewModel.duplicateSessionProfile(it) },
-        onDeleteConfigurationClicked = { viewModel.deleteSessionProfile(it) },
+        onSessionProfileSelected = { viewModel.onSessionProfileSelected(it) },
+        onCreateProfileClicked = onCreateConfigurationClicked,
+        onEditProfileClicked = onEditConfigurationClicked,
+        onDuplicateProfileClicked = { viewModel.duplicateSessionProfile(it) },
+        onDeleteProfileClicked = { viewModel.deleteSessionProfile(it) },
         onNextClicked = { viewModel.onNextClicked() },
         onPrevClicked = { viewModel.onPrevClicked() },
         onSourceTypeSelected = {
@@ -102,29 +105,31 @@ fun PrepareSessionScreen(
             viewModel.onSourceSelected(it)
         },
         onRequestLocationPermission = { viewModel.requestLocationPermission() },
-        onCheckLocationSettings = { viewModel.checkLocationSettings() }
+        onCheckLocationSettings = { viewModel.checkLocationSettings() },
+        onSessionTypeSelected = { viewModel.onSessionTypeSelected(it) }
     )
 }
 
 @Composable
 fun PrepareSessionScreenInternal(
     state: PrepareSessionState,
-    onSessionConfigurationSelected: (SessionProfile) -> Unit,
-    onCreateConfigurationClicked: () -> Unit,
-    onEditConfigurationClicked: (SessionProfile) -> Unit,
-    onDuplicateConfigurationClicked: (SessionProfile) -> Unit,
-    onDeleteConfigurationClicked: (SessionProfile) -> Unit,
+    onSessionProfileSelected: (SessionProfile) -> Unit,
+    onCreateProfileClicked: () -> Unit,
+    onEditProfileClicked: (SessionProfile) -> Unit,
+    onDuplicateProfileClicked: (SessionProfile) -> Unit,
+    onDeleteProfileClicked: (SessionProfile) -> Unit,
     onSourceTypeSelected: (SessionSourceType) -> Unit,
     onSourceSelected: (SessionSource) -> Unit,
     onPrevClicked: () -> Unit,
     onNextClicked: () -> Unit,
     onRequestLocationPermission: () -> Unit,
-    onCheckLocationSettings: () -> Unit
+    onCheckLocationSettings: () -> Unit,
+    onSessionTypeSelected: (SessionType) -> Unit
 ) {
 
     val phase = state.prepareSessionPhase
 
-    val sessionConfigurations = state.sessionProfiles
+    val sessionProfile = state.sessionProfiles
 
     Surface(
         modifier = Modifier
@@ -132,20 +137,31 @@ fun PrepareSessionScreenInternal(
         color = MaterialTheme.colorScheme.surface
     ) {
         when (phase) {
+            PrepareSessionPhase.SelectSessionType -> SelectSessionTypeScreen(
+                availableTypes = state.availableSessionTypes,
+                selectedSessionType = state.selectedSessionType,
+                onSessionTypeSelected = { sessionType ->
+                    onSessionTypeSelected(sessionType)
+                },
+                onNextClicked = onNextClicked
+            )
+
             PrepareSessionPhase.SelectProfile -> SelectProfileScreen(
-                sessionProfiles = sessionConfigurations,
+                sessionProfiles = sessionProfile,
                 selectedProfile = state.selectedProfile,
                 onSessionProfileSelected = {
-                    onSessionConfigurationSelected(it)
+                    onSessionProfileSelected(it)
                 },
+                onPrevClicked = onPrevClicked,
                 onNextClicked = onNextClicked,
-                onCreateConfigurationClicked = onCreateConfigurationClicked,
-                onEditConfigurationClicked = onEditConfigurationClicked,
-                onDuplicateConfigurationClicked = onDuplicateConfigurationClicked,
-                onDeleteConfigurationClicked = onDeleteConfigurationClicked
+                onCreateProfileClicked = onCreateProfileClicked,
+                onEditProfileClicked = onEditProfileClicked,
+                onDuplicateProfileClicked = onDuplicateProfileClicked,
+                onDeleteProfileClicked = onDeleteProfileClicked
             )
 
             PrepareSessionPhase.SelectSource -> SelectSourceScreen(
+                selectedSessionType = state.selectedSessionType,
                 availableSources = state.availableSources,
                 selectedSourceType = state.selectedSourceType,
                 selectedSource = state.selectedSource,
@@ -166,11 +182,12 @@ fun SelectProfileScreen(
     sessionProfiles: LoadingState<List<SessionProfile>>,
     selectedProfile: SessionProfile?,
     onSessionProfileSelected: (SessionProfile) -> Unit,
+    onPrevClicked: () -> Unit,
     onNextClicked: () -> Unit,
-    onCreateConfigurationClicked: () -> Unit,
-    onEditConfigurationClicked: (SessionProfile) -> Unit,
-    onDuplicateConfigurationClicked: (SessionProfile) -> Unit,
-    onDeleteConfigurationClicked: (SessionProfile) -> Unit
+    onCreateProfileClicked: () -> Unit,
+    onEditProfileClicked: (SessionProfile) -> Unit,
+    onDuplicateProfileClicked: (SessionProfile) -> Unit,
+    onDeleteProfileClicked: (SessionProfile) -> Unit
 ) {
     when (sessionProfiles) {
         is LoadingState.Error -> {}
@@ -189,7 +206,7 @@ fun SelectProfileScreen(
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     Button(
-                        onClick = onCreateConfigurationClicked
+                        onClick = onCreateProfileClicked
                     ) {
                         FText(
                             text = "Create new one",
@@ -213,7 +230,7 @@ fun SelectProfileScreen(
                         item {
                             Column {
                                 Button(
-                                    onClick = onCreateConfigurationClicked,
+                                    onClick = onCreateProfileClicked,
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     FText(
@@ -229,20 +246,20 @@ fun SelectProfileScreen(
                                 profile = profile,
                                 isSelected = profile.name == selectedProfile?.name,
                                 onClick = { onSessionProfileSelected(profile) },
-                                onEditClick = { onEditConfigurationClicked(profile) },
-                                onDuplicateClick = { onDuplicateConfigurationClicked(profile) },
-                                onDeleteClick = { onDeleteConfigurationClicked(profile) }
+                                onEditClick = { onEditProfileClicked(profile) },
+                                onDuplicateClick = { onDuplicateProfileClicked(profile) },
+                                onDeleteClick = { onDeleteProfileClicked(profile) }
                             )
                         }
                     }
                     PrevNextBar(
-                        prevEnabled = false,
-                        onPrevClicked = {},
+                        prevEnabled = true,
+                        onPrevClicked = onPrevClicked,
                         nextEnabled = selectedProfile != null,
                         onNextClicked = onNextClicked,
                         showStepCounter = true,
-                        currentStep = 1,
-                        maxStep = 2
+                        currentStep = 2,
+                        maxStep = 3
                     )
                 }
             }
@@ -276,7 +293,7 @@ fun SessionProfileItem(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     var deleteDialogOpened by remember { mutableStateOf(false) }
-    
+
     Card(
         border = if (isSelected) {
             BorderStroke(width = 2.dp, color = MaterialTheme.colorScheme.primary)
@@ -298,7 +315,7 @@ fun SessionProfileItem(
                     text = profile.name,
                     configuration = FlySightTheme.typography.plainScreenTextLarge
                 )
-                
+
                 if (profile.description?.isNotBlank() == true) {
                     Spacer(modifier = Modifier.requiredHeight(4.dp))
                     FText(
@@ -307,7 +324,7 @@ fun SessionProfileItem(
                     )
                 }
             }
-            
+
             Box {
                 IconButton(
                     onClick = { menuExpanded = true }
@@ -317,7 +334,7 @@ fun SessionProfileItem(
                         contentDescription = ""
                     )
                 }
-                
+
                 DropdownMenu(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false }
@@ -334,7 +351,7 @@ fun SessionProfileItem(
                             onEditClick()
                         }
                     )
-                    
+
                     DropdownMenuItem(
                         text = {
                             Text(
@@ -347,7 +364,7 @@ fun SessionProfileItem(
                             onDuplicateClick()
                         }
                     )
-                    
+
                     DropdownMenuItem(
                         text = {
                             Text(
@@ -364,7 +381,7 @@ fun SessionProfileItem(
             }
         }
     }
-    
+
     if (deleteDialogOpened) {
         DeleteProfileDialog(
             profile = profile,
@@ -409,7 +426,87 @@ fun DeleteProfileDialog(
 }
 
 @Composable
+fun SelectSessionTypeScreen(
+    availableTypes: List<SessionType>,
+    selectedSessionType: SessionType,
+    onSessionTypeSelected: (SessionType) -> Unit,
+    onNextClicked: () -> Unit
+) {
+    Column(
+        modifier = Modifier.padding(8.dp),
+    ) {
+        FText(
+            text = "Select the type of session",
+            configuration = FlySightTheme.typography.cardTitle
+        )
+        Spacer(modifier = Modifier.requiredHeight(8.dp))
+        val context = LocalContext.current
+        DropdownContainer(
+            label = "Session type",
+            selectedValue = stringResource(selectedSessionType.textResource),
+            options = availableTypes.map { stringResource(it.textResource) },
+            onSelectionChanged = {
+                SessionType.fromText(context, it)?.let { sessionType ->
+                    onSessionTypeSelected(sessionType)
+                }
+            }
+        )
+
+        Spacer(modifier = Modifier.requiredHeight(8.dp))
+
+        when (selectedSessionType) {
+            SessionType.Hud -> {
+                SessionTypeExplanation(
+                    icon = R.drawable.outline_head_mounted_device_24,
+                    title = stringResource(SessionType.Hud.textResource),
+                    explanation = "A Head-up Display for PPC competitions"
+                )
+            }
+            SessionType.PlaneDisplay -> {
+                SessionTypeExplanation(
+                    icon = R.drawable.outline_tv_with_assistant_24,
+                    title = stringResource(SessionType.PlaneDisplay.textResource),
+                    explanation = "A display to put on plane dashboards for PPC competitions, so we can all make sure the competition exit window requirements are met."
+                )
+            }
+            SessionType.FlyBlind -> {
+                SessionTypeExplanation(
+                    icon = R.drawable.outline_track_changes_24,
+                    title = stringResource(SessionType.FlyBlind.textResource),
+                    explanation = "A Head-up Display with indications to navigate to a reference point"
+                )
+            }
+            SessionType.SpaceInvaders -> {
+                SessionTypeExplanation(
+                    icon = R.drawable.space_invader_vector,
+                    title = stringResource(SessionType.SpaceInvaders.textResource),
+                    explanation = "Defend your dropzone against incoming invaders by shooting at them"
+                )
+            }
+            SessionType.FlyToDraw -> {
+                SessionTypeExplanation(
+                    icon = R.drawable.outline_crossword_24,
+                    title = stringResource(SessionType.FlyToDraw.textResource),
+                    explanation = "Wingsuit Pixel War!!"
+                )
+            }
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        PrevNextBar(
+            prevEnabled = false,
+            onPrevClicked = {},
+            nextEnabled = selectedSessionType == SessionType.Hud || selectedSessionType == SessionType.PlaneDisplay,
+            onNextClicked = onNextClicked,
+            showStepCounter = true,
+            currentStep = 1,
+            maxStep = if (selectedSessionType == SessionType.Hud) 3 else 2
+        )
+    }
+}
+
+@Composable
 fun SelectSourceScreen(
+    selectedSessionType: SessionType,
     availableSources: List<SessionSource>,
     selectedSourceType: SessionSourceType,
     selectedSource: SessionSource?,
@@ -444,17 +541,18 @@ fun SelectSourceScreen(
             availableSources.filter { it.sessionSourceType == selectedSourceType }
         }
         Spacer(modifier = Modifier.requiredHeight(8.dp))
-        
+
         when (selectedSourceType) {
             SessionSourceType.Local -> LocalSourceTypeContent(
                 locationAvailabilityState = locationAvailabilityState,
                 onRequestLocationPermission = onRequestLocationPermission,
                 onCheckLocationSettings = onCheckLocationSettings
             )
+
             SessionSourceType.FlySight -> FlySightSourceTypeContent()
             SessionSourceType.Record -> RecordSourceTypeContent()
         }
-        
+
         Spacer(modifier = Modifier.requiredHeight(8.dp))
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -505,22 +603,23 @@ fun SelectSourceScreen(
                 }
             }
         }
-        
+
         val nextEnabled = when {
-            selectedSourceType == SessionSourceType.Local && 
+            selectedSourceType == SessionSourceType.Local &&
                     locationAvailabilityState != LocationAvailabilityState.LocationAvailable -> false
+
             selectedSource != null || selectedSourceType == SessionSourceType.Local -> true
             else -> false
         }
-        
+
         PrevNextBar(
             prevEnabled = true,
             onPrevClicked = onPrevClicked,
             nextEnabled = nextEnabled,
             onNextClicked = onNextClicked,
             showStepCounter = true,
-            currentStep = 2,
-            maxStep = 2
+            currentStep = if (selectedSessionType == SessionType.Hud) 3 else 2,
+            maxStep = if (selectedSessionType == SessionType.Hud) 3 else 2
         )
     }
 }
@@ -591,7 +690,7 @@ fun LocalSourceTypeContent(
                     }
                 }
             }
-            
+
             LocationAvailabilityState.SettingNotEnabled -> {
                 Column {
                     Row(
@@ -624,9 +723,40 @@ fun LocalSourceTypeContent(
                     }
                 }
             }
-            
+
             LocationAvailabilityState.LocationAvailable -> {}
         }
+    }
+}
+
+@Composable
+fun SessionTypeExplanation(
+    @DrawableRes icon: Int,
+    title: String,
+    explanation: String
+) {
+    Column(
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                modifier = Modifier.requiredSize(24.dp),
+                painter = painterResource(icon),
+                contentDescription = ""
+            )
+            Spacer(modifier = Modifier.requiredWidth(8.dp))
+            FText(
+                text = title,
+                configuration = FlySightTheme.typography.cardTitle
+            )
+        }
+        Spacer(modifier = Modifier.requiredHeight(8.dp))
+        FText(
+            text = explanation
+        )
+        Spacer(modifier = Modifier.requiredHeight(8.dp))
     }
 }
 

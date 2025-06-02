@@ -9,6 +9,7 @@ import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.session.configuration.Coordinate
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.VideoControllerImpl.PerformanceLine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -33,7 +34,8 @@ class DefaultSessionController(
     private val exitDetectorDelegate: MutableExitDetector,
     private val flareDetectorDelegate: MutableFlareDetector,
     private val gnssSource: GnssSource,
-    override val profile: SessionProfile
+    override val profile: SessionProfile,
+    override val type: SessionType
 ) : SessionController,
     ExitDetector by exitDetectorDelegate,
     FlareDetector by flareDetectorDelegate {

@@ -11,6 +11,7 @@ import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesServic
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import fr.hozakan.flysightcompanion.sessionmodule.business.SessionControllerService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,12 +36,14 @@ class PrepareSessionViewModel @Inject constructor(
     private val _state =
         MutableStateFlow(
             PrepareSessionState(
-                prepareSessionPhase = PrepareSessionPhase.SelectProfile,
+                prepareSessionPhase = PrepareSessionPhase.SelectSessionType,
                 sessionProfiles = LoadingState.Loading(),
                 selectedProfile = null,
                 selectedSourceType = SessionSourceType.Local,
                 selectedSource = null,
                 availableSources = emptyList(),
+                availableSessionTypes = SessionType.entries,
+                selectedSessionType = SessionType.Hud,
                 doneEvent = null,
                 locationAvailabilityState = LocationAvailabilityState.ForegroundLocationNotAllowed
             )
@@ -118,7 +121,29 @@ class PrepareSessionViewModel @Inject constructor(
     }
 
     fun onNextClicked() {
-        if (_state.value.prepareSessionPhase == PrepareSessionPhase.SelectProfile && _state.value.selectedProfile != null) {
+        if (_state.value.prepareSessionPhase == PrepareSessionPhase.SelectSessionType) {
+            when (_state.value.selectedSessionType) {
+                SessionType.Hud -> {
+                    _state.update {
+                        it.copy(
+                            prepareSessionPhase = PrepareSessionPhase.SelectProfile
+                        )
+                    }
+                }
+
+                SessionType.PlaneDisplay -> {
+                    _state.update {
+                        it.copy(
+                            prepareSessionPhase = PrepareSessionPhase.SelectSource
+                        )
+                    }
+                }
+
+                SessionType.FlyBlind -> {}
+                SessionType.SpaceInvaders -> {}
+                SessionType.FlyToDraw -> {}
+            }
+        } else if (_state.value.prepareSessionPhase == PrepareSessionPhase.SelectProfile && _state.value.selectedProfile != null) {
             _state.update {
                 it.copy(
                     prepareSessionPhase = PrepareSessionPhase.SelectSource
@@ -130,10 +155,12 @@ class PrepareSessionViewModel @Inject constructor(
             (_state.value.selectedSourceType == SessionSourceType.Local &&
                     _state.value.locationAvailabilityState != LocationAvailabilityState.ForegroundLocationNotAllowed)
         ) {
+            val sessionType = _state.value.selectedSessionType
             val profile = _state.value.selectedProfile ?: return
             val source = _state.value.selectedSource ?: SessionSource.Local
             viewModelScope.launch {
                 sessionControllerService.playSession(
+                    sessionType = sessionType,
                     sessionProfile = profile,
                     sessionSource = source
                 )
@@ -150,7 +177,13 @@ class PrepareSessionViewModel @Inject constructor(
         if (_state.value.prepareSessionPhase == PrepareSessionPhase.SelectSource) {
             _state.update {
                 it.copy(
-                    prepareSessionPhase = PrepareSessionPhase.SelectProfile
+                    prepareSessionPhase = if (_state.value.selectedSessionType == SessionType.Hud) PrepareSessionPhase.SelectProfile else PrepareSessionPhase.SelectSessionType
+                )
+            }
+        } else if (_state.value.prepareSessionPhase == PrepareSessionPhase.SelectProfile) {
+            _state.update {
+                it.copy(
+                    prepareSessionPhase = PrepareSessionPhase.SelectSessionType
                 )
             }
         }
@@ -169,6 +202,14 @@ class PrepareSessionViewModel @Inject constructor(
         _state.update {
             it.copy(
                 selectedSource = source
+            )
+        }
+    }
+
+    fun onSessionTypeSelected(sessionType: SessionType) {
+        _state.update {
+            it.copy(
+                selectedSessionType = sessionType
             )
         }
     }

@@ -13,6 +13,7 @@ import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
 
 val UnitSystem.unitNameResource: Int
     get() = when (this) {
@@ -146,6 +147,19 @@ val DisplayGrid.textResource: Int
 
 fun DisplayGrid.Companion.fromText(context: Context, text: String): DisplayGrid? {
     return DisplayGrid.entries.firstOrNull { context.getString(it.textResource) == text }
+}
+
+val SessionType.textResource: Int
+    get() = when (this) {
+        SessionType.Hud -> R.string.session_configuration_session_type_hud
+        SessionType.PlaneDisplay -> R.string.session_configuration_session_type_plane_display
+        SessionType.FlyBlind -> R.string.session_configuration_session_type_fly_blind
+        SessionType.SpaceInvaders -> R.string.session_configuration_session_type_space_invaders
+        SessionType.FlyToDraw -> R.string.session_configuration_session_type_fly_to_draw
+    }
+
+fun SessionType.Companion.fromText(context: Context, text: String): SessionType? {
+    return SessionType.entries.firstOrNull { context.getString(it.textResource) == text }
 }
 
 val DisplayableCapability.textResource: Int

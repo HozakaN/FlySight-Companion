@@ -303,14 +303,14 @@
     <string name="session_configuration_display_grid_three_on_each_side">Three case on each side</string>
 
     <string name="session_configuration_displayable_capability_altitude">Altitude</string>
-    <string name="session_configuration_displayable_capability_horizontal_speed">HSpeed</string>
-    <string name="session_configuration_displayable_capability_vertical_speed">VSpeed</string>
+    <string name="session_configuration_displayable_capability_horizontal_speed">Horizontal speed (km/h)</string>
+    <string name="session_configuration_displayable_capability_vertical_speed">Vertical speed (km/h)</string>
     <string name="session_configuration_displayable_capability_glide_ratio">Glide Ratio</string>
     <string name="session_configuration_displayable_capability_inverse_glide_ratio">IGlide Ratio</string>
-    <string name="session_configuration_displayable_capability_total_speed">TSpeed</string>
+    <string name="session_configuration_displayable_capability_total_speed">Total speed (km/h)</string>
     <string name="session_configuration_displayable_capability_dive_angle">Dive Angle</string>
     <string name="session_configuration_displayable_capability_elevation">Elevation</string>
-    <string name="session_configuration_displayable_capability_distance_to_ref_point">Dist to ref</string>
+    <string name="session_configuration_displayable_capability_distance_to_ref_point">Distance to reference</string>
     <string name="session_configuration_displayable_capability_latitude">latitude</string>
     <string name="session_configuration_displayable_capability_longitude">longitude</string>
     <string name="session_configuration_displayable_capability_vel_n">Velocity North</string>
@@ -321,5 +321,11 @@
     <string name="session_configuration_displayable_capability_speed_in_window">PPC Speed</string>
     <string name="session_configuration_displayable_capability_flare_count">Flare count</string>
     <string name="session_configuration_displayable_capability_last_flare_result">Last flare result</string>
+
+    <string name="session_configuration_session_type_hud">PPC HUD</string>
+    <string name="session_configuration_session_type_plane_display">Plane display</string>
+    <string name="session_configuration_session_type_fly_blind">Fly Blind</string>
+    <string name="session_configuration_session_type_space_invaders">WS Space Invaders</string>
+    <string name="session_configuration_session_type_fly_to_draw">WS Fly-to-draw</string>
 
 </resources>

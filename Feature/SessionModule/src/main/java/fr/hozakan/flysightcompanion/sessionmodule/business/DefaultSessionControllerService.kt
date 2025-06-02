@@ -13,6 +13,7 @@ import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionControl
 import fr.hozakan.flysightcompanion.sessionmodule.model.SessionControllerState
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
+import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.DefaultSessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.player.ExitDetectorDelegate
@@ -45,13 +46,17 @@ class DefaultSessionControllerService(
     private var _sessionController= MutableStateFlow<SessionController?>(null)
     override val sessionController: StateFlow<SessionController?> = _sessionController.asStateFlow()
 
-    override suspend fun playSession(sessionProfile: SessionProfile, sessionSource: SessionSource) {
+    override suspend fun playSession(
+        sessionType: SessionType,
+        sessionProfile: SessionProfile,
+        sessionSource: SessionSource
+    ) {
         val currentState = _state.value
         if (currentState is SessionControllerState.Playing) {
             // Already playing a session, handle accordingly
             return
         }
-        _state.value = SessionControllerState.Playing(sessionProfile)
+        _state.value = SessionControllerState.Playing(sessionType, sessionProfile)
         job = scope.launch {
             val gnssSource = when (sessionSource) {
                 SessionSource.Local -> LocalGnssSource(
@@ -92,7 +97,8 @@ class DefaultSessionControllerService(
                     exitDetectionFlow = exitDetector.exitFound
                 ),
                 gnssSource = gnssSource,
-                profile = sessionProfile
+                profile = sessionProfile,
+                type = sessionType,
             )
 //            displayService.lockDisplay(true)
             _sessionController.value?.play(object : SessionController.SessionControllerCallback {

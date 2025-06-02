@@ -43,7 +43,7 @@ data class SessionProfile(
         fun default() = SessionProfile(
             name = "Default profile",
             description = "",
-            sessionType = SessionType.Visual,
+            sessionType = SessionType.Hud,
             configFile = defaultConfigFile(),
             showMap = false,
             showPerformanceLane = true,
