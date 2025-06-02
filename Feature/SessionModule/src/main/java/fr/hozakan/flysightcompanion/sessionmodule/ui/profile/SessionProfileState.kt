@@ -11,7 +11,7 @@ data class SessionProfileState(
     val sessionProfile: SessionProfile,
     val configFiles: List<ConfigFile>,
     val referencePoints: List<ReferencePoint> = emptyList(),
-    val configurationFound: Boolean = true,
+    val profileFound: Boolean = true,
     val hasGpsFeature: Boolean = true,
     val hasGpsPermission: Boolean = false,
     val fileSaved: FlowEvent<Boolean>? = null

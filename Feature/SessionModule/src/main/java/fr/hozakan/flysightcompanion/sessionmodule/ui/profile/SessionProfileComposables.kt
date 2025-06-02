@@ -53,7 +53,6 @@ import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
 import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
-import timber.log.Timber
 
 @Composable
 fun SessionProfileMenuActions(
@@ -134,7 +133,7 @@ fun SessionProfileScreenInternal(
             .fillMaxSize(),
         color = MaterialTheme.colorScheme.surface
     ) {
-        if (!state.configurationFound) {
+        if (!state.profileFound) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -822,7 +821,7 @@ fun SessionConfigScreenInternalPreview() {
         state = SessionProfileState(
             sessionProfile = SessionProfile.default(),
             configFiles = emptyList(),
-            configurationFound = true
+            profileFound = true
         ),
         saveConfigurationClicked = {},
         onNavigateUp = {}

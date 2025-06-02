@@ -184,7 +184,7 @@ class BleFlySightDeviceDelegateImpl(
 
             override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
                 super.onServicesDiscovered(gatt, status)
-                Timber.d("Hoz3 onServicesDiscovered : $status")
+                Timber.d("onServicesDiscovered : $status")
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     gatt?.let {
                         doDiscoverGattServices(it)
@@ -370,9 +370,9 @@ class BleFlySightDeviceDelegateImpl(
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     @SuppressLint("MissingPermission")
     private fun doDiscoverGattServices(gatt: BluetoothGatt) {
-        Timber.d("Hoz3 doDiscoverGattServices")
+        Timber.d("doDiscoverGattServices")
         val servs = gatt.services
-        Timber.d("Hoz3 services : ${servs.map { it.uuid }}")
+        Timber.d("services : ${servs.map { it.uuid }}")
         _services.update {
             servs
         }
@@ -478,7 +478,7 @@ class BleFlySightDeviceDelegateImpl(
                 try {
                     getMode()
                 } catch (ex: Exception) {
-                    Timber.d("Hoz3 mode exception : ${ex.message}")
+                    Timber.d("mode exception : ${ex.message}")
                 }
                 readCurrentConfigFile()
                 _records.value = LoadingState.Loading(emptyList())

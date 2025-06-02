@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -115,9 +116,12 @@ class DefaultSessionController(
                 }
             }
             combine(sessionComputationUnit.exitDetected, laneStartPoint) { exitPoint, laneStartPoint ->
+                Timber.d("Hoz3 Exit point: $exitPoint, Lane start point: $laneStartPoint")
                 if (exitPoint != null && laneStartPoint != null) {
+                    Timber.d("Hoz3 Exit point and lane start point are not null, updating performance lanes")
                     updatePerformanceLanes()
                 } else {
+                    Timber.d("Hoz3 Exit point or lane start point is null, clearing performance lanes")
                     _performanceLanes.value = emptyList()
                 }
             }

@@ -123,9 +123,10 @@ class DefaultSessionProfilesService(
     override suspend fun updateProfile(oldConf: SessionProfile, newConf: SessionProfile) {
         _sessionProfiles.update { configs ->
             val index = configs.indexOfFirst { it.name == oldConf.name }
-            (configs - configs.first { it.name == oldConf.name }).run {
+            val profiles = (configs - configs.first { it.name == oldConf.name }).run {
                 toMutableList().also { mutableList -> mutableList.add(index, newConf) }
             }
+            profiles
         }
         val fileContent = withContext(Dispatchers.IO) {
             buildFileContent(newConf)

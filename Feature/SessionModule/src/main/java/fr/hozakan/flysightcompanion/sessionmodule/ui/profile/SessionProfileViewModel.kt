@@ -61,29 +61,29 @@ class SessionProfileViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    fun loadSessionConfiguration(configurationName: String) {
-        isCreatingConf = configurationName.isEmpty()
-        if (configurationName.isEmpty()) {
+    fun loadSessionConfiguration(profileName: String) {
+        isCreatingConf = profileName.isEmpty()
+        if (profileName.isEmpty()) {
             _state.update {
                 it.copy(
                     sessionProfile = SessionProfile.default(),
-                    configurationFound = true
+                    profileFound = true
                 )
             }
         } else {
-            val configFile =
-                sessionProfilesService.sessionProfiles.value.firstOrNull { it.name == configurationName }
-            if (configFile != null) {
+            val sessionProfile =
+                sessionProfilesService.sessionProfiles.value.firstOrNull { it.name == profileName }
+            if (sessionProfile != null) {
                 _state.update {
                     it.copy(
-                        sessionProfile = configFile,
-                        configurationFound = true
+                        sessionProfile = sessionProfile,
+                        profileFound = true
                     )
                 }
             } else {
                 _state.update {
                     it.copy(
-                        configurationFound = false
+                        profileFound = false
                     )
                 }
             }
