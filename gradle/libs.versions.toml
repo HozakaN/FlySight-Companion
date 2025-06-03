@@ -9,12 +9,13 @@ junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 kotlinxSerializationJson = "1.5.1"
 lifecycleRuntimeKtx = "2.8.4"
-composeBom = "2024.06.00"
+composeBom = "2025.05.01"
 appcompat = "1.7.0"
 mapsCompose = "6.6.0"
 material = "1.12.0"
-navigationCompose = "2.8.0"
-material3Compose = "1.3.0"
+materialIconsExtended = "1.7.8"
+navigationCompose = "2.9.0"
+material3Compose = "1.4.0-alpha15"
 playServicesLocation = "21.3.0"
 secretsGradlePlugin = "2.0.1"
 timber = "5.0.1"
@@ -28,7 +29,7 @@ ktor = "3.0.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }
 dagger-android = { module = "com.google.dagger:dagger-android", version.ref = "dagger" }

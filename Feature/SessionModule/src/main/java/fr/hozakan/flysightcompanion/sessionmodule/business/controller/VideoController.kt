@@ -1,7 +1,4 @@
-package fr.hozakan.flysightcompanion.sessionmodule.business.player
-
-import fr.hozakan.flysightcompanion.model.GnssData
-import kotlinx.coroutines.flow.StateFlow
+package fr.hozakan.flysightcompanion.sessionmodule.business.controller
 
 interface VideoController {
 //    val performanceLines: StateFlow<List<VideoControllerImpl.PerformanceLine>>

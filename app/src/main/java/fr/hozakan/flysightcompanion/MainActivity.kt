@@ -1,6 +1,5 @@
 package fr.hozakan.flysightcompanion
 
-import android.app.Activity
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Build
@@ -12,7 +11,6 @@ import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.updateTransition
@@ -42,9 +40,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.RecomposeScope
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -106,7 +102,7 @@ import fr.hozakan.flysightcompanion.sessionmodule.business.SessionControllerServ
 import fr.hozakan.flysightcompanion.sessionmodule.model.SessionControllerState
 import fr.hozakan.flysightcompanion.sessionmodule.ui.profile.SessionProfileScreen
 import fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session.PrepareSessionScreen
-import fr.hozakan.flysightcompanion.sessionmodule.ui.play.SessionPlayerScreen
+import fr.hozakan.flysightcompanion.sessionmodule.ui.player.SessionPlayerScreen
 import fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session.PrepareSessionMenuActions
 import fr.hozakan.flysightcompanion.sessionmodule.ui.reference.ReferencePointListScreen
 import fr.hozakan.flysightcompanion.ui.DevScreen
@@ -116,7 +112,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import fr.hozakan.flysightcompanion.R as LocalR
@@ -394,6 +389,7 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActiv
                                                 Icon(
                                                     modifier = Modifier.requiredSize(24.dp),
                                                     painter = painterResource(LocalR.drawable.flysight_logo_only),
+//                                                    painter = painterResource(R.drawable.vd_vector),
                                                     contentDescription = stringResource(R.string.misc_devices)
                                                 )
                                                 Spacer(modifier = Modifier.requiredHeight(8.dp))

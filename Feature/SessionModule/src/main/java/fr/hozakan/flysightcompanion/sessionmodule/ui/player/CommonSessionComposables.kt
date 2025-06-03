@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.sessionmodule.ui.play
+package fr.hozakan.flysightcompanion.sessionmodule.ui.player
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -21,7 +21,7 @@ import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.math.meterSecondToKmh
 import fr.hozakan.flysightcompanion.model.ui.SpeedOrientation
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionController
 
 
 @Composable

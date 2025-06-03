@@ -1,6 +1,6 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business
 
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionController
 import fr.hozakan.flysightcompanion.sessionmodule.model.SessionControllerState
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource

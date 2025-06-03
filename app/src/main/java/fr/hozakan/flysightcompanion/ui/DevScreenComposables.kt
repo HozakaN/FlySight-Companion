@@ -15,7 +15,6 @@ import fr.hozakan.flysightcompanion.audiomodule.AudioService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.loggermodule.LoggerService
-import fr.hozakan.flysightcompanion.sessionmodule.ui.play.LockContainer
 import fr.hozakan.flysightcompanion.usbmodule.UsbService
 import kotlinx.coroutines.flow.combine
 

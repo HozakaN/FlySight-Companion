@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.sessionmodule.business.player
+package fr.hozakan.flysightcompanion.sessionmodule.business.controller
 
 import android.location.Location
 import fr.hozakan.flysightcompanion.locationmodule.LocationService

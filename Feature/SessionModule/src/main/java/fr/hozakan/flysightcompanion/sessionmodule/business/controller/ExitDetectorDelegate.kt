@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.sessionmodule.business.player
+package fr.hozakan.flysightcompanion.sessionmodule.business.controller
 
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.session.Direction
@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import timber.log.Timber
 
 
 class ExitDetectorDelegate(

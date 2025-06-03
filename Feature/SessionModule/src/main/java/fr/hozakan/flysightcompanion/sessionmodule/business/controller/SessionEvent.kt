@@ -1,9 +1,7 @@
-package fr.hozakan.flysightcompanion.sessionmodule.business.player
+package fr.hozakan.flysightcompanion.sessionmodule.business.controller
 
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.config.Alarm
-import fr.hozakan.flysightcompanion.model.config.Volume
-import java.util.Locale
 
 sealed class SessionEvent(
     val name: String

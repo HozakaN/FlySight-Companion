@@ -12,6 +12,16 @@ interface UserPrefService {
     val plotLeftItems: StateFlow<List<PlotLeftItem>>
     val plotBottomItem: StateFlow<PlotBottomItem>
     val plotDisplayPreferences: StateFlow<List<PlotDisplayPreference>>
+    val planeDisplayDzElev: StateFlow<Int>
+    val planeDisplayColorBlindOption: StateFlow<Boolean>
+    fun updatePlaneDisplayColorBlindOption(planeDisplayColorBlindOption: Boolean)
+
+    /**
+     * 0 for performance, 1 for acrobatics
+     */
+    val planeDisplayDiscipline: StateFlow<Int>
+    fun updatePlaneDisplayDiscipline(planeDisplayDiscipline: Int)
+    fun updatePlaneDisplayDzElev(planeDisplayDzElev: Int)
     fun updateUnitSystem(unitSystem: UnitSystem)
     fun updateShowConfigAsRaw(showConfigAsRaw: Boolean)
     fun updatePlotLeftItems(plotLeftItems: List<PlotLeftItem>)

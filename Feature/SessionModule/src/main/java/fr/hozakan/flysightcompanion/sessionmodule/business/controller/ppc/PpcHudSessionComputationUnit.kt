@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.sessionmodule.business.player
+package fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc
 
 import fr.hozakan.flysightcompanion.framework.math.computeHorizontalDistance
 import fr.hozakan.flysightcompanion.framework.math.fromNMToMeters
@@ -15,6 +15,8 @@ import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItemBundle
 import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ExitDetector
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionEvent
 import fr.hozakan.flysightcompanion.sessionmodule.computation.getSpeedMultiplicator
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -29,13 +31,13 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.text.format
 
-class SessionComputationUnit(
+class PpcHudSessionComputationUnit(
     private val profile: SessionProfile,
     private val exitDetector: ExitDetector
 ) {
@@ -678,7 +680,7 @@ class SessionComputationUnit(
         return "zero"
     }
 
-    companion object {
+    companion object Companion {
         private const val MIN_ALTITUDE = 1500L // Minimum announced altitude (m)
 
         private const val TONE_MIN_PITCH = 220
@@ -686,4 +688,3 @@ class SessionComputationUnit(
     }
 
 }
-

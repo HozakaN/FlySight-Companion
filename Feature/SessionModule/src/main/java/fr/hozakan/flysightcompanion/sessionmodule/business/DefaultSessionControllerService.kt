@@ -6,18 +6,20 @@ import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.MutableFlySightDevice
 import fr.hozakan.flysightcompanion.locationmodule.LocationService
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.FileGnssSource
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.FlySightGnssSource
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.LocalGnssSource
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.FileGnssSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.FlySightGnssSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.LocalGnssSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionController
 import fr.hozakan.flysightcompanion.sessionmodule.model.SessionControllerState
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.DefaultSessionController
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.ExitDetectorDelegate
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.FlareDetectorDelegate
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc.DefaultPpcHudSessionController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ExitDetectorDelegate
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.FlareDetectorDelegate
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.DefaultPlaneDisplaySessionController
+import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -34,7 +36,8 @@ class DefaultSessionControllerService(
     private val audioService: AudioService,
     private val recordService: RecordService,
     private val displayService: DisplayService,
-    private val locationService: LocationService
+    private val locationService: LocationService,
+    private val userPrefService: UserPrefService
 ) : SessionControllerService {
 
     private val _state = MutableStateFlow<SessionControllerState>(SessionControllerState.Idle)
@@ -87,19 +90,31 @@ class DefaultSessionControllerService(
                 dzElevation = sessionProfile.configFile.dzElev
             )
 
-            _sessionController.value = DefaultSessionController(
-                context = context,
-                audioService = audioService,
-                displayService = displayService,
-                exitDetectorDelegate = exitDetector,
-                flareDetectorDelegate = FlareDetectorDelegate(
-                    gnssFlow = gnssSource.gnssFlow,
-                    exitDetectionFlow = exitDetector.exitFound
-                ),
-                gnssSource = gnssSource,
-                profile = sessionProfile,
-                type = sessionType,
-            )
+            val controller = when (sessionType) {
+                SessionType.Hud -> DefaultPpcHudSessionController(
+                    context = context,
+                    audioService = audioService,
+                    displayService = displayService,
+                    exitDetectorDelegate = exitDetector,
+                    flareDetectorDelegate = FlareDetectorDelegate(
+                        gnssFlow = gnssSource.gnssFlow,
+                        exitDetectionFlow = exitDetector.exitFound
+                    ),
+                    gnssSource = gnssSource,
+                    profile = sessionProfile,
+                    type = sessionType,
+                )
+                SessionType.PlaneDisplay -> DefaultPlaneDisplaySessionController(
+                    type = sessionType,
+                    gnssSource = gnssSource,
+                    userService = userPrefService
+                )
+                SessionType.FlyBlind -> TODO()
+                SessionType.SpaceInvaders -> TODO()
+                SessionType.FlyToDraw -> TODO()
+            }
+
+            _sessionController.value = controller
 //            displayService.lockDisplay(true)
             _sessionController.value?.play(object : SessionController.SessionControllerCallback {
                 override fun onDone() {

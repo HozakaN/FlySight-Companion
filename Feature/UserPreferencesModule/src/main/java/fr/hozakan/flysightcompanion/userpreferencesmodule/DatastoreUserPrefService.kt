@@ -112,6 +112,57 @@ class DatastoreUserPrefService(
                 PlotDisplayPreference.defaultValues()
             )
 
+    override val planeDisplayDzElev: StateFlow<Int>
+        get() = dataStore.data
+            .map { preferences ->
+                val key = getKey<Int>("plane_display_dz_elev")
+                preferences[key] ?: 0 // Default value in meters
+            }
+            .stateIn(dataStoreCoroutineScope, SharingStarted.WhileSubscribed(), 0)
+
+    override val planeDisplayColorBlindOption: StateFlow<Boolean>
+        get() = dataStore.data
+            .map { preferences ->
+                val key = getKey<Boolean>("plane_display_color_blind_option")
+                preferences[key] ?: false // Default value: false
+            }
+            .stateIn(dataStoreCoroutineScope, SharingStarted.WhileSubscribed(), false)
+
+    override fun updatePlaneDisplayColorBlindOption(planeDisplayColorBlindOption: Boolean) {
+        dataStoreCoroutineScope.launch {
+            val key = getKey<Boolean>("plane_display_color_blind_option")
+            dataStore.edit { preferences ->
+                preferences[key] = planeDisplayColorBlindOption
+            }
+        }
+    }
+
+    override val planeDisplayDiscipline: StateFlow<Int>
+        get() = dataStore.data
+            .map { preferences ->
+                val key = getKey<Int>("plane_display_discipline")
+                preferences[key] ?: 0 // Default value: 0 for performance, 1 for acrobatics
+            }
+            .stateIn(dataStoreCoroutineScope, SharingStarted.WhileSubscribed(), 0)
+
+    override fun updatePlaneDisplayDiscipline(planeDisplayDiscipline: Int) {
+        dataStoreCoroutineScope.launch {
+            val key = getKey<Int>("plane_display_discipline")
+            dataStore.edit { preferences ->
+                preferences[key] = planeDisplayDiscipline
+            }
+        }
+    }
+
+    override fun updatePlaneDisplayDzElev(planeDisplayDzElev: Int) {
+        dataStoreCoroutineScope.launch {
+            val key = getKey<Int>("plane_display_dz_elev")
+            dataStore.edit { preferences ->
+                preferences[key] = planeDisplayDzElev
+            }
+        }
+    }
+
     override fun updateUnitSystem(unitSystem: UnitSystem) {
         dataStoreCoroutineScope.launch {
             val key = getKey<Int>("unit_system")
@@ -158,14 +209,22 @@ class DatastoreUserPrefService(
         }
     }
 
-    override suspend fun canShowFirmwareWarningForVersion(deviceId: String, firmwareVersionName: String): Boolean {
-        val key = getKey<Boolean>("can_show_firmware_warning_for_version_${deviceId}_$firmwareVersionName")
+    override suspend fun canShowFirmwareWarningForVersion(
+        deviceId: String,
+        firmwareVersionName: String
+    ): Boolean {
+        val key =
+            getKey<Boolean>("can_show_firmware_warning_for_version_${deviceId}_$firmwareVersionName")
         return dataStore.data.first()[key] ?: true
     }
 
-    override fun updateFirmwareWarningForDeviceIdAndFirmwareVersion(deviceId: String, firmwareVersionName: String) {
+    override fun updateFirmwareWarningForDeviceIdAndFirmwareVersion(
+        deviceId: String,
+        firmwareVersionName: String
+    ) {
         dataStoreCoroutineScope.launch {
-            val key = getKey<Boolean>("can_show_firmware_warning_for_version_${deviceId}_$firmwareVersionName")
+            val key =
+                getKey<Boolean>("can_show_firmware_warning_for_version_${deviceId}_$firmwareVersionName")
             dataStore.edit { preferences ->
                 preferences[key] = false
             }

@@ -1,16 +1,28 @@
-package fr.hozakan.flysightcompanion.sessionmodule.business.player
+package fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc
 
 import android.content.Context
 import fr.hozakan.flysightcompanion.audiomodule.AudioService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
-import fr.hozakan.flysightcompanion.framework.math.computeSignedDistanceToLine
 import fr.hozakan.flysightcompanion.framework.math.computeHeading
+import fr.hozakan.flysightcompanion.framework.math.computeSignedDistanceToLine
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.session.configuration.Coordinate
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.VideoControllerImpl.PerformanceLine
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.AudioController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ExitDetector
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.FileGnssSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.FlareDetector
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.GnssSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.MutableExitDetector
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.MutableFlareDetector
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc.PpcHudSessionComputationUnit
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionEvent
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.TimeMutableSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.VideoController
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -23,11 +35,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import kotlin.math.cos
 import kotlin.math.sin
 
-class DefaultSessionController(
+class DefaultPpcHudSessionController(
     context: Context,
     audioService: AudioService,
     displayService: DisplayService,
@@ -36,7 +47,7 @@ class DefaultSessionController(
     private val gnssSource: GnssSource,
     override val profile: SessionProfile,
     override val type: SessionType
-) : SessionController,
+) : PpcHudSessionController,
     ExitDetector by exitDetectorDelegate,
     FlareDetector by flareDetectorDelegate {
 
@@ -44,7 +55,7 @@ class DefaultSessionController(
 
     override val gnssFlow = gnssSource.gnssFlow
 
-    private val sessionComputationUnit = SessionComputationUnit(
+    private val sessionComputationUnit = PpcHudSessionComputationUnit(
         profile = profile,
         exitDetector = exitDetectorDelegate,
     )
@@ -61,7 +72,7 @@ class DefaultSessionController(
     override val timeMutableSource: TimeMutableSource?
         get() = gnssSource.timeMutableSource
 
-    private val scope = CoroutineScope(SupervisorJob())
+    private val scope = CoroutineScope(SupervisorJob() + CoroutineName("DefaultPpcHudSessionController"))
     private var startJob: Job? = null
 
     private var gnssPoints = emptyList<GnssData>()
@@ -73,7 +84,7 @@ class DefaultSessionController(
         sessionComputationUnit.sessionEvents
     )
 
-    private val _videoController = VideoControllerImpl(
+    private val _videoController = PpcHudVideoControllerImpl(
         context = context,
         sessionProfile = profile,
         displayService = displayService,
@@ -89,8 +100,9 @@ class DefaultSessionController(
     override val sessionEvents: SharedFlow<SessionEvent> = sessionComputationUnit.sessionEvents
 
     // StateFlow to hold the three performance lanes
-    private val _performanceLanes = MutableStateFlow<List<PerformanceLine>>(emptyList())
-    override val performanceLanes: StateFlow<List<PerformanceLine>> =
+    private val _performanceLanes =
+        MutableStateFlow<List<PpcHudVideoControllerImpl.PerformanceLine>>(emptyList())
+    override val performanceLanes: StateFlow<List<PpcHudVideoControllerImpl.PerformanceLine>> =
         _performanceLanes.asStateFlow()
 
     // StateFlow to hold the distance from lanes (negative if closer to left, positive if closer to right)
@@ -117,7 +129,10 @@ class DefaultSessionController(
                         }
                 }
             }
-            combine(sessionComputationUnit.exitDetected, laneStartPoint) { exitPoint, laneStartPoint ->
+            combine(
+                sessionComputationUnit.exitDetected,
+                laneStartPoint
+            ) { exitPoint, laneStartPoint ->
                 if (exitPoint != null && laneStartPoint != null) {
                     updatePerformanceLanes()
                 } else {
@@ -211,9 +226,9 @@ class DefaultSessionController(
         start: Coordinate,
         end: Coordinate,
         isReference: Boolean
-    ): PerformanceLine {
+    ): PpcHudVideoControllerImpl.PerformanceLine {
         // For a simple line, we just use the start and end points
-        return PerformanceLine(
+        return PpcHudVideoControllerImpl.PerformanceLine(
             points = listOf(start, end),
             isReference = isReference
         )
@@ -299,7 +314,7 @@ class DefaultSessionController(
         heading: Double,
         distanceMeters: Double,
         isReference: Boolean
-    ): PerformanceLine {
+    ): PpcHudVideoControllerImpl.PerformanceLine {
         // Calculate the offset perpendicular to the heading
         val perpendicular = heading + Math.PI / 2
 
@@ -322,7 +337,7 @@ class DefaultSessionController(
             )
         }
 
-        return PerformanceLine(
+        return PpcHudVideoControllerImpl.PerformanceLine(
             points = offsetPoints,
             isReference = isReference
         )

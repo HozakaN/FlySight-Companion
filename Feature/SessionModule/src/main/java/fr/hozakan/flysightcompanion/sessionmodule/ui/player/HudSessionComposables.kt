@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.sessionmodule.ui.play
+package fr.hozakan.flysightcompanion.sessionmodule.ui.player
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.animateColorAsState
@@ -31,7 +31,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Pause
@@ -90,7 +89,6 @@ import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.math.computeGlideRatio
 import fr.hozakan.flysightcompanion.framework.math.computeGroundSpeed
 import fr.hozakan.flysightcompanion.framework.math.computeInverseGlideRatio
-import fr.hozakan.flysightcompanion.framework.math.meterSecondToKmh
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.config.AlarmType
@@ -102,12 +100,13 @@ import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapab
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
 import fr.hozakan.flysightcompanion.model.ui.SpeedOrientation
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.FlareState
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionController
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.SessionEvent
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.TimeMutableSource
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.VideoController
-import fr.hozakan.flysightcompanion.sessionmodule.business.player.VideoControllerImpl
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.FlareState
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc.PpcHudSessionController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionEvent
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.TimeMutableSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.VideoController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc.PpcHudVideoControllerImpl
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -122,7 +121,7 @@ import kotlin.math.abs
 
 @Composable
 fun HudSessionPlayer(
-    controller: SessionController,
+    controller: PpcHudSessionController,
     onExitClicked: () -> Unit,
     resetExitDetection: () -> Unit
 ) {
@@ -416,7 +415,7 @@ private fun TimeControlContainer(
 
 @Composable
 private fun TwoByTwoGridPlayerScreen(
-    controller: SessionController
+    controller: PpcHudSessionController
 ) {
     val displayItems = controller.profile.displayItems
     Row(
@@ -571,7 +570,7 @@ private fun TwoByTwoGridPlayerScreen(
 
 @Composable
 private fun SideDisplayItemsPlayerScreen(
-    controller: SessionController,
+    controller: PpcHudSessionController,
     caseNumber: Int
 ) {
     val displayItems = controller.profile.displayItems
@@ -810,7 +809,7 @@ private fun SideDisplayItemsPlayerScreen(
 private fun DisplayCapabilityContainer(
     item: DisplayItem,
     config: ConfigFile,
-    player: SessionController
+    player: PpcHudSessionController
 ) {
     val gnssData: GnssData? by player.gnssFlow.collectAsState(initial = null)
     when (item.displayableCapability) {
@@ -975,7 +974,7 @@ enum class InlinePlayerDirection {
 
 @Composable
 private fun InlinePlayerScreen(
-    controller: SessionController,
+    controller: PpcHudSessionController,
     inlinePlayerDirection: InlinePlayerDirection
 ) {
     val displayItems = controller.profile.displayItems
@@ -1027,7 +1026,7 @@ private fun InlinePlayerScreen(
 @Composable
 private fun SessionMainContainer(
     modifier: Modifier = Modifier,
-    controller: SessionController
+    controller: PpcHudSessionController
 ) {
     var alarmMessage by remember { mutableStateOf("") }
 
@@ -1365,7 +1364,7 @@ private fun OngoingFlareContainer2(data: List<GnssData>) {
 }
 
 @Composable
-private fun GMapContainer(sessionController: SessionController) {
+private fun GMapContainer(sessionController: PpcHudSessionController) {
     val gnssData by sessionController.gnssFlow.collectAsState(initial = null)
 
     val cameraPositionState = rememberCameraPositionState()
@@ -1491,7 +1490,7 @@ private fun GMapContainer(sessionController: SessionController) {
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun PerformanceLaneContainer(
-    sessionController: SessionController,
+    sessionController: PpcHudSessionController,
     content: @Composable BoxScope.() -> Unit = {}
 ) {
     val exitPoint by sessionController.exitFound.collectAsState()
@@ -1699,10 +1698,10 @@ fun InlineLeftPlayerScreenPreview() {
 
 class FakeSessionController(
     override val profile: SessionProfile
-) : SessionController {
+) : PpcHudSessionController {
     override val sessionEvents: SharedFlow<SessionEvent> = MutableSharedFlow()
     override val type: SessionType = SessionType.Hud
-    override val performanceLanes: StateFlow<List<VideoControllerImpl.PerformanceLine>> =
+    override val performanceLanes: StateFlow<List<PpcHudVideoControllerImpl.PerformanceLine>> =
         MutableStateFlow(emptyList())
     override val gnssFlow: SharedFlow<GnssData> = MutableSharedFlow()
     override val laneStartPoint: StateFlow<GnssData?> = MutableStateFlow(null)

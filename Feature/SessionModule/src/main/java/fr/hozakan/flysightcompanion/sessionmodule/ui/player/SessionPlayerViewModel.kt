@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.sessionmodule.ui.play
+package fr.hozakan.flysightcompanion.sessionmodule.ui.player
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 class SessionPlayerViewModel @Inject constructor(

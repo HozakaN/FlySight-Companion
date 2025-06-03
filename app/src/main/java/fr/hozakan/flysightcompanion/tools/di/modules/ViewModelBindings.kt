@@ -18,7 +18,7 @@ import fr.hozakan.flysightcompanion.recordsmodule.ui.list.ListRecordsViewModel
 import fr.hozakan.flysightcompanion.recordsmodule.ui.plot.PlotSettingsViewModel
 import fr.hozakan.flysightcompanion.sessionmodule.ui.profile.SessionProfileViewModel
 import fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session.PrepareSessionViewModel
-import fr.hozakan.flysightcompanion.sessionmodule.ui.play.SessionPlayerViewModel
+import fr.hozakan.flysightcompanion.sessionmodule.ui.player.SessionPlayerViewModel
 import fr.hozakan.flysightcompanion.sessionmodule.ui.reference.ReferencePointListViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi

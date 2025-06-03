@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.sessionmodule.business.player
+package fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc
 
 import android.content.Context
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
@@ -6,21 +6,17 @@ import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.display.Display
 import fr.hozakan.flysightcompanion.model.session.configuration.Coordinate
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionEvent
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.VideoController
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import timber.log.Timber
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
 
-class VideoControllerImpl(
+class PpcHudVideoControllerImpl(
     private val context: Context,
     private val sessionProfile: SessionProfile,
     private val displayService: DisplayService,

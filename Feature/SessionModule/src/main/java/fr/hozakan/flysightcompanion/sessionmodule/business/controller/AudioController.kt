@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.sessionmodule.business.player
+package fr.hozakan.flysightcompanion.sessionmodule.business.controller
 
 import fr.hozakan.flysightcompanion.audiomodule.AudioService
 import fr.hozakan.flysightcompanion.model.ConfigFile
@@ -10,7 +10,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import timber.log.Timber
 import java.util.Locale
 
 class AudioController(

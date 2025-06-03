@@ -1,15 +1,8 @@
-package fr.hozakan.flysightcompanion.sessionmodule.business.player
+package fr.hozakan.flysightcompanion.sessionmodule.business.controller
 
-import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.MutableFlySightDevice
-import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.GnssData
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.launch
 
 class FlySightGnssSource(
     fsDevice: MutableFlySightDevice

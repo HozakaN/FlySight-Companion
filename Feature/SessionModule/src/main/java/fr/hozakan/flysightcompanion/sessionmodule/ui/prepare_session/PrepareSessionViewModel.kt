@@ -156,7 +156,13 @@ class PrepareSessionViewModel @Inject constructor(
                     _state.value.locationAvailabilityState != LocationAvailabilityState.ForegroundLocationNotAllowed)
         ) {
             val sessionType = _state.value.selectedSessionType
-            val profile = _state.value.selectedProfile ?: return
+            val profile = _state.value.selectedProfile ?: run {
+                if (sessionType == SessionType.Hud) {
+                    null
+                } else {
+                    SessionProfile.default()
+                }
+            } ?: return
             val source = _state.value.selectedSource ?: SessionSource.Local
             viewModelScope.launch {
                 sessionControllerService.playSession(
