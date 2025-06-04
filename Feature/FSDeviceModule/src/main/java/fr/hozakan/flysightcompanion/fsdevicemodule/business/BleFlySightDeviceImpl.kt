@@ -10,11 +10,7 @@ import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
-/**
- * Implementation of a FlySightDevice that only depends on BleFlySightDeviceDelegate
- * This will be removed when full support for bluetooth will be available
- */
-class IntermediateBleFlySightDevice(
+class BleFlySightDeviceImpl(
     private val delegate: BleFlySightDeviceDelegate
 ) : MutableFlySightDevice {
 

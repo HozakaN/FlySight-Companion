@@ -2,7 +2,6 @@ package fr.hozakan.flysightcompanion.fsdevicemodule.business
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
-import android.hardware.usb.UsbDevice
 import fr.hozakan.flysightcompanion.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigEncoder
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
@@ -33,13 +32,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.timeout
@@ -68,20 +64,13 @@ class DefaultFsDeviceService(
 
     private val _bluetoothDevices = MutableStateFlow<List<BleFlySightDeviceDelegate>>(emptyList())
 
-    private val _usbDevices = MutableStateFlow<List<UsbFlySightDeviceDelegate>>(emptyList())
-
     private val _logs = MutableStateFlow<List<Log>>(emptyList())
     override val logs: StateFlow<List<Log>> = _logs.asStateFlow()
 
 
-    private val _devices: StateFlow<List<MutableFlySightDevice>> =
-        combine(_bluetoothDevices, _usbDevices) { bluetooth, usb ->
-            _logs.value += Log("usb devices (${usb.size}) : ${usb.map { it.name }}")
-            val map = mergeBtAndUsbDevices(bluetooth, usb)
-                .map { device -> IntermediateBleOrUsbFlySightDevice(device) }
-            _logs.value += Log("available devices (${map.size}) : ${map.map { it.name }}")
-            map
-        }.stateIn(scope, SharingStarted.WhileSubscribed(), emptyList())
+    private val _devices: StateFlow<List<MutableFlySightDevice>> = _bluetoothDevices
+        .map { devices -> devices.map { device -> BleFlySightDeviceImpl(device) } }
+        .stateIn(scope, SharingStarted.WhileSubscribed(), emptyList())
 
     override val devices: StateFlow<List<FlySightDevice>> = _devices
 
@@ -92,50 +81,6 @@ class DefaultFsDeviceService(
     private var initialDeviceLoading = true
 
     private var scanJob: Job? = null
-
-    init {
-        usbService.usbFlySights
-            .onEach {
-                _logs.value += Log("[DefaultFsDeviceService] New usb device list : ${it.map { device -> device.deviceName }}")
-                synchronized(this) {
-                    _usbDevices.value = mergeUsbDevices(
-                        currentUsbDevices = _usbDevices.value,
-                        newUsbDeviceList = it
-                    )
-                }
-            }
-            .launchIn(scope)
-    }
-
-    private fun mergeUsbDevices(
-        currentUsbDevices: List<UsbFlySightDeviceDelegate>,
-        newUsbDeviceList: List<UsbDevice>
-    ): List<UsbFlySightDeviceDelegate> {
-        val newDevicesNames = newUsbDeviceList.map { it.deviceName }
-        val oldDevices = currentUsbDevices.filter { it.usbDevice.deviceName in newDevicesNames }
-        val oldUsbDevices = oldDevices.map { it.usbDevice }
-        val newUsbDevices = newUsbDeviceList.filter { it !in oldUsbDevices }
-
-        val newDevices = newUsbDevices.map {
-            UsbFlySightDeviceDelegateImpl(
-                it,
-                context,
-                usbService.usbManager,
-                loggerService = loggerService
-            )
-        }
-        return (oldDevices + newDevices).also {
-            _logs.value += Log("[DefaultFsDeviceService] Merged usb devices : ${it.map { device -> device.name }}")
-        }
-    }
-
-    private fun mergeBtAndUsbDevices(
-        bluetooth: List<BleFlySightDeviceDelegate>,
-        usb: List<UsbFlySightDeviceDelegate>
-    ): List<FlySightDeviceDelegate> {
-        //TODO change this when we know how to recognize a ble and a usb devices being the same
-        return bluetooth// + usb
-    }
 
     override suspend fun refreshBtDevices() {
         scanJob = scope.launch {
