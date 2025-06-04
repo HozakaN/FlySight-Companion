@@ -166,7 +166,7 @@
     <string name="list_device_record_count">Record count</string>
     <string name="list_device_record_most_recent">Most recent record</string>
     <string name="list_device_loading_records">Loading records…</string>
-    <string name="list_device_configuration_title">Configuration</string>
+    <string name="list_device_configuration_title">Config</string>
     <string name="list_device_item_configuration_menu_content_description">Device menu</string>
     <string name="list_device_item_configuration_menu_change">Change configuration</string>
     <string name="list_device_item_configuration_updating">Updating configuration…</string>

@@ -833,13 +833,19 @@ fun DeviceRecordsContainer(
                         style = MaterialTheme.typography.titleSmall
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
-                    Text(text = "${files.value.size}")
+                    FText(
+                        text = "${files.value.size}",
+                        configuration = FlySightTheme.typography.captionText
+                    )
                     Spacer(modifier = Modifier.requiredHeight(16.dp))
                     Text(
                         text = stringResource(R.string.list_device_record_most_recent),
                         style = MaterialTheme.typography.titleSmall
                     )
-                    Text(text = "${mostRecentFile?.dateTime?.format(dateTimeFormatter)}")
+                    FText(
+                        text = "${mostRecentFile?.dateTime?.format(dateTimeFormatter)}",
+                        configuration = FlySightTheme.typography.captionText
+                    )
                 }
             }
 
@@ -992,9 +998,9 @@ private fun DeviceConfigurationContainer(
             )
             Spacer(modifier = Modifier.weight(1f))
             if (!updatingConfiguration) {
-                Box(
-                    modifier = Modifier.requiredSize(24.dp)
-                ) {
+//                Box(
+//                    modifier = Modifier.requiredSize(24.dp)
+//                ) {
                     IconButton(
                         modifier = Modifier.requiredSize(24.dp),
                         onClick = {
@@ -1029,7 +1035,7 @@ private fun DeviceConfigurationContainer(
                         )
                     }
                 }
-            }
+//            }
         }
         if (updatingConfiguration) {
             Box(
@@ -1081,12 +1087,13 @@ private fun DeviceConfigurationContainer(
                     Text(text = configFileState.value.name.ifBlank { stringResource(R.string.list_device_item_configuration_no_name) })
                 }
                 Spacer(modifier = Modifier.requiredHeight(16.dp))
-                Text(
+                FText(
                     text = stringResource(
                         R.string.list_config_file_dz_elev_info,
                         configFileState.value.dzElev,
                         stringResource(unitSystem.distanceTextResource)
                     ),
+                    configuration = FlySightTheme.typography.plainScreenTextLarge
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 Text(

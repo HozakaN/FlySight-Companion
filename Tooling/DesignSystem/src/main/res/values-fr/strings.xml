@@ -166,7 +166,7 @@
     <string name="list_device_record_count">Nombre de fichiers</string>
     <string name="list_device_record_most_recent">Dernier enregistrement</string>
     <string name="list_device_loading_records">Chargement des enregistrements…</string>
-    <string name="list_device_configuration_title">Configuration</string>
+    <string name="list_device_configuration_title">Config</string>
     <string name="list_device_item_configuration_menu_content_description">Menu de l\'appareil</string>
     <string name="list_device_item_configuration_menu_change">Changer la configuration</string>
     <string name="list_device_item_configuration_updating">Mise à jour de la configuration…</string>

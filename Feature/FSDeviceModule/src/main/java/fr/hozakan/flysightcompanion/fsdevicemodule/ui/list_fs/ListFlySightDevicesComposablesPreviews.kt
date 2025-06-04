@@ -187,6 +187,59 @@ fun ListFlySightDevicesScreenInternalWithDevicePreview() {
     )
 }
 
+@Preview(device = "id:4.65in 720p (Galaxy Nexus)", showSystemUi = true)
+@Preview(device = "id:Nexus One", showSystemUi = true)
+@Preview(device = "id:pixel_9_pro", showSystemUi = true)
+@Preview(device = "id:pixel_9_pro_fold", showSystemUi = true)
+@Preview(device = "id:pixel_tablet", showSystemUi = true)
+@Composable
+fun ListFlySightDevicesScreenInternalWithDeviceConnectedPreview() {
+    ListFlySightDevicesScreenInternal(
+        state = ListFlySightDevicesState(
+            hasBluetoothPermission = true,
+            bluetoothState = BluetoothService.BluetoothState.Available,
+            devices = listOf(
+                ListFlySightDeviceDisplayData(
+                    device =
+                        FakeDeviceDelegateImpl(
+                            initialConnectionState = DeviceConnectionState.Connected,
+                            initialRecordFileState = LoadingState.Loaded(
+                                emptyList()
+                            ),
+                            initialConfigFileState = LoadingState.Loaded(
+                                defaultConfigFile().copy(name = "Speed Corbas")
+                            ),
+                            configFileName = "Speed Corbas",
+                            name = "Fake device 1"
+                        ),
+                    deviceConfig = LoadingState.Loaded(
+                        defaultConfigFile().copy(name = "Speed Corbas")
+                    ),
+                    isConfigFromSystem = true,
+                    hasConfigContentChanged = false
+                )
+            ),
+            refreshingDeviceList = LoadingState.Idle,
+            unitSystem = UnitSystem.Metric,
+            updatingConfiguration = null
+        ),
+        onDeviceSelected = {},
+        onRequestBluetoothPermissionClicked = {},
+        onEnableBluetoothClicked = {},
+        onCancelScanClicked = {},
+        refreshBluetoothDeviceListClicked = {},
+        onAddDeviceClicked = {},
+        onConnectDeviceClicked = {},
+        onUploadConfigToSystemClicked = {},
+        onUpdateSystemConfigClicked = {},
+        onPushConfigToDeviceClicked = {},
+        onChangeDeviceConfigurationClicked = {},
+        onUploadRecordToSystem = {},
+        onPreventDialogForFirmwareVersion = {},
+        onUpdateFirmwareClicked = {}
+    )
+}
+
 @Preview
 @Composable
 fun FlySightDeviceItemDisconnectedPreview() {
