@@ -7,18 +7,20 @@ import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionServ
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.MutableFlySightDevice
 import fr.hozakan.flysightcompanion.locationmodule.LocationService
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.FileGnssSource
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.FlySightGnssSource
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.LocalGnssSource
+import fr.hozakan.flysightcompanion.model.session.FlyBlindConfiguration
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.FileGnssSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.FlySightGnssSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.LocalGnssSource
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionController
 import fr.hozakan.flysightcompanion.sessionmodule.model.SessionControllerState
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
+import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
+import fr.hozakan.flysightcompanion.model.session.profile.SessionSource
+import fr.hozakan.flysightcompanion.model.session.profile.SessionType
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc.DefaultPpcHudSessionController
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ExitDetectorDelegate
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.FlareDetectorDelegate
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.detector.ExitDetectorDelegate
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.detector.FlareDetectorDelegate
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.flyblind.DefaultFlyBlindSessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.DefaultPlaneDisplaySessionController
 import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import kotlinx.coroutines.CoroutineScope
@@ -54,7 +56,8 @@ class DefaultSessionControllerService(
     override suspend fun playSession(
         sessionType: SessionType,
         sessionProfile: SessionProfile,
-        sessionSource: SessionSource
+        sessionSource: SessionSource,
+        flyBlindConfiguration: FlyBlindConfiguration?
     ) {
         val currentState = _state.value
         if (currentState is SessionControllerState.Playing) {
@@ -113,7 +116,16 @@ class DefaultSessionControllerService(
                     gnssSource = gnssSource,
                     userService = userPrefService
                 )
-                SessionType.FlyBlind -> TODO()
+                SessionType.FlyBlind -> DefaultFlyBlindSessionController(
+                    context = context,
+                    recordService = recordService,
+                    appVersionService = appVersionService,
+                    audioService = audioService,
+                    configuration = flyBlindConfiguration!!,
+                    gnssSource = gnssSource,
+                    exitDetectorDelegate = exitDetector,
+                    type = sessionType
+                )
                 SessionType.SpaceInvaders -> TODO()
                 SessionType.FlyToDraw -> TODO()
             }

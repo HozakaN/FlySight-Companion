@@ -48,7 +48,7 @@ import com.google.maps.android.compose.rememberMarkerState
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
-import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
+import fr.hozakan.flysightcompanion.model.session.profile.ReferencePoint
 import kotlinx.coroutines.launch
 
 @Composable

@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.sessionmodule.business.controller
+package fr.hozakan.flysightcompanion.sessionmodule.business.controller.source
 
 import fr.hozakan.flysightcompanion.framework.math.computeGroundSpeed
 import fr.hozakan.flysightcompanion.framework.math.computeTotalSpeed

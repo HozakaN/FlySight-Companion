@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.model.session.configuration
+package fr.hozakan.flysightcompanion.model.session.profile
 
 data class DisplayItem(
     val displayableCapability: DisplayableCapability,

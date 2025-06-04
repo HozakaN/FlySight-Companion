@@ -16,13 +16,11 @@ import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.extensions.formatDate
 import fr.hozakan.flysightcompanion.model.extensions.formatTime
 import fr.hozakan.flysightcompanion.model.records.RecordFile
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.GnssSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.GnssSource
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import timber.log.Timber
 import java.time.LocalDateTime
 import java.time.ZoneOffset

@@ -2,11 +2,11 @@ package fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_dis
 
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.FileGnssSource
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.GnssSource
+import fr.hozakan.flysightcompanion.model.session.profile.SessionType
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.FileGnssSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.GnssSource
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionController
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.TimeMutableSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.TimeMutableSource
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.VideoController
 import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import kotlinx.coroutines.CoroutineName
@@ -40,13 +40,11 @@ class DefaultPlaneDisplaySessionController(
 
     private var callback: SessionController.SessionControllerCallback? = null
 
-    override val timeMutableSource: TimeMutableSource?
-        get() = gnssSource.timeMutableSource
+    override val timeMutableSource: TimeMutableSource? = gnssSource.timeMutableSource
 
     override val gnssFlow: SharedFlow<GnssData> = gnssSource.gnssFlow
 
     override val videoController: VideoController = PlaneDisplayVideoController()
-
 
     private val scope =
         CoroutineScope(SupervisorJob() + CoroutineName("DefaultPlaneDisplaySessionController"))

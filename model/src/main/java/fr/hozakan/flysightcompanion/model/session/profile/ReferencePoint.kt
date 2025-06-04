@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.model.session.configuration
+package fr.hozakan.flysightcompanion.model.session.profile
 
 data class ReferencePoint(
     val id: String,

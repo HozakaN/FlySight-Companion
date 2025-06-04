@@ -1,7 +1,8 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.controller
 
 import fr.hozakan.flysightcompanion.model.GnssData
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
+import fr.hozakan.flysightcompanion.model.session.profile.SessionType
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.TimeMutableSource
 import kotlinx.coroutines.flow.SharedFlow
 
 interface SessionController {

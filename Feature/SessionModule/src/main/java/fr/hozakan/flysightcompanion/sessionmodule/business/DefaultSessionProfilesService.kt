@@ -16,9 +16,9 @@ import fr.hozakan.flysightcompanion.dialogmodule.DialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.DialogService
 import fr.hozakan.flysightcompanion.dialogmodule.PickConfigurationDialog
 import fr.hozakan.flysightcompanion.dialogmodule.PickConfigurationDialogResult
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItemBundle
-import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayItemBundle
+import fr.hozakan.flysightcompanion.model.session.profile.ReferencePoint
+import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

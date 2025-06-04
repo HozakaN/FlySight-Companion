@@ -49,10 +49,11 @@ import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.model.ConfigFile
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
-import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayGrid
+import fr.hozakan.flysightcompanion.model.session.profile.ReferencePoint
+import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
+import fr.hozakan.flysightcompanion.model.session.profile.SessionSourceType
+import fr.hozakan.flysightcompanion.sessionmodule.ui.player.ReferencePointSelector
 
 @Composable
 fun SessionProfileMenuActions(
@@ -623,7 +624,6 @@ private fun PerformanceLaneCard(form: SessionProfileForm, state: SessionProfileS
 
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
 
-                // Reference point picker
                 ReferencePointSelector(
                     referencePoints = state.referencePoints,
                     selectedReferencePoint = form.referencePoint,
@@ -749,27 +749,6 @@ private fun AlertsCard(form: SessionProfileForm) {
             }
         }
     }
-}
-
-@Composable
-private fun ReferencePointSelector(
-    referencePoints: List<ReferencePoint>,
-    selectedReferencePoint: ReferencePoint?,
-    onReferencePointSelected: (ReferencePoint?) -> Unit
-) {
-    val selectableValues = remember(referencePoints) {
-        referencePoints.map { it.name }
-    }
-
-    DropdownContainer(
-        label = "Reference Point",
-        selectedValue = selectedReferencePoint?.name ?: "Select a reference point",
-        options = selectableValues,
-        onSelectionChanged = { newSelection ->
-            onReferencePointSelected(referencePoints.firstOrNull { it.name == newSelection })
-        },
-        modifier = Modifier.fillMaxWidth()
-    )
 }
 
 @Composable

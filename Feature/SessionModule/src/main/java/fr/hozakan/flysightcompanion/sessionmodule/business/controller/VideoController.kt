@@ -1,6 +1,7 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.controller
 
 interface VideoController {
+    fun destroy()
 //    val performanceLines: StateFlow<List<VideoControllerImpl.PerformanceLine>>
 
 //    /**

@@ -38,8 +38,8 @@ import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.model.DisplayableConfig
 import fr.hozakan.flysightcompanion.model.firmware.FirmwareUpdateStatus
-import fr.hozakan.flysightcompanion.model.session.configuration.Coordinate
-import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
+import fr.hozakan.flysightcompanion.model.session.profile.Coordinate
+import fr.hozakan.flysightcompanion.model.session.profile.ReferencePoint
 import kotlinx.coroutines.flow.StateFlow
 import java.util.UUID
 

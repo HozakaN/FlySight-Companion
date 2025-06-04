@@ -46,13 +46,12 @@ import androidx.compose.ui.window.Dialog
 import fr.hozakan.flysightcompanion.designsystem.extension.textResource
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItem
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItemBundle
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
-import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
-import timber.log.Timber
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayGrid
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayItem
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayItemBundle
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayableCapability
+import fr.hozakan.flysightcompanion.model.session.profile.ReferencePoint
+import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
 
 @Composable
 fun DisplayGridConfigurationScreen(

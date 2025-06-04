@@ -21,14 +21,14 @@ import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
 import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.config.Volume
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItem
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItemBundle
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
-import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
-import fr.hozakan.flysightcompanion.model.session.configuration.Coordinate
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayGrid
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayItem
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayItemBundle
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayableCapability
+import fr.hozakan.flysightcompanion.model.session.profile.ReferencePoint
+import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
+import fr.hozakan.flysightcompanion.model.session.profile.SessionType
+import fr.hozakan.flysightcompanion.model.session.profile.Coordinate
 import timber.log.Timber
 
 @Composable

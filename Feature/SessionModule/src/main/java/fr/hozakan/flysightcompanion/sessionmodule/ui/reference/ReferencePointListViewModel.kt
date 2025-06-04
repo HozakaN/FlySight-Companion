@@ -2,7 +2,7 @@ package fr.hozakan.flysightcompanion.sessionmodule.ui.reference
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
+import fr.hozakan.flysightcompanion.model.session.profile.ReferencePoint
 import fr.hozakan.flysightcompanion.sessionmodule.business.ReferencePointsService
 import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
 import kotlinx.coroutines.flow.MutableStateFlow

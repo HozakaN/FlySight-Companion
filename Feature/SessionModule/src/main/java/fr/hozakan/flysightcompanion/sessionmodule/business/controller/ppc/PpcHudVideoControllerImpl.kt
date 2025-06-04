@@ -4,13 +4,14 @@ import android.content.Context
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.display.Display
-import fr.hozakan.flysightcompanion.model.session.configuration.Coordinate
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
+import fr.hozakan.flysightcompanion.model.session.profile.Coordinate
+import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionEvent
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.VideoController
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -94,6 +95,10 @@ class PpcHudVideoControllerImpl(
             SessionEvent.CompetitionWindowEntered -> {}
             SessionEvent.CompetitionWindowExited -> {}
         }
+    }
+
+    override fun destroy() {
+        scope.cancel()
     }
 //
 //    override fun moveTo(gnssData: GnssData) {

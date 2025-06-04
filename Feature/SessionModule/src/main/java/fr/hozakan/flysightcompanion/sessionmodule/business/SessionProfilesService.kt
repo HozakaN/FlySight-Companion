@@ -1,6 +1,6 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business
 
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
+import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
 import kotlinx.coroutines.flow.StateFlow
 
 interface SessionProfilesService {

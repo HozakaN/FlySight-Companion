@@ -1,7 +1,6 @@
 package fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session
 
 import androidx.annotation.DrawableRes
-import androidx.annotation.IdRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,8 +15,11 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
@@ -31,7 +33,10 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -44,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,14 +61,20 @@ import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.designsystem.extension.fromText
 import fr.hozakan.flysightcompanion.designsystem.extension.textResource
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
+import fr.hozakan.flysightcompanion.designsystem.theme.TextConfiguration
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.locationmodule.LocationAvailabilityState
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
+import fr.hozakan.flysightcompanion.model.session.FlyBlindConfiguration
+import fr.hozakan.flysightcompanion.model.session.profile.ReferencePoint
+import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
+import fr.hozakan.flysightcompanion.model.session.profile.SessionSource
+import fr.hozakan.flysightcompanion.model.session.profile.SessionSourceType
+import fr.hozakan.flysightcompanion.model.session.profile.SessionType
+import fr.hozakan.flysightcompanion.sessionmodule.ui.player.ReferencePointSelector
+import fr.hozakan.flysightcompanion.sessionmodule.ui.profile.FlyBlindProfileForm
+import fr.hozakan.flysightcompanion.sessionmodule.ui.profile.rememberFlyBlindProfileForm
 
 @Composable
 fun PrepareSessionMenuActions(
@@ -106,7 +118,8 @@ fun PrepareSessionScreen(
         },
         onRequestLocationPermission = { viewModel.requestLocationPermission() },
         onCheckLocationSettings = { viewModel.checkLocationSettings() },
-        onSessionTypeSelected = { viewModel.onSessionTypeSelected(it) }
+        onSessionTypeSelected = { viewModel.onSessionTypeSelected(it) },
+        onFlyBlindFormFilled = { viewModel.onFlyBlindConfigurationChanged(it) }
     )
 }
 
@@ -124,12 +137,16 @@ fun PrepareSessionScreenInternal(
     onNextClicked: () -> Unit,
     onRequestLocationPermission: () -> Unit,
     onCheckLocationSettings: () -> Unit,
-    onSessionTypeSelected: (SessionType) -> Unit
+    onSessionTypeSelected: (SessionType) -> Unit,
+    onFlyBlindFormFilled: (FlyBlindConfiguration) -> Unit
 ) {
 
     val phase = state.prepareSessionPhase
 
-    val sessionProfile = state.sessionProfiles
+    val sessionProfiles = state.sessionProfiles
+
+    val flyBlindForm =
+        rememberFlyBlindProfileForm(initialConfiguration = state.flyBlindConfiguration)
 
     Surface(
         modifier = Modifier
@@ -146,19 +163,35 @@ fun PrepareSessionScreenInternal(
                 onNextClicked = onNextClicked
             )
 
-            PrepareSessionPhase.SelectProfile -> SelectProfileScreen(
-                sessionProfiles = sessionProfile,
-                selectedProfile = state.selectedProfile,
-                onSessionProfileSelected = {
-                    onSessionProfileSelected(it)
-                },
-                onPrevClicked = onPrevClicked,
-                onNextClicked = onNextClicked,
-                onCreateProfileClicked = onCreateProfileClicked,
-                onEditProfileClicked = onEditProfileClicked,
-                onDuplicateProfileClicked = onDuplicateProfileClicked,
-                onDeleteProfileClicked = onDeleteProfileClicked
-            )
+            PrepareSessionPhase.SelectProfile -> when (state.selectedSessionType) {
+                SessionType.Hud -> HudProfileSelection(
+                    sessionProfiles = sessionProfiles,
+                    selectedProfile = state.selectedProfile,
+                    onSessionProfileSelected = onSessionProfileSelected,
+                    onPrevClicked = onPrevClicked,
+                    onNextClicked = onNextClicked,
+                    onCreateProfileClicked = onCreateProfileClicked,
+                    onEditProfileClicked = onEditProfileClicked,
+                    onDuplicateProfileClicked = onDuplicateProfileClicked,
+                    onDeleteProfileClicked = onDeleteProfileClicked
+                )
+
+                SessionType.PlaneDisplay -> {}
+                SessionType.FlyBlind -> FlyBlindProfileSelection(
+                    form = flyBlindForm,
+                    availableReferencePoints = state.referencePoints,
+                    onNextClicked = {
+                        flyBlindForm.toFlyBlindConfiguration()?.let { config ->
+                            onFlyBlindFormFilled(config)
+                            onNextClicked()
+                        }
+                    },
+                    onPrevClicked = onPrevClicked,
+                )
+
+                SessionType.SpaceInvaders -> {}
+                SessionType.FlyToDraw -> {}
+            }
 
             PrepareSessionPhase.SelectSource -> SelectSourceScreen(
                 selectedSessionType = state.selectedSessionType,
@@ -178,7 +211,227 @@ fun PrepareSessionScreenInternal(
 }
 
 @Composable
-fun SelectProfileScreen(
+fun FlyBlindProfileSelection(
+    form: FlyBlindProfileForm,
+    availableReferencePoints: List<ReferencePoint>,
+    onNextClicked: () -> Unit,
+    onPrevClicked: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp)
+    ) {
+
+        // Reference Point Selection
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+
+                ReferencePointSelector(
+                    referencePoints = availableReferencePoints,
+                    selectedReferencePoint = form.referencePoint,
+                    onReferencePointSelected = { form.updateReferencePoint(it) }
+                )
+
+            }
+        }
+
+        Spacer(modifier = Modifier.requiredHeight(16.dp))
+
+        // DZ Elevation
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+
+                OutlinedTextField(
+                    value = form.dzElev,
+                    onValueChange = { newValue ->
+                        // Only allow numeric input
+                        if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                            form.updateDzElev(newValue)
+                        }
+                    },
+                    label = {
+                        FText(
+                            text = "Dropzone elevation (m)",
+                            configuration = TextConfiguration.Default
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+        Spacer(modifier = Modifier.requiredHeight(16.dp))
+
+        // Belly Flying Toggle
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        FText(
+                            text = "Flying Position",
+                            configuration = FlySightTheme.typography.cardTitle
+                        )
+                    }
+
+                    Switch(
+                        checked = form.isBellyFlying,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = SwitchDefaults.colors().uncheckedThumbColor,
+                        ),
+                        onCheckedChange = { form.updateIsBellyFlying(it) },
+                        thumbContent = {
+                            Icon(
+                                imageVector = if (form.isBellyFlying)
+                                    Icons.Default.KeyboardArrowDown
+                                else
+                                    Icons.Default.KeyboardArrowUp,
+                                contentDescription = null,
+                                modifier = Modifier.requiredSize(16.dp)
+                            )
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.requiredWidth(8.dp))
+
+                    FText(
+                        text = if (form.isBellyFlying) "Belly" else "Back",
+                        configuration = FlySightTheme.typography.plainScreenTextMedium
+                    )
+                }
+                Spacer(modifier = Modifier.requiredHeight(4.dp))
+                FText(
+                    text = "Left and Right indications are inverted depending on the position",
+                    configuration = FlySightTheme.typography.captionText
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.requiredHeight(16.dp))
+        
+        // Audio Updates Frequency
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                val audioOptions = remember {
+                    listOf(
+                        Pair("Disabled", -1L),
+                        Pair("Every 5 seconds", 5000L),
+                        Pair("Every 10 seconds", 10000L),
+                        Pair("Every 15 seconds", 15000L),
+                        Pair("Every 30 seconds", 30000L),
+                        Pair("Every minute", 60000L)
+                    )
+                }
+                
+                val selectedOptionText = remember(form.timeBetweenAudioUpdates) {
+                    audioOptions.find { it.second == form.timeBetweenAudioUpdates }?.first ?: "Disabled"
+                }
+                
+                FText(
+                    text = "Audio Updates",
+                    configuration = FlySightTheme.typography.cardTitle
+                )
+                
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                
+                FText(
+                    text = "How often should audio directions be announced",
+                    configuration = FlySightTheme.typography.captionText
+                )
+                
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                
+                DropdownContainer(
+                    label = "Frequency",
+                    selectedValue = selectedOptionText,
+                    options = audioOptions.map { it.first },
+                    onSelectionChanged = { selectedText ->
+                        audioOptions.find { it.first == selectedText }?.let {
+                            form.updateTimeBetweenAudioUpdates(it.second)
+                        }
+                    }
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.requiredHeight(16.dp))
+        
+        // Keep Map On Exit Toggle
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        FText(
+                            text = "Keep Map After Exit",
+                            configuration = FlySightTheme.typography.cardTitle
+                        )
+                        
+                        Spacer(modifier = Modifier.requiredHeight(4.dp))
+                        
+                        FText(
+                            text = "Display the map even after exit detection",
+                            configuration = FlySightTheme.typography.captionText
+                        )
+                    }
+
+                    Switch(
+                        checked = form.keepMapOnExit,
+                        onCheckedChange = { form.updateKeepMapOnExit(it) },
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+        PrevNextBar(
+            prevEnabled = true,
+            onPrevClicked = onPrevClicked,
+            nextEnabled = form.isValid,
+            onNextClicked = onNextClicked,
+            showStepCounter = true,
+            currentStep = 2,
+            maxStep = 3
+        )
+    }
+}
+
+@Composable
+fun HudProfileSelection(
     sessionProfiles: LoadingState<List<SessionProfile>>,
     selectedProfile: SessionProfile?,
     onSessionProfileSelected: (SessionProfile) -> Unit,
@@ -462,6 +715,7 @@ fun SelectSessionTypeScreen(
                     explanation = "A Head-up Display for PPC competitions"
                 )
             }
+
             SessionType.PlaneDisplay -> {
                 SessionTypeExplanation(
                     icon = R.drawable.outline_tv_with_assistant_24,
@@ -469,6 +723,7 @@ fun SelectSessionTypeScreen(
                     explanation = "A display to put on plane dashboards for PPC competitions, so we can all make sure the competition exit window requirements are met."
                 )
             }
+
             SessionType.FlyBlind -> {
                 SessionTypeExplanation(
                     icon = R.drawable.outline_track_changes_24,
@@ -476,6 +731,7 @@ fun SelectSessionTypeScreen(
                     explanation = "A Head-up Display with indications to navigate to a reference point"
                 )
             }
+
             SessionType.SpaceInvaders -> {
                 SessionTypeExplanation(
                     icon = R.drawable.space_invader_vector,
@@ -483,6 +739,7 @@ fun SelectSessionTypeScreen(
                     explanation = "Defend your dropzone against incoming invaders by shooting at them"
                 )
             }
+
             SessionType.FlyToDraw -> {
                 SessionTypeExplanation(
                     icon = R.drawable.outline_crossword_24,
@@ -495,11 +752,13 @@ fun SelectSessionTypeScreen(
         PrevNextBar(
             prevEnabled = false,
             onPrevClicked = {},
-            nextEnabled = selectedSessionType == SessionType.Hud || selectedSessionType == SessionType.PlaneDisplay,
+            nextEnabled = selectedSessionType == SessionType.Hud ||
+                    selectedSessionType == SessionType.PlaneDisplay ||
+                    selectedSessionType == SessionType.FlyBlind,
             onNextClicked = onNextClicked,
             showStepCounter = true,
             currentStep = 1,
-            maxStep = if (selectedSessionType == SessionType.Hud) 3 else 2
+            maxStep = if (selectedSessionType == SessionType.PlaneDisplay) 2 else 3
         )
     }
 }
@@ -618,8 +877,8 @@ fun SelectSourceScreen(
             nextEnabled = nextEnabled,
             onNextClicked = onNextClicked,
             showStepCounter = true,
-            currentStep = if (selectedSessionType == SessionType.Hud) 3 else 2,
-            maxStep = if (selectedSessionType == SessionType.Hud) 3 else 2
+            currentStep = if (selectedSessionType == SessionType.Hud || selectedSessionType == SessionType.FlyBlind) 3 else 2,
+            maxStep = if (selectedSessionType == SessionType.Hud || selectedSessionType == SessionType.FlyBlind) 3 else 2
         )
     }
 }

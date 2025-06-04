@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.sessionmodule.business.controller
+package fr.hozakan.flysightcompanion.sessionmodule.business.controller.source
 
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -12,10 +12,10 @@ import fr.hozakan.flysightcompanion.model.config.SpeechMode
 import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
 import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItemBundle
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ExitDetector
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayItemBundle
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayableCapability
+import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.detector.ExitDetector
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionEvent
 import fr.hozakan.flysightcompanion.sessionmodule.computation.getSpeedMultiplicator
 import kotlinx.coroutines.CoroutineName

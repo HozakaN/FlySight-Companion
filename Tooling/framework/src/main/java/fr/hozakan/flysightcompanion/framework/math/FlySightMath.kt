@@ -1,6 +1,6 @@
 package fr.hozakan.flysightcompanion.framework.math
 
-import fr.hozakan.flysightcompanion.model.session.configuration.Coordinate
+import fr.hozakan.flysightcompanion.model.session.profile.Coordinate
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
@@ -107,6 +107,10 @@ fun computeHeading(from: Coordinate, to: Coordinate): Double {
     val y = sin(dLng) * cos(toLat)
     val x = cos(fromLat) * sin(toLat) - sin(fromLat) * cos(toLat) * cos(dLng)
     return (atan2(y, x) + 2 * Math.PI) % (2 * Math.PI) // Normalize to [0, 2π)
+}
+
+fun Double.radToDeg(): Double {
+    return this * (180.0 / Math.PI)
 }
 
 /**

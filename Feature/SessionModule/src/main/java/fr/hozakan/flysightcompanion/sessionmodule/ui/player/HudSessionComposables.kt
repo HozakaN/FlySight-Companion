@@ -5,17 +5,14 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,11 +25,8 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerSettingsNew
@@ -43,7 +37,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,7 +46,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -93,18 +85,18 @@ import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.config.AlarmType
 import fr.hozakan.flysightcompanion.model.session.Flare
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItem
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayItemBundle
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayGrid
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayItem
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayItemBundle
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayableCapability
+import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
+import fr.hozakan.flysightcompanion.model.session.profile.SessionType
 import fr.hozakan.flysightcompanion.model.ui.SpeedOrientation
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.FlareState
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.detector.FlareState
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc.PpcHudSessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionEvent
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.TimeMutableSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.TimeMutableSource
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.VideoController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc.PpcHudVideoControllerImpl
 import kotlinx.coroutines.delay
@@ -210,7 +202,7 @@ fun HudSessionPlayer(
                 }
             }
             if (!uiLocked) {
-                LockedContent(
+                PpcHudLockedContent(
                     onExitClicked = onExitClicked,
                     resetExitDetection = resetExitDetection
                 )
@@ -222,193 +214,6 @@ fun HudSessionPlayer(
                 modifier = Modifier/*.weight(1f)*/,
                 timeMutableSource = source
             )
-        }
-    }
-}
-
-
-@Composable
-fun LockContainer(
-    locked: Boolean,
-    onUnlocked: () -> Unit,
-    onUiTouchChanged: (Boolean) -> Unit
-) {
-    BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-    ) {
-
-        val scope = rememberCoroutineScope()
-        val alphaPointerAnimatable = remember { Animatable(0.5f) }
-        val alphaCursiveAnimatable = remember { Animatable(0f) }
-
-        val translationX = remember { Animatable(0f) }
-        val containerWidth = with(LocalDensity.current) {
-            maxWidth.toPx()
-        }
-
-        //Cursive
-        val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
-        val color = remember(surfaceVariant) { surfaceVariant.copy(alpha = 0.5f) }
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .graphicsLayer {
-                    this.alpha = alphaCursiveAnimatable.value
-                }
-                .requiredSize(height = 60.dp, width = maxWidth),
-            shape = RoundedCornerShape(120.dp),
-            color = color,
-            border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outline)
-        ) {
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Slide to unlock",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                )
-            }
-        }
-
-        //Pointer
-        Surface(
-            modifier = Modifier
-                .requiredSize(60.dp)
-                .graphicsLayer {
-                    this.alpha = alphaPointerAnimatable.value
-                    this.translationX = translationX.value
-                }
-                .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDragStart = {
-                            scope.launch {
-                                launch {
-                                    alphaPointerAnimatable.animateTo(1f)
-                                }
-                                launch {
-                                    alphaCursiveAnimatable.animateTo(1f)
-                                }
-                            }
-                            onUiTouchChanged(true)
-                        },
-                        onDragEnd = {
-                            scope.launch {
-                                if (translationX.value >= containerWidth - 60.dp.toPx()) {
-                                    onUnlocked()
-                                }
-                                launch {
-                                    alphaPointerAnimatable.animateTo(0.5f)
-                                }
-                                launch {
-                                    //Do it in sequence
-                                    translationX.animateTo(0f)
-                                    alphaCursiveAnimatable.animateTo(0f)
-                                }
-                            }
-                            onUiTouchChanged(false)
-                        },
-                        onDragCancel = {
-                            scope.launch {
-                                launch {
-                                    alphaPointerAnimatable.animateTo(0.5f)
-                                }
-                                launch {
-                                    //Do it in sequence
-                                    translationX.animateTo(0f)
-                                    alphaCursiveAnimatable.animateTo(0f)
-                                }
-                            }
-                            onUiTouchChanged(false)
-                        },
-                        onDrag = { _, dragAmount ->
-                            scope.launch {
-                                translationX.snapTo(
-                                    (translationX.value + dragAmount.x).coerceAtLeast(
-                                        0f
-                                    ).coerceAtMost(containerWidth - 60.dp.toPx())
-                                )
-                            }
-                        }
-                    )
-                },
-            shape = CircleShape,
-            border = BorderStroke(width = 2.dp, color = Color.Red)
-        ) {
-            Icon(
-                modifier = Modifier.requiredSize(40.dp),
-                imageVector = if (locked) Icons.Default.Lock else Icons.Default.LockOpen,
-                contentDescription = ""
-            )
-        }
-    }
-}
-
-@SuppressLint("DefaultLocale")
-@Composable
-private fun TimeControlContainer(
-    modifier: Modifier = Modifier,
-    timeMutableSource: TimeMutableSource
-) {
-    Box(
-        modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.BottomCenter
-    ) {
-        val sliderPosition by timeMutableSource.currentTime.collectAsState()
-        val startValue by timeMutableSource.startValue.collectAsState()
-        val endValue by timeMutableSource.endValue.collectAsState()
-        Column(
-            modifier = Modifier
-                .padding(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Slider(
-                    modifier = Modifier.weight(1f),
-                    value = sliderPosition,
-                    onValueChange = {
-                        timeMutableSource.moveTo(it)
-                    },
-                    colors = SliderDefaults.colors(
-                        thumbColor = MaterialTheme.colorScheme.secondary,
-                        activeTrackColor = MaterialTheme.colorScheme.secondary,
-                        inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
-                    ),
-                    onValueChangeFinished = {
-                        timeMutableSource.start()
-                    },
-                    valueRange = startValue..endValue
-                )
-                Spacer(modifier = Modifier.requiredWidth(8.dp))
-                val paused by timeMutableSource.paused.collectAsState()
-                Box(
-                    modifier = Modifier
-                        .requiredSize(56.dp)
-                        .clickable {
-                            if (paused) {
-                                timeMutableSource.start()
-                            } else {
-                                timeMutableSource.pause()
-                            }
-                        }
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (paused) {
-                            Icons.Default.PlayArrow
-                        } else {
-                            Icons.Default.Pause
-                        },
-                        contentDescription = ""
-                    )
-                }
-            }
-            Text(text = String.format("%.2f", sliderPosition))
         }
     }
 }
@@ -1727,7 +1532,9 @@ class FakeSessionController(
 
 }
 
-private val fakeVideoController = object : VideoController {}
+private val fakeVideoController = object : VideoController {
+    override fun destroy() {}
+}
 
 private val fakeProfile = SessionProfile.default()
     .copy(
@@ -1827,7 +1634,7 @@ private val fakeProfile = SessionProfile.default()
 
 
 @Composable
-private fun LockedContent(
+private fun PpcHudLockedContent(
     onExitClicked: () -> Unit,
     resetExitDetection: () -> Unit
 ) {

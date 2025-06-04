@@ -5,8 +5,8 @@ import fr.hozakan.flysightcompanion.dialogmodule.CreateReferencePointDialog
 import fr.hozakan.flysightcompanion.dialogmodule.CreateReferencePointDialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.DialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.DialogService
-import fr.hozakan.flysightcompanion.model.session.configuration.Coordinate
-import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
+import fr.hozakan.flysightcompanion.model.session.profile.Coordinate
+import fr.hozakan.flysightcompanion.model.session.profile.ReferencePoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

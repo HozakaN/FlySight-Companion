@@ -18,7 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
+import fr.hozakan.flysightcompanion.model.session.profile.SessionType
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.flyblind.FlyBlindSessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.PlaneDisplaySessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc.PpcHudSessionController
 
@@ -49,13 +50,13 @@ fun SessionPlayerScreen() {
         viewModel.lockDisplay()
     }
 
-    Scaffold { paddingValues ->
+//    Scaffold { paddingValues ->
         Surface(
             modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.displayCutout)
-                .padding(8.dp)
-                .padding(paddingValues),
+                .fillMaxSize(),
+//                .windowInsetsPadding(WindowInsets.displayCutout)
+//                .padding(8.dp),
+//                .padding(paddingValues),
             color = MaterialTheme.colorScheme.surface
         ) {
             SessionPlayerScreenInternal(
@@ -67,7 +68,7 @@ fun SessionPlayerScreen() {
                     viewModel.resetExitDetection()
                 }
             )
-        }
+//        }
     }
 }
 
@@ -90,7 +91,11 @@ private fun SessionPlayerScreenInternal(
             onExitClicked = onExitClicked
         )
 
-        SessionType.FlyBlind -> {}
+        SessionType.FlyBlind -> FlyBlindSessionPlayer(
+            controller = sessionController as FlyBlindSessionController,
+            onExitClicked = onExitClicked,
+            resetExitDetection = resetExitDetection
+        )
         SessionType.SpaceInvaders -> {}
         SessionType.FlyToDraw -> {}
     }

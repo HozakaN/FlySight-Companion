@@ -10,10 +10,10 @@ import fr.hozakan.flysightcompanion.model.config.SpeechMode
 import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
 import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayGrid
-import fr.hozakan.flysightcompanion.model.session.configuration.DisplayableCapability
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayGrid
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayableCapability
+import fr.hozakan.flysightcompanion.model.session.profile.SessionSourceType
+import fr.hozakan.flysightcompanion.model.session.profile.SessionType
 
 val UnitSystem.unitNameResource: Int
     get() = when (this) {

@@ -7,13 +7,15 @@ import fr.hozakan.flysightcompanion.framework.service.permission.AndroidPermissi
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.locationmodule.LocationAvailabilityState
 import fr.hozakan.flysightcompanion.locationmodule.LocationService
-import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionSource
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionSourceType
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
+import fr.hozakan.flysightcompanion.model.session.FlyBlindConfiguration
+import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
+import fr.hozakan.flysightcompanion.model.session.profile.SessionSource
+import fr.hozakan.flysightcompanion.model.session.profile.SessionSourceType
+import fr.hozakan.flysightcompanion.model.session.profile.SessionType
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
+import fr.hozakan.flysightcompanion.sessionmodule.business.ReferencePointsService
 import fr.hozakan.flysightcompanion.sessionmodule.business.SessionControllerService
+import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -27,6 +29,7 @@ import javax.inject.Inject
 class PrepareSessionViewModel @Inject constructor(
     fsDeviceService: FsDeviceService,
     recordService: RecordService,
+    referencePointsService: ReferencePointsService,
     private val sessionProfilesService: SessionProfilesService,
     private val sessionControllerService: SessionControllerService,
     private val locationService: LocationService,
@@ -45,7 +48,9 @@ class PrepareSessionViewModel @Inject constructor(
                 availableSessionTypes = SessionType.entries,
                 selectedSessionType = SessionType.Hud,
                 doneEvent = null,
-                locationAvailabilityState = LocationAvailabilityState.ForegroundLocationNotAllowed
+                locationAvailabilityState = LocationAvailabilityState.ForegroundLocationNotAllowed,
+                referencePoints = emptyList(),
+                flyBlindConfiguration = null
             )
         )
 
@@ -62,6 +67,15 @@ class PrepareSessionViewModel @Inject constructor(
                         } else {
                             null
                         }
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+        referencePointsService.referencePoints
+            .onEach { refPoints ->
+                _state.update {
+                    it.copy(
+                        referencePoints = refPoints
                     )
                 }
             }
@@ -139,11 +153,18 @@ class PrepareSessionViewModel @Inject constructor(
                     }
                 }
 
-                SessionType.FlyBlind -> {}
+                SessionType.FlyBlind -> {
+                    _state.update {
+                        it.copy(
+                            prepareSessionPhase = PrepareSessionPhase.SelectProfile
+                        )
+                    }
+                }
+
                 SessionType.SpaceInvaders -> {}
                 SessionType.FlyToDraw -> {}
             }
-        } else if (_state.value.prepareSessionPhase == PrepareSessionPhase.SelectProfile && _state.value.selectedProfile != null) {
+        } else if (_state.value.prepareSessionPhase == PrepareSessionPhase.SelectProfile && (_state.value.selectedProfile != null || _state.value.selectedSessionType == SessionType.FlyBlind)) {
             _state.update {
                 it.copy(
                     prepareSessionPhase = PrepareSessionPhase.SelectSource
@@ -168,7 +189,8 @@ class PrepareSessionViewModel @Inject constructor(
                 sessionControllerService.playSession(
                     sessionType = sessionType,
                     sessionProfile = profile,
-                    sessionSource = source
+                    sessionSource = source,
+                    flyBlindConfiguration = _state.value.flyBlindConfiguration
                 )
             }
 //            _state.update {
@@ -183,7 +205,11 @@ class PrepareSessionViewModel @Inject constructor(
         if (_state.value.prepareSessionPhase == PrepareSessionPhase.SelectSource) {
             _state.update {
                 it.copy(
-                    prepareSessionPhase = if (_state.value.selectedSessionType == SessionType.Hud) PrepareSessionPhase.SelectProfile else PrepareSessionPhase.SelectSessionType
+                    prepareSessionPhase = if (_state.value.selectedSessionType == SessionType.Hud || _state.value.selectedSessionType == SessionType.FlyBlind) {
+                        PrepareSessionPhase.SelectProfile
+                    } else {
+                        PrepareSessionPhase.SelectSessionType
+                    }
                 )
             }
         } else if (_state.value.prepareSessionPhase == PrepareSessionPhase.SelectProfile) {
@@ -258,4 +284,13 @@ class PrepareSessionViewModel @Inject constructor(
         } else {
             LocationAvailabilityState.ForegroundLocationNotAllowed
         }
+
+    fun onFlyBlindConfigurationChanged(flyBlindConfiguration: FlyBlindConfiguration) {
+        _state.update {
+            it.copy(
+                flyBlindConfiguration = flyBlindConfiguration
+            )
+        }
+    }
 }
+

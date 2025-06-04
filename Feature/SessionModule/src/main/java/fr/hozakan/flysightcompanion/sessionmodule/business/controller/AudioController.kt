@@ -3,7 +3,7 @@ package fr.hozakan.flysightcompanion.sessionmodule.business.controller
 import fr.hozakan.flysightcompanion.audiomodule.AudioService
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.config.AlarmType
-import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
+import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -22,6 +22,7 @@ class AudioController(
     private val scope = CoroutineScope(SupervisorJob() + CoroutineName("AudioController"))
 
     init {
+
         sessionEvents
             .onEach { event ->
                 when (event) {

@@ -1,7 +1,7 @@
 package fr.hozakan.flysightcompanion.sessionmodule.ui.reference
 
 import androidx.compose.runtime.Immutable
-import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
+import fr.hozakan.flysightcompanion.model.session.profile.ReferencePoint
 
 @Immutable
 data class ReferencePointListState(

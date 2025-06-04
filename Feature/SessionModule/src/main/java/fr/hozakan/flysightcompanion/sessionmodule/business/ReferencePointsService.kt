@@ -1,6 +1,6 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business
 
-import fr.hozakan.flysightcompanion.model.session.configuration.ReferencePoint
+import fr.hozakan.flysightcompanion.model.session.profile.ReferencePoint
 import kotlinx.coroutines.flow.StateFlow
 
 interface ReferencePointsService {
