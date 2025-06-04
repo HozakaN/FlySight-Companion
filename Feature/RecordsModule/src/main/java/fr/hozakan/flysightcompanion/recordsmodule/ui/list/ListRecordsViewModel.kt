@@ -22,7 +22,9 @@ class ListRecordsViewModel @Inject constructor(
     init {
         recordService.records
             .onEach {
-                _state.value = _state.value.copy(recordFiles = it)
+                _state.value = _state.value.copy(
+                    recordFiles = it
+                        .sortedByDescending { item -> item.dateTime })
             }
             .launchIn(viewModelScope)
     }
