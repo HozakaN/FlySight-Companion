@@ -65,6 +65,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -94,6 +95,7 @@ import timber.log.Timber
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
+import androidx.compose.ui.platform.LocalConfiguration
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
@@ -760,7 +762,7 @@ fun DeviceRecordsContainer(
     device: ListFlySightDeviceDisplayData,
     onUploadRecordToSystem: () -> Unit
 ) {
-    val locales = LocalContext.current.resources.configuration.locales
+    val locales = LocalConfiguration.current.locales
     val locale = if (locales.isEmpty) Locale.ROOT else locales[0]
     val dateTimeFormatter = remember(locale) {
         DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(locale)
@@ -985,11 +987,14 @@ private fun DeviceConfigurationContainer(
                 text = stringResource(R.string.list_device_configuration_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.weight(1f))
             if (!updatingConfiguration) {
-                Box {
+                Box(
+                    modifier = Modifier.requiredSize(24.dp)
+                ) {
                     IconButton(
                         modifier = Modifier.requiredSize(24.dp),
                         onClick = {
@@ -1185,7 +1190,7 @@ internal fun DeviceConfigurationMisMatchDialog(
     }
 }
 
-@SuppressLint("UnusedTransitionTargetStateParameter")
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun ConnectionIndicator(
     connectionState: DeviceConnectionState,

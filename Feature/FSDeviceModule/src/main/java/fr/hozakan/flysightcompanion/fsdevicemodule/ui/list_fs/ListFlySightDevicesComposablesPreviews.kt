@@ -138,7 +138,11 @@ fun ListFlySightDevicesScreenInternalNoDevicePreview() {
     )
 }
 
-@Preview
+@Preview(device = "id:4.65in 720p (Galaxy Nexus)", showSystemUi = true)
+@Preview(device = "id:Nexus One", showSystemUi = true)
+@Preview(device = "id:pixel_9_pro", showSystemUi = true)
+@Preview(device = "id:pixel_9_pro_fold", showSystemUi = true)
+@Preview(device = "id:pixel_tablet", showSystemUi = true)
 @Composable
 fun ListFlySightDevicesScreenInternalWithDevicePreview() {
     ListFlySightDevicesScreenInternal(
