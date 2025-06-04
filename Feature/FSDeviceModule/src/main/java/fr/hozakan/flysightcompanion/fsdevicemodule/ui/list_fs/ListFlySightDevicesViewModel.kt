@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @SuppressLint("StaticFieldLeak")
@@ -313,7 +314,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
             .take(1).mapNotNull { records ->
                 records.maxByOrNull { it.dateTime }
             }.flatMapConcat { record ->
-                fsDeviceService.extractRecordFromDevice(device, record)
+                fsDeviceService.extractRecordFromDevice(device.device, record)
             }.onEach { loadingState ->
                 _state.update {
                     it.copy(
@@ -322,7 +323,8 @@ class ListFlySightDevicesViewModel @Inject constructor(
                             is LoadingState.Error -> null
                             is LoadingState.Loaded -> null
                             LoadingState.Idle -> null
-                        }, event = when (loadingState) {
+                        },
+                        event = when (loadingState) {
                             is LoadingState.Error -> loadingState.error.message?.asEvent()
                                 ?: context.getString(R.string.misc_unknown_error).asEvent()
 

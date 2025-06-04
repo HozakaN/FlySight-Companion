@@ -266,9 +266,9 @@ class DefaultFsDeviceService(
             return@flow
         }
         val recordPath = "${recordFile.dateTime.formatDate()}/${recordFile.dateTime.formatTime()}"
-        emit(LoadingState.Loading("Downloading file /$recordPath/TRACK.CSV"))
+        emit(LoadingState.Loading("Downloading file ${recordFile.flySightFilePath}"))
         val trackFile =
-            device.readFileSynchronously("$recordPath/TRACK.CSV")
+            device.readFileSynchronously(recordFile.flySightFilePath)
         val trackFileContent = (trackFile as? FileState.Success)?.content
         if (trackFileContent != null) {
             emit(LoadingState.Loading("Saving file on the phone"))
