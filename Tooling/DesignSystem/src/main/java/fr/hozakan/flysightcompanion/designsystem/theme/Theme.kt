@@ -266,7 +266,7 @@ data class TextConfiguration(
 
         @Stable
         val TabTitle = TextConfiguration(
-            style = AppTypography.bodyLarge,
+            style = AppTypography.bodyMedium,
             fontSize = TextUnit.Unspecified,
             fontStyle = null,
             fontWeight = null,

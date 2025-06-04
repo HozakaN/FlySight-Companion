@@ -239,6 +239,10 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActiv
                                     stringResource(R.string.screen_title_config_list)
                                 }
 
+                                AppScreen.RecordTab.RecordList.route -> {
+                                    stringResource(R.string.screen_title_record_list)
+                                }
+
                                 AppScreen.Session.ReferencePointList.route -> {
                                     stringResource(R.string.screen_title_manage_reference_points)
                                 }
