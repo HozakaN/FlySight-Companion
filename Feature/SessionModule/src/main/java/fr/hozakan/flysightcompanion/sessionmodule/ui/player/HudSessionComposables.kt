@@ -1318,12 +1318,12 @@ private fun OngoingFlareContainer2(data: List<GnssData>) {
                 val gain = gnssData.hMsl - startAltitude
 
                 // Calculate the x position based on time (0 to 20 seconds)
-                val timeDiffMs = if (gnssData.iTow.toInt() >= startTime) {
+                val timeDiffMs = /*if (gnssData.iTow.toInt() >= startTime) {*/
                     gnssData.iTow.toInt() - startTime
-                } else {
+//                } else {
                     // Handle week rollover
-                    gnssData.iTow.toInt() + (604800000 - startTime)
-                }
+//                    gnssData.iTow.toInt() + (604800000 - startTime)
+//                }
 
                 val timeDiffSec = timeDiffMs / 1000f
                 val x =

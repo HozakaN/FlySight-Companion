@@ -5,11 +5,13 @@ import fr.hozakan.flysightcompanion.audiomodule.AudioService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.framework.math.computeHeading
 import fr.hozakan.flysightcompanion.framework.math.computeSignedDistanceToLine
+import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.session.configuration.Coordinate
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.configuration.SessionType
+import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.AudioController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ExitDetector
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.FileGnssSource
@@ -22,6 +24,8 @@ import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionCon
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionEvent
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.TimeMutableSource
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.VideoController
+import fr.hozakan.flysightcompanion.sessionmodule.business.recorder.Recorder
+import fr.hozakan.flysightcompanion.sessionmodule.business.recorder.TrackCsvRecorder
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -42,6 +46,8 @@ class DefaultPpcHudSessionController(
     context: Context,
     audioService: AudioService,
     displayService: DisplayService,
+    recordService: RecordService,
+    appVersionService: AppVersionService,
     private val exitDetectorDelegate: MutableExitDetector,
     private val flareDetectorDelegate: MutableFlareDetector,
     private val gnssSource: GnssSource,
@@ -72,7 +78,8 @@ class DefaultPpcHudSessionController(
     override val timeMutableSource: TimeMutableSource?
         get() = gnssSource.timeMutableSource
 
-    private val scope = CoroutineScope(SupervisorJob() + CoroutineName("DefaultPpcHudSessionController"))
+    private val scope =
+        CoroutineScope(SupervisorJob() + CoroutineName("DefaultPpcHudSessionController"))
     private var startJob: Job? = null
 
     private var gnssPoints = emptyList<GnssData>()
@@ -94,6 +101,24 @@ class DefaultPpcHudSessionController(
         laneStartDetection = sessionComputationUnit.laneStartPoint
     )
     override val videoController: VideoController = _videoController
+
+    private var recorder: Recorder? = if (gnssSource !is FileGnssSource) {
+        TrackCsvRecorder(
+            context = context,
+            recordService = recordService,
+            gnssSource = gnssSource,
+            appVersionService = appVersionService
+        )
+    } else {
+        null
+    }
+
+//    private var recorder: Recorder? = TrackCsvRecorder(
+//        context = context,
+//        recordService = recordService,
+//        gnssSource = gnssSource,
+//        appVersionService = appVersionService
+//    )
 
     override val laneStartPoint: StateFlow<GnssData?> = sessionComputationUnit.laneStartPoint
 
@@ -119,9 +144,12 @@ class DefaultPpcHudSessionController(
                             (gnssSource as? FileGnssSource)?.getGnssPointsUpToTime(pickedTiming.toLong() * 1_000L)
                                 ?.let { pastGnssData ->
                                     sessionComputationUnit.handleDataBatch(pastGnssData)
-                                    exitDetectorDelegate.clearAndProcessExitDetectionData(pastGnssData)
-                                    flareDetectorDelegate.clearAndProcessFlareDetectionData(pastGnssData)
-                                    //FIXME May be an issue since performanceLane is moving when playing with the slider
+                                    exitDetectorDelegate.clearAndProcessExitDetectionData(
+                                        pastGnssData
+                                    )
+                                    flareDetectorDelegate.clearAndProcessFlareDetectionData(
+                                        pastGnssData
+                                    )
                                     pastGnssData.lastOrNull()?.let { data ->
                                         moveTo(data)
                                     }
@@ -157,6 +185,7 @@ class DefaultPpcHudSessionController(
 
     override fun play() {
         if (startJob == null) {
+            recorder?.start()
             start()
         }
     }
@@ -175,6 +204,7 @@ class DefaultPpcHudSessionController(
     }
 
     override fun destroy() {
+        recorder?.stop()
         scope.cancel()
     }
 

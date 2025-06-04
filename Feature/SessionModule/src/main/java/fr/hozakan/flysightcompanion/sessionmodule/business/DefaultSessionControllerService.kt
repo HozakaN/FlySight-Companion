@@ -3,6 +3,7 @@ package fr.hozakan.flysightcompanion.sessionmodule.business
 import android.content.Context
 import fr.hozakan.flysightcompanion.audiomodule.AudioService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
+import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.MutableFlySightDevice
 import fr.hozakan.flysightcompanion.locationmodule.LocationService
@@ -35,6 +36,7 @@ class DefaultSessionControllerService(
     private val fsDeviceService: FsDeviceService,
     private val audioService: AudioService,
     private val recordService: RecordService,
+    private val appVersionService: AppVersionService,
     private val displayService: DisplayService,
     private val locationService: LocationService,
     private val userPrefService: UserPrefService
@@ -95,6 +97,8 @@ class DefaultSessionControllerService(
                     context = context,
                     audioService = audioService,
                     displayService = displayService,
+                    recordService = recordService,
+                    appVersionService = appVersionService,
                     exitDetectorDelegate = exitDetector,
                     flareDetectorDelegate = FlareDetectorDelegate(
                         gnssFlow = gnssSource.gnssFlow,
