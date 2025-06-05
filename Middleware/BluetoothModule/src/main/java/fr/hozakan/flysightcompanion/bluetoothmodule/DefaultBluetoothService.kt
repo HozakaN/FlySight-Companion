@@ -79,9 +79,9 @@ class DefaultBluetoothService(
     @SuppressLint("MissingPermission")
     override fun getPairedDevices(): Flow<LoadingState<List<BluetoothDevice>>> {
         return channelFlow {
-            if (!isClosedForSend) {
-                send(LoadingState.Loading())
-            }
+            if (isClosedForSend) return@channelFlow
+            send(LoadingState.Loading())
+
             val adapter = bluetoothAdapter
             val devices = mutableListOf<BluetoothDevice>()
 

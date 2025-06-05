@@ -1,0 +1,11 @@
+package fr.hozakan.flysightcompanion.model.session.profile
+
+enum class DisplayGrid {
+    InlineLeft,
+    InlineRight,
+    TwoByTwo,
+    TwoOnEachSide,
+    ThreeOnEachSide;
+
+    companion object
+}

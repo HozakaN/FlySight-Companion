@@ -1,13 +1,12 @@
 package fr.hozakan.flysightcompanion.configfilesmodule.business
 
 import android.content.Context
-import fr.hozakan.flysightcompanion.dialogmodule.ConfigFileName
+import fr.hozakan.flysightcompanion.dialogmodule.ConfigFileNameDialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.ConfigFileNameDialog
 import fr.hozakan.flysightcompanion.dialogmodule.DialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.DialogService
 import fr.hozakan.flysightcompanion.dialogmodule.PickConfigurationDialog
 import fr.hozakan.flysightcompanion.dialogmodule.PickConfigurationDialogResult
-import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.CONFIG_FILES_FOLDER
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +41,7 @@ class DefaultConfigFileService(
         var name = configFile.name
         if (name.isBlank()) {
             when (val result = dialogService.displayDialog(ConfigFileNameDialog())) {
-                is ConfigFileName -> name = result.name
+                is ConfigFileNameDialogResult -> name = result.name
                 DialogResult.Dismiss -> return configFile
                 else -> error("Save config file result should not have another type (${result::class.java})")
             }
@@ -97,7 +96,7 @@ class DefaultConfigFileService(
             configs
         })) {
             is PickConfigurationDialogResult -> {
-                result.configFile
+                result.configFile as? ConfigFile
             }
 
             DialogResult.Dismiss -> null
@@ -113,7 +112,7 @@ class DefaultConfigFileService(
             name = "${configFile.name} ($index)"
         }
         when (val result = dialogService.displayDialog(ConfigFileNameDialog(name))) {
-            is ConfigFileName -> name = result.name
+            is ConfigFileNameDialogResult -> name = result.name
             DialogResult.Dismiss -> return
             else -> error("Duplicate config file should not have another output")
         }
@@ -128,19 +127,40 @@ class DefaultConfigFileService(
         return configEncoder.encodeConfig(configFile)
     }
 
-    private fun getOrCreateConfigFilesFolder(): File {
+    private suspend fun getOrCreateConfigFilesFolder(): File {
         val folder =
             File("${context.filesDir.absolutePath}${File.separator}$CONFIG_FILES_FOLDER")
-        val success = folder.exists() || folder.mkdir()
+        val success = folder.exists() || (folder.mkdir() && addDefaultConfigs())
         return if (success) folder else throw IllegalAccessException("Cannot access app folder")
+    }
+
+    private suspend fun addDefaultConfigs(): Boolean {
+        withContext(Dispatchers.IO) {
+            val beaufortConf =
+                javaClass.classLoader.getResource("Beaufort time-distance.TXT")?.readText()
+            val readyConfigFile = parseConfiguration(beaufortConf?.lines() ?: emptyList())
+            val fileContent =
+                buildFileContent(readyConfigFile)
+            val file =
+                File("${context.filesDir.absolutePath}${File.separator}$CONFIG_FILES_FOLDER${File.separator}Beaufort time-distance.TXT")
+            file.writeText(fileContent)
+        }
+        return true
     }
 
     private suspend fun loadConfigFiles() {
         withContext(Dispatchers.IO) {
             val configFolder = getOrCreateConfigFilesFolder()
+//            val beaufortConf =
+//                javaClass.classLoader.getResource("Beaufort time-distance.TXT")?.readText()
             val configFiles =
-                (configFolder.listFiles()?.mapNotNull { parseConfiguration(it.readLines()) }
-                    ?: emptyList()).toMutableList()
+                (configFolder.listFiles()?.mapNotNull {
+//                    parseConfiguration(it?.lines() ?: emptyList()).copy(
+//                        name = "my config"
+//                    )
+                    parseConfiguration(it.readLines())
+                }
+                    ?: emptyList())
             _configs.update {
                 configFiles
             }
@@ -149,4 +169,7 @@ class DefaultConfigFileService(
 
     private fun parseConfiguration(fileLines: List<String>): ConfigFile = parser.parse(fileLines)
 
+    companion object {
+        private const val CONFIG_FILES_FOLDER = "configFiles"
+    }
 }

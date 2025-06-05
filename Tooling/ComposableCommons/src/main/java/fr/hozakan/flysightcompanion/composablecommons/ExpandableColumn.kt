@@ -53,7 +53,7 @@ fun ExpandableColumn(
         ) {
             Icon(
                 imageVector = if (!contentExpanded) Icons.Default.ExpandMore else Icons.Default.ExpandLess,
-                contentDescription = stringResource(id = if (!contentExpanded) R.string.misc_expand_more else R.string.misc_reduce)
+                contentDescription = stringResource(id = if (!contentExpanded) R.string.misc_expand else R.string.misc_reduce)
             )
             Spacer(modifier = Modifier.requiredWidth(8.dp))
             headerComposable(contentExpanded)

@@ -46,7 +46,7 @@ fun versionCode(): Int {
 
 android {
     namespace = "fr.hozakan.flysightcompanion"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "fr.hozakan.flysightcompanion"
@@ -85,12 +85,21 @@ dependencies {
     implementation(project(":model"))
     implementation(project(":Tooling:framework"))
     implementation(project(":Middleware:BluetoothModule"))
+    implementation(project(":Middleware:AudioModule"))
+    implementation(project(":Middleware:ExternalDisplayModule"))
     implementation(project(":Feature:FSDeviceModule"))
+    implementation(project(":Tooling:UsbModule"))
     implementation(project(":Feature:ConfigFilesModule"))
+    implementation(project(":Feature:RecordsModule"))
     implementation(project(":Tooling:ComposableCommons"))
     implementation(project(":Tooling:DesignSystem"))
     implementation(project(":Feature:UserPreferencesModule"))
     implementation(project(":Tooling:DialogModule"))
+    implementation(project(":Tooling:NetworkModule"))
+    implementation(project(":Tooling:LoggerModule"))
+    implementation(project(":Feature:SessionModule"))
+    implementation(project(":Business:CapabilitiesModule"))
+    implementation(project(":Middleware:LocationModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -110,6 +119,9 @@ dependencies {
     implementation(libs.dagger.android.support)
     kapt(libs.dagger.android.processor)
     kapt(libs.dagger.compiler)
+
+    // Google Play services location API
+    implementation(libs.play.services.location)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

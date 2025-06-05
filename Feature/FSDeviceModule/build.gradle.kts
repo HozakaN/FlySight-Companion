@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "fr.hozakan.flysightcompanion.fsdevicemodule"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -40,10 +40,15 @@ dependencies {
     implementation(project(":Middleware:BluetoothModule"))
     implementation(project(":model"))
     implementation(project(":Tooling:framework"))
+    implementation(project(":Tooling:UsbModule"))
     implementation(project(":Feature:UserPreferencesModule"))
     implementation(project(":Tooling:ComposableCommons"))
     implementation(project(":Feature:ConfigFilesModule"))
+    implementation(project(":Feature:RecordsModule"))
     implementation(project(":Tooling:DesignSystem"))
+    implementation(project(":Tooling:NetworkModule"))
+    implementation(project(":Tooling:LoggerModule"))
+    implementation(project(":Tooling:DialogModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

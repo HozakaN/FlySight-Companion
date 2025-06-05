@@ -1,11 +1,21 @@
 package fr.hozakan.flysightcompanion
 
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
+import android.view.View
+import android.view.WindowInsets
+import android.view.WindowInsetsController
+import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -16,31 +26,46 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AreaChart
 import androidx.compose.material.icons.filled.Engineering
+import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.common.api.ResolvableApiException
 import com.google.gson.Gson
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
+import fr.hozakan.flysightcompanion.audiomodule.AudioService
 import fr.hozakan.flysightcompanion.configfilesmodule.ui.config_detail.ConfigDetailMenuActions
 import fr.hozakan.flysightcompanion.configfilesmodule.ui.config_detail.ConfigDetailScreen
 import fr.hozakan.flysightcompanion.configfilesmodule.ui.list_files.ListConfigFileMenuActions
@@ -51,10 +76,14 @@ import fr.hozakan.flysightcompanion.designsystem.theme.TextConfiguration
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.dialogmodule.DialogHandler
 import fr.hozakan.flysightcompanion.dialogmodule.LocalDialogService
+import fr.hozakan.flysightcompanion.dialogmodule.MutableDialogService
+import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
+import fr.hozakan.flysightcompanion.externaldisplaymodule.ScreenExtensions
 import fr.hozakan.flysightcompanion.framework.compose.LocalMenuState
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.dagger.Injectable
 import fr.hozakan.flysightcompanion.framework.menu.rememberActionBarMenuState
+import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_config.DeviceConfigurationMenuActions
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_config.DeviceConfigurationScreen
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail.DeviceDetailMenuActions
@@ -62,12 +91,32 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail.DeviceDetail
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.file.DeviceFileScreen
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesMenuActions
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesScreen
+import fr.hozakan.flysightcompanion.locationmodule.LocationCheckerActivity
+import fr.hozakan.flysightcompanion.loggermodule.LoggerService
 import fr.hozakan.flysightcompanion.model.ConfigFile
+import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailMenuActions
+import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailScreen
+import fr.hozakan.flysightcompanion.recordsmodule.ui.list.ListRecordsScreen
+import fr.hozakan.flysightcompanion.recordsmodule.ui.plot.PlotSettingsScreen
+import fr.hozakan.flysightcompanion.sessionmodule.business.SessionControllerService
+import fr.hozakan.flysightcompanion.sessionmodule.model.SessionControllerState
+import fr.hozakan.flysightcompanion.sessionmodule.ui.profile.SessionProfileScreen
+import fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session.PrepareSessionScreen
+import fr.hozakan.flysightcompanion.sessionmodule.ui.player.SessionPlayerScreen
+import fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session.PrepareSessionMenuActions
+import fr.hozakan.flysightcompanion.sessionmodule.ui.reference.ReferencePointListScreen
+import fr.hozakan.flysightcompanion.ui.DevScreen
+import fr.hozakan.flysightcompanion.usbmodule.UsbService
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
+import kotlin.coroutines.resume
 import fr.hozakan.flysightcompanion.R as LocalR
 
-class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
+class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActivity, HasAndroidInjector, Injectable {
 
     @Inject
     lateinit var androidInjector: DispatchingAndroidInjector<Any>
@@ -76,12 +125,34 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
     lateinit var viewModelFactory: ViewModelProvider.Factory
 
     @Inject
-    lateinit var dialogService: fr.hozakan.flysightcompanion.dialogmodule.MutableDialogService
+    lateinit var dialogService: MutableDialogService
+
+    @Inject
+    lateinit var usbService: UsbService
+
+    @Inject
+    lateinit var fsDeviceService: FsDeviceService
+
+    @Inject
+    lateinit var loggerService: LoggerService
 
     @Inject
     lateinit var json: Gson
 
+    @Inject
+    lateinit var sessionControllerService: SessionControllerService
+
+    @Inject
+    lateinit var audioService: AudioService
+
+    @Inject
+    lateinit var displayService: DisplayService
+
     override fun androidInjector(): AndroidInjector<Any> = androidInjector
+
+    private var currentLocationRequestId = 10010
+
+    private val locationContinuations = mutableMapOf<Int, CancellableContinuation<Boolean>>()
 
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,10 +170,56 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                 ) {
                     val navController = rememberNavController()
                     val currentBackStack = navController.currentBackStackEntryAsState()
+                    var devScreenOpened by remember { mutableStateOf(false) }
 
                     DialogHandler()
 
+                    val sessionControllerState by sessionControllerService.state.collectAsState()
+
+                    if (devScreenOpened) {
+                        DevScreen(
+                            usbService = usbService,
+                            fsDeviceService = fsDeviceService,
+                            loggerService = loggerService,
+                            audioService = audioService,
+                            displayService = displayService
+                        ) {
+                            devScreenOpened = false
+                        }
+                        return@CompositionLocalProvider
+                    }
+
+                    var isSessionControllerLaunched by remember { mutableStateOf(false) }
+                    if (sessionControllerState is SessionControllerState.Playing) {
+                        SessionPlayerScreen()
+                        isSessionControllerLaunched = true
+                        return@CompositionLocalProvider
+                    } else if (isSessionControllerLaunched) {
+                        isSessionControllerLaunched = false
+                        navController.navigateUp()
+                    }
                     Scaffold(
+                        modifier = Modifier.tripleTapHandler {
+                            devScreenOpened = true
+                        },
+                        floatingActionButton = {
+                            if (currentBackStack.value?.destination?.route == AppScreen.DeviceTab.DeviceList.route ||
+                                currentBackStack.value?.destination?.route == AppScreen.ConfigTab.ConfigList.route ||
+                                currentBackStack.value?.destination?.route == AppScreen.RecordTab.RecordList.route
+                            ) {
+                                FloatingActionButton(
+                                    onClick = {
+                                        navController.navigate(AppScreen.Session.PrepareSession.route)
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.RocketLaunch,
+                                        contentDescription = ""
+                                    )
+                                }
+                            }
+
+                        },
                         topBar = {
                             val currentRoute = currentBackStack.value?.destination?.route
                             val title = when (currentRoute) {
@@ -118,6 +235,18 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                     stringResource(R.string.screen_title_config_list)
                                 }
 
+                                AppScreen.RecordTab.PlotSettings.route -> {
+                                    stringResource(R.string.screen_title_config_list)
+                                }
+
+                                AppScreen.RecordTab.RecordList.route -> {
+                                    stringResource(R.string.screen_title_record_list)
+                                }
+
+                                AppScreen.Session.ReferencePointList.route -> {
+                                    stringResource(R.string.screen_title_manage_reference_points)
+                                }
+
                                 AppScreen.DeviceTab.DeviceFile.route -> {
                                     val filePath =
                                         currentBackStack.value?.arguments?.getString("filePath")
@@ -129,6 +258,10 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                     )
                                 }
 
+                                AppScreen.Session.PrepareSession.route -> {
+                                    stringResource(R.string.screen_title_prepare_session)
+                                }
+
                                 else -> {
                                     stringResource(LocalR.string.app_name)
                                 }
@@ -138,46 +271,13 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                 navigationIcon = {
                                     when (currentRoute) {
 
-                                        AppScreen.DeviceTab.DeviceDetail.route -> {
-                                            IconButton(
-                                                onClick = {
-                                                    navController.popBackStack()
-                                                },
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                    contentDescription = stringResource(R.string.misc_navigate_up)
-                                                )
-                                            }
-                                        }
-
-                                        AppScreen.DeviceTab.DeviceFile.route -> {
-                                            IconButton(
-                                                onClick = {
-                                                    navController.popBackStack()
-                                                },
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                    contentDescription = stringResource(R.string.misc_navigate_up)
-                                                )
-                                            }
-                                        }
-
-                                        AppScreen.ConfigTab.ConfigDetail.route -> {
-                                            IconButton(
-                                                onClick = {
-                                                    navController.popBackStack()
-                                                },
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                    contentDescription = stringResource(R.string.misc_navigate_up)
-                                                )
-                                            }
-                                        }
-
-                                        AppScreen.DeviceTab.DeviceConfig.route -> {
+                                        AppScreen.RecordTab.RecordDetail.route,
+                                        AppScreen.RecordTab.PlotSettings.route,
+                                        AppScreen.DeviceTab.DeviceDetail.route,
+                                        AppScreen.ConfigTab.ConfigDetail.route,
+                                        AppScreen.DeviceTab.DeviceConfig.route,
+                                        AppScreen.Session.ReferencePointList.route,
+                                        AppScreen.Session.PrepareSession.route -> {
                                             IconButton(
                                                 onClick = {
                                                     navController.popBackStack()
@@ -248,6 +348,18 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             ListFlySightDevicesMenuActions()
                                         }
 
+                                        AppScreen.RecordTab.RecordDetail.route -> {
+                                            RecordDetailMenuActions {
+                                                navController.navigate(AppScreen.RecordTab.PlotSettings.route)
+                                            }
+                                        }
+
+                                        AppScreen.Session.PrepareSession.route -> {
+                                            PrepareSessionMenuActions {
+                                                navController.navigate(AppScreen.Session.ReferencePointList.route)
+                                            }
+                                        }
+
                                         else -> {}
                                     }
                                 }
@@ -255,12 +367,24 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                         },
                         bottomBar = {
                             if (currentBackStack.value?.destination?.route == AppScreen.DeviceTab.DeviceList.route ||
-                                currentBackStack.value?.destination?.route == AppScreen.ConfigTab.ConfigList.route
+                                currentBackStack.value?.destination?.route == AppScreen.ConfigTab.ConfigList.route ||
+                                currentBackStack.value?.destination?.route == AppScreen.RecordTab.RecordList.route
                             ) {
+                                val selectedTab =
+                                    updateTransition(targetState = currentBackStack.value?.destination?.route)
+
+                                val deviceScale by selectedTab.animateFloat { if (it == AppScreen.DeviceTab.DeviceList.route) 1.2f else 1f }
+                                val configScale by selectedTab.animateFloat { if (it == AppScreen.ConfigTab.ConfigList.route) 1.2f else 1f }
+                                val recordScale by selectedTab.animateFloat { if (it == AppScreen.RecordTab.RecordList.route) 1.2f else 1f }
                                 BottomAppBar(
                                     actions = {
                                         Box(
-                                            modifier = Modifier.weight(1f),
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .graphicsLayer {
+                                                    scaleX = deviceScale
+                                                    scaleY = deviceScale
+                                                },
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Column(
@@ -269,6 +393,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                 Icon(
                                                     modifier = Modifier.requiredSize(24.dp),
                                                     painter = painterResource(LocalR.drawable.flysight_logo_only),
+//                                                    painter = painterResource(R.drawable.vd_vector),
                                                     contentDescription = stringResource(R.string.misc_devices)
                                                 )
                                                 Spacer(modifier = Modifier.requiredHeight(8.dp))
@@ -287,7 +412,12 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             )
                                         }
                                         Box(
-                                            modifier = Modifier.weight(1f),
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .graphicsLayer {
+                                                    scaleX = configScale
+                                                    scaleY = configScale
+                                                },
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Column(
@@ -312,12 +442,53 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                                     }
                                             )
                                         }
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .graphicsLayer {
+                                                    scaleX = recordScale
+                                                    scaleY = recordScale
+                                                },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.AreaChart,
+                                                    contentDescription = stringResource(R.string.screen_title_record_list)
+                                                )
+                                                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                                                FText(
+                                                    text = stringResource(R.string.screen_title_record_list),
+                                                    configuration = TextConfiguration.TabTitle
+                                                )
+                                            }
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .clip(CircleShape)
+                                                    .clickable {
+                                                        navController.navigate(AppScreen.RecordTab.route)
+                                                    }
+                                            )
+                                        }
                                     }
                                 )
                             }
                         }
                     ) { paddingValues ->
                         Box(modifier = Modifier.padding(paddingValues)) {
+
+                            BackHandler {
+                                val currentRoute = currentBackStack.value?.destination?.route
+                                if (currentRoute == AppScreen.DeviceTab.DeviceList.route || currentRoute == AppScreen.ConfigTab.ConfigList.route) {
+                                    finish()
+                                } else {
+                                    navController.popBackStack()
+                                }
+                            }
+
                             NavHost(
                                 navController = navController,
                                 startDestination = AppScreen.DeviceTab.route
@@ -331,7 +502,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                             onDeviceSelected = {
                                                 navController.navigate(
                                                     AppScreen.DeviceTab.DeviceDetail.buildRoute(
-                                                        it.uuid
+                                                        it.volatileUuid
                                                     )
                                                 )
                                             }
@@ -421,14 +592,70 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
                                         )
                                     }
                                 }
-                            }
-
-                            BackHandler {
-                                val currentRoute = currentBackStack.value?.destination?.route
-                                if (currentRoute == AppScreen.DeviceTab.DeviceList.route || currentRoute == AppScreen.ConfigTab.ConfigList.route) {
-                                    finish()
-                                } else {
-                                    navController.popBackStack()
+                                navigation(
+                                    route = AppScreen.RecordTab.route,
+                                    startDestination = AppScreen.RecordTab.RecordList.route
+                                ) {
+                                    composable(route = AppScreen.RecordTab.RecordList.route) {
+                                        ListRecordsScreen { selectedRecord ->
+                                            navController.navigate(
+                                                AppScreen.RecordTab.RecordDetail.buildRoute(
+                                                    selectedRecord.phoneFilePath
+                                                )
+                                            )
+                                        }
+                                    }
+                                    composable(route = AppScreen.RecordTab.RecordDetail.route) { backStackEntry ->
+                                        val recordName =
+                                            backStackEntry.arguments?.getString("recordName")
+                                                ?: return@composable
+                                        RecordDetailScreen(
+                                            recordName = recordName
+                                        )
+                                    }
+                                    composable(route = AppScreen.RecordTab.PlotSettings.route) {
+                                        PlotSettingsScreen()
+                                    }
+                                }
+                                navigation(
+                                    route = AppScreen.Session.route,
+                                    startDestination = AppScreen.Session.PrepareSession.route
+                                ) {
+                                    composable(route = AppScreen.Session.PrepareSession.route) {
+                                        PrepareSessionScreen(
+                                            onCreateConfigurationClicked = {
+                                                navController.navigate(
+                                                    AppScreen.Session.Config.buildRoute(
+                                                        ""
+                                                    )
+                                                )
+                                            },
+                                            onEditConfigurationClicked = {
+                                                navController.navigate(
+                                                    AppScreen.Session.Config.buildRoute(
+                                                        it.name
+                                                    )
+                                                )
+                                            }
+                                        )
+                                    }
+                                    composable(route = AppScreen.Session.Config.route) { backStackEntry ->
+                                        val configurationName =
+                                            backStackEntry.arguments?.getString("configurationName")
+                                                ?: return@composable
+                                        SessionProfileScreen(
+                                            configurationName = configurationName,
+                                            onNavigateUp = {
+                                                navController.popBackStack()
+                                            }
+                                        )
+                                    }
+                                    composable(route = AppScreen.Session.Play.route) {
+                                        SessionPlayerScreen()
+                                    }
+                                    composable(route = AppScreen.Session.ReferencePointList.route) {
+                                        ReferencePointListScreen()
+                                    }
                                 }
                             }
                         }
@@ -437,4 +664,148 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector, Injectable {
             }
         }
     }
+
+    @Composable
+    private fun Modifier.tripleTapHandler(
+        callback: () -> Unit
+    ): Modifier {
+        if (!BuildConfig.DEBUG) {
+            return this
+        }
+        var simpleTapDetected by remember { mutableStateOf(false) }
+        var doubleTapDetected by remember { mutableStateOf(false) }
+
+        LaunchedEffect(doubleTapDetected, simpleTapDetected) {
+            if (doubleTapDetected || simpleTapDetected) {
+                delay(500)
+                run {
+                    simpleTapDetected = false
+                    doubleTapDetected = false
+                }
+            }
+        }
+        // detect triple tap
+        return this.pointerInput(Unit) {
+            detectTapGestures(
+                onDoubleTap = { position ->
+                    if (simpleTapDetected) {
+                        callback()
+                    } else {
+                        doubleTapDetected = true
+                    }
+                },
+            ) { position ->
+                if (doubleTapDetected) {
+                    callback()
+                } else {
+                    simpleTapDetected = true
+                }
+            }
+        }
+    }
+
+    private var originalBrightness: Float = -1f
+    override fun lock(lock: Boolean) {
+        requestedOrientation = if (lock) {
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+
+        lifecycleScope.launch {
+            // Toggle fullscreen mode
+            if (lock) {
+                // Enter fullscreen mode
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    window.insetsController?.let {
+                        it.hide(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+                        it.systemBarsBehavior =
+                            WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    }
+                } else {
+                    @Suppress("DEPRECATION")
+                    window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_FULLSCREEN)
+
+                    @Suppress("DEPRECATION")
+                    window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+                }
+            } else {
+                // Exit fullscreen mode
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    window.insetsController?.show(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+                } else {
+                    @Suppress("DEPRECATION")
+                    window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+
+                    @Suppress("DEPRECATION")
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+                }
+            }
+
+            if (lock) {
+                // Keep screen on when locked
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON/* and WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN*/)
+
+                // Store original brightness if not already stored
+                val layoutParams = window.attributes
+                if (originalBrightness < 0) {
+                    originalBrightness = layoutParams.screenBrightness
+                }
+
+                // Set screen brightness to maximum
+                layoutParams.screenBrightness = 1.0f  // 1.0f is maximum brightness
+                window.attributes = layoutParams
+                window.apply {
+                    attributes.apply {
+                        screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
+                    }
+                    addFlags(WindowManager.LayoutParams.SCREEN_BRIGHTNESS_CHANGED)
+                }
+            } else {
+                // Allow screen to turn off when unlocked
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON/* and WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN*/)
+
+                // Restore original brightness
+                if (originalBrightness >= 0) {
+                    val layoutParams = window.attributes
+                    layoutParams.screenBrightness = originalBrightness
+                    window.attributes = layoutParams
+                    originalBrightness = -1f
+                    window.apply {
+                        attributes.apply {
+                            screenBrightness = originalBrightness
+
+                        }
+                        addFlags(WindowManager.LayoutParams.SCREEN_BRIGHTNESS_CHANGED)
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode in locationContinuations.keys) {
+            handleCheckSettings(requestCode, resultCode, data)
+        }
+    }
+
+    private fun handleCheckSettings(requestCode: Int, resultCode: Int, data: Intent?) {
+        val continuation = locationContinuations.remove(requestCode)
+        continuation?.resume(resultCode == RESULT_OK)
+    }
+
+
+    override suspend fun enableLocation(resolvableApiException: ResolvableApiException): Boolean =
+        suspendCancellableCoroutine { continuation ->
+            val requestId = currentLocationRequestId
+            currentLocationRequestId++
+            locationContinuations[requestId] = continuation
+            resolvableApiException.startResolutionForResult(this, requestId)
+        }
 }

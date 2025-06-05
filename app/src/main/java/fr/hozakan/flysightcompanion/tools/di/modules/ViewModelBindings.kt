@@ -13,6 +13,13 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_config.DeviceConfig
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail.DeviceDetailViewModel
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.file.FileScreenViewModel
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesViewModel
+import fr.hozakan.flysightcompanion.recordsmodule.ui.detail.RecordDetailViewModel
+import fr.hozakan.flysightcompanion.recordsmodule.ui.list.ListRecordsViewModel
+import fr.hozakan.flysightcompanion.recordsmodule.ui.plot.PlotSettingsViewModel
+import fr.hozakan.flysightcompanion.sessionmodule.ui.profile.SessionProfileViewModel
+import fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session.PrepareSessionViewModel
+import fr.hozakan.flysightcompanion.sessionmodule.ui.player.SessionPlayerViewModel
+import fr.hozakan.flysightcompanion.sessionmodule.ui.reference.ReferencePointListViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 
@@ -55,6 +62,48 @@ internal abstract class ViewModelBindings {
     @IntoMap
     @ViewModelKey(DeviceConfigurationViewModel::class)
     abstract fun bindDeviceConfigurationViewModel(deviceConfigurationViewModel: DeviceConfigurationViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(ListRecordsViewModel::class)
+    abstract fun bindListRecordsViewModel(listRecordsViewModel: ListRecordsViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(RecordDetailViewModel::class)
+    abstract fun bindRecordDetailViewModel(recordDetailViewModel: RecordDetailViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(PlotSettingsViewModel::class)
+    abstract fun bindPlotSettingsViewModel(plotSettingsViewModel: PlotSettingsViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(PrepareSessionViewModel::class)
+    abstract fun bindPickConfigViewModel(prepareSessionViewModel: PrepareSessionViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(SessionProfileViewModel::class)
+    abstract fun bindSessionConfigViewModel(sessionProfileViewModel: SessionProfileViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(SessionPlayerViewModel::class)
+    abstract fun bindSessionPlayViewModel(sessionPlayerViewModel: SessionPlayerViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(ReferencePointListViewModel::class)
+    abstract fun bindReferencePointListViewModel(referencePointListViewModel: ReferencePointListViewModel): ViewModel
 
     @Binds
     abstract fun bindViewModelFactory(factory: ViewModelFactory): ViewModelProvider.Factory

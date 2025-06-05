@@ -16,7 +16,7 @@
 + Possibilité de donner une importance supérieure au job de ping. scheduler
 
 - DONE améliorer l'interface de list des devices en :
- + changeant la position du boutton "add device" quand il y a déjà des devices (Icons.Default.NewWindow)
+ + changeant la position du bouton "add device" quand il y a déjà des devices (Icons.Default.NewWindow)
  + ajoutant un spinner dans l'action bar quand un scan est en cours avec des devices déjà trouvés
 
 - DONE Improve config file picking dialog spacing between elements
@@ -59,7 +59,7 @@
 
 - DONE gradle modules organization and clean up
 
-# TODO release/1.0.0 RC4
+# DONE release/1.0.0 RC4
 
 - NOPE Help on config file edition and display ?
 
@@ -67,22 +67,46 @@
 
 - DONE Fix FlySight tab logo on devices with density < my phone density
 
-# TODO release/2.0.0
+# TODO release/1.0.0 RC5
+
+- Distance is only displayed in meters in the Configuration Card of a device on the list of devices
+
+- Some coroutines are hanging up in FlySightDeviceImpl class
+
+# TODO release/2.0.0 RC1
+
+- DONE big feature : Live GNSS data and HUDs V1
+
+- DONE Reference points
+
+- DONE firmware updater
+
+- DONE FlyBlind
+
+- DONE Many fixes and improvements
+
+# TODO release/2.0.0 RC2
+
+- Check feedback not exporting device logs in playstore app
+
+- Check download of TRACK.CSV files from FlySight file trees
+
+- Update compatibility matrix to expose latests FlySight firmware versions
+
+- Auto launch FlySights when starting a session with a FlySight as source
+
+- Hide content from Record detail screen
+
+# TODO release/2.1.0
+
+- Help on config file edition and display (if not in 2.0.0)
 
 - big feature : record analyses
 
-- Help on config file edition and display (if not in 1.0.0)
-
-- How to update FlySight 2 Firmware + firmware updater
-
 # TODO release/3.0.0
-
-- big feature : Live GNSS data and HUD
-
-# TODO release/4.0.0
 
 - big feature : iOS
 
-# TODO release/5.0.0
+# TODO release/4.0.0
 
 - big feature : Desktop

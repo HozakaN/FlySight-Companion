@@ -35,11 +35,11 @@ class FlySightJobScheduler {
         val label = labelProvider?.invoke()
         val tag = label?.let { "$it [$counter]" }
         if (label != null) {
-            Timber.d("Job $tag scheduled")
+            Timber.i("Job $tag scheduled")
         }
         deferred.await()
         if (label != null)  {
-            Timber.d("Job $tag started")
+            Timber.i("Job $tag started")
         }
         val result = try {
             block(counter)
@@ -47,7 +47,7 @@ class FlySightJobScheduler {
             onJobFinished()
         }
         if (label != null)  {
-            Timber.d("Job $tag finished")
+            Timber.i("Job $tag finished")
         }
         return result
     }

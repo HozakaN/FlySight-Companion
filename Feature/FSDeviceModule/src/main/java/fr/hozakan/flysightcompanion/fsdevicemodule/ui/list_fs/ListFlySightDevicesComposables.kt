@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,11 +28,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -63,6 +65,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -76,19 +79,23 @@ import fr.hozakan.flysightcompanion.designsystem.theme.TextConfiguration
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.fsdevicemodule.R as LocalR
 import fr.hozakan.flysightcompanion.designsystem.R
+import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
-import fr.hozakan.flysightcompanion.model.ConfigFileState
+import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
-import fr.hozakan.flysightcompanion.model.result.ResultFile
+import fr.hozakan.flysightcompanion.model.firmware.FirmwareCompatibilityMatrix
+import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
+import androidx.compose.ui.platform.LocalConfiguration
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
@@ -149,7 +156,10 @@ fun ListFlySightDevicesMenuActions() {
                     modifier = Modifier.requiredHeight(120.dp)
                 ) {
                     Box(
-                        modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(horizontal = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(text = "Version ${state.versionName}")
@@ -218,6 +228,15 @@ fun ListFlySightDevicesScreen(
         },
         onChangeDeviceConfigurationClicked = {
             viewModel.changeDeviceConfiguration(it)
+        },
+        onUploadRecordToSystem = {
+            viewModel.uploadRecordToSystem(it)
+        },
+        onPreventDialogForFirmwareVersion = {
+            viewModel.preventDialogForFirmwareVersion(it)
+        },
+        onUpdateFirmwareClicked = {
+            viewModel.updateFirmware(it)
         }
     )
 }
@@ -235,7 +254,10 @@ internal fun ListFlySightDevicesScreenInternal(
     onUploadConfigToSystemClicked: (ListFlySightDeviceDisplayData) -> Unit,
     onUpdateSystemConfigClicked: (ListFlySightDeviceDisplayData) -> Unit,
     onPushConfigToDeviceClicked: (FlySightDevice) -> Unit,
-    onChangeDeviceConfigurationClicked: (ListFlySightDeviceDisplayData) -> Unit
+    onChangeDeviceConfigurationClicked: (ListFlySightDeviceDisplayData) -> Unit,
+    onUploadRecordToSystem: (ListFlySightDeviceDisplayData) -> Unit,
+    onPreventDialogForFirmwareVersion: (ListFlySightDeviceDisplayData) -> Unit,
+    onUpdateFirmwareClicked: (ListFlySightDeviceDisplayData) -> Unit
 ) {
 
     Surface(
@@ -256,7 +278,7 @@ internal fun ListFlySightDevicesScreenInternal(
                         onRequestBluetoothPermissionClicked()
                     }
                 ) {
-                    Text(text = stringResource(R.string.misc_request_permission))
+                    Text(text = stringResource(R.string.misc_grant_permission))
                 }
             }
         } else if (state.bluetoothState != BluetoothService.BluetoothState.Available) {
@@ -379,8 +401,9 @@ internal fun ListFlySightDevicesScreenInternal(
                     items(state.devices) { device ->
                         FlySightDeviceItem(
                             device = device,
+                            firmwareCompatibilityMatrix = state.compatibilityMatrix,
                             unitSystem = state.unitSystem,
-                            updatingConfiguration = state.updatingConfiguration == device.uuid,
+                            updatingConfiguration = state.updatingConfiguration == device.volatileUuid,
                             onConnectionClicked = {
                                 onConnectDeviceClicked(device)
                             },
@@ -398,8 +421,38 @@ internal fun ListFlySightDevicesScreenInternal(
                             },
                             onChangeDeviceConfigurationClicked = {
                                 onChangeDeviceConfigurationClicked(device)
+                            },
+                            onUploadRecordToSystem = {
+                                onUploadRecordToSystem(device)
+                            },
+                            onPreventDialogForFirmwareVersion = {
+                                onPreventDialogForFirmwareVersion(device)
+                            },
+                            onUpdateFirmwareClicked = {
+                                onUpdateFirmwareClicked(device)
                             }
                         )
+                    }
+                }
+                if (state.uploadingRecord != null) {
+                    Dialog(
+                        onDismissRequest = {}
+                    ) {
+                        Card {
+                            Row(
+                                modifier = Modifier.padding(32.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                                FText(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    text = state.uploadingRecord,
+                                    configuration = FlySightTheme.typography.plainScreenTextLarge,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -411,6 +464,7 @@ internal fun ListFlySightDevicesScreenInternal(
 @Composable
 fun FlySightDeviceItem(
     device: ListFlySightDeviceDisplayData,
+    firmwareCompatibilityMatrix: FirmwareCompatibilityMatrix,
     unitSystem: UnitSystem,
     updatingConfiguration: Boolean,
     onConnectionClicked: () -> Unit,
@@ -418,15 +472,32 @@ fun FlySightDeviceItem(
     onUploadConfigToSystem: () -> Unit,
     onUpdateSystemConfClicked: () -> Unit,
     onPushConfigToDeviceClicked: () -> Unit,
-    onChangeDeviceConfigurationClicked: () -> Unit
+    onChangeDeviceConfigurationClicked: () -> Unit,
+    onUploadRecordToSystem: () -> Unit,
+    onPreventDialogForFirmwareVersion: () -> Unit,
+    onUpdateFirmwareClicked: () -> Unit
 ) {
+    var firmwareUpdateDialogOpened by remember { mutableStateOf(false) }
     Card {
         val connectionState by device.connectionState.collectAsState()
 
-        val resultFilesState by device.resultFiles.collectAsState()
+        Timber.d("Composing FlySightDeviceItem with device state : $connectionState")
+
+        val resultFilesState by device.records.collectAsState()
+
         val clickableModifier =
-            if (connectionState == DeviceConnectionState.Connected && resultFilesState is LoadingState.Loaded) {
-                Modifier.clickable { onDeviceClicked() }
+            if (connectionState == DeviceConnectionState.Connected) {
+                if (device.hasFirmwareUpdate && device.canShowFirmwareWarning) {
+                    Modifier.clickable {
+                        firmwareUpdateDialogOpened = true
+                    }
+                } else if (resultFilesState is LoadingState.Loaded) {
+                    Modifier.clickable {
+                        onDeviceClicked()
+                    }
+                } else {
+                    Modifier
+                }
             } else {
                 Modifier
             }
@@ -448,11 +519,31 @@ fun FlySightDeviceItem(
                                 text = device.name,
                                 style = MaterialTheme.typography.titleLarge
                             )
-                            Spacer(modifier = Modifier.requiredWidth(8.dp))
-                            ConnectionIndicator(
-                                connectionState = connectionState,
-                                flySightDevice = device
-                            )
+                            if (device.isBle) {
+                                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                                ConnectionIndicator(
+                                    connectionState = connectionState,
+                                    flySightDevice = device
+                                )
+                                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                                Icon(
+                                    imageVector = Icons.Default.Bluetooth,
+                                    contentDescription = "This device is connected through Bluetooth"
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Usb,
+                                    contentDescription = "This device is connected through Usb"
+                                )
+                            }
+                            if (device.hasFirmwareUpdate && device.canShowFirmwareWarning) {
+                                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = "",
+                                    tint = CustomColors.Orange
+                                )
+                            }
                             Spacer(modifier = Modifier.weight(1f))
                             TextButton(
                                 onClick = onConnectionClicked
@@ -469,7 +560,8 @@ fun FlySightDeviceItem(
                             onUploadConfigToSystem = onUploadConfigToSystem,
                             onUpdateSystemConfClicked = onUpdateSystemConfClicked,
                             onPushConfigToDeviceClicked = onPushConfigToDeviceClicked,
-                            onChangeDeviceConfigurationClicked = onChangeDeviceConfigurationClicked
+                            onChangeDeviceConfigurationClicked = onChangeDeviceConfigurationClicked,
+                            onUploadRecordToSystem = onUploadRecordToSystem
                         )
                     }
                 }
@@ -483,10 +575,26 @@ fun FlySightDeviceItem(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = device.name,
-                            style = MaterialTheme.typography.titleLarge
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = device.name,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Spacer(modifier = Modifier.requiredWidth(8.dp))
+                            if (device.isBle) {
+                                Icon(
+                                    imageVector = Icons.Default.Bluetooth,
+                                    contentDescription = "This device is connected through Bluetooth"
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Usb,
+                                    contentDescription = "This device is connected through Usb"
+                                )
+                            }
+                        }
                         Spacer(modifier = Modifier.requiredHeight(32.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically
@@ -507,10 +615,26 @@ fun FlySightDeviceItem(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = device.name,
-                            style = MaterialTheme.typography.titleLarge
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = device.name,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Spacer(modifier = Modifier.requiredWidth(8.dp))
+                            if (device.isBle) {
+                                Icon(
+                                    imageVector = Icons.Default.Bluetooth,
+                                    contentDescription = "This device is connected through Bluetooth"
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Usb,
+                                    contentDescription = "This device is connected through Usb"
+                                )
+                            }
+                        }
                         Spacer(modifier = Modifier.requiredHeight(32.dp))
                         Text(
                             text = connectionText(connectionState),
@@ -528,10 +652,26 @@ fun FlySightDeviceItem(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = device.name,
-                            style = MaterialTheme.typography.titleLarge
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = device.name,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Spacer(modifier = Modifier.requiredWidth(8.dp))
+                            if (device.isBle) {
+                                Icon(
+                                    imageVector = Icons.Default.Bluetooth,
+                                    contentDescription = "This device is connected through Bluetooth"
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Usb,
+                                    contentDescription = "This device is connected through Usb"
+                                )
+                            }
+                        }
                         Spacer(modifier = Modifier.requiredHeight(32.dp))
                         Button(
                             onClick = onConnectionClicked
@@ -543,68 +683,225 @@ fun FlySightDeviceItem(
             }
         }
     }
+
+    if (firmwareUpdateDialogOpened) {
+        FirmwareUpdateDialog(
+            device = device,
+            firmwareCompatibilityMatrix = firmwareCompatibilityMatrix,
+            onDismissRequest = {
+                firmwareUpdateDialogOpened = false
+                if (it) {
+                    onPreventDialogForFirmwareVersion()
+                }
+            },
+            onValidate = {
+                onUpdateFirmwareClicked()
+                firmwareUpdateDialogOpened = false
+            }
+        )
+    }
 }
 
 @Composable
-fun DeviceResultFilesContainer(
-    modifier: Modifier = Modifier,
-    device: ListFlySightDeviceDisplayData
+fun FirmwareUpdateDialog(
+    device: ListFlySightDeviceDisplayData,
+    firmwareCompatibilityMatrix: FirmwareCompatibilityMatrix,
+    onDismissRequest: (Boolean) -> Unit,
+    onValidate: () -> Unit
 ) {
-    val locales = LocalContext.current.resources.configuration.locales
+    Dialog(
+        onDismissRequest = { onDismissRequest(false) }
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(8.dp)
+            ) {
+                FText(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = device.name,
+                    configuration = FlySightTheme.typography.cardTitle,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.requiredHeight(32.dp))
+                Text(
+                    text = "You can update the firmware of your device to version ${firmwareCompatibilityMatrix.firmwares.first().name}",
+                    color = CustomColors.Orange
+                )
+                Spacer(modifier = Modifier.requiredHeight(32.dp))
+                var donnotShowAgain by remember { mutableStateOf(false) }
+                Row(
+                    modifier = Modifier.clickable { donnotShowAgain = !donnotShowAgain },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = donnotShowAgain,
+                        onCheckedChange = {
+                            donnotShowAgain = !donnotShowAgain
+                        }
+                    )
+                    Spacer(modifier = Modifier.requiredWidth(8.dp))
+                    Text(
+                        text = "Don't show this message again for this version"
+                    )
+                }
+                SimpleDialogActionBar(
+                    onCancel = { onDismissRequest(donnotShowAgain) },
+                    onValidate = onValidate,
+                    validateButtonText = "Update".uppercase()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun DeviceRecordsContainer(
+    modifier: Modifier = Modifier,
+    device: ListFlySightDeviceDisplayData,
+    onUploadRecordToSystem: () -> Unit
+) {
+    val locales = LocalConfiguration.current.locales
     val locale = if (locales.isEmpty) Locale.ROOT else locales[0]
     val dateTimeFormatter = remember(locale) {
         DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(locale)
     }
-    val resultFiles by device.resultFiles.collectAsState()
+
+    val resultFiles by device.records.collectAsState()
+    val warning = !device.isLastRecordUploaded
+    var warningDialogOpened by remember { mutableStateOf(false) }
+    val mod = if (warning) {
+        Modifier
+            .clickable {
+                warningDialogOpened = true
+            }
+            .padding(8.dp)
+    } else {
+        Modifier.padding(8.dp)
+    }
     Column(
-        modifier = modifier.padding(8.dp)
+        modifier = modifier
+            .then(mod)
     ) {
-        Text(
-            text = stringResource(R.string.list_device_result_files_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
-        )
+        if (warning) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.list_device_records_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    modifier = Modifier.requiredSize(24.dp),
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = stringResource(R.string.list_device_item_record_warning_content_description),
+                    tint = CustomColors.Orange
+                )
+            }
+        } else {
+            Text(
+                text = stringResource(R.string.list_device_records_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+        }
         when (val files = resultFiles) {
-            is LoadingState.Error<List<ResultFile>> -> {
+            is LoadingState.Error<List<RecordFile>> -> {
                 Row(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = stringResource(R.string.list_device_error_loading_result_files),
+                        text = stringResource(R.string.list_device_error_loading_records),
                     )
                 }
             }
 
-            is LoadingState.Loaded<List<ResultFile>> -> {
+            is LoadingState.Loaded<List<RecordFile>> -> {
                 val mostRecentFile = files.value.maxByOrNull { it.dateTime }
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.list_device_result_files_count),
+                        text = stringResource(R.string.list_device_record_count),
                         style = MaterialTheme.typography.titleSmall
                     )
-                    Text(text = "${files.value.size}")
+                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+                    FText(
+                        text = "${files.value.size}",
+                        configuration = FlySightTheme.typography.captionText
+                    )
                     Spacer(modifier = Modifier.requiredHeight(16.dp))
                     Text(
-                        text = stringResource(R.string.list_device_result_files_most_recent),
+                        text = stringResource(R.string.list_device_record_most_recent),
                         style = MaterialTheme.typography.titleSmall
                     )
-                    Text(text = "${mostRecentFile?.dateTime?.format(dateTimeFormatter)}")
+                    FText(
+                        text = "${mostRecentFile?.dateTime?.format(dateTimeFormatter)}",
+                        configuration = FlySightTheme.typography.captionText
+                    )
                 }
             }
 
             LoadingState.Idle,
-            is LoadingState.Loading<List<ResultFile>> -> {
+            is LoadingState.Loading<List<RecordFile>> -> {
                 Row(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = stringResource(R.string.list_device_loading_result_files))
+                    Text(text = stringResource(R.string.list_device_loading_records))
                 }
+            }
+        }
+    }
+    if (warningDialogOpened) {
+        DeviceLastRecordNotSavedDialog(
+            device = device,
+            onValidate = {
+                onUploadRecordToSystem()
+                warningDialogOpened = false
+            },
+            onDismissRequest = { warningDialogOpened = false }
+        )
+    }
+}
+
+@Composable
+private fun DeviceLastRecordNotSavedDialog(
+    device: ListFlySightDeviceDisplayData,
+    onValidate: () -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest
+    ) {
+        Card {
+            Column(
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = device.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.requiredHeight(16.dp))
+                Text(
+                    text = stringResource(R.string.list_device_dialog_upload_most_recent_record),
+                    color = CustomColors.Orange
+                )
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                SimpleDialogActionBar(
+                    onCancel = onDismissRequest,
+                    onValidate = onValidate,
+                    validateButtonText = stringResource(R.string.misc_upload).uppercase()
+                )
             }
         }
     }
@@ -612,15 +909,16 @@ fun DeviceResultFilesContainer(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun FlySightDeviceItemConfigBody(
+private fun FlySightDeviceItemConfigBody(
     device: ListFlySightDeviceDisplayData,
     updatingConfiguration: Boolean,
-    configFileState: ConfigFileState,
+    configFileState: LoadingState<ConfigFile>,
     unitSystem: UnitSystem,
     onUploadConfigToSystem: () -> Unit,
     onUpdateSystemConfClicked: () -> Unit,
     onPushConfigToDeviceClicked: () -> Unit,
-    onChangeDeviceConfigurationClicked: () -> Unit
+    onChangeDeviceConfigurationClicked: () -> Unit,
+    onUploadRecordToSystem: () -> Unit
 ) {
     val rows = 2
     FlowRow(
@@ -651,8 +949,9 @@ fun FlySightDeviceItemConfigBody(
         Surface(
             modifier = itemModifier
         ) {
-            DeviceResultFilesContainer(
-                device = device
+            DeviceRecordsContainer(
+                device = device,
+                onUploadRecordToSystem = onUploadRecordToSystem
             )
         }
     }
@@ -661,7 +960,7 @@ fun FlySightDeviceItemConfigBody(
 @Composable
 private fun DeviceConfigurationContainer(
     modifier: Modifier = Modifier,
-    configFileState: ConfigFileState,
+    configFileState: LoadingState<ConfigFile>,
     updatingConfiguration: Boolean,
     device: ListFlySightDeviceDisplayData,
     onUploadConfigToSystem: () -> Unit,
@@ -674,7 +973,7 @@ private fun DeviceConfigurationContainer(
     val warning = !device.isConfigFromSystem || device.hasConfigContentChanged
     var warningDialogOpened by remember { mutableStateOf(false) }
     var menuOpened by remember { mutableStateOf(false) }
-    val mod = if (warning && configFileState is ConfigFileState.Success) {
+    val mod = if (warning && configFileState is LoadingState.Loaded) {
         Modifier
             .clickable {
                 warningDialogOpened = true
@@ -694,11 +993,14 @@ private fun DeviceConfigurationContainer(
                 text = stringResource(R.string.list_device_configuration_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.weight(1f))
             if (!updatingConfiguration) {
-                Box {
+//                Box(
+//                    modifier = Modifier.requiredSize(24.dp)
+//                ) {
                     IconButton(
                         modifier = Modifier.requiredSize(24.dp),
                         onClick = {
@@ -733,7 +1035,7 @@ private fun DeviceConfigurationContainer(
                         )
                     }
                 }
-            }
+//            }
         }
         if (updatingConfiguration) {
             Box(
@@ -747,7 +1049,7 @@ private fun DeviceConfigurationContainer(
             return
         }
         when (configFileState) {
-            is ConfigFileState.Error -> {
+            is LoadingState.Error -> {
                 Row(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
@@ -756,7 +1058,7 @@ private fun DeviceConfigurationContainer(
                 }
             }
 
-            ConfigFileState.Loading -> {
+            is LoadingState.Loading -> {
                 Row(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
@@ -765,14 +1067,14 @@ private fun DeviceConfigurationContainer(
                 }
             }
 
-            ConfigFileState.Nothing -> {}
-            is ConfigFileState.Success -> {
+            LoadingState.Idle -> {}
+            is LoadingState.Loaded -> {
                 Spacer(modifier = Modifier.requiredHeight(16.dp))
                 if (warning) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = configFileState.config.name.ifBlank { stringResource(R.string.list_device_item_configuration_no_name) })
+                        Text(text = configFileState.value.name.ifBlank { stringResource(R.string.list_device_item_configuration_no_name) })
                         Spacer(modifier = Modifier.weight(1f))
                         Icon(
                             modifier = Modifier.requiredSize(24.dp),
@@ -782,35 +1084,36 @@ private fun DeviceConfigurationContainer(
                         )
                     }
                 } else {
-                    Text(text = configFileState.config.name.ifBlank { stringResource(R.string.list_device_item_configuration_no_name) })
+                    Text(text = configFileState.value.name.ifBlank { stringResource(R.string.list_device_item_configuration_no_name) })
                 }
                 Spacer(modifier = Modifier.requiredHeight(16.dp))
-                Text(
+                FText(
                     text = stringResource(
                         R.string.list_config_file_dz_elev_info,
-                        configFileState.config.dzElev,
+                        configFileState.value.dzElev,
                         stringResource(unitSystem.distanceTextResource)
                     ),
+                    configuration = FlySightTheme.typography.plainScreenTextLarge
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 Text(
                     text = stringResource(
                         R.string.list_config_file_speech_count,
-                        configFileState.config.speeches.size
+                        configFileState.value.speeches.size
                     ),
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 Text(
                     text = stringResource(
                         R.string.list_config_file_alarm_count,
-                        configFileState.config.alarms.size
+                        configFileState.value.alarms.size
                     ),
                 )
                 Spacer(modifier = Modifier.requiredHeight(8.dp))
                 Text(
                     text = stringResource(
                         R.string.list_config_file_silence_window_count,
-                        configFileState.config.silenceWindows.size
+                        configFileState.value.silenceWindows.size
                     ),
                 )
             }
@@ -839,7 +1142,7 @@ private fun DeviceConfigurationContainer(
 
 @Composable
 internal fun DeviceConfigurationMisMatchDialog(
-    configFileState: ConfigFileState,
+    configFileState: LoadingState<ConfigFile>,
     device: ListFlySightDeviceDisplayData,
     onDismissRequest: () -> Unit,
     onUploadConfigToSystem: () -> Unit,
@@ -875,7 +1178,7 @@ internal fun DeviceConfigurationMisMatchDialog(
                     Text(
                         text = stringResource(
                             R.string.list_device_dialog_config_content_changed,
-                            configFileState.conf?.name ?: stringResource(R.string.misc_unknown)
+                            configFileState.content?.name ?: stringResource(R.string.misc_unknown)
                         ),
                         color = CustomColors.Orange
                     )
@@ -894,7 +1197,7 @@ internal fun DeviceConfigurationMisMatchDialog(
     }
 }
 
-@SuppressLint("UnusedTransitionTargetStateParameter")
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun ConnectionIndicator(
     connectionState: DeviceConnectionState,

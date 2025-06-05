@@ -11,11 +11,12 @@ import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.config.Volume
 
-/*
-TODO Pay attention to unit system and Rate value (does it change when changing unit system?)
- */
+interface DisplayableConfig {
+    val name: String
+}
+
 data class ConfigFile(
-    val name: String,
+    override val name: String,
     val description: String,
     val group: String,
     //General
@@ -57,10 +58,10 @@ data class ConfigFile(
     val altitudeUnit: UnitSystem,
     //silence windows
     val silenceWindows: List<SilenceWindow>
-)
+) : DisplayableConfig
 
 val defaultConfigFile = ConfigFile(
-    name = "",
+    name = "Default config",
     description = "",
     group = "",
     dynamicModel = DynamicModel.Airborne2g,

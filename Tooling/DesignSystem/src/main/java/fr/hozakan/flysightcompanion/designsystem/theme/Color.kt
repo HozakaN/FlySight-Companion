@@ -224,4 +224,35 @@ object CustomColors {
     val Orange = Color(0xFFFD8A01)
     @Stable
     val FlySightGreen = Color(0xFFB5D92A)
+    @Stable
+    val PlotColor1 = Color(0xFFFF0000)
+    @Stable
+    val PlotColor2 = Color(0xFF00FF00)
+    @Stable
+    val PlotColor3 = Color(0xFF0000FF)
+    @Stable
+    val PlotColor4 = Color(0xFFFF00FF)
+    @Stable
+    val PlotColor5 = Color(0xFFFFFF00)
+    @Stable
+    val PlotColor6 = Color(0xFF00FFFF)
+    @Stable
+    val PlotColor7 = Color(0xFFFF8000)
+    @Stable
+    val PlotColor8 = Color(0xFFFF0080)
+    @Stable
+    val PlotColor9 = Color(0xFF8B4513)
+    @Stable
+    val PlotColor10 = Color(0xFF8000FF)
+    @Stable
+    val PlotColor11 = Color(0xFFFF8080)
+    @Stable
+    val PlotColor12 = Color(0xFF80FF80)
+    @Stable
+    val PlotColor13 = Color(0xFF8080FF)
+    @Stable
+    val PlotColor14 = Color(0xFFFF80FF)
+    @Stable
+    val PlotColor15 = Color(0xFF808080)
+
 }

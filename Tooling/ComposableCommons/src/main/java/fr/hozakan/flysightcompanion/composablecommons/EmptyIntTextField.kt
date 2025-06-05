@@ -1,5 +1,6 @@
 package fr.hozakan.flysightcompanion.composablecommons
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -36,6 +37,29 @@ fun EmptyIntTextField(
         label = {
             Text(text = label)
         },
+        keyboardOptions = KeyboardOptions.Default.copy(
+            keyboardType = KeyboardType.Decimal
+        )
+    )
+}
+
+
+@Composable
+fun NumberInputField(
+    label: String,
+    value: Int,
+    onValueChange: (Int) -> Unit
+) {
+    OutlinedTextField(
+        modifier = Modifier.fillMaxWidth(),
+        value = value.toString(),
+        onValueChange = {
+            it.toIntOrNull()?.let { number ->
+                onValueChange(number)
+            }
+        },
+        label = { Text(text = label) },
+        singleLine = true,
         keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Decimal
         )

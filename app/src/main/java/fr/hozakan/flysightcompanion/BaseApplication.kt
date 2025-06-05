@@ -28,8 +28,6 @@ class BaseApplication : Application() , HasAndroidInjector {
         super.onCreate()
         initTimber()
         DataStoreService.init(applicationContext)
-
-        Timber.d("Hoz2 ${BuildConfig.VERSION_NAME}")
     }
 
     private fun initTimber() {

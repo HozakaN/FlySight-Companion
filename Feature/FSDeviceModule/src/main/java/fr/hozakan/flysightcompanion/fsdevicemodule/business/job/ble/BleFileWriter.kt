@@ -5,10 +5,12 @@ import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import fr.hozakan.flysightcompanion.bluetoothmodule.GattTaskQueue
 import fr.hozakan.flysightcompanion.bluetoothmodule.SimpleBluetoothGattCallback
+import fr.hozakan.flysightcompanion.framework.extension.bytesToHex
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.FileWriter
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightcompanion.model.ble.FlySightCharacteristic
 import kotlinx.coroutines.CompletableDeferred
+import timber.log.Timber
 
 class BleFileWriter(
     private val gatt: BluetoothGatt,
@@ -25,6 +27,14 @@ class BleFileWriter(
     override suspend fun writeFile(
         filePath: String,
         fileContent: String
+    ) {
+        writeFile(filePath, fileContent.toByteArray(), {})
+    }
+
+    override suspend fun writeFile(
+        filePath: String,
+        fileContent: ByteArray,
+        callback: (Int) -> Unit
     ) {
         scheduler.schedule(
             labelProvider = { "Write file $filePath" }
@@ -52,11 +62,12 @@ class BleFileWriter(
                         }
                     } else if (cmd == Command.FILE_ACK) {
                         val ackNum = value[1].toInt() and 0xFF
-                        if (ackNum == currentPacket) {
+                        if (ackNum == currentPacket.mod(256)) {
                             currentPacket++
                             if (currentPacket > dataPackets.size) {
                                 fileDataSent.complete(Unit)
                             } else {
+                                callback(currentPacket * FRAME_LENGTH)
                                 sendNextDataPacket()
                             }
                         }
@@ -89,14 +100,13 @@ class BleFileWriter(
         }
     }
 
-    private fun prepareDataPackets(fileContent: String) {
-        val contentBytes = fileContent.toByteArray()
-        val nbPackets = contentBytes.size / FRAME_LENGTH + 1
+    private fun prepareDataPackets(fileContent: ByteArray) {
+        val nbPackets = fileContent.size / FRAME_LENGTH + 1
         for (i in 0 until nbPackets) {
             val packet = try {
-                contentBytes.copyOfRange(i * FRAME_LENGTH, (i + 1) * FRAME_LENGTH)
+                fileContent.copyOfRange(i * FRAME_LENGTH, (i + 1) * FRAME_LENGTH)
             } catch (e: Exception) {
-                contentBytes.copyOfRange(i * FRAME_LENGTH, contentBytes.size)
+                fileContent.copyOfRange(i * FRAME_LENGTH, fileContent.size)
             }
             dataPackets.add(packet)
         }
@@ -115,7 +125,7 @@ class BleFileWriter(
             TaskBuilder.buildWriteFileDataTask(
                 gatt,
                 gattCharacteristic,
-                currentPacket,
+                currentPacket.mod(256),
                 chunk
             ) {}
         }

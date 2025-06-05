@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
+import timber.log.Timber
 import kotlin.coroutines.resume
 
 class AsyncOperationsFragment : Fragment() {
@@ -50,7 +51,6 @@ class AsyncOperationsFragment : Fragment() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun requestPermission(permissions: ArrayList<String>, callback: (Boolean) -> Unit) {
         val newIndex = requestCodeCounter++
         pendingPermissionsJobs[newIndex] = callback

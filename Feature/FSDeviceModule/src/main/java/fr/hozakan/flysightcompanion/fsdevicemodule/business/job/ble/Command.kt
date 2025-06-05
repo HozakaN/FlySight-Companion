@@ -1,5 +1,6 @@
 package fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble
 
+import fr.hozakan.flysightcompanion.model.DeviceMode
 import java.nio.ByteBuffer
 
 private const val FS_CRS_COMMAND_CREATE = 0x00
@@ -11,10 +12,13 @@ private const val FS_CRS_COMMAND_READ_DIR = 0x05
 private const val FS_CRS_COMMAND_FILE_DATA = 0x10
 private const val FS_CRS_COMMAND_FILE_INFO = 0x11
 private const val FS_CRS_COMMAND_FILE_ACK = 0x12
+private const val FS_CRS_COMMAND_GET_MODE = 0x13
 private const val FS_CRS_COMMAND_NAK = 0xf0
 private const val FS_CRS_COMMAND_ACK = 0xf1
 private const val FS_CRS_COMMAND_PING = 0xfe
 private const val FS_CRS_COMMAND_CANCEL = 0xff
+private const val FS_CONTROL_COMMAND_START_PISTOL = 0x00
+private const val FS_CONTROL_COMMAND_CANCEL_PISTOL = 0x01
 
 enum class Command(val value: Int) {
     CREATE(FS_CRS_COMMAND_CREATE),
@@ -26,10 +30,13 @@ enum class Command(val value: Int) {
     FILE_DATA(FS_CRS_COMMAND_FILE_DATA),
     FILE_INFO(FS_CRS_COMMAND_FILE_INFO),
     FILE_ACK(FS_CRS_COMMAND_FILE_ACK),
+    DEVICE_MODE(FS_CRS_COMMAND_GET_MODE),
     NAK(FS_CRS_COMMAND_NAK),
     ACK(FS_CRS_COMMAND_ACK),
     PING(FS_CRS_COMMAND_PING),
-    CANCEL(FS_CRS_COMMAND_CANCEL);
+    CANCEL(FS_CRS_COMMAND_CANCEL),
+    START_GNSS(FS_CONTROL_COMMAND_START_PISTOL),
+    STOP_GNSS(FS_CONTROL_COMMAND_CANCEL_PISTOL);
 
     companion object {
 
@@ -60,6 +67,12 @@ object CommandBuilder {
     fun buildWriteFileCommand(path: String): ByteArray =
         byteArrayOf(FS_CRS_COMMAND_WRITE.toByte()) + path.toByteArray(Charsets.UTF_8)
 
+    fun buildStartPistolCommand(): ByteArray =
+        byteArrayOf(FS_CONTROL_COMMAND_START_PISTOL.toByte())
+
+    fun buildCancelPistolSCommand(): ByteArray =
+        byteArrayOf(FS_CONTROL_COMMAND_CANCEL_PISTOL.toByte())
+
     fun buildFileDataCommand(packetId: Int, data: ByteArray): ByteArray =
         byteArrayOf(FS_CRS_COMMAND_FILE_DATA.toByte()) + byteArrayOf(packetId.toByte()) + data
 
@@ -68,5 +81,11 @@ object CommandBuilder {
 
     fun buildPingCommand(): ByteArray =
         byteArrayOf(FS_CRS_COMMAND_PING.toByte())
+
+    fun buildGetModeCommand(): ByteArray =
+        byteArrayOf(FS_CRS_COMMAND_GET_MODE.toByte())
+
+    fun buildSetModeCommand(mode: DeviceMode): ByteArray =
+        byteArrayOf(FS_CRS_COMMAND_GET_MODE.toByte()) + byteArrayOf(mode.value.toByte())
 
 }

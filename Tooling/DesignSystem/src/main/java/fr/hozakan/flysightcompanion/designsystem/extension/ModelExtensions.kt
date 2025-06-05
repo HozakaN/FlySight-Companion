@@ -10,6 +10,10 @@ import fr.hozakan.flysightcompanion.model.config.SpeechMode
 import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
 import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayGrid
+import fr.hozakan.flysightcompanion.model.session.profile.DisplayableCapability
+import fr.hozakan.flysightcompanion.model.session.profile.SessionSourceType
+import fr.hozakan.flysightcompanion.model.session.profile.SessionType
 
 val UnitSystem.unitNameResource: Int
     get() = when (this) {
@@ -120,3 +124,64 @@ val ToneMode.textResource: Int
 fun ToneMode.Companion.fromText(context: Context, text: String): ToneMode? {
     return ToneMode.entries.firstOrNull { context.getString(it.textResource) == text }
 }
+
+val SessionSourceType.textResource: Int
+    get() = when (this) {
+        SessionSourceType.Local -> R.string.session_configuration_source_local
+        SessionSourceType.FlySight -> R.string.session_configuration_source_flysight
+        SessionSourceType.Record -> R.string.session_configuration_source_file
+    }
+
+fun SessionSourceType.Companion.fromText(context: Context, text: String): SessionSourceType? {
+    return SessionSourceType.entries.firstOrNull { context.getString(it.textResource) == text }
+}
+
+val DisplayGrid.textResource: Int
+    get() = when (this) {
+        DisplayGrid.InlineLeft -> R.string.session_configuration_display_grid_inline_left
+        DisplayGrid.InlineRight -> R.string.session_configuration_display_grid_inline_right
+        DisplayGrid.TwoByTwo -> R.string.session_configuration_display_grid_two_by_two
+        DisplayGrid.TwoOnEachSide -> R.string.session_configuration_display_grid_two_on_each_side
+        DisplayGrid.ThreeOnEachSide -> R.string.session_configuration_display_grid_three_on_each_side
+    }
+
+fun DisplayGrid.Companion.fromText(context: Context, text: String): DisplayGrid? {
+    return DisplayGrid.entries.firstOrNull { context.getString(it.textResource) == text }
+}
+
+val SessionType.textResource: Int
+    get() = when (this) {
+        SessionType.Hud -> R.string.session_configuration_session_type_hud
+        SessionType.PlaneDisplay -> R.string.session_configuration_session_type_plane_display
+        SessionType.FlyBlind -> R.string.session_configuration_session_type_fly_blind
+        SessionType.SpaceInvaders -> R.string.session_configuration_session_type_space_invaders
+        SessionType.FlyToDraw -> R.string.session_configuration_session_type_fly_to_draw
+    }
+
+fun SessionType.Companion.fromText(context: Context, text: String): SessionType? {
+    return SessionType.entries.firstOrNull { context.getString(it.textResource) == text }
+}
+
+val DisplayableCapability.textResource: Int
+    get() = when (this) {
+        DisplayableCapability.Altitude -> R.string.session_configuration_displayable_capability_altitude
+        DisplayableCapability.HorizontalSpeed -> R.string.session_configuration_displayable_capability_horizontal_speed
+        DisplayableCapability.VerticalSpeed -> R.string.session_configuration_displayable_capability_vertical_speed
+        DisplayableCapability.GlideRatio -> R.string.session_configuration_displayable_capability_glide_ratio
+        DisplayableCapability.InverseGlideRatio -> R.string.session_configuration_displayable_capability_inverse_glide_ratio
+        DisplayableCapability.TotalSpeed -> R.string.session_configuration_displayable_capability_total_speed
+        DisplayableCapability.DiveAngle -> R.string.session_configuration_displayable_capability_dive_angle
+        DisplayableCapability.Elevation -> R.string.session_configuration_displayable_capability_elevation
+        DisplayableCapability.DistanceToReferencePoint -> R.string.session_configuration_displayable_capability_distance_to_ref_point
+        DisplayableCapability.Latitude -> R.string.session_configuration_displayable_capability_latitude
+        DisplayableCapability.Longitude -> R.string.session_configuration_displayable_capability_longitude
+        DisplayableCapability.VelN -> R.string.session_configuration_displayable_capability_vel_n
+        DisplayableCapability.VelE -> R.string.session_configuration_displayable_capability_vel_e
+        DisplayableCapability.VelD -> R.string.session_configuration_displayable_capability_vel_d
+        DisplayableCapability.TimeInWindow -> R.string.session_configuration_displayable_capability_time_in_window
+        DisplayableCapability.DistanceInWindow -> R.string.session_configuration_displayable_capability_distance_in_window
+        DisplayableCapability.SpeedInWindow -> R.string.session_configuration_displayable_capability_speed_in_window
+        DisplayableCapability.FlareCount -> R.string.session_configuration_displayable_capability_flare_count
+        DisplayableCapability.LastFlareResult -> R.string.session_configuration_displayable_capability_last_flare_result
+    }
+

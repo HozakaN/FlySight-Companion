@@ -12,22 +12,26 @@
     <string name="misc_discard">Annuler les changements</string>
     <string name="misc_do_not_discard">Ne rien faire</string>
 
-    <string name="misc_expand_more">Plus</string>
+    <string name="misc_expand">Plus</string>
     <string name="misc_reduce">Réduire</string>
     <string name="misc_save">Enregistrer</string>
     <string name="misc_cancel">Annuler</string>
     <string name="misc_neutral">Neutre</string>
+    <string name="misc_back">Menu parent</string>
 
-    <string name="misc_upload">Upload</string>
+    <string name="misc_named_delete">Effacer %s ?</string>
+
+    <string name="misc_upload">Enregistrer</string>
 
     <string name="misc_delete">Supprimer</string>
     <string name="misc_duplicate">Dupliquer</string>
+    <string name="misc_edit">Éditer</string>
     <string name="misc_confirm">Confirmer</string>
 
     <string name="misc_unit_name_metric">Système métrique</string>
     <string name="misc_unit_name_imperial">Système impérial</string>
 
-    <string name="misc_request_permission">Demander la permission</string>
+    <string name="misc_grant_permission">Accorder la permission</string>
 
     <string name="misc_enable_bluetooth">Activer le bluetooth</string>
 
@@ -37,9 +41,44 @@
     <string name="misc_navigate_up">Naviguer en arrière</string>
     <string name="misc_devices">Appareils</string>
 
+    <string name="left_plot_item_elevation">Hauteur</string>
+    <string name="left_plot_item_horizontal_speed">Vitesse horizontale</string>
+    <string name="left_plot_item_vertical_speed">Vitesse verticale</string>
+    <string name="left_plot_total_speed">Vitesse totale</string>
+    <string name="left_plot_course">Course</string>
+    <string name="left_plot_course_rate">Course rate</string>
+    <string name="left_plot_course_accuracy">Course accuracy</string>
+    <string name="left_plot_glide_ratio">Finesse</string>
+    <string name="left_plot_dive_angle">Angle d\'attaque</string>
+    <string name="left_plot_dive_rate">Dive rate</string>
+    <string name="left_plot_horizontal_accuracy">Précision horizontale</string>
+    <string name="left_plot_vertical_accuracy">Précision verticale</string>
+    <string name="left_plot_speed_accuracy">Précision vitesse</string>
+    <string name="left_plot_number_of_satellites">Satellites</string>
+    <string name="left_plot_acceleration">Accéleration</string>
+    <string name="left_plot_acceleration_local">Accéleration locale</string>
+    <string name="left_plot_local_acceleration_forward">Accéleration vers l\'avant</string>
+    <string name="left_plot_local_acceleration_right">Accéleration vers la droite</string>
+    <string name="left_plot_local_acceleration_down">Accéleration vers le bas</string>
+    <string name="left_plot_local_acceleration_magnitude">Accéleration magnitude</string>
+    <string name="left_plot_total_energy">Énergie totale</string>
+    <string name="left_plot_energy_rate">Energy rate</string>
+    <string name="left_plot_lift_coefficient">Coefficient de portance</string>
+    <string name="left_plot_drag_coefficient">Coefficient de traînée</string>
+    <string name="left_plot_wingsuit_sep">Probabilité d\'erreur sphérique</string>
+    <string name="left_plot_speed__score_accuracy">Précision du score de vitesse</string>
+
+    <string name="bottom_plot_item_time">Temps</string>
+    <string name="bottom_plot_item_horizontal_distance">Distance horizontale</string>
+    <string name="bottom_plot_item_total_distance">Distance totale</string>
+
     <string name="screen_title_device_detail">Détail de l\'appareil</string>
     <string name="screen_title_config_list">Configurations</string>
+    <string name="screen_title_record_list">Enregistrements</string>
     <string name="screen_title_file">Fichier %1$s</string>
+    <string name="screen_title_plot_settings">Paramètres de graphique</string>
+    <string name="screen_title_prepare_session">Préparons votre session</string>
+    <string name="screen_title_manage_reference_points">Points de référence</string>
 
     <string name="dialog_pick_config_title">Choisissez une nouvelle configuration pour votre FlySight</string>
 
@@ -112,20 +151,22 @@
     <string name="list_device_missing_ble_permission">Permission bluetooth non accordée</string>
     <string name="list_device_ble_not_available">Le bluetooth est disponible</string>
     <string name="list_device_ble_disabled">Le bluetooth est désactivé</string>
-    <string name="list_device_error_loading_result_files">Erreur lors du chargement des fichiers de sauts</string>
+    <string name="list_device_error_loading_records">Erreur lors du chargement des fichiers de sauts</string>
 
     <string name="list_device_refresh_info_1">Rafraîchissement de la liste des appareils…</string>
     <string name="list_device_refresh_info_2">Rafraîchissement de la liste des appareils…\n
                                     L\'attente est un peu plus longue que prévue…</string>
     <string name="list_device_refresh_info_3">Rafraîchissement de la liste des appareils…\n
                                         Essayez de mettre votre FlySight en appairage\n
-                                        en pressant brièvement le boutton d\'allumage deux fois</string>
+                                        en pressant brièvement le bouton d\'allumage deux fois</string>
 
-    <string name="list_device_result_files_title">Résultats</string>
-    <string name="list_device_result_files_count">Nombre de fichiers</string>
-    <string name="list_device_result_files_most_recent">Dernier run</string>
-    <string name="list_device_loading_result_files">Chargement des fichiers de résultat…</string>
-    <string name="list_device_configuration_title">Configuration</string>
+    <string name="list_devices_event_record_uploaded">Enregistrement obtenu!</string>
+
+    <string name="list_device_records_title">Enregistrements</string>
+    <string name="list_device_record_count">Nombre de fichiers</string>
+    <string name="list_device_record_most_recent">Dernier enregistrement</string>
+    <string name="list_device_loading_records">Chargement des enregistrements…</string>
+    <string name="list_device_configuration_title">Config</string>
     <string name="list_device_item_configuration_menu_content_description">Menu de l\'appareil</string>
     <string name="list_device_item_configuration_menu_change">Changer la configuration</string>
     <string name="list_device_item_configuration_updating">Mise à jour de la configuration…</string>
@@ -133,6 +174,9 @@
     <string name="list_device_item_loading_configuration">Chargement de la configuration…</string>
     <string name="list_device_item_configuration_no_name">Aucun nom</string>
     <string name="list_device_item_configuration_warning_content_description">Il y a un problème avec la configuration</string>
+    <string name="list_device_item_record_warning_content_description">Le dernier enregistrement n\'a pas encore été sauvegardé</string>
+
+    <string name="list_device_dialog_upload_most_recent_record">Souhaitez-vous télécharger le dernier enregistrement sur votre téléphone ?</string>
 
     <string name="list_device_dialog_upload_config">Souhaitez-vous télécharger cette configurtation sur votre téléphone ?</string>
     <string name="list_device_dialog_config_content_changed">La configuration "%1$s" du FlySight diffère de celle sur le téléphone</string>
@@ -211,6 +255,7 @@
     <string name="device_detail_folder">Dossier %1$s</string>
     <string name="device_detail_file">Fichier %1$s</string>
     <string name="device_detail_path_separator">Séparateur de chemin</string>
+    <string name="device_detail_download_record">Télécharger</string>
 
     <string name="device_configuration_formatted">Formaté</string>
     <string name="device_configuration_raw">Brut</string>
@@ -234,4 +279,52 @@
     <string name="device_configuration_silence_label">Silence (%1$d)</string>
     <string name="device_configuration_silence">Silence (%1$d) :</string>
 
+    <string name="list_records_no_records">Il n\'y a pas encore d\'enregistrement</string>
+    <string name="list_records_delete_record">@string/misc_delete</string>
+
+    <string name="record_detail_menu">Menu</string>
+    <string name="record_detail_menu_plot_settings">Paramètres du graphique</string>
+    <string name="record_detail_time">Temps (s)</string>
+    <string name="record_detail_horizontal_distance">Distance horizontale (%1$s)</string>
+    <string name="record_detail_total_distance">Distance totale (%1$s)</string>
+
+    <string name="color_picker_custom_color">Couleur personalisée</string>
+    <string name="color_picker_current_choice">Couleur à remplacer :</string>
+
+    <string name="session_profile_not_found">Profil introuvable</string>
+    <string name="session_configuration_source_local">GPS du téléphone</string>
+    <string name="session_configuration_source_flysight">FlySight</string>
+    <string name="session_configuration_source_file">fichier TRACK.CSV</string>
+
+    <string name="session_configuration_display_grid_inline_left">Alignés à gauche</string>
+    <string name="session_configuration_display_grid_inline_right">Alignés à droite</string>
+    <string name="session_configuration_display_grid_two_by_two">Grille 2x2</string>
+    <string name="session_configuration_display_grid_two_on_each_side">2 cases sur chaque côté</string>
+    <string name="session_configuration_display_grid_three_on_each_side">3 cases sur chaque côté</string>
+
+    <string name="session_configuration_displayable_capability_altitude">Altitude</string>
+    <string name="session_configuration_displayable_capability_horizontal_speed">Vitesse horizontale (km/h)</string>
+    <string name="session_configuration_displayable_capability_vertical_speed">Vitesse verticale (km/h)</string>
+    <string name="session_configuration_displayable_capability_glide_ratio">Glide Ratio</string>
+    <string name="session_configuration_displayable_capability_inverse_glide_ratio">IGlide Ratio</string>
+    <string name="session_configuration_displayable_capability_total_speed">Vitesse sur trajectoire (km/h)</string>
+    <string name="session_configuration_displayable_capability_dive_angle">Angle d\'attaque</string>
+    <string name="session_configuration_displayable_capability_elevation">Élévation</string>
+    <string name="session_configuration_displayable_capability_distance_to_ref_point">Distance au point de référence</string>
+    <string name="session_configuration_displayable_capability_latitude">latitude</string>
+    <string name="session_configuration_displayable_capability_longitude">longitude</string>
+    <string name="session_configuration_displayable_capability_vel_n">Vitesse nord (m\s)</string>
+    <string name="session_configuration_displayable_capability_vel_e">Vitesse est (m\s)</string>
+    <string name="session_configuration_displayable_capability_vel_d">Vitesse vers le sol (m\s)</string>
+    <string name="session_configuration_displayable_capability_time_in_window">PPC time</string>
+    <string name="session_configuration_displayable_capability_distance_in_window">PPC distance</string>
+    <string name="session_configuration_displayable_capability_speed_in_window">PPC speed</string>
+    <string name="session_configuration_displayable_capability_flare_count">Compteur de resources</string>
+    <string name="session_configuration_displayable_capability_last_flare_result">Résultat de la dernière resource</string>
+
+    <string name="session_configuration_session_type_hud">PPC HUD</string>
+    <string name="session_configuration_session_type_plane_display">Affichage d\'avion</string>
+    <string name="session_configuration_session_type_fly_blind">Fly Blind</string>
+    <string name="session_configuration_session_type_space_invaders">WS Space Invaders</string>
+    <string name="session_configuration_session_type_fly_to_draw">WS Fly-to-draw</string>
 </resources>

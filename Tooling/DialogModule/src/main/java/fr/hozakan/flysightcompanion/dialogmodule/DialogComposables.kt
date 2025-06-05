@@ -47,7 +47,19 @@ fun DialogHandler() {
                     dialItem.second.resume(result)
                 }
             }
-            else -> {}
+            is UpdateFirmwareDialog -> {
+                dial.Content {
+                    dialog = null
+                    dialItem.second.resume(DialogResult.Dismiss)
+                }
+            }
+
+            is CreateReferencePointDialog -> {
+                dial.Content {
+                    dialog = null
+                    dialItem.second.resume(it)
+                }
+            }
         }
     }
 

@@ -37,11 +37,13 @@ class BaseModule {
     @Provides
     fun provideAndroidPermissionsService(
         application: BaseApplication,
+        activityLifecycleService: ActivityLifecycleService,
         activityOperationsService: ActivityOperationsService
     ): AndroidPermissionsService =
         FrameworkAndroidPermissionsService(
             BaseMonitorableService(),
             application,
+            activityLifecycleService,
             activityOperationsService
         )
 }

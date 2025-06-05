@@ -13,7 +13,8 @@ sealed class LoadingState<out R> {
      * Loading state: the operation is actively executing.
      *
      */
-    data class Loading<out T>(val currentLoad: T? = null, val increment: Int = 0) : LoadingState<T>()
+    data class Loading<out T>(val currentLoad: T? = null, val increment: Int = 0) :
+        LoadingState<T>()
 
     /**
      * Loaded state: the operation succeeded, holding its value
@@ -29,4 +30,21 @@ sealed class LoadingState<out R> {
      */
     data class Error<out T>(val error: Throwable) : LoadingState<T>()
 
+
+    override fun toString(): String {
+        return when (this) {
+            Idle -> "Idle"
+            is Loading -> "Loading(currentLoad=$currentLoad, increment=$increment)"
+            is Loaded -> "Loaded(value=$value)"
+            is Error -> "Error(error=$error)"
+        }
+    }
+
+    val content: R?
+        get() {
+            return when (this) {
+                is Loaded -> value
+                else -> null
+            }
+        }
 }

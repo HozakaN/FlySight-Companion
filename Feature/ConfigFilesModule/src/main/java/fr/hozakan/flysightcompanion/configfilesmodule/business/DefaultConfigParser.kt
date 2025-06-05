@@ -46,9 +46,9 @@ class DefaultConfigParser : ConfigParser {
             if (line.isBlank()) return@forEachIndexed
             if (line.startsWith(";")) return@forEachIndexed
             if (multilineParser != null) {
-                newConfig = multilineParser!!.fillConfigFile(line, newConfig)
-                if (multilineParser?.isSatisfied() == true) {
-                    multilineParser?.reset()
+                newConfig = multilineParser.fillConfigFile(line, newConfig)
+                if (multilineParser.isSatisfied()) {
+                    multilineParser.reset()
                     multilineParser = null
                 }
             } else {

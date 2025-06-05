@@ -44,8 +44,8 @@ class ConfigDetailViewModel @Inject constructor(
     }
 
     fun loadConfigFile(configFileName: String) {
+        isCreatingConf = configFileName.isEmpty()
         if (configFileName.isEmpty()) {
-            isCreatingConf = true
             _state.update {
                 it.copy(
                     editedConfiguration = defaultConfigFile(),

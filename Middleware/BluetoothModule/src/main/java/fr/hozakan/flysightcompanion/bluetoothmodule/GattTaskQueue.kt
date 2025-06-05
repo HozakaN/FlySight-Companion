@@ -2,10 +2,10 @@ package fr.hozakan.flysightcompanion.bluetoothmodule
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.os.Build
+import fr.hozakan.flysightcompanion.framework.extension.bytesToHex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -30,7 +30,7 @@ class GattTaskQueue(
 
     fun gattCallback() = _gattCallback
 
-    private val characteristicChangeCallbacks = mutableMapOf<UUID, List<SimpleBluetoothGattCallback>>()
+    private val characteristicCallbacks = mutableMapOf<UUID, List<SimpleBluetoothGattCallback>>()
 
     private val _gattCallback = object : SimpleBluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
@@ -64,6 +64,7 @@ class GattTaskQueue(
             status: Int
         ) {
             super.onCharacteristicRead(gatt, characteristic, value, status)
+            Timber.d("onCharacteristicRead: ${characteristic.uuid} ${value.bytesToHex()}")
 //            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 gattCallback.onCharacteristicRead(gatt, characteristic, value, status)
 //            } else {
@@ -75,6 +76,11 @@ class GattTaskQueue(
             if (task != null) {
                 task.completion.complete(Unit)
                 tasks -= task
+            }
+            characteristicCallbacks[characteristic.uuid]?.let { callbacks ->
+                callbacks.forEach { callback ->
+                    callback.onCharacteristicRead(gatt, characteristic, value, status)
+                }
             }
         }
 
@@ -101,7 +107,7 @@ class GattTaskQueue(
         ) {
             super.onCharacteristicChanged(gatt, characteristic, value)
             gattCallback.onCharacteristicChanged(gatt, characteristic, value)
-            characteristicChangeCallbacks[characteristic.uuid]?.let { callbacks ->
+            characteristicCallbacks[characteristic.uuid]?.let { callbacks ->
                 callbacks.forEach { callback ->
                     callback.onCharacteristicChanged(gatt, characteristic, value)
                 }
@@ -118,17 +124,17 @@ class GattTaskQueue(
     }
 
     operator fun plusAssign(callback: Pair<UUID, SimpleBluetoothGattCallback>) {
-        val list = characteristicChangeCallbacks[callback.first]
+        val list = characteristicCallbacks[callback.first]
         if (list != null) {
-            characteristicChangeCallbacks[callback.first] = list + callback.second
+            characteristicCallbacks[callback.first] = list + callback.second
         } else {
-            characteristicChangeCallbacks[callback.first] = listOf(callback.second)
+            characteristicCallbacks[callback.first] = listOf(callback.second)
         }
     }
 
     operator fun minusAssign(callback: SimpleBluetoothGattCallback) {
-        characteristicChangeCallbacks.forEach { (uuid, callbacks) ->
-            characteristicChangeCallbacks[uuid] = callbacks.filter { it != callback }
+        characteristicCallbacks.forEach { (uuid, callbacks) ->
+            characteristicCallbacks[uuid] = callbacks.filter { it != callback }
         }
     }
 
