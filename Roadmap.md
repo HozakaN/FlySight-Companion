@@ -73,15 +73,29 @@
 
 - Some coroutines are hanging up in FlySightDeviceImpl class
 
-# TODO release/2.0.0
+# TODO release/2.0.0 RC1
 
-- big feature : Live GNSS data and HUDs V1
+- DONE big feature : Live GNSS data and HUDs V1
 
-- Reference points
+- DONE Reference points
 
 - DONE firmware updater
 
+- DONE FlyBlind
+
+- DONE Many fixes and improvements
+
+# TODO release/2.0.0 RC2
+
 - Check feedback not exporting device logs in playstore app
+
+- Check download of TRACK.CSV files from FlySight file trees
+
+- Update compatibility matrix to expose latests FlySight firmware versions
+
+- Auto launch FlySights when starting a session with a FlySight as source
+
+- Hide content from Record detail screen
 
 # TODO release/2.1.0
 
