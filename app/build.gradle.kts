@@ -98,7 +98,6 @@ dependencies {
     implementation(project(":Tooling:NetworkModule"))
     implementation(project(":Tooling:LoggerModule"))
     implementation(project(":Feature:SessionModule"))
-    implementation(project(":Business:CapabilitiesModule"))
     implementation(project(":Middleware:LocationModule"))
 
     implementation(libs.androidx.core.ktx)

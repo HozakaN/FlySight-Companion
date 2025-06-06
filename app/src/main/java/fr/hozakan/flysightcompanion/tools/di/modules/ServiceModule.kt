@@ -4,23 +4,19 @@ import android.content.Context
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
-import fr.hozakan.flysightcompanion.dialogmodule.DefaultDialogService
-import fr.hozakan.flysightcompanion.dialogmodule.DialogService
-import fr.hozakan.flysightcompanion.dialogmodule.MutableDialogService
-import fr.hozakan.flysightcompanion.userpreferencesmodule.DatastoreUserPrefService
-import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import fr.hozakan.flysightcompanion.BaseApplication
 import fr.hozakan.flysightcompanion.BuildConfig
 import fr.hozakan.flysightcompanion.audiomodule.AudioService
 import fr.hozakan.flysightcompanion.audiomodule.DefaultAudioService
 import fr.hozakan.flysightcompanion.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightcompanion.bluetoothmodule.DefaultBluetoothService
-import fr.hozakan.flysightcompanion.capabilitiesmodule.CapabilitiesService
-import fr.hozakan.flysightcompanion.capabilitiesmodule.DefaultCapabilitiesService
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigEncoder
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightcompanion.configfilesmodule.business.DefaultConfigEncoder
 import fr.hozakan.flysightcompanion.configfilesmodule.business.DefaultConfigFileService
+import fr.hozakan.flysightcompanion.dialogmodule.DefaultDialogService
+import fr.hozakan.flysightcompanion.dialogmodule.DialogService
+import fr.hozakan.flysightcompanion.dialogmodule.MutableDialogService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DefaultDisplayService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.framework.service.applifecycle.ActivityLifecycleService
@@ -39,13 +35,15 @@ import fr.hozakan.flysightcompanion.networkmodule.NetworkService
 import fr.hozakan.flysightcompanion.recordsmodule.business.FileBasedRecordService
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import fr.hozakan.flysightcompanion.sessionmodule.business.DefaultReferencePointsService
-import fr.hozakan.flysightcompanion.sessionmodule.business.DefaultSessionProfilesService
 import fr.hozakan.flysightcompanion.sessionmodule.business.DefaultSessionControllerService
+import fr.hozakan.flysightcompanion.sessionmodule.business.DefaultSessionProfilesService
 import fr.hozakan.flysightcompanion.sessionmodule.business.ReferencePointsService
-import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
 import fr.hozakan.flysightcompanion.sessionmodule.business.SessionControllerService
+import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
 import fr.hozakan.flysightcompanion.usbmodule.DefaultUsbService
 import fr.hozakan.flysightcompanion.usbmodule.UsbService
+import fr.hozakan.flysightcompanion.userpreferencesmodule.DatastoreUserPrefService
+import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import kotlinx.coroutines.InternalCoroutinesApi
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -171,10 +169,6 @@ class ServiceModule {
     @Singleton
     @Provides
     fun provideLoggerService(): LoggerService = DefaultLoggerService()
-
-    @Singleton
-    @Provides
-    fun provideCapabilitiesService(): CapabilitiesService = DefaultCapabilitiesService()
 
     @Singleton
     @Provides
