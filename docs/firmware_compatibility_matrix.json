@@ -5,7 +5,8 @@
       "name": "v2024.12.30",
       "app_compatibility": [
         "1.0.0-RC3",
-        "1.0.0-RC4"
+        "1.0.0-RC4",
+        "2.0.0-RC1"
       ]
     },
     {
@@ -29,6 +30,12 @@
       "firmware_compatibility": [
         "v2024.12.30",
         "v2024.11.11.release_candidate"
+      ]
+    },
+    {
+      "name":"2.0.0-RC1",
+      "firmware_compatibility": [
+        "v2024.12.30"
       ]
     }
   ],
