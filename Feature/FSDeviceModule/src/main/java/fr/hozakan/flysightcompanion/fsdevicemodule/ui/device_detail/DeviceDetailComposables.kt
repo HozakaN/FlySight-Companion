@@ -178,13 +178,14 @@ fun DeviceDetailScreen(
                 contentPadding = PaddingValues(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                item {
-                    GnssDataContainer(state.device)
-                }
-
-                item {
-                    LogsContainer(state.device)
-                }
+//                item {
+//                    GnssDataContainer(state.device)
+//                }
+//
+//                item {
+//                    LogsContainer(state.device)
+//                }
+                Timber.d("Hoz3 state.hasFirmwareUpdate: ${state.hasFirmwareUpdate}, showFirmwareUpdateInfo: ${state.showFirmwareUpdateInfo}, currentDirectoryPath: ${state.currentDirectoryPath}")
                 if (state.hasFirmwareUpdate && state.showFirmwareUpdateInfo && (state.currentDirectoryPath.isEmpty() || state.currentDirectoryPath.size == 1)) {
                     item {
                         UpdateInfoContainer(

@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.collections.map
 
@@ -99,10 +100,12 @@ class DeviceDetailViewModel @Inject constructor(
 //                }
 //                .collect { (device, matrix, firmwareVersion) ->
                     _state.update {
+                        val hasFirmwareUpdate = matrix.firmwares.map { fw -> fw.name }
+                            .indexOf(firmwareVersion) != 0
+                        Timber.d("Hoz3 firmwareVersion : $firmwareVersion, matrix: ${matrix.firmwares}")
                         it.copy(
                             device = device,
-                            hasFirmwareUpdate = matrix.firmwares.map { fw -> fw.name }
-                                .indexOf(firmwareVersion) != 0
+                            hasFirmwareUpdate = hasFirmwareUpdate
                         )
                     }
                     if (initialLoad && device != null) {
