@@ -183,11 +183,14 @@ class CreateReferencePointDialog : DialogItem {
                     var isDirty by remember { mutableStateOf(false) }
                     var name by remember { mutableStateOf("") }
                     var description by remember { mutableStateOf("") }
-                    var latitude by remember { mutableStateOf(45.077200) }
-                    var longitude by remember { mutableStateOf(3.761141) }
+                    var latitudeText by remember { mutableStateOf("45.077200") }
+                    var longitudeText by remember { mutableStateOf("3.761141") }
 
                     fun isValid(): Boolean {
-                        return name.isNotBlank() && description.isNotBlank()
+                        return name.isNotBlank() &&
+                                description.isNotBlank() &&
+                                latitudeText.toDoubleOrNull() != null &&
+                                longitudeText.toDoubleOrNull() != null
                     }
 
                     OutlinedTextField(
@@ -220,32 +223,30 @@ class CreateReferencePointDialog : DialogItem {
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        value = "$latitude",
+                        value = latitudeText,
                         onValueChange = {
-                            it.toDoubleOrNull()?.let { newValue ->
-                                latitude = newValue
-                                isDirty = true
-                            }
+                            latitudeText = it
+                            isDirty = true
                         },
                         label = {
                             Text(text = "Latitude")
                         },
-                        isError = false // isDirty && latitude.isBlank()
+//                        isError = false // isDirty && latitude.isBlank()
+                        isError = isDirty && latitudeText.toDoubleOrNull() == null
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        value = "$longitude",
+                        value = longitudeText,
                         onValueChange = {
-                            it.toDoubleOrNull()?.let { newValue ->
-                                longitude = newValue
-                                isDirty = true
-                            }
+                            longitudeText = it
+                            isDirty = true
                         },
                         label = {
                             Text(text = "Longitude")
                         },
-                        isError = false // isDirty && longitude.isBlank()
+//                        isError = false // isDirty && longitude.isBlank()
+                        isError = isDirty && longitudeText.toDoubleOrNull() == null
                     )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     SimpleDialogActionBar(
@@ -261,8 +262,8 @@ class CreateReferencePointDialog : DialogItem {
                                         name = name,
                                         description = description,
                                         coords = Coordinate(
-                                            latitude = latitude,
-                                            longitude = longitude
+                                            latitude = latitudeText.toDouble(),
+                                            longitude = longitudeText.toDouble()
                                         )
                                     )
                                 )

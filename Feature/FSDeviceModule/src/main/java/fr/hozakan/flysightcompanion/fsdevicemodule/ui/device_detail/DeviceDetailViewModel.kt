@@ -102,7 +102,6 @@ class DeviceDetailViewModel @Inject constructor(
                     _state.update {
                         val hasFirmwareUpdate = matrix.firmwares.map { fw -> fw.name }
                             .indexOf(firmwareVersion) != 0
-                        Timber.d("Hoz3 firmwareVersion : $firmwareVersion, matrix: ${matrix.firmwares}")
                         it.copy(
                             device = device,
                             hasFirmwareUpdate = hasFirmwareUpdate

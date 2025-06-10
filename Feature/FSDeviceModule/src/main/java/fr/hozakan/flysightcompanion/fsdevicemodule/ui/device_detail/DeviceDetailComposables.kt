@@ -185,7 +185,6 @@ fun DeviceDetailScreen(
 //                item {
 //                    LogsContainer(state.device)
 //                }
-                Timber.d("Hoz3 state.hasFirmwareUpdate: ${state.hasFirmwareUpdate}, showFirmwareUpdateInfo: ${state.showFirmwareUpdateInfo}, currentDirectoryPath: ${state.currentDirectoryPath}")
                 if (state.hasFirmwareUpdate && state.showFirmwareUpdateInfo && (state.currentDirectoryPath.isEmpty() || state.currentDirectoryPath.size == 1)) {
                     item {
                         UpdateInfoContainer(
