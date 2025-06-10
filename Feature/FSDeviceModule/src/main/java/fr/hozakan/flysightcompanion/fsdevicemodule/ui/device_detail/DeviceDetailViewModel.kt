@@ -224,8 +224,7 @@ class DeviceDetailViewModel @Inject constructor(
                                             .asEvent()
 
                                         else -> null
-                                    },
-                                    isInTrackFolder = loadingState is LoadingState.Loaded
+                                    }
                                 )
                             }
                         }

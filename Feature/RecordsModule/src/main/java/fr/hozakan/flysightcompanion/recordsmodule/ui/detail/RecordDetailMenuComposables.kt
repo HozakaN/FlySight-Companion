@@ -30,6 +30,13 @@ import fr.hozakan.flysightcompanion.model.ui.PlotLeftItem
 fun RecordDetailMenuActions(
     onPlotSettingsClicked: ()  -> Unit
 ) {
+
+}
+
+@Composable
+fun RecordDetailMenuActionsOld(
+    onPlotSettingsClicked: ()  -> Unit
+) {
     val factory = LocalViewModelFactory.current
 
     val viewModel: RecordDetailViewModel = viewModel(factory = factory)

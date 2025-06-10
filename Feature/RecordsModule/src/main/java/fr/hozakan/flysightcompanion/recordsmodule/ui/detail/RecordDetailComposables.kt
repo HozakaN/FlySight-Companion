@@ -76,11 +76,34 @@ import fr.hozakan.flysightcompanion.model.ui.totalSpeedColor
 import fr.hozakan.flysightcompanion.model.ui.verticalAccuracyColor
 import fr.hozakan.flysightcompanion.model.ui.verticalSpeedColor
 import fr.hozakan.flysightcompanion.designsystem.R
+import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
+import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import timber.log.Timber
 import kotlin.math.abs
 
 @Composable
 fun RecordDetailScreen(
+    recordName: String
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxSize(),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            FText(
+                "Nothing to see here yet. Come back later!",
+                configuration = FlySightTheme.typography.plainScreenTextLarge
+            )
+        }
+    }
+}
+
+@Composable
+fun RecordDetailScreenOld(
     recordName: String
 ) {
     val factory = LocalViewModelFactory.current
