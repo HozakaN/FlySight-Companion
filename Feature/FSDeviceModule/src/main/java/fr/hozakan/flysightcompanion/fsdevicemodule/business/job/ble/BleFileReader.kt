@@ -12,18 +12,29 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.FlySightJobSched
 import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.ble.FlySightCharacteristic
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.time.LocalTime
 
 class BleFileReader(
     private val gatt: BluetoothGatt,
     private val gattCharacteristic: BluetoothGattCharacteristic,
     private val gattTaskQueue: GattTaskQueue,
-    private val scheduler: FlySightJobScheduler
+    private val scheduler: FlySightJobScheduler,
+    private val requestPing: suspend () -> Unit
 ) : FileReader {
 
     private var fileData: ByteArray? = null
     private var fileDataPacketNumber: Int? = null
     private val fileContent = CompletableDeferred<FileState>()
+
+    private val scope = CoroutineScope(Job() + CoroutineName("BleFileReaderScope") + Dispatchers.IO)
+
+    var lastPingTime = LocalTime.now()
 
     private val gattCallback = object : SimpleBluetoothGattCallback() {
         override fun onCharacteristicChanged(
@@ -41,7 +52,6 @@ class BleFileReader(
     }
 
     override suspend fun readFile(filePath: String): FileState {
-
         return scheduler.schedule(
             labelProvider = { "read file $filePath" }
         ) {
@@ -73,6 +83,14 @@ class BleFileReader(
                 sendReadFileAck(packetId)
                 if (dataArray.isNotEmpty()) {
                     fileData = fileData!! + dataArray
+                    val currentTimer = LocalTime.now()
+                    val isAfter = currentTimer.isAfter(lastPingTime.plusSeconds(14))
+                    if (isAfter) {
+                        scope.launch {
+                            requestPing()
+                        }
+                        lastPingTime = currentTimer
+                    }
                 } else {
                     val fileState = FileState.Success(String(fileData!!, Charsets.UTF_8))
                     fileData = null

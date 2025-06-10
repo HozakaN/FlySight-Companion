@@ -666,7 +666,8 @@ class BleFlySightDeviceDelegateImpl(
                 gatt = gatt,
                 gattCharacteristic = rx,
                 gattTaskQueue = gattTaskQueue,
-                scheduler = scheduler
+                scheduler = scheduler,
+                requestPing = {}
             )
             try {
                 val fileState = fileReader.readFile(file)
@@ -731,7 +732,8 @@ class BleFlySightDeviceDelegateImpl(
                 gatt = gatt,
                 gattCharacteristic = rx,
                 gattTaskQueue = gattTaskQueue,
-                scheduler = scheduler
+                scheduler = scheduler,
+                requestPing = {}
             )
             try {
                 _file.emit(FileState.Loading)
@@ -761,7 +763,10 @@ class BleFlySightDeviceDelegateImpl(
                 gatt = gatt,
                 gattCharacteristic = rx,
                 gattTaskQueue = gattTaskQueue,
-                scheduler = scheduler
+                scheduler = scheduler,
+                requestPing = {
+                    pingDevice()
+                }
             )
             try {
                 val fileState = fileReader.readFile(fileName)
@@ -852,7 +857,10 @@ class BleFlySightDeviceDelegateImpl(
                 gatt = gatt,
                 gattCharacteristic = rx,
                 gattTaskQueue = gattTaskQueue,
-                scheduler = scheduler
+                scheduler = scheduler,
+                requestPing = {
+                    pingDevice()
+                }
             )
             try {
                 fileReader.readFile(fileName)
