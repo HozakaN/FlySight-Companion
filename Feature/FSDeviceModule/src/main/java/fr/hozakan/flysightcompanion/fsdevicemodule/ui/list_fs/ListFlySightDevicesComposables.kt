@@ -946,14 +946,14 @@ private fun FlySightDeviceItemConfigBody(
                 unitSystem = unitSystem
             )
         }
-        Surface(
-            modifier = itemModifier
-        ) {
-            DeviceRecordsContainer(
-                device = device,
-                onUploadRecordToSystem = onUploadRecordToSystem
-            )
-        }
+//        Surface(
+//            modifier = itemModifier
+//        ) {
+//            DeviceRecordsContainer(
+//                device = device,
+//                onUploadRecordToSystem = onUploadRecordToSystem
+//            )
+//        }
     }
 }
 

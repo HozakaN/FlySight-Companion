@@ -481,9 +481,10 @@ class BleFlySightDeviceDelegateImpl(
                     Timber.d("mode exception : ${ex.message}")
                 }
                 readCurrentConfigFile()
-                _records.value = LoadingState.Loading(emptyList())
-                val records = retrieveRecordsInfo()
-                _records.value = LoadingState.Loaded(records)
+//                _records.value = LoadingState.Loading(emptyList())
+//                val records = retrieveRecordsInfo()
+//                _records.value = LoadingState.Loaded(records)
+                _records.value = LoadingState.Loaded(emptyList())
                 startPingSystem()
                 readCurrentFlySightFile()
 //                setMode(DeviceMode.Active)
