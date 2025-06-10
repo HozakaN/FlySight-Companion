@@ -9,6 +9,7 @@ import fr.hozakan.flysightcompanion.dialogmodule.DialogService
 import fr.hozakan.flysightcompanion.dialogmodule.UpdateFirmwareDialog
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
+import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDeviceDisplayData
 import fr.hozakan.flysightcompanion.loggermodule.LoggerService
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.FileState
@@ -197,7 +198,7 @@ class DefaultFsDeviceService(
             val pickedConfig = configFileService.userPickConfiguration()
             if (pickedConfig != null) {
                 emit(LoadingState.Loading(Unit))
-                updateDeviceConfig(device, pickedConfig)
+                updateDeviceConfig(device.unwrap(), pickedConfig)
                 emit(LoadingState.Loaded(Unit))
             }
         }
@@ -334,5 +335,11 @@ class DefaultFsDeviceService(
                 }
             }
         }
+    }
+
+    private fun FlySightDevice.unwrap(): FlySightDevice = when(this) {
+        is BleFlySightDeviceImpl -> this
+        is ListFlySightDeviceDisplayData -> this.device
+        else -> error("Unknown FlySightDevice type")
     }
 }

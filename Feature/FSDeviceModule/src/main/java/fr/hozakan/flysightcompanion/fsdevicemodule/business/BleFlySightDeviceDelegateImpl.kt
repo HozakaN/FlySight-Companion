@@ -789,7 +789,7 @@ class BleFlySightDeviceDelegateImpl(
             val pathWithoutFileSimpleName = fileName.substringBeforeLast("/")
             val pathWithoutFileSimpleNameSplit = pathWithoutFileSimpleName.substringAfter("/").split("/")
             var firstNonExistingPartIndex =
-                checkNonExistingPathParts(filePath = pathWithoutFileSimpleNameSplit)
+                if (pathWithoutFileSimpleName.isBlank()) -1 else checkNonExistingPathParts(filePath = pathWithoutFileSimpleNameSplit)
             if (firstNonExistingPartIndex > -1) {
                 var existingPart = pathWithoutFileSimpleNameSplit.subList(0, firstNonExistingPartIndex).joinToString(separator = "/")
                 while (firstNonExistingPartIndex < pathWithoutFileSimpleNameSplit.size) {
