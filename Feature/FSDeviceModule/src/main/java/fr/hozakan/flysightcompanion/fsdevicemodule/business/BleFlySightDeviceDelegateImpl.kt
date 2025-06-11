@@ -55,9 +55,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -508,6 +511,21 @@ class BleFlySightDeviceDelegateImpl(
         )
 
         return fetcher.flowDirectory(directoryPath)
+            .onEach { dirFiles ->
+                if (dirFiles.any { it.fileName == "TRACK.CSV" }) {
+                    val dateFolder = directoryPath[1]
+                    val timeFolder = directoryPath[2]
+                    val dateStr = "$dateFolder-$timeFolder"
+                    val date =
+                        LocalDateTime.parse(dateStr, DateTimeFormatter.ofPattern("yy-MM-dd-HH-mm-ss"))
+                    val record = RecordFile(date)
+
+                    if (_records.value.content?.contains(record) != true) {
+                        _records.value = LoadingState.Loaded((_records.value.content ?: emptyList()) + record)
+                    }
+                }
+            }
+            .stateIn(scope!!, SharingStarted.WhileSubscribed(5_000), emptyList())
     }
 
     private suspend fun loadDirectory(directoryPath: List<String>): List<FileInfo> {
