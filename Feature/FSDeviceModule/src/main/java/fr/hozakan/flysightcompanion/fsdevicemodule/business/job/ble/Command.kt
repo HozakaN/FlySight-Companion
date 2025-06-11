@@ -88,4 +88,7 @@ object CommandBuilder {
     fun buildSetModeCommand(mode: DeviceMode): ByteArray =
         byteArrayOf(FS_CRS_COMMAND_GET_MODE.toByte()) + byteArrayOf(mode.value.toByte())
 
+    fun buildCancelCommand(): ByteArray =
+        byteArrayOf(FS_CRS_COMMAND_CANCEL.toByte())
+
 }

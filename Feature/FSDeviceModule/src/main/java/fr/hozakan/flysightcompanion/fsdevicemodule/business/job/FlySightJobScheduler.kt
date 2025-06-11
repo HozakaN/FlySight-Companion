@@ -42,8 +42,13 @@ class FlySightJobScheduler {
             Timber.i("Job $tag started")
         }
         val result = try {
+            Timber.i("Job $tag block started")
             block(counter)
+        } catch (e: Exception) {
+            Timber.e(e, "Job $tag failed with exception $e")
+            throw e // rethrow the exception to propagate it to the caller
         } finally {
+            Timber.d("Job finally block executed for job $tag")
             onJobFinished()
         }
         if (label != null)  {
@@ -55,6 +60,7 @@ class FlySightJobScheduler {
     private fun onJobFinished() {
         counter++
         synchronized(this) {
+            Timber.d("Hoz3 onJobFinished, counter: $counter, queue size: ${requestQueue.size}")
             if (requestQueue.isNotEmpty()) {
                 val request = requestQueue.removeAt(0)
                 request.deferred.complete(Unit)

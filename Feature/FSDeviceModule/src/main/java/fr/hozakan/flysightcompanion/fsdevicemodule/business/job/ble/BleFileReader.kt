@@ -11,6 +11,7 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.FileReader
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.ble.FlySightCharacteristic
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -36,6 +37,8 @@ class BleFileReader(
 
     var lastPingTime = LocalTime.now()
 
+    private var canceled = false
+
     private val gattCallback = object : SimpleBluetoothGattCallback() {
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt,
@@ -45,7 +48,7 @@ class BleFileReader(
             super.onCharacteristicChanged(gatt, characteristic, value)
             val cmdCode = value[0].toInt() and 0xFF
             val cmd = Command.fromValue(cmdCode)
-            if (cmd == Command.FILE_DATA) {
+            if (cmd == Command.FILE_DATA/* && !canceled*/) {
                 handleFileDataPart(value.sliceArray(1 until value.size))
             }
         }
@@ -64,7 +67,16 @@ class BleFileReader(
             gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
             gattTaskQueue.addTask(task)
 
-            val fileState = fileContent.await()
+            val fileState = try {
+                fileContent.await()
+            } catch (ex: Exception) {
+                Timber.e("Hoz4 Hoz3 Error reading file $filePath: ${ex.message}; canceled : ${fileContent.isCancelled} completed : ${fileContent.isCompleted} active : ${fileContent.isActive}")
+                canceled = canceled || ex is CancellationException
+                if (ex is CancellationException) {
+                    sendCancel()
+                }
+                throw ex
+            }
             gattTaskQueue -= gattCallback
             fileState
         }
@@ -102,6 +114,15 @@ class BleFileReader(
                 sendReadFileAck(packetId)
             }
         }
+    }
+
+    private fun sendCancel() {
+        val task = TaskBuilder.buildCancelReadTask(
+            gatt = gatt,
+            characteristic = gattCharacteristic,
+            commandLogger = {}
+        )
+        gattTaskQueue.addTask(task)
     }
 
     private fun sendReadFileAck(packetId: Int) {

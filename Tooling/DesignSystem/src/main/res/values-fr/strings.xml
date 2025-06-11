@@ -84,7 +84,7 @@
     <string name="dialog_pick_config_title">Choisissez une nouvelle configuration pour votre FlySight</string>
 
     <!-- Firmware Screen -->
-    <string name="firmware_current_versions">Versionsa ctuelles</string>
+    <string name="firmware_current_versions">Versions actuelles</string>
     <string name="firmware_app_version">Android application:</string>
     <string name="firmware_version">FlySight firmware:</string>
     <string name="firmware_available_firmwares">Firmwares disponibles</string>

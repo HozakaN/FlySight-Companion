@@ -10,6 +10,8 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.FlySightJobSched
 import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.ble.FlySightCharacteristic
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -35,7 +37,11 @@ class BleDirectoryFetcher(
 
     private var directoryListed: CompletableDeferred<Unit>? = null
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val scope =
+        CoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineName("BleDirectoryFetcherScope") + CoroutineExceptionHandler { _, throwable ->
+            Timber.d("Hoz3 DirectoryFetcher exception: $throwable")
+            directoryListed?.completeExceptionally(throwable)
+        })
 
     private val gattCallback = object : SimpleBluetoothGattCallback() {
         override fun onCharacteristicChanged(
@@ -58,7 +64,7 @@ class BleDirectoryFetcher(
             scheduler.schedule(
                 labelProvider = { "flow directory $directory" }
             ) {
-
+                Timber.i("Hoz3 Fetching directory $directory")
                 directoryListed = CompletableDeferred()
                 gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
                 val task = TaskBuilder.buildGetDirectoryTask(
@@ -69,7 +75,13 @@ class BleDirectoryFetcher(
                 )
                 gattTaskQueue.addTask(task)
 
-                directoryListed?.await()
+                Timber.d("Hoz3 Fetching directory $directory await()")
+                try {
+                    directoryListed?.await()
+                } catch (ex: Exception) {
+                    Timber.d("Hoz3 await exception : $ex")
+                }
+                Timber.d("Hoz3 Fetching directory $directory await() done")
                 directoryListed = null
 
                 gattTaskQueue -= gattCallback
@@ -106,6 +118,7 @@ class BleDirectoryFetcher(
 
     private fun handleFileEntry(value: ByteArray) {
         val fileInfo = decodeFileInfo(value) ?: return
+        Timber.d("Hoz3 File entry received: ${fileInfo.fileName}")
         if (fileInfo.fileName.isEmpty()) {
             directoryListed?.complete(Unit)
             directoryListed = null

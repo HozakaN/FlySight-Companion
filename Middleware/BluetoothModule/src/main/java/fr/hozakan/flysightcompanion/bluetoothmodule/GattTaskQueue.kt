@@ -66,7 +66,7 @@ class GattTaskQueue(
             super.onCharacteristicRead(gatt, characteristic, value, status)
             Timber.d("onCharacteristicRead: ${characteristic.uuid} ${value.bytesToHex()}")
 //            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                gattCallback.onCharacteristicRead(gatt, characteristic, value, status)
+            gattCallback.onCharacteristicRead(gatt, characteristic, value, status)
 //            } else {
 //                characteristic.value = value
 //                gattCallback.onCharacteristicRead(gatt, characteristic, status)

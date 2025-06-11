@@ -791,7 +791,13 @@ class BleFlySightDeviceDelegateImpl(
                 val fileState = fileReader.readFile(fileName)
                 _file.emit(fileState)
             } catch (e: Exception) {
+                Timber.d("Hoz3 exception reading file : $e")
                 log("Error reading file : $e")
+                if (e is CancellationException) {
+                    throw e
+                } else {
+                    _file.emit(FileState.Error(e.message ?: "Unknown error"))
+                }
             }
         }
     }

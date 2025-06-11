@@ -80,6 +80,29 @@ object TaskBuilder {
         )
     }
 
+    fun buildCancelReadTask(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic,
+        commandLogger: (String) -> Unit
+    ) : GattTask {
+        val command = CommandBuilder.buildCancelCommand()
+        return GattTask.WriteTask(
+            gatt,
+            characteristic,
+            command,
+            BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
+            {
+                commandLogger(
+                    "[COMMAND] [WRITE] [${
+                        FlySightCharacteristic.fromUuid(
+                            characteristic.uuid
+                        )?.name
+                    }] ${command.bytesToHex()}"
+                )
+            }
+        )
+    }
+
     fun buildCreateFileTask(
         gatt: BluetoothGatt,
         characteristic: BluetoothGattCharacteristic,
