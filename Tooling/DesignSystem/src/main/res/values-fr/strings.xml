@@ -79,8 +79,18 @@
     <string name="screen_title_plot_settings">Paramètres de graphique</string>
     <string name="screen_title_prepare_session">Préparons votre session</string>
     <string name="screen_title_manage_reference_points">Points de référence</string>
+    <string name="screen_title_device_firmware">Firmware</string>
 
     <string name="dialog_pick_config_title">Choisissez une nouvelle configuration pour votre FlySight</string>
+
+    <!-- Firmware Screen -->
+    <string name="firmware_current_versions">Versionsa ctuelles</string>
+    <string name="firmware_app_version">Android application:</string>
+    <string name="firmware_version">FlySight firmware:</string>
+    <string name="firmware_available_firmwares">Firmwares disponibles</string>
+    <string name="firmware_version_column">Version firmware</string>
+    <string name="firmware_compatible_apps_column">Applications compatibles</string>
+    <string name="firmware_show_compatibility_matrix">Firmware compatibility matrix</string>
 
     <string name="dynamic_model_text_portable">Portable</string>
     <string name="dynamic_model_text_stationary">Stationnaire</string>
@@ -246,6 +256,16 @@
     <string name="config_detail_configuration_volume">Volume</string>
     <string name="config_detail_configuration_rate_mode">Mode de fréquence</string>
     <string name="config_detail_cancel_changes">Annulez les changements ?</string>
+    <!-- ActiveLook Configuration -->
+    <string name="config_detail_configuration_section_active_look">ActiveLook</string>
+    <string name="config_detail_configuration_active_look_device_id">Device ID</string>
+    <string name="config_detail_configuration_active_look_mode">Mode</string>
+    <string name="config_detail_configuration_active_look_rate">Rate (ms)</string>
+    <string name="config_detail_configuration_active_look_line_type">Type de ligne</string>
+    <string name="config_detail_configuration_active_look_decimal_places">décimales</string>
+    <string name="config_detail_configuration_add_active_look_line">Ajouter ligne</string>
+    <string name="config_detail_configuration_delete_active_look_line">Effacer ligne</string>
+    <string name="config_detail_configuration_active_look_line_label">Ligne %1$d</string>
 
     <string name="list_devices_no_device_found">Aucun appareil trouvé</string>
     <string name="list_devices_refresh_list">Rafraîchir la liste</string>
@@ -327,4 +347,21 @@
     <string name="session_configuration_session_type_fly_blind">Fly Blind</string>
     <string name="session_configuration_session_type_space_invaders">WS Space Invaders</string>
     <string name="session_configuration_session_type_fly_to_draw">WS Fly-to-draw</string>
+
+    <!-- ActiveLook Mode -->
+    <string name="active_look_mode_not_active">Inactif</string>
+    <string name="active_look_mode_default_mode">Par défaut</string>
+
+    <!-- ActiveLook Line Types -->
+    <string name="active_look_line_type_horizontal_speed">Vitesse horizontale</string>
+    <string name="active_look_line_type_vertical_speed">Vitesse verticale</string>
+    <string name="active_look_line_type_glide_ratio">Finesse</string>
+    <string name="active_look_line_type_inverse_glide_ratio">Finesse inversée</string>
+    <string name="active_look_line_type_total_speed">Vitesse totale</string>
+    <string name="active_look_line_type_direction_to_destination">Direction vers destination</string>
+    <string name="active_look_line_type_distance_to_destination">Distance jusqu\'à destination</string>
+    <string name="active_look_line_type_direction_to_bearing">Orientation</string>
+    <string name="active_look_line_type_dive_angle">Angle d\'attaque</string>
+    <string name="active_look_line_type_altitude_above_dz_elev">Hauteur</string>
+    <string name="active_look_line_type_course">Course</string>
 </resources>

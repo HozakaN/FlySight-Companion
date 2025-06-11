@@ -43,18 +43,37 @@ class KTorNetworkService(
         install(HttpRedirect)
     }
 
-    private val _firmwares = MutableStateFlow<List<FirmwareVersion>>(emptyList())
-    override val firmwares: StateFlow<List<FirmwareVersion>> = _firmwares.asStateFlow()
+//    private val _firmwares = MutableStateFlow<List<FirmwareVersion>>(emptyList())
+//    override val firmwares: StateFlow<List<FirmwareVersion>> = _firmwares.asStateFlow()
 
-    private val _firmwareCompatibilityMatrix = MutableStateFlow(FirmwareCompatibilityMatrix.placeholder)
-    override val firmwareCompatibilityMatrix: StateFlow<FirmwareCompatibilityMatrix> = _firmwareCompatibilityMatrix.asStateFlow()
+    private val _firmwareCompatibilityMatrix =
+        MutableStateFlow(FirmwareCompatibilityMatrix.placeholder)
+    override val firmwareCompatibilityMatrix: StateFlow<FirmwareCompatibilityMatrix> =
+        _firmwareCompatibilityMatrix.asStateFlow()
+    private val _firmwareWithBetaCompatibilityMatrix =
+        MutableStateFlow(FirmwareCompatibilityMatrix.placeholder)
+    override val firmwareWithBetaCompatibilityMatrix: StateFlow<FirmwareCompatibilityMatrix> =
+        _firmwareWithBetaCompatibilityMatrix.asStateFlow()
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
         scope.launch {
-            _firmwares.value = getAvailableFirmwares()
-            _firmwareCompatibilityMatrix.value = getFirmwareCompatibilityMatrix()
+//            _firmwares.value = getAvailableFirmwares()
+            val firmwareCompatibilityMatrix1 = getFirmwareCompatibilityMatrix()
+            _firmwareWithBetaCompatibilityMatrix.value = firmwareCompatibilityMatrix1
+            val firmwareCompatibilityMatrix2 = firmwareCompatibilityMatrix1.copy(
+                firmwares = firmwareCompatibilityMatrix1.firmwares.filterNot {
+                    it.name.contains(
+                        "beta",
+                        ignoreCase = true
+                    ) || it.name.contains(
+                        "develop",
+                        ignoreCase = true
+                    ) || it.name.contains("release_candidate", ignoreCase = true)
+                }
+            )
+            _firmwareCompatibilityMatrix.value = firmwareCompatibilityMatrix2
         }
     }
 
@@ -104,7 +123,7 @@ class KTorNetworkService(
             .map { line ->
                 FirmwareVersion(
                     versionName = line.substring(line.indexOf(githubTagMarker) + githubTagMarker.length)
-                        .let { it.substring(0, it.indexOf("data-view-component") -2) }
+                        .let { it.substring(0, it.indexOf("data-view-component") - 2) }
                 )
             }
     }
@@ -119,8 +138,12 @@ class KTorNetworkService(
         }
     }
 
-    override suspend fun downloadFirmware(deviceBatch: String, firmwareInfo: FirmwareInfo): ByteArray? {
-        val response = client.get("$flySightFirmwareDownloadSite${deviceBatch}_${firmwareInfo.name}.sfb")
+    override suspend fun downloadFirmware(
+        deviceBatch: String,
+        firmwareInfo: FirmwareInfo
+    ): ByteArray? {
+        val response =
+            client.get("$flySightFirmwareDownloadSite${deviceBatch}_${firmwareInfo.name}.sfb")
         if (response.status != HttpStatusCode.OK) {
             return null
         }
@@ -135,4 +158,5 @@ private const val flySightFirmwareDownloadSite =
 private const val githubTagPagesUrl = "https://github.com/flysight/flysight-2-firmware/tags"
 private const val githubTagMarker = "<a href=\"/flysight/flysight-2-firmware/releases/tag/"
 
-private const val githubCompatibilityMatrixUrl = "https://hozakan.github.io/FlySight-Companion/firmware_compatibility_matrix.json"
+private const val githubCompatibilityMatrixUrl =
+    "https://hozakan.github.io/FlySight-Companion/firmware_compatibility_matrix.json"

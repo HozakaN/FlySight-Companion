@@ -69,5 +69,7 @@ sealed interface FirmwareUpdateStatus {
         data object DownloadError : ErrorInfo
         data object PushFirmwareError : ErrorInfo
         data object Unknown : ErrorInfo
+        data object IncompatibleAppVersion : ErrorInfo
+        data object AlreadyUpToDate : ErrorInfo
     }
 }

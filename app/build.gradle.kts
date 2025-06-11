@@ -99,6 +99,7 @@ dependencies {
     implementation(project(":Tooling:LoggerModule"))
     implementation(project(":Feature:SessionModule"))
     implementation(project(":Middleware:LocationModule"))
+    implementation(project(":Feature:FirmwareModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

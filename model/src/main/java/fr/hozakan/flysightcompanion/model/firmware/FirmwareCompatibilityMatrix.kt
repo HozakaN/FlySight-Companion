@@ -3,6 +3,7 @@ package fr.hozakan.flysightcompanion.model.firmware
 import com.google.gson.annotations.SerializedName
 
 data class FirmwareCompatibilityMatrix(
+    @SerializedName("desc")
     val description: String,
     val firmwares: List<FirmwareInfo>,
     val apps: List<AppVersionInfo>,
@@ -30,4 +31,10 @@ data class FirmwareInfo(
     val name: String,
     @SerializedName("app_compatibility")
     val appCompatibility: List<String>
-)
+) {
+    val isBeta: Boolean
+        get() = name.contains("beta", ignoreCase = true) || name.contains(
+            "develop",
+            ignoreCase = true
+        )
+}

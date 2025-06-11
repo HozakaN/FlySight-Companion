@@ -7,6 +7,7 @@ import dagger.Module
 import dagger.multibindings.IntoMap
 import fr.hozakan.flysightcompanion.configfilesmodule.ui.config_detail.ConfigDetailViewModel
 import fr.hozakan.flysightcompanion.configfilesmodule.ui.list_files.ListConfigFilesViewModel
+import fr.hozakan.flysightcompanion.firmwaremodule.ui.FirmwareScreenViewModel
 import fr.hozakan.flysightcompanion.framework.dagger.ViewModelKey
 import fr.hozakan.flysightcompanion.framework.viewmodel.ViewModelFactory
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_config.DeviceConfigurationViewModel
@@ -104,6 +105,12 @@ internal abstract class ViewModelBindings {
     @IntoMap
     @ViewModelKey(ReferencePointListViewModel::class)
     abstract fun bindReferencePointListViewModel(referencePointListViewModel: ReferencePointListViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(FirmwareScreenViewModel::class)
+    abstract fun bindFirmwareScreenViewModel(firmwareScreenViewModel: FirmwareScreenViewModel): ViewModel
 
     @Binds
     abstract fun bindViewModelFactory(factory: ViewModelFactory): ViewModelProvider.Factory

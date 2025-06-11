@@ -16,6 +16,7 @@ import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.Log
 import fr.hozakan.flysightcompanion.model.extensions.formatDate
 import fr.hozakan.flysightcompanion.model.extensions.formatTime
+import fr.hozakan.flysightcompanion.model.firmware.FirmwareInfo
 import fr.hozakan.flysightcompanion.model.firmware.FirmwareUpdateStatus
 import fr.hozakan.flysightcompanion.model.records.RecordFile
 import fr.hozakan.flysightcompanion.networkmodule.NetworkService
@@ -227,6 +228,28 @@ class DefaultFsDeviceService(
 
     @OptIn(FlowPreview::class)
     override suspend fun updateFirmware(device: FlySightDevice) {
+        val realDevice = device.unwrap()
+        val compatibilityMatrix = networkService.firmwareCompatibilityMatrix.value
+        val appVersion = appVersionService.appVersion
+        val latestCompatibleVersionIndex =
+            compatibilityMatrix.firmwares.indexOfFirst { appVersion in it.appCompatibility }
+
+        val currentFirmwareVersion = realDevice.firmwareVersion.value
+        if (currentFirmwareVersion == null) {
+            return
+        }
+        val currentFirmwareIndex =
+            compatibilityMatrix.firmwares.indexOfFirst { it.name == currentFirmwareVersion }
+        if (latestCompatibleVersionIndex == -1 || currentFirmwareIndex == -1 || latestCompatibleVersionIndex >= currentFirmwareIndex) {
+            return
+        }
+        val firmwareToUpdate = compatibilityMatrix.firmwares[latestCompatibleVersionIndex]
+        updateFirmware(device, firmwareToUpdate)
+
+    }
+
+    @OptIn(FlowPreview::class)
+    override suspend fun updateFirmware(device: FlySightDevice, firmwareInfo: FirmwareInfo) {
         val realDevice = _devices.value.firstOrNull { it.volatileUuid == device.volatileUuid }
         if (realDevice == null) return
         withContext(Dispatchers.IO) {
@@ -235,26 +258,18 @@ class DefaultFsDeviceService(
             scope.launch {
                 dialogService.displayDialog(dialogItem)
             }
-            val compatibilityMatrix = networkService.firmwareCompatibilityMatrix.value
-            val appVersion = appVersionService.appVersion
-            val latestCompatibleVersionIndex =
-                compatibilityMatrix.firmwares.indexOfFirst { appVersion in it.appCompatibility }
-
             val currentFirmwareVersion = realDevice.firmwareVersion.value
-            if (currentFirmwareVersion == null) {
-                FirmwareUpdateStatus.Error(FirmwareUpdateStatus.ErrorInfo.FirmwareVersionCheckError)
+            val appVersion = appVersionService.appVersion
+            val compatibilityMatrix = networkService.firmwareCompatibilityMatrix.value
+            if (appVersion !in firmwareInfo.appCompatibility) {
+                flow.value = FirmwareUpdateStatus.Error(FirmwareUpdateStatus.ErrorInfo.IncompatibleAppVersion)
+                return@withContext
+            }
+            if (firmwareInfo.name == currentFirmwareVersion) {
+                flow.value = FirmwareUpdateStatus.Error(FirmwareUpdateStatus.ErrorInfo.AlreadyUpToDate)
                 return@withContext
             }
 
-            // Find version of firmware to update to
-            val currentFirmwareIndex =
-                compatibilityMatrix.firmwares.indexOfFirst { it.name == currentFirmwareVersion }
-            if (latestCompatibleVersionIndex == -1 || currentFirmwareIndex == -1 || latestCompatibleVersionIndex >= currentFirmwareIndex) {
-                //There is no firmware update to do
-                flow.value = FirmwareUpdateStatus.NoUpdate
-                return@withContext
-            }
-            val firmwareToUpdate = compatibilityMatrix.firmwares[latestCompatibleVersionIndex]
 
             val publicKeys = device.publicKeys.value
             val batchPrefix =
@@ -274,7 +289,7 @@ class DefaultFsDeviceService(
                 return@withContext
             }
 
-            val binaryFile = networkService.downloadFirmware(batchPrefix, firmwareToUpdate)
+            val binaryFile = networkService.downloadFirmware(batchPrefix, firmwareInfo)
             if (binaryFile == null) {
                 FirmwareUpdateStatus.Error(FirmwareUpdateStatus.ErrorInfo.DownloadError)
                 return@withContext
@@ -321,10 +336,10 @@ class DefaultFsDeviceService(
                     null
                 }
             }
-            flow.value = if (firmwareVersion == firmwareToUpdate.name) {
+            flow.value = if (firmwareVersion == firmwareInfo.name) {
                 userPrefService.updateFirmwareWarningForDeviceIdAndFirmwareVersion(
                     device.name,
-                    firmwareToUpdate.name
+                    firmwareInfo.name
                 )
                 FirmwareUpdateStatus.Done
             } else {
@@ -337,7 +352,7 @@ class DefaultFsDeviceService(
         }
     }
 
-    private fun FlySightDevice.unwrap(): FlySightDevice = when(this) {
+    private fun FlySightDevice.unwrap(): FlySightDevice = when (this) {
         is BleFlySightDeviceImpl -> this
         is ListFlySightDeviceDisplayData -> this.device
         else -> error("Unknown FlySightDevice type")

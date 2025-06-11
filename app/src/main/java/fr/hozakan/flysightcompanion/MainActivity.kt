@@ -79,6 +79,7 @@ import fr.hozakan.flysightcompanion.dialogmodule.LocalDialogService
 import fr.hozakan.flysightcompanion.dialogmodule.MutableDialogService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.ScreenExtensions
+import fr.hozakan.flysightcompanion.firmwaremodule.ui.FirmwareScreen
 import fr.hozakan.flysightcompanion.framework.compose.LocalMenuState
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.dagger.Injectable
@@ -116,7 +117,8 @@ import javax.inject.Inject
 import kotlin.coroutines.resume
 import fr.hozakan.flysightcompanion.R as LocalR
 
-class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActivity, HasAndroidInjector, Injectable {
+class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActivity,
+    HasAndroidInjector, Injectable {
 
     @Inject
     lateinit var androidInjector: DispatchingAndroidInjector<Any>
@@ -231,6 +233,10 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActiv
                                     stringResource(R.string.screen_title_device_detail)
                                 }
 
+                                AppScreen.DeviceTab.DeviceFirmware.route -> {
+                                    stringResource(R.string.screen_title_device_firmware)
+                                }
+
                                 AppScreen.ConfigTab.ConfigList.route -> {
                                     stringResource(R.string.screen_title_config_list)
                                 }
@@ -276,6 +282,7 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActiv
                                         AppScreen.DeviceTab.DeviceDetail.route,
                                         AppScreen.ConfigTab.ConfigDetail.route,
                                         AppScreen.DeviceTab.DeviceConfig.route,
+                                        AppScreen.DeviceTab.DeviceFirmware.route,
                                         AppScreen.Session.ReferencePointList.route,
                                         AppScreen.Session.PrepareSession.route -> {
                                             IconButton(
@@ -320,14 +327,22 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActiv
                                                 currentBackStack.value?.arguments?.getString("deviceId")
                                             if (deviceId != null) {
                                                 DeviceDetailMenuActions(
-                                                    deviceId = deviceId
-                                                ) {
-                                                    navController.navigate(
-                                                        AppScreen.DeviceTab.DeviceConfig.buildRoute(
-                                                            json.toJson(it)
+                                                    deviceId = deviceId,
+                                                    onShowDeviceConfigClicked = {
+                                                        navController.navigate(
+                                                            AppScreen.DeviceTab.DeviceConfig.buildRoute(
+                                                                json.toJson(it)
+                                                            )
                                                         )
-                                                    )
-                                                }
+                                                    },
+                                                    onShowFirmwareInfoClicked = { deviceId ->
+                                                        navController.navigate(
+                                                            AppScreen.DeviceTab.DeviceFirmware.buildRoute(
+                                                                deviceId
+                                                            )
+                                                        )
+                                                    }
+                                                )
                                             }
                                         }
 
@@ -555,6 +570,16 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActiv
                                                     ConfigFile::class.java
                                                 ),
                                             )
+                                        }
+                                    }
+                                    composable(route = AppScreen.DeviceTab.DeviceFirmware.route) { backStackEntry ->
+                                        val deviceId =
+                                            backStackEntry.arguments?.getString("deviceId")
+                                        if (deviceId != null) {
+                                            FirmwareScreen(
+                                                deviceId = deviceId
+                                            )
+
                                         }
                                     }
                                 }

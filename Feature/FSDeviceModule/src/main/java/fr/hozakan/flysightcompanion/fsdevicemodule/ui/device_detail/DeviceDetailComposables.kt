@@ -26,10 +26,12 @@ import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -55,6 +57,7 @@ import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
+import fr.hozakan.flysightcompanion.fsdevicemodule.business.DeviceId
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.GnssData
@@ -63,8 +66,9 @@ import timber.log.Timber
 
 @Composable
 fun DeviceDetailMenuActions(
-    deviceId: String,
-    onShowDeviceConfigClicked: (config: ConfigFile) -> Unit
+    deviceId: DeviceId,
+    onShowDeviceConfigClicked: (config: ConfigFile) -> Unit,
+    onShowFirmwareInfoClicked: (DeviceId) -> Unit
 ) {
 
     val factory = LocalViewModelFactory.current
@@ -89,18 +93,29 @@ fun DeviceDetailMenuActions(
         }
     }
 
-    when (val immutableConfigFileState = configFileState) {
-        is LoadingState.Loaded -> {
-            TextButton(
-                onClick = {
-                    onShowDeviceConfigClicked(immutableConfigFileState.value)
+    Row {
+        when (val immutableConfigFileState = configFileState) {
+            is LoadingState.Loaded -> {
+                TextButton(
+                    onClick = {
+                        onShowDeviceConfigClicked(immutableConfigFileState.value)
+                    }
+                ) {
+                    Text(text = stringResource(R.string.device_detail_show_config))
                 }
-            ) {
-                Text(text = stringResource(R.string.device_detail_show_config))
             }
-        }
 
-        else -> {}
+            else -> {}
+        }
+        
+        IconButton(
+            onClick = { onShowFirmwareInfoClicked(deviceId) }
+        ) {
+            Icon(
+                imageVector = Icons.Default.Memory,
+                contentDescription = stringResource(R.string.firmware_show_compatibility_matrix)
+            )
+        }
     }
 }
 

@@ -3,6 +3,7 @@ package fr.hozakan.flysightcompanion.fsdevicemodule.business
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.Log
+import fr.hozakan.flysightcompanion.model.firmware.FirmwareInfo
 import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +23,8 @@ interface FsDeviceService {
     suspend fun cancelScan()
     fun extractRecordFromDevice(device: FlySightDevice, recordFile: RecordFile): Flow<LoadingState<String>>
     suspend fun updateFirmware(device: FlySightDevice)
+
+    suspend fun updateFirmware(device: FlySightDevice, firmwareInfo: FirmwareInfo)
 
 
 }

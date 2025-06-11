@@ -1,5 +1,7 @@
 package fr.hozakan.flysightcompanion
 
+import fr.hozakan.flysightcompanion.fsdevicemodule.business.DeviceId
+
 sealed class AppScreen(val route: String) {
     data object DeviceTab : AppScreen("device_tab") {
         data object DeviceList : AppScreen("device_list")
@@ -12,6 +14,10 @@ sealed class AppScreen(val route: String) {
         }
         data object DeviceConfig : AppScreen("device_config/{config}") {
             fun buildRoute(config: String) = "device_config/$config"
+        }
+
+        data object DeviceFirmware : AppScreen("device_firmware/{deviceId}") {
+            fun buildRoute(deviceId: DeviceId) = "device_firmware/$deviceId"
         }
     }
     data object ConfigTab : AppScreen("config_tab") {

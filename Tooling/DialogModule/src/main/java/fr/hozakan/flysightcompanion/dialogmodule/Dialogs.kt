@@ -323,6 +323,8 @@ data class UpdateFirmwareDialog(
 
                                 FirmwareUpdateStatus.ErrorInfo.PushFirmwareError -> "Error while pushing the firmware"
                                 FirmwareUpdateStatus.ErrorInfo.Unknown -> "An error occurred"
+                                FirmwareUpdateStatus.ErrorInfo.IncompatibleAppVersion -> "This firmware is not compatible with this app version."
+                                FirmwareUpdateStatus.ErrorInfo.AlreadyUpToDate -> "Already up to date"
                             }
 
                             is FirmwareUpdateStatus.PushingWithAmount -> {
