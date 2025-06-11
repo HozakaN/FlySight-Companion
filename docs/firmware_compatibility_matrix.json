@@ -4,7 +4,8 @@
     {
       "name": "v2025.05.17.develop",
       "app_compatibility": [
-        "2.0.0-RC2"
+        "2.0.0-RC2",
+        "2.0.0-RC3"
       ]
     },
     {
@@ -41,6 +42,19 @@
     },
     {
       "name":"2.0.0-RC1",
+      "firmware_compatibility": [
+        "v2024.12.30"
+      ]
+    },
+    {
+      "name":"2.0.0-RC2",
+      "firmware_compatibility": [
+        "v2024.12.30",
+        "v2025.05.17.develop"
+      ]
+    },
+    {
+      "name":"2.0.0-RC3",
       "firmware_compatibility": [
         "v2024.12.30",
         "v2025.05.17.develop"
