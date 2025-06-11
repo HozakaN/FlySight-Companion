@@ -140,7 +140,7 @@
     <string name="list_config_file_no_config_file">Aucune configuration pour le moment</string>
     <string name="list_config_file_create_config_file">Créer une configuration</string>
     <string name="list_config_file_item_menu_action_content_description">Actions associées aux configurations</string>
-    <string name="list_config_file_dz_elev_info">Hauteur : %1$d %2$s</string>
+    <string name="list_config_file_dz_elev_info">MSL : %1$d %2$s</string>
     <string name="list_config_file_speech_count">%1$d speeches</string>
     <string name="list_config_file_alarm_count">%1$d alarmes</string>
     <string name="list_config_file_silence_window_count">%1$d silences</string>

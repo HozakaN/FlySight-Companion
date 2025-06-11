@@ -140,7 +140,7 @@
     <string name="list_config_file_no_config_file">No config file yet</string>
     <string name="list_config_file_create_config_file">Create a config file</string>
     <string name="list_config_file_item_menu_action_content_description">Config file actions</string>
-    <string name="list_config_file_dz_elev_info">Elevation : %1$d %2$s</string>
+    <string name="list_config_file_dz_elev_info">MSL : %1$d %2$s</string>
     <string name="list_config_file_speech_count">%1$d speeches</string>
     <string name="list_config_file_alarm_count">%1$d alarms</string>
     <string name="list_config_file_silence_window_count">%1$d silence windows</string>
