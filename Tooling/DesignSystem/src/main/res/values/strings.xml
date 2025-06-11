@@ -246,6 +246,16 @@
     <string name="config_detail_configuration_volume">Volume</string>
     <string name="config_detail_configuration_rate_mode">Rate mode</string>
     <string name="config_detail_cancel_changes">Discard changes ?</string>
+    <!-- ActiveLook Configuration -->
+    <string name="config_detail_configuration_section_active_look">ActiveLook</string>
+    <string name="config_detail_configuration_active_look_device_id">Device ID</string>
+    <string name="config_detail_configuration_active_look_mode">Mode</string>
+    <string name="config_detail_configuration_active_look_rate">Rate (ms)</string>
+    <string name="config_detail_configuration_active_look_line_type">Line Type</string>
+    <string name="config_detail_configuration_active_look_decimal_places">Decimal Places</string>
+    <string name="config_detail_configuration_add_active_look_line">Add Line</string>
+    <string name="config_detail_configuration_delete_active_look_line">Delete ActiveLook Line</string>
+    <string name="config_detail_configuration_active_look_line_label">Line %1$d</string>
 
     <string name="list_devices_no_device_found">No devices found</string>
     <string name="list_devices_refresh_list">Refresh list</string>
@@ -327,5 +337,22 @@
     <string name="session_configuration_session_type_fly_blind">Fly Blind</string>
     <string name="session_configuration_session_type_space_invaders">WS Space Invaders</string>
     <string name="session_configuration_session_type_fly_to_draw">WS Fly-to-draw</string>
+
+    <!-- ActiveLook Mode -->
+    <string name="active_look_mode_not_active">Not Active</string>
+    <string name="active_look_mode_default_mode">Default Mode</string>
+
+    <!-- ActiveLook Line Types -->
+    <string name="active_look_line_type_horizontal_speed">Horizontal Speed</string>
+    <string name="active_look_line_type_vertical_speed">Vertical Speed</string>
+    <string name="active_look_line_type_glide_ratio">Glide Ratio</string>
+    <string name="active_look_line_type_inverse_glide_ratio">Inverse Glide Ratio</string>
+    <string name="active_look_line_type_total_speed">Total Speed</string>
+    <string name="active_look_line_type_direction_to_destination">Direction to Destination</string>
+    <string name="active_look_line_type_distance_to_destination">Distance to Destination</string>
+    <string name="active_look_line_type_direction_to_bearing">Direction to Bearing</string>
+    <string name="active_look_line_type_dive_angle">Dive Angle</string>
+    <string name="active_look_line_type_altitude_above_dz_elev">Altitude above DZ_Elev</string>
+    <string name="active_look_line_type_course">Course</string>
 
 </resources>

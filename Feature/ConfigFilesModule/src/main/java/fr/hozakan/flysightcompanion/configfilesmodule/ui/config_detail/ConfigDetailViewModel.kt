@@ -7,6 +7,7 @@ import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.defaultConfigFile
+import fr.hozakan.flysightcompanion.model.emptyConfigFile
 import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +21,7 @@ class ConfigDetailViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ConfigDetailState(
-        editedConfiguration = defaultConfigFile(),
+        editedConfiguration = emptyConfigFile(),
         unitSystem = UnitSystem.Metric
     ))
 
@@ -48,7 +49,7 @@ class ConfigDetailViewModel @Inject constructor(
         if (configFileName.isEmpty()) {
             _state.update {
                 it.copy(
-                    editedConfiguration = defaultConfigFile(),
+                    editedConfiguration = emptyConfigFile(),
                     configFileFound = true
                 )
             }

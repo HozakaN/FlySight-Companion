@@ -1,5 +1,9 @@
 package fr.hozakan.flysightcompanion.configfilesmodule.business
 
+import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.ActiveLookDeviceIdParser
+import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.ActiveLookLineParser
+import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.ActiveLookModeParser
+import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.ActiveLookRateParser
 import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.AlarmParser
 import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.AlarmWindowAboveParser
 import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.AlarmWindowBelowParser
@@ -99,5 +103,9 @@ private val configItemsParsers = listOf(
     AlarmParser(),
     AltitudeUnitParser(),
     AltitudeStepParser(),
-    SilenceWindowParser()
+    SilenceWindowParser(),
+    ActiveLookDeviceIdParser(),
+    ActiveLookModeParser(),
+    ActiveLookRateParser(),
+    ActiveLookLineParser()
 )

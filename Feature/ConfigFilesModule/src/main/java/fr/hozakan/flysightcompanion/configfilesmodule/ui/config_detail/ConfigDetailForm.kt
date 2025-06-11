@@ -7,6 +7,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import fr.hozakan.flysightcompanion.model.ConfigFile
+import fr.hozakan.flysightcompanion.model.config.ActiveLook
+import fr.hozakan.flysightcompanion.model.config.ActiveLookLine
+import fr.hozakan.flysightcompanion.model.config.ActiveLookLineType
+import fr.hozakan.flysightcompanion.model.config.ActiveLookMode
 import fr.hozakan.flysightcompanion.model.config.Alarm
 import fr.hozakan.flysightcompanion.model.config.DynamicModel
 import fr.hozakan.flysightcompanion.model.config.InitMode
@@ -18,10 +22,11 @@ import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.config.Volume
 import fr.hozakan.flysightcompanion.model.defaultConfigFile
+import fr.hozakan.flysightcompanion.model.emptyConfigFile
 
 @Composable
 fun rememberConfigDetailForm(
-    initialConfigFile: ConfigFile = defaultConfigFile()
+    initialConfigFile: ConfigFile = emptyConfigFile()
 ): ConfigDetailForm {
     return remember(initialConfigFile) {
         ConfigDetailForm(initialConfigFile)
@@ -30,7 +35,7 @@ fun rememberConfigDetailForm(
 
 @Stable
 class ConfigDetailForm(
-    initialForm: ConfigFile = defaultConfigFile()
+    initialForm: ConfigFile = emptyConfigFile()
 ) {
 
     internal var isDirty by mutableStateOf(false)
@@ -89,6 +94,12 @@ class ConfigDetailForm(
 
     //silence windows
     internal var silenceWindows by mutableStateOf(initialForm.silenceWindows)
+    
+    //ActiveLook
+    internal var activeLookDeviceId by mutableStateOf<String?>(initialForm.activeLook.deviceId)
+    internal var activeLookMode by mutableStateOf(initialForm.activeLook.mode)
+    internal var activeLookRate by mutableStateOf<Int?>(initialForm.activeLook.rate)
+    internal var activeLookLines by mutableStateOf(initialForm.activeLook.lines)
 
     fun updateConfigFileName(fileName: String) {
         name = fileName
@@ -328,6 +339,34 @@ class ConfigDetailForm(
         this.silenceWindows -= silenceWindow
         isDirty = true
     }
+    
+    fun updateActiveLookDeviceId(deviceId: String?) {
+        this.activeLookDeviceId = deviceId
+        isDirty = true
+        checkValidity()
+    }
+    
+    fun updateActiveLookMode(mode: ActiveLookMode) {
+        this.activeLookMode = mode
+        isDirty = true
+        checkValidity()
+    }
+    
+    fun updateActiveLookRate(rate: Int?) {
+        this.activeLookRate = rate
+        isDirty = true
+        checkValidity()
+    }
+    
+    fun addActiveLookLine(line: ActiveLookLine) {
+        this.activeLookLines += line
+        isDirty = true
+    }
+    
+    fun deleteActiveLookLine(line: ActiveLookLine) {
+        this.activeLookLines -= line
+        isDirty = true
+    }
 
     private fun checkValidity() {
         isValid =
@@ -384,7 +423,13 @@ class ConfigDetailForm(
             alarms = alarms,
             altitudeStep = altitudeStep ?: return null,
             altitudeUnit = altitudeUnit,
-            silenceWindows = silenceWindows
+            silenceWindows = silenceWindows,
+            activeLook = ActiveLook(
+                deviceId = activeLookDeviceId ?: "000000",
+                mode = activeLookMode,
+                rate = activeLookRate ?: 1000,
+                lines = activeLookLines
+            )
         )
     }
 }

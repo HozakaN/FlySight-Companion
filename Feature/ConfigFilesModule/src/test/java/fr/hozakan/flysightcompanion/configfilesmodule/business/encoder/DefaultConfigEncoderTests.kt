@@ -26,7 +26,6 @@ class DefaultConfigEncoderTests {
         )
         val encoded = encore.encodeConfig(config)
 
-        //TODO check git and speeches addition
         Assert.assertTrue(encoded.contains("${CONFIG_NAME_INDICATOR}test"))
         Assert.assertTrue(encoded.contains("Sp_Mode:        1"))
     }

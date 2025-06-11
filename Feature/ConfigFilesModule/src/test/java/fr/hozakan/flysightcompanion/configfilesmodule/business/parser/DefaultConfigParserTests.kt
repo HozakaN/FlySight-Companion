@@ -1,6 +1,8 @@
 package fr.hozakan.flysightcompanion.configfilesmodule.business.parser
 
 import fr.hozakan.flysightcompanion.configfilesmodule.business.DefaultConfigParser
+import fr.hozakan.flysightcompanion.model.config.ActiveLookLineType
+import fr.hozakan.flysightcompanion.model.config.ActiveLookMode
 import fr.hozakan.flysightcompanion.model.config.AlarmType
 import fr.hozakan.flysightcompanion.model.config.DynamicModel
 import fr.hozakan.flysightcompanion.model.config.InitMode
@@ -8,6 +10,7 @@ import fr.hozakan.flysightcompanion.model.config.RateMode
 import fr.hozakan.flysightcompanion.model.config.SpeechMode
 import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
 import fr.hozakan.flysightcompanion.model.config.ToneMode
+import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.config.Volume
 import org.junit.Assert
 import org.junit.Test
@@ -19,7 +22,7 @@ class DefaultConfigParserTests {
         val parser = DefaultConfigParser()
 
         val fileLines = listOf(
-            ";.fsmp_name_my_config_file",
+            "Name: Le_Puy",
             "Model: 2",
             "Sp_Mode: 2",
             "Sp_Units: 1",
@@ -27,7 +30,7 @@ class DefaultConfigParserTests {
         )
         val configFile = parser.parse(fileLines)
 
-        Assert.assertTrue(configFile.name == "my_config_file")
+        Assert.assertTrue(configFile.name == "Le_Puy")
         Assert.assertTrue(configFile.dynamicModel == DynamicModel.Stationary)
         Assert.assertTrue(configFile.speeches.size == 1)
         val speech = configFile.speeches[0]
@@ -40,7 +43,6 @@ class DefaultConfigParserTests {
         val parser = DefaultConfigParser()
 
         val fileLines = listOf(
-            ";.fsmp_name_my_config_file ; hello world",
             "Model: 2 ; add some comment",
             "Sp_Mode: 3 ; some other comments",
             "Sp_Units: 1",
@@ -48,7 +50,6 @@ class DefaultConfigParserTests {
         )
         val configFile = parser.parse(fileLines)
 
-        Assert.assertTrue(configFile.name == "my_config_file")
         Assert.assertTrue(configFile.dynamicModel == DynamicModel.Stationary)
         Assert.assertTrue(configFile.speeches.size == 1)
         val speech = configFile.speeches[0]
@@ -168,6 +169,33 @@ class DefaultConfigParserTests {
         val silenceWindow1 = configFile.silenceWindows[1]
         Assert.assertEquals(4500, silenceWindow1.top)
         Assert.assertEquals(2500, silenceWindow1.bottom)
+
+        // ActiveLook tests
+        Assert.assertEquals("000000", configFile.activeLook.deviceId)
+        Assert.assertEquals(ActiveLookMode.DefaultMode, configFile.activeLook.mode)
+        Assert.assertEquals(1000, configFile.activeLook.rate)
+
+        Assert.assertEquals(4, configFile.activeLook.lines.size)
+        
+        val activeLookLine0 = configFile.activeLook.lines[0]
+        Assert.assertEquals(ActiveLookLineType.HorizontalSpeed, activeLookLine0.type)
+        Assert.assertEquals(UnitSystem.Metric, activeLookLine0.unitSystem)
+        Assert.assertEquals(1, activeLookLine0.decimal)
+
+        val activeLookLine1 = configFile.activeLook.lines[1]
+        Assert.assertEquals(ActiveLookLineType.VerticalSpeed, activeLookLine1.type)
+        Assert.assertEquals(UnitSystem.Metric, activeLookLine1.unitSystem)
+        Assert.assertEquals(1, activeLookLine1.decimal)
+
+        val activeLookLine2 = configFile.activeLook.lines[2]
+        Assert.assertEquals(ActiveLookLineType.GlideRatio, activeLookLine2.type)
+        Assert.assertEquals(UnitSystem.Metric, activeLookLine2.unitSystem)
+        Assert.assertEquals(2, activeLookLine2.decimal)
+
+        val activeLookLine3 = configFile.activeLook.lines[3]
+        Assert.assertEquals(ActiveLookLineType.Course, activeLookLine3.type)
+        Assert.assertEquals(UnitSystem.Metric, activeLookLine3.unitSystem)
+        Assert.assertEquals(0, activeLookLine3.decimal)
     }
 
 }

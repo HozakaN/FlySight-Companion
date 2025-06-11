@@ -80,6 +80,10 @@ import fr.hozakan.flysightcompanion.framework.extension.distanceInUnit
 import fr.hozakan.flysightcompanion.framework.extension.fromDistanceUnitToMeter
 import fr.hozakan.flysightcompanion.framework.extension.fromSpeedUnitToCmPerSec
 import fr.hozakan.flysightcompanion.framework.extension.speedInUnit
+import fr.hozakan.flysightcompanion.model.config.ActiveLook
+import fr.hozakan.flysightcompanion.model.config.ActiveLookLine
+import fr.hozakan.flysightcompanion.model.config.ActiveLookLineType
+import fr.hozakan.flysightcompanion.model.config.ActiveLookMode
 import fr.hozakan.flysightcompanion.model.config.Alarm
 import fr.hozakan.flysightcompanion.model.config.AlarmType
 import fr.hozakan.flysightcompanion.model.config.DynamicModel
@@ -93,6 +97,7 @@ import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.config.Volume
 import fr.hozakan.flysightcompanion.model.defaultConfigFile
+import fr.hozakan.flysightcompanion.model.emptyConfigFile
 
 @Composable
 fun ConfigDetailMenuActions() {
@@ -955,6 +960,100 @@ fun ConfigDetailScreenInternal(
                         }
                     }
                 }
+                item {
+                    Card {
+                        ExpandableColumn(
+                            expanded = false,
+                            headerComposable = {
+                                Text(text = stringResource(R.string.config_detail_configuration_section_active_look))
+                            },
+                            contentPaddingValues = PaddingValues(
+                                start = 8.dp,
+                                end = 8.dp,
+                                bottom = 8.dp
+                            )
+                        ) {
+                            OutlinedTextField(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.activeLookDeviceId == null) {
+                                            form.updateActiveLookDeviceId("")
+                                        }
+                                    },
+                                value = form.activeLookDeviceId ?: "",
+                                onValueChange = {
+                                    form.updateActiveLookDeviceId(it)
+                                },
+                                label = {
+                                    Text(text = stringResource(R.string.config_detail_configuration_active_look_device_id))
+                                }
+                            )
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+                            ActiveLookModeContainer(
+                                activeLookMode = form.activeLookMode,
+                                onSelectionChanged = {
+                                    form.updateActiveLookMode(it)
+                                }
+                            )
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+                            EmptyIntTextField(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.activeLookRate == null) {
+                                            form.updateActiveLookRate(1000)
+                                        }
+                                    },
+                                label = stringResource(R.string.config_detail_configuration_active_look_rate),
+                                intValue = form.activeLookRate,
+                                onValueChanged = {
+                                    form.updateActiveLookRate(it)
+                                }
+                            )
+                            if (form.activeLookLines.isNotEmpty()) {
+                                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                            }
+                            form.activeLookLines.forEachIndexed { index, activeLookLine ->
+                                ActiveLookLineItemContainer(
+                                    index = index + 1,
+                                    activeLookLine = activeLookLine,
+                                    onDeleteClicked = {
+                                        form.deleteActiveLookLine(activeLookLine)
+                                    }
+                                )
+                                if (index < form.activeLookLines.size - 1) {
+                                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+                                }
+                            }
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+                            var addActiveLookLineClicked by remember { mutableStateOf(false) }
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.TopCenter
+                            ) {
+                                Button(
+                                    onClick = {
+                                        addActiveLookLineClicked = true
+                                    }
+                                ) {
+                                    Text(text = stringResource(R.string.config_detail_configuration_add_active_look_line))
+                                }
+                            }
+                            if (addActiveLookLineClicked) {
+                                AddActiveLookLineDialog(
+                                    onActiveLookLineAdded = {
+                                        form.addActiveLookLine(it)
+                                        addActiveLookLineClicked = false
+                                    },
+                                    onDismiss = {
+                                        addActiveLookLineClicked = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             }
             Row(
                 modifier = Modifier
@@ -1605,12 +1704,160 @@ internal fun RateModeContainer(
     )
 }
 
+@Composable
+internal fun ActiveLookModeContainer(
+    modifier: Modifier = Modifier,
+    activeLookMode: ActiveLookMode,
+    onSelectionChanged: (ActiveLookMode) -> Unit
+) {
+    val context = LocalContext.current
+    DropdownContainer(
+        label = stringResource(R.string.config_detail_configuration_active_look_mode),
+        selectedValue = stringResource(activeLookMode.textResource),
+        options = remember { ActiveLookMode.entries.map { context.getString(it.textResource) } },
+        onSelectionChanged = { newMode ->
+            ActiveLookMode.fromText(context, newMode)?.let {
+                onSelectionChanged(it)
+            }
+        },
+        modifier = modifier
+    )
+}
+
+@Composable
+fun ActiveLookLineItemContainer(
+    index: Int,
+    activeLookLine: ActiveLookLine,
+    onDeleteClicked: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Surface {
+            Column(
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.config_detail_configuration_active_look_line_label,
+                            index
+                        )
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(
+                        onClick = onDeleteClicked
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = stringResource(
+                                R.string.config_detail_configuration_delete_active_look_line
+                            )
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                Text(
+                    text = stringResource(activeLookLine.type.textResource)
+                )
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                Text(
+                    text = stringResource(activeLookLine.unitSystem.unitNameResource)
+                )
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                Text(
+                    text = "${stringResource(R.string.config_detail_configuration_active_look_decimal_places)}: ${activeLookLine.decimal}"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AddActiveLookLineDialog(
+    onActiveLookLineAdded: (ActiveLookLine) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss
+    ) {
+        var lineType: ActiveLookLineType by remember { mutableStateOf(ActiveLookLineType.HorizontalSpeed) }
+        var unitSystem: UnitSystem by remember { mutableStateOf(UnitSystem.Metric) }
+        var decimals by remember { mutableIntStateOf(1) }
+
+        Card {
+            Column(
+                modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
+            ) {
+                ActiveLookLineTypeContainer(
+                    lineType = lineType,
+                    onSelectionChanged = {
+                        lineType = it
+                    }
+                )
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                DistanceUnitContainer(
+                    label = stringResource(R.string.config_detail_configuration_units),
+                    unitSystem = unitSystem,
+                    onSelectionChanged = {
+                        unitSystem = it
+                    }
+                )
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                EmptyIntTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    label = stringResource(R.string.config_detail_configuration_active_look_decimal_places),
+                    intValue = decimals,
+                    onValueChanged = {
+                        decimals = it ?: 0
+                    }
+                )
+                Spacer(modifier = Modifier.requiredHeight(8.dp))
+                SimpleDialogActionBar(
+                    onCancel = onDismiss,
+                    onValidate = {
+                        onActiveLookLineAdded(
+                            ActiveLookLine(
+                                type = lineType,
+                                unitSystem = unitSystem,
+                                decimal = decimals
+                            )
+                        )
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+internal fun ActiveLookLineTypeContainer(
+    modifier: Modifier = Modifier,
+    lineType: ActiveLookLineType,
+    onSelectionChanged: (ActiveLookLineType) -> Unit
+) {
+    val context = LocalContext.current
+    DropdownContainer(
+        label = stringResource(R.string.config_detail_configuration_active_look_line_type),
+        selectedValue = stringResource(lineType.textResource),
+        options = remember { ActiveLookLineType.entries.map { context.getString(it.textResource) } },
+        onSelectionChanged = { newType ->
+            ActiveLookLineType.fromText(context, newType)?.let {
+                onSelectionChanged(it)
+            }
+        },
+        modifier = modifier
+    )
+}
+
 @Preview
 @Composable
 fun ConfigDetailScreenInternalPreview() {
     ConfigDetailScreenInternal(
         state = ConfigDetailState(
-            editedConfiguration = defaultConfigFile(),
+            editedConfiguration = emptyConfigFile(),
             unitSystem = UnitSystem.Metric,
             configFileFound = true
         ),

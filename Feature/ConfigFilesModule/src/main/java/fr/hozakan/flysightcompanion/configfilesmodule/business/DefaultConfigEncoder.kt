@@ -8,7 +8,8 @@ import fr.hozakan.flysightcompanion.model.ConfigFile
 class DefaultConfigEncoder : ConfigEncoder {
     override fun encodeConfig(configFile: ConfigFile): String {
         return buildString {
-            appendLine("""
+            appendLine(
+                """
                 ; For information on configuring FlySight, please go to
                 ;     http://flysight.ca/wiki
 
@@ -20,8 +21,10 @@ class DefaultConfigEncoder : ConfigEncoder {
 
                 ; GPS settings
 
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Model:          ${configFile.dynamicModel.value} ; Dynamic model
                                   ;   0 = Portable
                                   ;   2 = Stationary
@@ -31,14 +34,18 @@ class DefaultConfigEncoder : ConfigEncoder {
                                   ;   6 = Airborne with < 1 G acceleration
                                   ;   7 = Airborne with < 2 G acceleration
                                   ;   8 = Airborne with < 4 G acceleration
-            """.trimIndent())
+            """.trimIndent()
+            )
             appendLine("Rate:         ${configFile.samplePeriod} ; Measurement rate (ms)")
-            appendLine("""
+            appendLine(
+                """
               
                 ; Tone settings
 
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Mode:           ${configFile.toneMode.value} ; Measurement mode
                                   ;   0 = Horizontal speed
                                   ;   1 = Vertical speed
@@ -46,33 +53,43 @@ class DefaultConfigEncoder : ConfigEncoder {
                                   ;   3 = Inverse glide ratio
                                   ;   4 = Total speed
                                   ;   11 = Dive angle
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Min:            ${configFile.toneMinimum} ; Lowest pitch value
                                   ;   cm/s        in Mode 0, 1, or 4
                                   ;   ratio * 100 in Mode 2 or 3
                                   ;   degrees     in Mode 11
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Max:          ${configFile.toneMaximum} ; Highest pitch value
                                   ;   cm/s        in Mode 0, 1, or 4
                                   ;   ratio * 100 in Mode 2 or 3
                                   ;   degrees     in Mode 11
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Limits:         ${configFile.toneLimitBehaviour.value} ; Behaviour when outside bounds
                                   ;   0 = No tone
                                   ;   1 = Min/max tone
                                   ;   2 = Chirp up/down
                                   ;   3 = Chirp down/up
-            """.trimIndent())
+            """.trimIndent()
+            )
             appendLine("Volume:         ${configFile.toneVolume.value} ; 0 (min) to 8 (max)")
-            appendLine("""
+            appendLine(
+                """
                 
                 ; Rate settings
 
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Mode_2:         ${configFile.rateMode.value} ; Determines tone rate
                                   ;   0 = Horizontal speed
                                   ;   1 = Vertical speed
@@ -82,46 +99,62 @@ class DefaultConfigEncoder : ConfigEncoder {
                                   ;   8 = Magnitude of Value 1
                                   ;   9 = Change in Value 1
                                   ;   11 = Dive angle
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Min_Val_2:    ${configFile.rateMinimumValue} ; Lowest rate value
                                   ;   cm/s          when Mode 2 = 0, 1, or 4
                                   ;   ratio * 100   when Mode 2 = 2 or 3
                                   ;   percent * 100 when Mode 2 = 9
                                   ;   degrees       when Mode 2 = 11
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Max_Val_2:   ${configFile.rateMaximumValue} ; Highest rate value
                                   ;   cm/s          when Mode 2 = 0, 1, or 4
                                   ;   ratio * 100   when Mode 2 = 2 or 3
                                   ;   percent * 100 when Mode 2 = 9
                                   ;   degrees       when Mode 2 = 11
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Min_Rate:     ${configFile.rateMinimum} ; Minimum rate (Hz * 100)
                 Max_Rate:     ${configFile.rateMaximum} ; Maximum rate (Hz * 100)
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Flatline:       ${if (configFile.flatLineAtMinimumRate) 1 else 0} ; Flatline at minimum rate
                                   ;   0 = No
                                   ;   1 = Yes
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 
                 ; Speech settings
 
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Sp_Rate:        ${configFile.speechRate} ; Speech rate (s)
                                   ;   0 = No speech
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Sp_Volume:      ${configFile.speechVolume.value} ; 0 (min) to 8 (max)
 
-            """.trimIndent())
+            """.trimIndent()
+            )
             configFile.speeches.forEachIndexed { index, speech ->
                 if (index == 0) {
-                    appendLine("""
+                    appendLine(
+                        """
                         Sp_Mode:        ${speech.mode.value} ; Speech mode
                                           ;   0 = Horizontal speed
                                           ;   1 = Vertical speed
@@ -136,56 +169,74 @@ class DefaultConfigEncoder : ConfigEncoder {
                         Sp_Dec:         ${speech.value} ; Speech precision
                                           ;   Altitude step in Mode 5
                                           ;   Decimal places in all other Modes
-                    """.trimIndent())
+                    """.trimIndent()
+                    )
                 } else {
-                    appendLine("""
+                    appendLine(
+                        """
                         
                         Sp_Mode:        ${speech.mode.value} ; Speech mode
                         Sp_Units:       ${speech.unit.value} ; Speech units
                         Sp_Dec:         ${speech.value} ; Speech precision
-                    """.trimIndent())
+                    """.trimIndent()
+                    )
                 }
             }
-            appendLine("""
+            appendLine(
+                """
                 
                 ; Thresholds
 
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 V_Thresh:    ${configFile.verticalThreshold/*.div(0.036)*/} ; Minimum vertical speed for tone (cm/s)
                 H_Thresh:    ${configFile.horizontalThreshold/*.div(0.036)*/} ; Minimum horizontal speed for tone (cm/s)
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 
                 ; Miscellaneous
 
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Use_SAS:        ${if (configFile.useSAS) 1 else 0} ; Use skydiver's airspeed
                                   ;   0 = No
                                   ;   1 = Yes
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 TZ_Offset:      0 ; Timezone offset of output files in seconds
                                   ;   -14400 = UTC-4 (EDT)
                                   ;   -18000 = UTC-5 (EST, CDT)
                                   ;   -21600 = UTC-6 (CST, MDT)
                                   ;   -25200 = UTC-7 (MST, PDT)
                                   ;   -28800 = UTC-8 (PST)
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 
                 ; Initialization
 
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Init_Mode:      ${configFile.initMode.value} ; When the FlySight is powered on
                                   ;   0 = Do nothing
                                   ;   1 = Test speech mode
                                   ;   2 = Play file
-            """.trimIndent())
+            """.trimIndent()
+            )
             appendLine("Init_File:      ${configFile.initFile ?: "0"} ; File to be played")
-            appendLine("""
+            appendLine(
+                """
                 
                 ; Alarm settings
 
@@ -200,17 +251,21 @@ class DefaultConfigEncoder : ConfigEncoder {
                 ; NOTE:    Alarm elevations are given in meters above ground
                 ;          elevation, which is specified in DZ_Elev.
                 
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Window:         0 ; Alarm window (m)
                 Win_Above:      ${configFile.windowAbove} ; Alarm window (m)
                 Win_Below:      ${configFile.windowBelow} ; Alarm window (m)
                 DZ_Elev:        ${configFile.dzElev} ; Ground elevation (m above sea level)
                 
-            """.trimIndent())
+            """.trimIndent()
+            )
             configFile.alarms.forEachIndexed { index, alarm ->
                 if (index == 0) {
-                    appendLine("""
+                    appendLine(
+                        """
                         Alarm_Elev:     ${alarm.alarmElevation} ; Alarm elevation (m above ground level)
                         Alarm_Type:     ${alarm.alarmType.value} ; Alarm type
                                           ;   0 = No alarm
@@ -219,17 +274,21 @@ class DefaultConfigEncoder : ConfigEncoder {
                                           ;   3 = Chirp down
                                           ;   4 = Play file
                         Alarm_File:     ${alarm.alarmFile} ; File to be played
-                    """.trimIndent())
+                    """.trimIndent()
+                    )
                 } else {
-                    appendLine("""
+                    appendLine(
+                        """
                         
                         Alarm_Elev:     ${alarm.alarmElevation} ; Alarm elevation (m above ground level)
                         Alarm_Type:     ${alarm.alarmType.value} ; Alarm type
                         Alarm_File:     ${alarm.alarmFile} ; File to be played
-                    """.trimIndent())
+                    """.trimIndent()
+                    )
                 }
             }
-            appendLine("""
+            appendLine(
+                """
                 
                 ; Altitude mode settings
 
@@ -245,29 +304,84 @@ class DefaultConfigEncoder : ConfigEncoder {
                 ;          which is specified in DZ_Elev. Altitude mode will
                 ;          not function below 1500 m above ground.
 
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 Alt_Units:      ${configFile.altitudeUnit.value} ; Altitude units
                                   ;   0 = m
                                   ;   1 = ft
                 Alt_Step:       ${configFile.altitudeStep} ; Altitude between announcements
                                   ;   0 = No altitude
 
-            """.trimIndent())
-            appendLine("""
+            """.trimIndent()
+            )
+            appendLine(
+                """
                 
                 ; NOTE:    Silence windows are given in meters above ground
                 ;          elevation, which is specified in DZ_Elev. Tones
                 ;          will be silenced during these windows and only
                 ;          alarms will be audible.
 
-            """.trimIndent())
+            """.trimIndent()
+            )
             configFile.silenceWindows.forEach { silenceWindow ->
-                appendLine("""
+                appendLine(
+                    """
                     Win_Top:        ${silenceWindow.top} ; Silence window top (m)
                     Win_Bottom:     ${silenceWindow.bottom} ; Silence window bottom (m)
 
-                """.trimIndent())
+                """.trimIndent()
+                )
+            }
+            appendLine(
+                """
+                    
+                ActiveLook interface
+                
+                AL_ID:    000000 ; ActiveLook device ID
+                AL_Mode:       1 ; ActiveLook mode
+                                     0 = Not active
+                                     1 = Default mode
+                AL_Rate:    1000 ; ActiveLook rate (ms)
+          
+            """.trimIndent()
+            )
+            configFile.activeLook.lines.forEachIndexed { index, activeLookLine ->
+                if (index == 0) {
+
+                    appendLine(
+                        """
+                        AL_Line:       ${activeLookLine.type.value} ; ActiveLook line value
+                                         ;   0 = Horizontal speed
+                                         ;   1 = Vertical speed
+                                         ;   2 = Glide ratio
+                                         ;   3 = Inverse glide ratio
+                                         ;   4 = Total speed
+                                         ;   5 = Direction to destination
+                                         ;   6 = Distance to destination
+                                         ;   7 = Direction to bearing
+                                         ;   11 = Dive angle
+                                         ;   12 = Altitude above DZ_Elev
+                                         ;   13 = Course
+                        AL_Units:      ${activeLookLine.unitSystem.value} ; ActiveLook units
+                                         ;   0 = km/h or m
+                                         ;   1 = mph or feet
+                        AL_Dec:        ${activeLookLine.decimal} ; ActiveLook precision
+                                         ;   Decimal places
+                    """.trimIndent()
+                    )
+                } else {
+
+                    appendLine(
+                        """
+                        AL_Line:       ${activeLookLine.type.value}
+                        AL_Units:      ${activeLookLine.unitSystem.value}
+                        AL_Dec:        ${activeLookLine.decimal}
+                    """.trimIndent()
+                    )
+                }
             }
         }
     }

@@ -1,13 +1,13 @@
 package fr.hozakan.flysightcompanion.model.config
 
-enum class UnitSystem(
+enum class ActiveLookMode(
     val value: Int
 ) {
-    Metric(0),
-    Imperial(1);
+    NotActive(0),
+    DefaultMode(1);
 
     companion object {
-        fun fromValue(value: Int): UnitSystem? {
+        fun fromValue(value: Int): ActiveLookMode? {
             return entries.firstOrNull { it.value == value }
         }
     }

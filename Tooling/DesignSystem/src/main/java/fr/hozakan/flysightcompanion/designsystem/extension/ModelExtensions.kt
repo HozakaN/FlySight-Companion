@@ -2,6 +2,8 @@ package fr.hozakan.flysightcompanion.designsystem.extension
 
 import android.content.Context
 import fr.hozakan.flysightcompanion.designsystem.R
+import fr.hozakan.flysightcompanion.model.config.ActiveLookLineType
+import fr.hozakan.flysightcompanion.model.config.ActiveLookMode
 import fr.hozakan.flysightcompanion.model.config.AlarmType
 import fr.hozakan.flysightcompanion.model.config.DynamicModel
 import fr.hozakan.flysightcompanion.model.config.InitMode
@@ -184,4 +186,33 @@ val DisplayableCapability.textResource: Int
         DisplayableCapability.FlareCount -> R.string.session_configuration_displayable_capability_flare_count
         DisplayableCapability.LastFlareResult -> R.string.session_configuration_displayable_capability_last_flare_result
     }
+
+val ActiveLookMode.textResource: Int
+    get() = when (this) {
+        ActiveLookMode.NotActive -> R.string.active_look_mode_not_active
+        ActiveLookMode.DefaultMode -> R.string.active_look_mode_default_mode
+    }
+
+fun ActiveLookMode.Companion.fromText(context: Context, text: String): ActiveLookMode? {
+    return ActiveLookMode.entries.firstOrNull { context.getString(it.textResource) == text }
+}
+
+val ActiveLookLineType.textResource: Int
+    get() = when (this) {
+        ActiveLookLineType.HorizontalSpeed -> R.string.active_look_line_type_horizontal_speed
+        ActiveLookLineType.VerticalSpeed -> R.string.active_look_line_type_vertical_speed
+        ActiveLookLineType.GlideRatio -> R.string.active_look_line_type_glide_ratio
+        ActiveLookLineType.InverseGlideRatio -> R.string.active_look_line_type_inverse_glide_ratio
+        ActiveLookLineType.TotalSpeed -> R.string.active_look_line_type_total_speed
+        ActiveLookLineType.DirectionToDestination -> R.string.active_look_line_type_direction_to_destination
+        ActiveLookLineType.DistanceToDestination -> R.string.active_look_line_type_distance_to_destination
+        ActiveLookLineType.DirectionToBearing -> R.string.active_look_line_type_direction_to_bearing
+        ActiveLookLineType.DiveAngle -> R.string.active_look_line_type_dive_angle
+        ActiveLookLineType.AltitudeAboveDzElev -> R.string.active_look_line_type_altitude_above_dz_elev
+        ActiveLookLineType.Course -> R.string.active_look_line_type_course
+    }
+
+fun ActiveLookLineType.Companion.fromText(context: Context, text: String): ActiveLookLineType? {
+    return ActiveLookLineType.entries.firstOrNull { context.getString(it.textResource) == text }
+}
 

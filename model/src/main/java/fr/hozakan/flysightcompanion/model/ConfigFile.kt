@@ -1,5 +1,9 @@
 package fr.hozakan.flysightcompanion.model
 
+import fr.hozakan.flysightcompanion.model.config.ActiveLook
+import fr.hozakan.flysightcompanion.model.config.ActiveLookLine
+import fr.hozakan.flysightcompanion.model.config.ActiveLookLineType
+import fr.hozakan.flysightcompanion.model.config.ActiveLookMode
 import fr.hozakan.flysightcompanion.model.config.Alarm
 import fr.hozakan.flysightcompanion.model.config.DynamicModel
 import fr.hozakan.flysightcompanion.model.config.InitMode
@@ -57,7 +61,9 @@ data class ConfigFile(
     val altitudeStep: Int, //Altitude between announcements
     val altitudeUnit: UnitSystem,
     //silence windows
-    val silenceWindows: List<SilenceWindow>
+    val silenceWindows: List<SilenceWindow>,
+    //ActiveLook
+    val activeLook: ActiveLook
 ) : DisplayableConfig
 
 val defaultConfigFile = ConfigFile(
@@ -92,7 +98,54 @@ val defaultConfigFile = ConfigFile(
     alarms = emptyList(),
     altitudeUnit = UnitSystem.Metric,
     altitudeStep = 0,
-    silenceWindows = emptyList()
+    silenceWindows = emptyList(),
+    activeLook = ActiveLook(
+        deviceId = "000000",
+        mode = ActiveLookMode.NotActive,
+        rate = 1000,
+        lines = emptyList()
+    )
 )
 
 fun defaultConfigFile() = defaultConfigFile.copy()
+
+fun emptyConfigFile() = ConfigFile(
+    name = "",
+    description = "",
+    group = "",
+    dynamicModel = DynamicModel.Airborne2g,
+    samplePeriod = 200,
+    toneMode = ToneMode.GlideRatio,
+    toneMinimum = 0,
+    toneMaximum = 300,
+    toneLimitBehaviour = ToneLimitBehaviour.MinMaxTone,
+    toneVolume = Volume.Volume0,
+    rateMode = RateMode.ChangeInValue1,
+    rateMinimumValue = 300,
+    rateMaximumValue = 1500,
+    rateMinimum = 100,
+    rateMaximum = 500,
+    flatLineAtMinimumRate = false,
+    speechRate = 0,
+    speechVolume = Volume.Volume0,
+    speeches = emptyList(),
+    verticalThreshold = 1000,
+    horizontalThreshold = 0,
+    tzOffset = 0,
+    useSAS = true,
+    initMode = InitMode.DoNothing,
+    initFile = "0",
+    windowAbove = 0,
+    windowBelow = 0,
+    dzElev = 0,
+    alarms = emptyList(),
+    altitudeUnit = UnitSystem.Metric,
+    altitudeStep = 0,
+    silenceWindows = emptyList(),
+    activeLook = ActiveLook(
+        deviceId = "000000",
+        mode = ActiveLookMode.NotActive,
+        rate = 1000,
+        lines = emptyList()
+    )
+)

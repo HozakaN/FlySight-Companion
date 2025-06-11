@@ -9,6 +9,10 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import fr.hozakan.flysightcompanion.model.ConfigFile
+import fr.hozakan.flysightcompanion.model.config.ActiveLook
+import fr.hozakan.flysightcompanion.model.config.ActiveLookLine
+import fr.hozakan.flysightcompanion.model.config.ActiveLookLineType
+import fr.hozakan.flysightcompanion.model.config.ActiveLookMode
 import fr.hozakan.flysightcompanion.model.config.Alarm
 import fr.hozakan.flysightcompanion.model.config.AlarmType
 import fr.hozakan.flysightcompanion.model.config.DynamicModel
@@ -115,6 +119,17 @@ class SessionProfileForm(
                     configFile.silenceWindows.forEach { silenceWindow ->
                         savedList.add(silenceWindow.top)
                         savedList.add(silenceWindow.bottom)
+                    }
+                    
+                    // Save ActiveLook with all fields
+                    savedList.add(configFile.activeLook.deviceId)
+                    savedList.add(configFile.activeLook.mode.name)
+                    savedList.add(configFile.activeLook.rate)
+                    savedList.add(configFile.activeLook.lines.size)
+                    configFile.activeLook.lines.forEach { line ->
+                        savedList.add(line.type.name)
+                        savedList.add(line.unitSystem.name)
+                        savedList.add(line.decimal)
                     }
                 } else {
                     savedList.add(false) // ConfigFile doesn't exist
@@ -267,6 +282,19 @@ class SessionProfileForm(
                             silenceWindows.add(SilenceWindow(top, bottom))
                         }
                         
+                        // Restore ActiveLook
+                        val activeLookDeviceId = savedList[index++] as String
+                        val activeLookMode = ActiveLookMode.valueOf(savedList[index++] as String)
+                        val activeLookRate = savedList[index++] as Int
+                        val activeLookLinesSize = savedList[index++] as Int
+                        val activeLookLines = mutableListOf<ActiveLookLine>()
+                        for (i in 0 until activeLookLinesSize) {
+                            val lineType = ActiveLookLineType.valueOf(savedList[index++] as String)
+                            val unitSystem = UnitSystem.valueOf(savedList[index++] as String)
+                            val decimal = savedList[index++] as Int
+                            activeLookLines.add(ActiveLookLine(lineType, unitSystem, decimal))
+                        }
+                        
                         form.configFile = ConfigFile(
                             name = name,
                             description = description,
@@ -299,7 +327,8 @@ class SessionProfileForm(
                             alarms = alarms,
                             altitudeUnit = altitudeUnit,
                             altitudeStep = altitudeStep,
-                            silenceWindows = silenceWindows
+                            silenceWindows = silenceWindows,
+                            activeLook = ActiveLook(activeLookDeviceId, activeLookMode, activeLookRate, activeLookLines)
                         )
                     } else {
                         form.configFile = null
