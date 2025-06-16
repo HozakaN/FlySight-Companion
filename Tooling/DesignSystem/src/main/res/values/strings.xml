@@ -365,4 +365,7 @@
     <string name="active_look_line_type_altitude_above_dz_elev">Altitude above DZ_Elev</string>
     <string name="active_look_line_type_course">Course</string>
 
+    <string name="pick_reference_point_title">Pick a reference point</string>
+    <string name="no_reference_points_available">No reference points available</string>
+
 </resources>

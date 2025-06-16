@@ -364,4 +364,7 @@
     <string name="active_look_line_type_dive_angle">Angle d\'attaque</string>
     <string name="active_look_line_type_altitude_above_dz_elev">Hauteur</string>
     <string name="active_look_line_type_course">Course</string>
+
+    <string name="pick_reference_point_title">Choisir un point de référence</string>
+    <string name="no_reference_points_available">Aucun point de référence disponible</string>
 </resources>

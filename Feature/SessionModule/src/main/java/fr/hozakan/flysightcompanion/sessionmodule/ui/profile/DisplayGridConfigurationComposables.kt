@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.designsystem.extension.textResource
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
@@ -182,20 +183,63 @@ fun PickReferencePointDialog(
     Dialog(
         onDismissRequest = onDismissRequest
     ) {
-        Card {
-            LazyColumn {
-                items(referencePoints) { referencePoint ->
-                    Text(
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                FText(
+                    text = stringResource(R.string.pick_reference_point_title),
+                    configuration = FlySightTheme.typography.cardTitle,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                if (referencePoints.isEmpty()) {
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .requiredHeight(36.dp)
-                            .clickable {
-                                onItemPicked(referencePoint)
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        FText(
+                            text = stringResource(R.string.no_reference_points_available),
+                            configuration = FlySightTheme.typography.plainScreenTextMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(referencePoints) { referencePoint ->
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onItemPicked(referencePoint)
+                                    },
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    FText(
+                                        text = referencePoint.name,
+                                        configuration = FlySightTheme.typography.cardTitle,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                             }
-                            .padding(8.dp),
-                        text = referencePoint.name,
-                        textAlign = TextAlign.Center
-                    )
+                        }
+                    }
                 }
             }
         }
