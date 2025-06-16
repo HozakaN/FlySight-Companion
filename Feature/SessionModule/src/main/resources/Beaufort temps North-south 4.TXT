@@ -2,6 +2,12 @@
   "competitionWindowBottom": 1500,
   "competitionWindowTop": 2500,
   "configFile": {
+    "activeLook": {
+        "deviceId": "000000",
+        "lines": [],
+        "mode": "NotActive",
+        "rate": 1000
+    },
     "alarms": [
       {
         "alarmElevation": 3500,
