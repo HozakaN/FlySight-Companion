@@ -13,6 +13,7 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDeviceDisplayData
 import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
+import fr.hozakan.flysightcompanion.model.firmware.FirmwareCompatibilityMatrix
 import fr.hozakan.flysightcompanion.networkmodule.NetworkService
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -79,16 +80,38 @@ class DeviceDetailViewModel @Inject constructor(
 //            }.flatMapLatest { (devide, matrix) ->
 //
 //            }
+
+            fun hasFirmwareUpdate(
+                firmwareVersion: String,
+                firmwareCompatibilityMatrix: FirmwareCompatibilityMatrix,
+                firmwareCompatibilityMatrixWithBeta: FirmwareCompatibilityMatrix
+            ): Boolean {
+                val firmwareInfo =
+                    firmwareCompatibilityMatrix.firmwares.firstOrNull { it.name == firmwareVersion }
+                        ?: firmwareCompatibilityMatrixWithBeta.firmwares.firstOrNull { it.name == firmwareVersion }
+                val indexOfFirmware = if (firmwareInfo?.isBeta == true) {
+                    firmwareCompatibilityMatrixWithBeta
+                } else if (firmwareInfo?.isBeta == false) {
+                    firmwareCompatibilityMatrix
+                } else {
+                    null
+                }?.firmwares?.indexOf(firmwareInfo)
+                return indexOfFirmware != null && indexOfFirmware != 0
+            }
             fsDeviceService.observeDevice(deviceId)
                 .flatMapLatest { device ->
                     if (device != null) {
-                        combine(networkService.firmwareCompatibilityMatrix, device.flySightFile) { matrix, flySightFile ->
-                            device to matrix triple if (flySightFile is FileState.Success) device.firmwareVersion.value else null
+                        combine(
+                            networkService.firmwareCompatibilityMatrix,
+                            networkService.firmwareWithBetaCompatibilityMatrix,
+                            device.flySightFile
+                        ) { matrix, matrixWithBeta, flySightFile ->
+                            device to (matrix to matrixWithBeta) triple if (flySightFile is FileState.Success) device.firmwareVersion.value else null
                         }
                     } else {
-                        flowOf(null to networkService.firmwareCompatibilityMatrix.value triple null)
+                        flowOf(null to (networkService.firmwareCompatibilityMatrix.value to networkService.firmwareWithBetaCompatibilityMatrix.value) triple null)
                     }
-                }.collect { (device, matrix, firmwareVersion) ->
+                }.collect { (device, matrixes, firmwareVersion) ->
 
 //                }
 //            fsDeviceService.observeDevice(deviceId)
@@ -100,8 +123,11 @@ class DeviceDetailViewModel @Inject constructor(
 //                }
 //                .collect { (device, matrix, firmwareVersion) ->
                     _state.update {
-                        val hasFirmwareUpdate = matrix.firmwares.map { fw -> fw.name }
-                            .indexOf(firmwareVersion) != 0
+                        val hasFirmwareUpdate = hasFirmwareUpdate(
+                            firmwareVersion ?: "",
+                            matrixes.first,
+                            matrixes.second
+                        )
                         it.copy(
                             device = device,
                             hasFirmwareUpdate = hasFirmwareUpdate
@@ -110,7 +136,7 @@ class DeviceDetailViewModel @Inject constructor(
                     if (initialLoad && device != null) {
                         observeDeviceDirectories(_state.value.currentDirectoryPath)
                         observeDeviceConfigFile(device)
-
+                        
                         initialLoad = false
                     }
                 }
@@ -132,7 +158,10 @@ class DeviceDetailViewModel @Inject constructor(
                                 .sortedBy { it.fileName }
                                 .sortedByDescending { it.isDirectory },
                             isInTrackFolder = fileInfos.any { it.fileName == "TRACK.CSV" } && records.none { record ->
-                                record.dateTime == recordService.formatRecordDateTimeFromPathParts(path[1], path[2])
+                                record.dateTime == recordService.formatRecordDateTimeFromPathParts(
+                                    path[1],
+                                    path[2]
+                                )
                             }
                         )
                     }
@@ -202,9 +231,14 @@ class DeviceDetailViewModel @Inject constructor(
     fun downloadRecord() {
         if (state.value.isInTrackFolder) {
             val device = state.value.device ?: return
-            val dateTime = recordService.formatRecordDateTimeFromPathParts(state.value.currentDirectoryPath[1], state.value.currentDirectoryPath[2])
+            val dateTime = recordService.formatRecordDateTimeFromPathParts(
+                state.value.currentDirectoryPath[1],
+                state.value.currentDirectoryPath[2]
+            )
             viewModelScope.launch {
-                val record = device.records.map { (it as? LoadingState.Loaded)?.value?.firstOrNull { record -> record.dateTime == dateTime } }.first()
+                val record =
+                    device.records.map { (it as? LoadingState.Loaded)?.value?.firstOrNull { record -> record.dateTime == dateTime } }
+                        .first()
                 if (record != null) {
                     fsDeviceService.extractRecordFromDevice(device, record)
                         .collect { loadingState ->
@@ -218,7 +252,8 @@ class DeviceDetailViewModel @Inject constructor(
                                     },
                                     toastEvent = when (loadingState) {
                                         is LoadingState.Error -> loadingState.error.message?.asEvent()
-                                            ?: context.getString(R.string.misc_unknown_error).asEvent()
+                                            ?: context.getString(R.string.misc_unknown_error)
+                                                .asEvent()
 
                                         is LoadingState.Loaded -> context.getString(R.string.list_devices_event_record_uploaded)
                                             .asEvent()

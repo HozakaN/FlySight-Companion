@@ -38,7 +38,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @SuppressLint("StaticFieldLeak")
@@ -99,16 +98,17 @@ class ListFlySightDevicesViewModel @Inject constructor(
             combine(
                 configFileService.configFiles,
                 recordService.records,
-                networkService.firmwareCompatibilityMatrix
-            ) { configFiles, records, matrix ->
-                configFiles to records triple matrix
+                networkService.firmwareCompatibilityMatrix,
+                networkService.firmwareWithBetaCompatibilityMatrix
+            ) { configFiles, records, matrix, matrixWithBeta ->
+                configFiles to records triple (matrix to matrixWithBeta)
             }) { devices, configFilesAndRecordsAndMatrix ->
             devices to configFilesAndRecordsAndMatrix
         }.map { blob ->
             blob.first.map { device ->
-                val firstOrNull = blob.second.third.firmwares.firstOrNull()
+                val firmwareInfo = blob.second.third.first.firmwares.firstOrNull()
                 val canShowFirmwareWarning =
-                    firstOrNull?.name?.let { firmwareName ->
+                    firmwareInfo?.name?.let { firmwareName ->
                         userPrefService.canShowFirmwareWarningForVersion(
                             device.first.name,
                             firmwareName
@@ -121,7 +121,8 @@ class ListFlySightDevicesViewModel @Inject constructor(
                     device.second.third ?: "",
                     blob.second.first,
                     blob.second.second,
-                    blob.second.third,
+                    blob.second.third.first,
+                    blob.second.third.second,
                     canShowFirmwareWarning == true,
                     appVersionService.appVersion
                 )
@@ -164,11 +165,27 @@ class ListFlySightDevicesViewModel @Inject constructor(
         configFiles: List<ConfigFile>,
         recordFiles: List<RecordFile>,
         firmwareCompatibilityMatrix: FirmwareCompatibilityMatrix,
+        firmwareCompatibilityMatrixWithBeta: FirmwareCompatibilityMatrix,
         canShowFirmwareWarning: Boolean,
         appVersion: String
     ): ListFlySightDeviceDisplayData {
+        fun hasFirmwareUpdate(firmwareVersion: String): Boolean {
+            val firmwareInfo =
+                firmwareCompatibilityMatrix.firmwares.firstOrNull { it.name == firmwareVersion }
+                    ?: firmwareCompatibilityMatrixWithBeta.firmwares.firstOrNull { it.name == firmwareVersion }
+            val indexOfFirmware = if (firmwareInfo?.isBeta == true) {
+                firmwareCompatibilityMatrixWithBeta
+            } else if (firmwareInfo?.isBeta == false) {
+                firmwareCompatibilityMatrix
+            } else {
+                null
+            }?.firmwares?.indexOf(firmwareInfo)
+            return indexOfFirmware != null && indexOfFirmware != 0
+        }
+
         val phoneConfigNames = configFiles.map { it.name }
         val deviceConfigName = deviceConfigFileState.content?.name
+        val hasFirmwareUpdate = hasFirmwareUpdate(firmwareVersion)
         return ListFlySightDeviceDisplayData(
             device = device,
             deviceConfig = deviceConfigFileState,
@@ -178,13 +195,11 @@ class ListFlySightDevicesViewModel @Inject constructor(
                 ?.let { lastRecord ->
                     recordFiles.any { it.flySightFilePath == lastRecord.flySightFilePath }
                 } ?: true,
-            hasFirmwareUpdate = firmwareCompatibilityMatrix.firmwares.map { it.name }
-                .indexOf(firmwareVersion) != 0,
+            hasFirmwareUpdate = hasFirmwareUpdate,
             canShowFirmwareWarning = firmwareCompatibilityMatrix.firmwares.isNotEmpty()
                     && canShowFirmwareWarning
-                    && firmwareCompatibilityMatrix.firmwares.first().appCompatibility.contains(
-                appVersion
-            ))
+                    && hasFirmwareUpdate
+        )
     }
 
     fun addDevice() {
