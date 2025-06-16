@@ -2,26 +2,30 @@ package fr.hozakan.flysightcompanion.sessionmodule.business
 
 import android.content.Context
 import fr.hozakan.flysightcompanion.audiomodule.AudioService
+import fr.hozakan.flysightcompanion.dialogmodule.DialogResult
+import fr.hozakan.flysightcompanion.dialogmodule.DialogService
+import fr.hozakan.flysightcompanion.dialogmodule.HudWarningDialog
+import fr.hozakan.flysightcompanion.dialogmodule.OkDialogResult
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.MutableFlySightDevice
 import fr.hozakan.flysightcompanion.locationmodule.LocationService
 import fr.hozakan.flysightcompanion.model.session.FlyBlindConfiguration
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.FileGnssSource
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.FlySightGnssSource
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.LocalGnssSource
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionController
-import fr.hozakan.flysightcompanion.sessionmodule.model.SessionControllerState
 import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.profile.SessionSource
 import fr.hozakan.flysightcompanion.model.session.profile.SessionType
 import fr.hozakan.flysightcompanion.recordsmodule.business.RecordService
-import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc.DefaultPpcHudSessionController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.detector.ExitDetectorDelegate
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.detector.FlareDetectorDelegate
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.flyblind.DefaultFlyBlindSessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.DefaultPlaneDisplaySessionController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc.DefaultPpcHudSessionController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.FileGnssSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.FlySightGnssSource
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.LocalGnssSource
+import fr.hozakan.flysightcompanion.sessionmodule.model.SessionControllerState
 import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -41,7 +45,8 @@ class DefaultSessionControllerService(
     private val appVersionService: AppVersionService,
     private val displayService: DisplayService,
     private val locationService: LocationService,
-    private val userPrefService: UserPrefService
+    private val userPrefService: UserPrefService,
+    private val dialogService: DialogService
 ) : SessionControllerService {
 
     private val _state = MutableStateFlow<SessionControllerState>(SessionControllerState.Idle)
@@ -64,7 +69,6 @@ class DefaultSessionControllerService(
             // Already playing a session, handle accordingly
             return
         }
-        _state.value = SessionControllerState.Playing(sessionType, sessionProfile)
         job = scope.launch {
             val gnssSource = when (sessionSource) {
                 SessionSource.Local -> LocalGnssSource(
@@ -83,6 +87,23 @@ class DefaultSessionControllerService(
                     )
                 }
             }
+
+            val shouldLaunch = if (sessionSource !is SessionSource.Record) {
+                val acknowledged = dialogService.displayDialog(HudWarningDialog)
+                when (acknowledged) {
+                    DialogResult.Dismiss -> false
+                    OkDialogResult -> true
+                    else -> error("Unexpected dialog result: $acknowledged")
+                }
+            } else {
+                true
+            }
+
+            if (!shouldLaunch) {
+                _state.value = SessionControllerState.Idle
+                return@launch
+            }
+            _state.value = SessionControllerState.Playing(sessionType, sessionProfile)
 
             val exitDetector = ExitDetectorDelegate(
                 gnssFlow = gnssSource.gnssFlow,

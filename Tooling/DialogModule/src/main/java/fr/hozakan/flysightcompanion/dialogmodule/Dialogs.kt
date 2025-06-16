@@ -18,6 +18,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -165,6 +166,72 @@ fun PickConfigurationDialogPreview() {
             }
         )
     }.Content {}
+}
+
+data object HudWarningDialog : DialogItem {
+    @Composable
+    override fun Content(onResult: (DialogResult) -> Unit) {
+        Dialog(
+            onDismissRequest = {
+                onResult(DialogResult.Dismiss)
+            }
+        ) {
+            Card {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    FText(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "⚠\uFE0F WARNING ⚠\uFE0F",
+                        configuration = FlySightTheme.typography.cardTitle,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.requiredHeight(16.dp))
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = """
+                            Using HUD goggles while flying is DANGEROUS and can be life-threatening.
+                            
+                            • Goggles can obstruct your peripheral vision
+                            • Screen glare may impair depth perception
+                            • Electronic displays can malfunction or fail
+                            • Distraction from instruments increases crash risk
+                            
+                            Use only with extreme caution and proper training.
+                            Your safety is your responsibility.
+                        """.trimIndent(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Start
+                    )
+                    Spacer(modifier = Modifier.requiredHeight(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(
+                            onClick = {
+                                onResult(DialogResult.Dismiss)
+                            }
+                        ) {
+                            FText(
+                                text = "Don't run session",
+                            )
+                        }
+                        Spacer(modifier = Modifier.requiredWidth(8.dp))
+                        TextButton(
+                            onClick = {
+                                onResult(OkDialogResult)
+                            }
+                        ) {
+                            FText(
+                                text = "I understand and still want to launch the session",
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 class CreateReferencePointDialog : DialogItem {

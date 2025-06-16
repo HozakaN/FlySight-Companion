@@ -60,6 +60,13 @@ fun DialogHandler() {
                     dialItem.second.resume(it)
                 }
             }
+
+            HudWarningDialog -> {
+                dial.Content {
+                    dialog = null
+                    dialItem.second.resume(it)
+                }
+            }
         }
     }
 

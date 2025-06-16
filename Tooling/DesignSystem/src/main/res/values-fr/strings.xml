@@ -367,5 +367,5 @@
 
     <string name="pick_reference_point_title">Choisir un point de référence</string>
     <string name="no_reference_points_available">Aucun point de référence disponible</string>
-    <string name="add_display_item_title">Ajouter un élément d\a'affichage</string>
+    <string name="add_display_item_title">Ajouter un élément d\'affichage</string>
 </resources>

@@ -11,6 +11,9 @@ sealed interface DialogResult {
     data object Dismiss : DialogResult
 }
 
+data object OkDialogResult : DialogResult
+
+
 interface DialogService {
     suspend fun displayDialog(dialogItem: DialogItem): DialogResult
 }

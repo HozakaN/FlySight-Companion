@@ -191,7 +191,8 @@ class ServiceModule {
         displayService: DisplayService,
         locationService: LocationService,
         userPrefService: UserPrefService,
-        appVersionService: AppVersionService
+        appVersionService: AppVersionService,
+        dialogService: DialogService
     ): SessionControllerService = DefaultSessionControllerService(
         context = application.applicationContext,
         fsDeviceService = fsDeviceService,
@@ -200,7 +201,8 @@ class ServiceModule {
         displayService = displayService,
         locationService = locationService,
         userPrefService = userPrefService,
-        appVersionService = appVersionService
+        appVersionService = appVersionService,
+        dialogService = dialogService
     )
 
     @Singleton
