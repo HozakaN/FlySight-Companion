@@ -367,5 +367,6 @@
 
     <string name="pick_reference_point_title">Pick a reference point</string>
     <string name="no_reference_points_available">No reference points available</string>
+    <string name="add_display_item_title">Add display item</string>
 
 </resources>

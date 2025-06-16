@@ -254,20 +254,48 @@ fun AddItemDialog(
     Dialog(
         onDismissRequest = onDismissRequest
     ) {
-        Card {
-            LazyColumn {
-                items(DisplayableCapability.entries) { item ->
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .requiredHeight(36.dp)
-                            .clickable {
-                                onItemPicked(item)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                FText(
+                    text = stringResource(R.string.add_display_item_title),
+                    configuration = FlySightTheme.typography.cardTitle,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(DisplayableCapability.entries) { item ->
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onItemPicked(item)
+                                },
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                FText(
+                                    text = stringResource(item.textResource),
+                                    configuration = FlySightTheme.typography.cardTitle,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
                             }
-                            .padding(8.dp),
-                        text = stringResource(item.textResource),
-                        textAlign = TextAlign.Center
-                    )
+                        }
+                    }
                 }
             }
         }
