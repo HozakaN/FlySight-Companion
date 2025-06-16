@@ -130,14 +130,16 @@ fun ConfigFileItem(
         onClick = onConfigSelected
     ) {
         Column(
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    configFile.name,
-                    style = MaterialTheme.typography.titleLarge
+                    text = configFile.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 var menuExpanded by remember { mutableStateOf(false) }
@@ -150,7 +152,8 @@ fun ConfigFileItem(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.MoreVert,
-                            contentDescription = stringResource(R.string.list_config_file_item_menu_action_content_description)
+                            contentDescription = stringResource(R.string.list_config_file_item_menu_action_content_description),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     DropdownMenu(
@@ -201,42 +204,63 @@ fun ConfigFileItem(
                     )
                 }
             }
-            Spacer(modifier = Modifier.requiredHeight(8.dp))
+            
             if (configFile.description.isNotBlank()) {
                 Text(
-                    configFile.description,
-                    style = MaterialTheme.typography.bodyMedium
+                    text = configFile.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Spacer(modifier = Modifier.requiredHeight(8.dp))
-            Text(
-                text = stringResource(
-                    R.string.list_config_file_dz_elev_info,
-                    configFile.dzElev,
-                    stringResource(unitSystem.distanceTextResource)
-                )
-            )
-            Spacer(modifier = Modifier.requiredHeight(8.dp))
-            Text(
-                text = stringResource(
-                    R.string.list_config_file_speech_count,
-                    configFile.speeches.size
-                )
-            )
-            Spacer(modifier = Modifier.requiredHeight(8.dp))
-            Text(
-                text = stringResource(
-                    R.string.list_config_file_alarm_count,
-                    configFile.alarms.size
-                )
-            )
-            Spacer(modifier = Modifier.requiredHeight(8.dp))
-            Text(
-                text = stringResource(
-                    R.string.list_config_file_silence_window_count,
-                    configFile.silenceWindows.size
-                )
-            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.list_config_file_dz_elev_info,
+                            configFile.dzElev,
+                            stringResource(unitSystem.distanceTextResource)
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.list_config_file_speech_count,
+                            configFile.speeches.size
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.list_config_file_alarm_count,
+                            configFile.alarms.size
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.list_config_file_silence_window_count,
+                            configFile.silenceWindows.size
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
     }
 }
