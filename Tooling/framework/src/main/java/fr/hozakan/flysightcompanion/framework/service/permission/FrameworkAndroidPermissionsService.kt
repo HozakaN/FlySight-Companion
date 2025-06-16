@@ -8,7 +8,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import fr.hozakan.flysightcompanion.framework.service.ListenableService
 import fr.hozakan.flysightcompanion.framework.service.MonitorableService
@@ -17,7 +16,6 @@ import fr.hozakan.flysightcompanion.framework.service.applifecycle.SimpleActivit
 import fr.hozakan.flysightcompanion.framework.service.async.ActivityOperationsService
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
-import timber.log.Timber
 import kotlin.coroutines.resume
 
 class FrameworkAndroidPermissionsService(
@@ -52,11 +50,7 @@ class FrameworkAndroidPermissionsService(
     }
 
     private fun checkLocationPermissions() {
-        if (ContextCompat.checkSelfPermission(
-                application.applicationContext,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
+        if (hasForegroundLocationPermission()) {
             if (!hasLocationPermission) {
                 hasLocationPermission = true
                 freeForegroundLocationCoroutines()
@@ -69,16 +63,16 @@ class FrameworkAndroidPermissionsService(
         activityOperationsService.usePermission(permission, job)
     }
 
-    override fun hasForegroundLocationPermission(): Boolean = with(
+    override fun hasForegroundLocationPermission(): Boolean = if (
         ContextCompat.checkSelfPermission(
             application.applicationContext,
-            locationPermission
+            Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
     ) {
-        if (this) {
-            freeForegroundLocationCoroutines()
-        }
-        this
+        freeForegroundLocationCoroutines()
+        true
+    } else {
+        false
     }
 
     override fun hasBackgroundLocationPermission(): Boolean = with(
@@ -160,8 +154,9 @@ class FrameworkAndroidPermissionsService(
         if (hasForegroundLocation) return true
 
         val activity = activityLifecycleService.awaitActivity()
-        val permission = Manifest.permission.ACCESS_COARSE_LOCATION
-        val hasPermission = activityOperationsService.requestPermission(permission)
+//        val permission = Manifest.permission.ACCESS_COARSE_LOCATION
+        val hasPermission =
+            activityOperationsService.requestPermissions(*locationPermission.toTypedArray())
 
         if (hasPermission) {
             freeForegroundLocationCoroutines()
@@ -332,12 +327,10 @@ class FrameworkAndroidPermissionsService(
     }
 
     companion object {
-//        val locationPermission = Manifest.permission.ACCESS_FINE_LOCATION
-        val locationPermission = Manifest.permission.ACCESS_COARSE_LOCATION
-//        val locationPermission = listOf(
-//            Manifest.permission.ACCESS_COARSE_LOCATION,
-//            Manifest.permission.ACCESS_FINE_LOCATION
-//        )
+        val locationPermission = listOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
     }
 
 }
