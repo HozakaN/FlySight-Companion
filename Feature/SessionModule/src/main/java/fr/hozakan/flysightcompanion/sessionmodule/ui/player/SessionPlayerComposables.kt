@@ -1,9 +1,11 @@
 package fr.hozakan.flysightcompanion.sessionmodule.ui.player
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.IconButton
@@ -15,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
@@ -51,10 +54,11 @@ fun SessionPlayerScreen() {
     }
 
 //    Scaffold { paddingValues ->
+
         Surface(
             modifier = Modifier
                 .fillMaxSize(),
-//                .windowInsetsPadding(WindowInsets.displayCutout)
+//                .windowInsetsPadding(WindowInsets.displayCutout),
 //                .padding(8.dp),
 //                .padding(paddingValues),
             color = MaterialTheme.colorScheme.surface

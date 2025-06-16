@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -120,7 +123,12 @@ fun HudSessionPlayer(
     val displayGrid = controller.profile.displayGrid
     var uiLocked by remember { mutableStateOf(true) }
 
-    Column {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.displayCutout)
+            .padding(8.dp),
+    ) {
         var displayUnlockUi by remember { mutableStateOf(false) }
         var counter by remember { mutableIntStateOf(0) }
         var uiTouched by remember { mutableStateOf(false) }
@@ -1126,7 +1134,7 @@ private fun OngoingFlareContainer2(data: List<GnssData>) {
                 val timeDiffMs = /*if (gnssData.iTow.toInt() >= startTime) {*/
                     gnssData.iTow.toInt() - startTime
 //                } else {
-                    // Handle week rollover
+                // Handle week rollover
 //                    gnssData.iTow.toInt() + (604800000 - startTime)
 //                }
 

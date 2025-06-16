@@ -353,7 +353,11 @@ private fun FlyBlindLockedContent(
     onExitClicked: () -> Unit,
     resetExitDetection: () -> Unit
 ) {
-    Column {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.displayCutout)
+    ) {
         FloatingActionButton(
             onClick = onExitClicked,
             containerColor = MaterialTheme.colorScheme.error,
