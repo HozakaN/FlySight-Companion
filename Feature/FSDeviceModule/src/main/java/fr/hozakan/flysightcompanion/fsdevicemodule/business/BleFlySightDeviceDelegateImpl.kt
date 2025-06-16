@@ -215,14 +215,6 @@ class BleFlySightDeviceDelegateImpl(
 //                }
             }
 
-            private fun handleGNSSFeed(data: ByteArray) {
-                if (data.size != 9) {
-                    log("Invalid GNSS feed data size")
-                    return
-                }
-
-            }
-
             override fun onCharacteristicWrite(
                 gatt: BluetoothGatt?,
                 characteristic: BluetoothGattCharacteristic?,
@@ -250,6 +242,8 @@ class BleFlySightDeviceDelegateImpl(
                     "descriptor write : ${descriptor?.uuid} , status = $status}"
                 )
             }
+
+
 
             override fun onMtuChanged(gatt: BluetoothGatt?, mtu: Int, status: Int) {
                 super.onMtuChanged(gatt, mtu, status)

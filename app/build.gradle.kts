@@ -1,5 +1,3 @@
-import java.io.ByteArrayOutputStream
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -13,13 +11,12 @@ fun List<String>.removeAfter(nbElement: Int = 1): List<String> {
 }
 
 fun versionName(): String {
-    val outputStream = ByteArrayOutputStream()
     // release/1.0.0-RC1-7-ga2f6cd1
-    project.exec {
+    val gitOutput = providers.exec {
         commandLine("git", "describe", "--tags")
-        standardOutput = outputStream
-    }
-    val intermediate = outputStream.toString().trim().split("/")[1] // possible outputs are 1.0.0-RC1-7-ga2f6cd1, 1.0.0-7-ga2f6cd1, 1.0.0-RC1-ga2f6cd1, 1.0.0-ga2f6cd1
+    }.standardOutput.asText.get().trim()
+    
+    val intermediate = gitOutput.split("/")[1] // possible outputs are 1.0.0-RC1-7-ga2f6cd1, 1.0.0-7-ga2f6cd1, 1.0.0-RC1-ga2f6cd1, 1.0.0-ga2f6cd1
     val output =
         intermediate.split("-").removeAfter(if (intermediate.contains("RC")) 2 else 1).joinToString("-") // possible outputs are 1.0.0-RC1, 1.0.0
     return output
