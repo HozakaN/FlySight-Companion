@@ -2,11 +2,10 @@ package fr.hozakan.flysightcompanion.configfilesmodule.ui.config_detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
+import fr.hozakan.flysightcompanion.framework.coroutine.flow.asFlowEvent
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
-import fr.hozakan.flysightcompanion.model.defaultConfigFile
 import fr.hozakan.flysightcompanion.model.emptyConfigFile
 import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -83,7 +82,7 @@ class ConfigDetailViewModel @Inject constructor(
         if (configFile.name.isBlank()) {
             _state.update {
                 it.copy(
-                    fileSaved = false.asEvent()
+                    fileSaved = false.asFlowEvent()
                 )
             }
         } else {
@@ -98,7 +97,7 @@ class ConfigDetailViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         editedConfiguration = configFile,
-                        fileSaved = true.asEvent()
+                        fileSaved = true.asFlowEvent()
                     )
                 }
             }

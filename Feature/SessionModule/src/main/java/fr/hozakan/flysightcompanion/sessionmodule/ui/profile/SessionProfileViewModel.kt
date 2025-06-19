@@ -2,7 +2,7 @@ package fr.hozakan.flysightcompanion.sessionmodule.ui.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
+import fr.hozakan.flysightcompanion.framework.coroutine.flow.asFlowEvent
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.sessionmodule.business.SessionProfilesService
@@ -94,7 +94,7 @@ class SessionProfileViewModel @Inject constructor(
         if (sessionProfile.name.isBlank()) {
             _state.update {
                 it.copy(
-                    fileSaved = false.asEvent()
+                    fileSaved = false.asFlowEvent()
                 )
             }
         } else {
@@ -112,7 +112,7 @@ class SessionProfileViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         sessionProfile = sessionProfile,
-                        fileSaved = true.asEvent()
+                        fileSaved = true.asFlowEvent()
                     )
                 }
             }

@@ -1,7 +1,7 @@
 package fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs
 
 import androidx.compose.runtime.Immutable
-import com.qorvo.uwbtestapp.framework.coroutines.flow.FlowEvent
+import fr.hozakan.flysightcompanion.framework.coroutine.flow.FlowEvent
 import fr.hozakan.flysightcompanion.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.DeviceId

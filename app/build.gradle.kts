@@ -48,9 +48,9 @@ android {
     defaultConfig {
         applicationId = "fr.hozakan.flysightcompanion"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = versionCode()
-        versionName = versionName() //"1.0.0-RC1"
+        versionName = versionName()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

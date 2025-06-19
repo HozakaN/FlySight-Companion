@@ -50,7 +50,7 @@ import androidx.compose.ui.unit.dp
 import fr.hozakan.flysightcompanion.composablecommons.DropdownContainer
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
-import fr.hozakan.flysightcompanion.framework.math.meterSecondToKmh
+import fr.hozakan.flysightcompanion.framework.math.meterSecondToKmHour
 import fr.hozakan.flysightcompanion.model.session.profile.ReferencePoint
 import fr.hozakan.flysightcompanion.model.ui.SpeedOrientation
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionController
@@ -61,7 +61,11 @@ import kotlinx.coroutines.launch
 
 
 @Composable
-internal fun SpeedContainer(orientation: SpeedOrientation, player: SessionController) {
+internal fun SpeedContainer(
+    orientation: SpeedOrientation,
+    player: SessionController,
+    suffix: String = ""
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -84,9 +88,9 @@ internal fun SpeedContainer(orientation: SpeedOrientation, player: SessionContro
         FText(
             text = "${
                 when (orientation) {
-                    SpeedOrientation.Horizontal -> remember(gnssData?.gSpeed) { gnssData?.gSpeed?.meterSecondToKmh() }
-                    SpeedOrientation.Vertical -> remember(gnssData?.velD) { gnssData?.velD?.meterSecondToKmh() }
-                    SpeedOrientation.Total -> remember(gnssData?.speed) { gnssData?.speed?.meterSecondToKmh() }
+                    SpeedOrientation.Horizontal -> remember(gnssData?.gSpeed) { gnssData?.gSpeed?.meterSecondToKmHour() }
+                    SpeedOrientation.Vertical -> remember(gnssData?.velD) { gnssData?.velD?.meterSecondToKmHour() }
+                    SpeedOrientation.Total -> remember(gnssData?.speed) { gnssData?.speed?.meterSecondToKmHour() }
                 }
             }",
             configuration = FlySightTheme.typography.sessionPlayerValue,
@@ -94,7 +98,7 @@ internal fun SpeedContainer(orientation: SpeedOrientation, player: SessionContro
         )
 
         FText(
-            text = " km/h",
+            text = " $suffix",
             configuration = FlySightTheme.typography.sessionPlayerText,
             color = Color.Green
         )

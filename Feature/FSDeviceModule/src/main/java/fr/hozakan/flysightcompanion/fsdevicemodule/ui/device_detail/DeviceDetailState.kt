@@ -1,7 +1,7 @@
 package fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail
 
 import androidx.compose.runtime.Immutable
-import com.qorvo.uwbtestapp.framework.coroutines.flow.FlowEvent
+import fr.hozakan.flysightcompanion.framework.coroutine.flow.FlowEvent
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.FileInfo

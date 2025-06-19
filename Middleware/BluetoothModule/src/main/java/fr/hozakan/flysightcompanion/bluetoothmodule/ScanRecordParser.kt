@@ -76,7 +76,7 @@ class ScanRecordParser {
                             currentPos,
                             dataLength,
                             UUID_BYTES_16_BIT,
-                            serviceUuids?.filterNotNull()?.toMutableList() ?: mutableListOf()
+                            serviceUuids?.toMutableList() ?: mutableListOf()
                         )
 
                         DATA_TYPE_SERVICE_UUIDS_32_BIT_PARTIAL, DATA_TYPE_SERVICE_UUIDS_32_BIT_COMPLETE -> parseServiceUuid(

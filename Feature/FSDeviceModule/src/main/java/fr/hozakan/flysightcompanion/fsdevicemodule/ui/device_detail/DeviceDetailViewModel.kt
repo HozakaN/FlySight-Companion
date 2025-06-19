@@ -4,13 +4,12 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
+import fr.hozakan.flysightcompanion.framework.coroutine.flow.asFlowEvent
 import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
-import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDeviceDisplayData
 import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.firmware.FirmwareCompatibilityMatrix
@@ -21,16 +20,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
-import kotlin.collections.map
 
 @SuppressLint("StaticFieldLeak")
 class DeviceDetailViewModel @Inject constructor(
@@ -222,7 +218,7 @@ class DeviceDetailViewModel @Inject constructor(
         } else {
             _state.update {
                 it.copy(
-                    fileClicked = (_state.value.currentDirectoryPath + fileInfo.fileName).asEvent()
+                    fileClicked = (_state.value.currentDirectoryPath + fileInfo.fileName).asFlowEvent()
                 )
             }
         }
@@ -251,12 +247,12 @@ class DeviceDetailViewModel @Inject constructor(
                                         LoadingState.Idle -> null
                                     },
                                     toastEvent = when (loadingState) {
-                                        is LoadingState.Error -> loadingState.error.message?.asEvent()
+                                        is LoadingState.Error -> loadingState.error.message?.asFlowEvent()
                                             ?: context.getString(R.string.misc_unknown_error)
-                                                .asEvent()
+                                                .asFlowEvent()
 
                                         is LoadingState.Loaded -> context.getString(R.string.list_devices_event_record_uploaded)
-                                            .asEvent()
+                                            .asFlowEvent()
 
                                         else -> null
                                     }

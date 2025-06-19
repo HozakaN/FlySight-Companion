@@ -1,9 +1,4 @@
-/**
- * SPDX-FileCopyrightText: Copyright (c) 2024 Qorvo, Inc.
- * SPDX-License-Identifier: LicenseRef-QORVO-2
- */
-
-package com.qorvo.uwbtestapp.framework.coroutines.flow
+package fr.hozakan.flysightcompanion.framework.coroutine.flow
 
 /**
  * Used as a wrapper for data that is exposed via a Flow that represents an event.
@@ -33,4 +28,4 @@ class FlowEvent<out T>(private val content: T) {
     fun peekContent(): T = content
 }
 
-fun <T> T.asEvent(): FlowEvent<T> = FlowEvent(this)
+fun <T> T.asFlowEvent(): FlowEvent<T> = FlowEvent(this)

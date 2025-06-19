@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.qorvo.uwbtestapp.framework.coroutines.flow.asEvent
+import fr.hozakan.flysightcompanion.framework.coroutine.flow.asFlowEvent
 import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import fr.hozakan.flysightcompanion.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
@@ -249,7 +249,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
                 if (state is LoadingState.Error) {
                     _state.update {
                         it.copy(
-                            event = state.error.message?.asEvent()
+                            event = state.error.message?.asFlowEvent()
                         )
                     }
                     job?.cancel()
@@ -258,7 +258,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             event = context.getString(R.string.list_devices_event_device_config_empty)
-                                .asEvent()
+                                .asFlowEvent()
                         )
                     }
                     job?.cancel()
@@ -297,8 +297,8 @@ class ListFlySightDevicesViewModel @Inject constructor(
                     is LoadingState.Error -> {
                         _state.update { state ->
                             state.copy(
-                                event = it.error.message?.asEvent()
-                                    ?: context.getString(R.string.misc_unknown_error).asEvent()
+                                event = it.error.message?.asFlowEvent()
+                                    ?: context.getString(R.string.misc_unknown_error).asFlowEvent()
                             )
                         }
                     }
@@ -340,11 +340,11 @@ class ListFlySightDevicesViewModel @Inject constructor(
                             LoadingState.Idle -> null
                         },
                         event = when (loadingState) {
-                            is LoadingState.Error -> loadingState.error.message?.asEvent()
-                                ?: context.getString(R.string.misc_unknown_error).asEvent()
+                            is LoadingState.Error -> loadingState.error.message?.asFlowEvent()
+                                ?: context.getString(R.string.misc_unknown_error).asFlowEvent()
 
                             is LoadingState.Loaded -> context.getString(R.string.list_devices_event_record_uploaded)
-                                .asEvent()
+                                .asFlowEvent()
 
                             else -> null
                         }

@@ -12,7 +12,7 @@
         android:roundIcon="@mipmap/ic_launcher_flysight"
         android:supportsRtl="true"
         android:theme="@style/Theme.FlySightCompanion"
-        tools:targetApi="35">
+        tools:targetApi="36">
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -1,10 +1,5 @@
 package fr.hozakan.flysightcompanion.framework.service.loading
 
-
-/**
- * Represents an instantaneous loading state with no memory and that may NOT be inactive (no `Idle` state)
- * @param <T>
- */
 sealed class LoadingState<out R> {
 
     data object Idle : LoadingState<Nothing>()
@@ -43,6 +38,7 @@ sealed class LoadingState<out R> {
     val content: R?
         get() {
             return when (this) {
+                is Loading -> currentLoad
                 is Loaded -> value
                 else -> null
             }

@@ -1,7 +1,7 @@
 package fr.hozakan.flysightcompanion.configfilesmodule.ui.config_detail
 
 import androidx.compose.runtime.Immutable
-import com.qorvo.uwbtestapp.framework.coroutines.flow.FlowEvent
+import fr.hozakan.flysightcompanion.framework.coroutine.flow.FlowEvent
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 

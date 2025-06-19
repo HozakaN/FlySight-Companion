@@ -1,7 +1,7 @@
 package fr.hozakan.flysightcompanion.sessionmodule.ui.prepare_session
 
 import androidx.compose.runtime.Stable
-import com.qorvo.uwbtestapp.framework.coroutines.flow.FlowEvent
+import fr.hozakan.flysightcompanion.framework.coroutine.flow.FlowEvent
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.locationmodule.LocationAvailabilityState
 import fr.hozakan.flysightcompanion.model.session.FlyBlindConfiguration

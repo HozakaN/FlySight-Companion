@@ -6,7 +6,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-fun Int.meterSecondToKmh(): Int {
+fun Int.meterSecondToKmHour(): Int {
     return (this * 3.6).toInt()
 }
 
@@ -20,7 +20,7 @@ fun computeGlideRatio(
     verticalSpeed: Int,
     horizontalSpeed: Int,
 ): Float {
-    return if (horizontalSpeed == 0) {
+    return if (verticalSpeed == 0) {
         0f
     } else {
         horizontalSpeed.toFloat() / verticalSpeed.toFloat()
@@ -31,7 +31,7 @@ fun computeInverseGlideRatio(
     verticalSpeed: Int,
     horizontalSpeed: Int,
 ): Float {
-    return if (verticalSpeed == 0) {
+    return if (horizontalSpeed == 0) {
         0f
     } else {
         verticalSpeed.toFloat() / horizontalSpeed.toFloat()
@@ -155,37 +155,6 @@ fun computeSignedDistanceToLine(
 }
 
 /**
- * Calculate vertical speed between two points given their coordinates
- * Returns vertical speed in meters per second (m/s)
- * Positive values indicate ascent, negative values indicate descent
- *
- * @param lat1 Latitude of the first point (degrees)
- * @param lon1 Longitude of the first point (degrees)
- * @param alt1 Altitude of the first point (meters)
- * @param lat2 Latitude of the second point (degrees)
- * @param lon2 Longitude of the second point (degrees)
- * @param alt2 Altitude of the second point (meters)
- * @param timeInterval Time between measurements in seconds
- * @return Vertical speed in meters per second
- */
-fun computeVerticalSpeed(
-    lat1: Double, lon1: Double, alt1: Double,
-    lat2: Double, lon2: Double, alt2: Double,
-    timeInterval: Double
-): Float {
-    // Calculate altitude difference (in meters)
-    val altitudeDifference = alt2 - alt1
-
-    // Calculate vertical speed (altitude change divided by time)
-    val verticalSpeed = altitudeDifference / timeInterval
-
-    return verticalSpeed.toFloat()
-}
-
-/**
- * Simplified version of computeVerticalSpeed that takes only elevations and time
- * Returns vertical speed in meters per second (m/s)
- *
  * @param alt1 Altitude of the first point (meters)
  * @param alt2 Altitude of the second point (meters)
  * @param timeInterval Time between measurements in seconds

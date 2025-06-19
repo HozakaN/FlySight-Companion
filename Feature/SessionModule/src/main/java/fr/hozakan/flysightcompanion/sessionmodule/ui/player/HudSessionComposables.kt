@@ -8,7 +8,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,15 +22,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -628,17 +624,20 @@ private fun DisplayCapabilityContainer(
     when (item.displayableCapability) {
         DisplayableCapability.HorizontalSpeed -> SpeedContainer(
             orientation = SpeedOrientation.Horizontal,
-            player = player
+            player = player,
+            suffix = "km/h"
         )
 
         DisplayableCapability.VerticalSpeed -> SpeedContainer(
             orientation = SpeedOrientation.Vertical,
-            player = player
+            player = player,
+            suffix = "km/h"
         )
 
         DisplayableCapability.TotalSpeed -> SpeedContainer(
             orientation = SpeedOrientation.Total,
-            player = player
+            player = player,
+            suffix = "km/h"
         )
 
         DisplayableCapability.Elevation -> TagAndValueContainer(
@@ -770,7 +769,7 @@ private fun DisplayCapabilityContainer(
 
         DisplayableCapability.LastFlareResult -> {
             val flares by player.registeredFlares.collectAsState()
-            val lastFlare = flares.lastOrNull()
+            val lastFlare = remember(flares) { flares.lastOrNull() }
             TagAndValueContainer(
                 tag = "UP",
                 value = "${lastFlare?.gain ?: "--"}",
@@ -958,7 +957,7 @@ private fun FlareContainer(
         when (flareState) {
             is FlareState.FlareDone -> {}
             is FlareState.Flaring -> {
-                OngoingFlareContainer2(
+                OngoingFlareContainer(
                     flareState.flareData
                 )
             }
@@ -969,70 +968,12 @@ private fun FlareContainer(
 }
 
 @Composable
-private fun OngoingFlareContainer2(data: List<GnssData>) {
+private fun OngoingFlareContainer(data: List<GnssData>) {
     if (data.isEmpty()) return
 
     // Start altitude and time - from the first data point
     val startAltitude = remember(data) { data.firstOrNull()?.hMsl ?: 0 }
     val startTime = remember(data) { data.firstOrNull()?.iTow?.toInt() ?: 0 }
-
-    // Calculate max altitude gain
-//    val maxGain = data.maxOfOrNull { it.hMsl - startAltitude } ?: 0
-//    Timber.d("Hoz4 ${data.size} maxGain = $maxGain; startAltitude = $startAltitude, maxAltitude = ${data.maxOfOrNull { it.hMsl }}")
-
-    // Calculate current gain (from the last data point)
-    val currentGain = data.lastOrNull()?.let { it.hMsl - startAltitude } ?: 0
-
-    // Calculate max time difference (in seconds)
-
-    // Use Animatable for height representation
-//    val heightRepresentation = remember { Animatable(25f) }
-//    val pickedMax = max(currentGain, maxGain)
-//    val heightRepresentation32 by animateIntAsState(
-//        when {
-//            pickedMax > 30 -> (pickedMax + 20)
-//            pickedMax > 15 -> 40
-//            else -> 25
-//        }
-//    )
-//    val widthRepresentation = remember { Animatable(10f) }
-//    val widthRepresentation2 by animateIntAsState(
-//        when {
-//            maxTimeDiff < 8 -> 10
-//            maxTimeDiff >= 8 && maxTimeDiff < 13 -> 15
-//            maxTimeDiff >= 13 -> (maxTimeDiff + 3).toInt()
-//            else -> 10
-//        }
-//    )
-
-//    // Update the height representation when maxGain changes
-//    LaunchedEffect(maxGain) {
-//        val targetValue = when {
-//            maxGain > 35 -> (maxGain + 20).toFloat()
-//            maxGain > 20 -> 40f
-//            else -> 25f
-//        }
-//
-//        heightRepresentation.animateTo(
-//            targetValue = targetValue
-//        )
-//    }
-//
-//    LaunchedEffect(maxTimeDiff) {
-//        val targetValue = when {
-//            maxTimeDiff < 8 -> 10f
-//            maxTimeDiff >= 8 && maxTimeDiff < 13 -> 15f
-//            maxTimeDiff >= 13 -> maxTimeDiff + 3f
-//            else -> 10f
-//        }
-//
-//        widthRepresentation.animateTo(
-//            targetValue = targetValue
-//        )
-//    }
-
-    // Convert dp to px for line width
-    val lineWidthPx = with(LocalDensity.current) { 16.dp.toPx() }
 
     Canvas(
         modifier = Modifier
@@ -1049,12 +990,7 @@ private fun OngoingFlareContainer2(data: List<GnssData>) {
         }
 
         val lastTime = data.lastOrNull()?.iTow?.toInt() ?: startTime
-        val diffMs = if (lastTime >= startTime) {
-            lastTime - startTime
-        } else {
-            // Handle week rollover (604800000 = 7*24*60*60*1000 ms in a week)
-            lastTime + (604800000 - startTime)
-        }
+        val diffMs = lastTime - startTime
         val maxTimeDiff = (diffMs / 1000f)
         val widthRepresentation =
             when {
@@ -1067,63 +1003,6 @@ private fun OngoingFlareContainer2(data: List<GnssData>) {
         // How much is 1m in pixels
         val heightFactor = canvasHeight / heightRepresentation
 
-        // Draw axis lines
-//        drawLine(
-//            color = Color.Gray,
-//            start = Offset(0f, canvasHeight),
-//            end = Offset(canvasWidth, canvasHeight),
-//            strokeWidth = 2f
-//        )
-//
-//        drawLine(
-//            color = Color.Gray,
-//            start = Offset(0f, 0f),
-//            end = Offset(0f, canvasHeight),
-//            strokeWidth = 2f
-//        )
-        // Draw height markers every 10m
-//        val markerInterval = 10
-//        for (i in 0..(heightRepresentation.toInt() / markerInterval) * markerInterval step markerInterval) {
-////            val y = canvasHeight - (i.toFloat() / heightRepresentation.value * canvasHeight)
-//            val y = canvasHeight - (i.toFloat() * heightFactor)
-//
-//            // Draw marker text
-//            drawContext.canvas.nativeCanvas.drawText(
-//                "$i m",
-//                -35f,
-//                y,
-//                android.graphics.Paint().apply {
-//                    color = android.graphics.Color.GRAY
-//                    textSize = 30f
-//                }
-//            )
-//        }
-
-        // Draw time markers every 5 seconds
-//        for (i in 0..widthRepresentation step 5) {
-//            val x = (i / widthRepresentation) * canvasWidth
-//
-//            // Draw vertical marker line
-//            drawLine(
-//                color = Color.Gray.copy(alpha = 0.5f),
-//                start = Offset(x, canvasHeight),
-//                end = Offset(x, canvasHeight + 5f),
-//                strokeWidth = 1f
-//            )
-//
-//            // Draw marker text
-//            drawContext.canvas.nativeCanvas.drawText(
-//                "${i}s",
-//                x,
-//                canvasHeight + 20f,
-//                android.graphics.Paint().apply {
-//                    color = android.graphics.Color.GREEN
-//                    textSize = 30f
-//                    textAlign = android.graphics.Paint.Align.CENTER
-//                }
-//            )
-//        }
-
         // If we have more than one data point, draw the gain line
         if (data.size > 1) {
             // Create points for the line
@@ -1131,17 +1010,11 @@ private fun OngoingFlareContainer2(data: List<GnssData>) {
                 val gain = gnssData.hMsl - startAltitude
 
                 // Calculate the x position based on time (0 to 20 seconds)
-                val timeDiffMs = /*if (gnssData.iTow.toInt() >= startTime) {*/
-                    gnssData.iTow.toInt() - startTime
-//                } else {
-                // Handle week rollover
-//                    gnssData.iTow.toInt() + (604800000 - startTime)
-//                }
+                val timeDiffMs = gnssData.iTow.toInt() - startTime
 
                 val timeDiffSec = timeDiffMs / 1000f
                 val x =
                     (timeDiffSec / widthRepresentation.toFloat()) * canvasWidth // Scale to canvas width
-//                val y = canvasHeight - (gain.toFloat() / heightRepresentation.value) * canvasHeight
                 val y = canvasHeight - (gain.toFloat() * heightFactor)
 
                 Offset(x, y)
@@ -1185,9 +1058,16 @@ private fun GMapContainer(sessionController: PpcHudSessionController) {
 
     val perfLanes by sessionController.performanceLanes.collectAsState()
 
+    val exitFound by sessionController.exitFound.collectAsState()
     val gpsData = gnssData
     val cameraZoom by animateFloatAsState(
-        targetValue = if (sessionController.exitFound.value == null || (gpsData != null && sessionController.profile.competitionWindowBottom > gpsData.hMsl)) 13f else 16f,
+        targetValue = if (exitFound == null ||
+            (gpsData != null && sessionController.profile.competitionWindowBottom > gpsData.hMsl)
+        ) {
+            13f
+        } else {
+            16f
+        },
         animationSpec = tween(durationMillis = 1_500)
     )
 
