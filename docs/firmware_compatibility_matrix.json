@@ -5,7 +5,8 @@
       "name": "v2025.05.17.develop",
       "app_compatibility": [
         "2.0.0-RC2",
-        "2.0.0-RC3"
+        "2.0.0-RC3",
+        "2.0.0-RC4"
       ]
     },
     {
