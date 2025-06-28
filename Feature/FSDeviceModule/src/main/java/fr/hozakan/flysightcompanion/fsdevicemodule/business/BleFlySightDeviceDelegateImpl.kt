@@ -32,8 +32,10 @@ import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleFileReade
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleFileWriter
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleGetModeJob
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BlePingJob
+import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleSetMaskJob
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.BleSetModeJob
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.Command
+import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble.GnssMask
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.DeviceMode
@@ -42,6 +44,8 @@ import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.ble.FlySightCharacteristic
 import fr.hozakan.flysightcompanion.model.ble.cccdUuid
+import fr.hozakan.flysightcompanion.model.firmware.FirmwareCompatibilityMatrix
+import fr.hozakan.flysightcompanion.model.firmware.FirmwareInfo
 import fr.hozakan.flysightcompanion.model.records.RecordFile
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
@@ -85,7 +89,8 @@ private val record_directory_time_regex =
 class BleFlySightDeviceDelegateImpl(
     private val bluetoothDevice: BluetoothDevice,
     private val context: Context,
-    private val configEncoder: ConfigEncoder
+    private val configEncoder: ConfigEncoder,
+    private val compatibilityMatrix: FirmwareCompatibilityMatrix
 ) : BleFlySightDeviceDelegate {
 
     override val uuid = UUID.randomUUID().toString()
@@ -106,6 +111,7 @@ class BleFlySightDeviceDelegateImpl(
                 gnssCharacteristic = null
                 controlCharacteristic = null
                 resultCharacteristic = null
+                gnssControlCharacteristic = null
             }
         }
     private var scope: CoroutineScope? = null
@@ -118,6 +124,7 @@ class BleFlySightDeviceDelegateImpl(
     private var controlCharacteristic: BluetoothGattCharacteristic? = null
     private var resultCharacteristic: BluetoothGattCharacteristic? = null
     private var modeCharacteristic: BluetoothGattCharacteristic? = null
+    private var gnssControlCharacteristic: BluetoothGattCharacteristic? = null
 
     private val _connectionState =
         MutableStateFlow<DeviceConnectionState>(DeviceConnectionState.Disconnected)
@@ -298,53 +305,20 @@ class BleFlySightDeviceDelegateImpl(
                     }
                     FlySightCharacteristic.GNSS_PV.uuid -> {
                         log("GNSS data received (${value.size}) : ${value.bytesToHex()}")
-                        if (value.size != 29) {
-                            log("Invalid GNSS PV data size")
-                            return
+                        val firmwareInfo = compatibilityMatrix.getFirmwareInfoByName(_firmwareVersion.value ?: "")
+                        val parser: GnssFeedParser = if (firmwareInfo?.hasGnssMaskCommand == true) {
+                            GnssFeedParserV2 {
+                                log(it)
+                            }
+                        } else {
+                            GnssFeedParserV1 {
+                                log(it)
+                            }
                         }
-                        val buffer = ByteBuffer.wrap(value.sliceArray(1 until value.size))
-                        buffer.order(ByteOrder.LITTLE_ENDIAN)
-                        val iTow = buffer.int.toUInt() //getInt(bytes, 0).toUInt()
-                        val lon = buffer.int // Raw int32 longitude value
-                        val lat = buffer.int // Raw int32 latitude value
-                        val hMsl = buffer.int //getInt(bytes, 12)
-                        val velN = buffer.int //getInt(bytes, 16)
-                        val velE = buffer.int //getInt(bytes, 20)
-                        val velD = buffer.int //getInt(bytes, 24)
-                        
-                        // Convert int32 to decimal degrees with 1e-7 scaling factor
-                        val latitudeDouble = lat * 1e-7
-                        val longitudeDouble = lon * 1e-7
 
-
-                        // Calculate ground speed from velN and velE (Pythagorean theorem)
-                        val groundSpeed = computeGroundSpeed(
-                            velN / 1_000.0,
-                            velE / 1_000.0
-                        )
-
-                        // Calculate total speed (3D) from velN, velE and velD
-                        val totalSpeed = computeTotalSpeed(
-                            velN / 1_000.0,
-                            velE / 1_000.0,
-                            velD / 1_000.0
-                        )
-
+                        val gnssData = parser.parse(value)
+                        if (gnssData == null) return
                         scope?.launch {
-                            val gnssData = GnssData(
-                                iTow = iTow,
-                                lon = longitudeDouble, // Keep the raw integer for backward compatibility
-                                lat = latitudeDouble, // Keep the raw integer for backward compatibility
-                                hMsl = hMsl / 1_000, // Convert from mm to meters
-                                velN = velN / 1_000,
-                                velE = velE / 1_000,
-                                velD = velD / 1_000,
-                                gpsFix = 0,
-                                vAcc = 0 / 1_000,
-                                speed = totalSpeed,
-                                gSpeed = groundSpeed
-                            )
-                            log("GNSS data: $gnssData (lat=${latitudeDouble}, lon=${longitudeDouble})")
                             _gnssFeed.emit(gnssData)
                         }
                     }
@@ -451,6 +425,17 @@ class BleFlySightDeviceDelegateImpl(
                             enableNotifications(gatt, char)
                             gatt.setCharacteristicNotification(char, true)
                         }
+
+                        FlySightCharacteristic.GNSS_CONTROL.uuid -> {
+                            gnssControlCharacteristic = char
+                            log("is gnss control char readable : ${char.isReadable()}")
+                            log("is gnss control char writable : ${char.isWritable()}")
+                            log("is gnss control char writable without response : ${char.isWritableWithoutResponse()}")
+                            log("is gnss control char indicatable : ${char.isIndicatable()}")
+                            log("is gnss control char notifiable : ${char.isNotifiable()}")
+                            enableNotifications(gatt, char)
+                            gatt.setCharacteristicNotification(char, true)
+                        }
                     }
                 }
             }
@@ -484,6 +469,15 @@ class BleFlySightDeviceDelegateImpl(
                 _records.value = LoadingState.Loaded(emptyList())
                 startPingSystem()
                 readCurrentFlySightFile()
+                val firmwareVersion = _firmwareVersion.value
+                if (firmwareVersion != null) {
+                    val firmwareInfo = compatibilityMatrix.getFirmwareInfoByName(firmwareVersion)
+                    if (firmwareInfo != null) {
+                        if (firmwareInfo.hasGnssMaskCommand) {
+                            setCorrectGnssMask()
+                        }
+                    }
+                }
 //                setMode(DeviceMode.Active)
             }
         } else {
@@ -951,8 +945,32 @@ class BleFlySightDeviceDelegateImpl(
 
     override suspend fun startGNSSFeed() {
         val gatt = this.gatt ?: return
-        val characteristic = this.controlCharacteristic ?: return
+        val characteristic = this.gnssControlCharacteristic ?: return
+    }
 
+    private suspend fun setCorrectGnssMask() {
+        val gatt = this.gatt ?: return
+        val characteristic = this.gnssControlCharacteristic ?: return
+
+        log("Setting correct GNSS mask")
+
+        val setMaskJob = BleSetMaskJob(
+            gatt = gatt,
+            gattCharacteristic = characteristic,
+            gattTaskQueue = gattTaskQueue,
+            scheduler = scheduler
+        )
+
+        try {
+            val success = setMaskJob.setMask(GnssMask.ALL)
+            if (success) {
+                log("GNSS mask set successfully to receive all fields: ${GnssMask.describe(GnssMask.ALL)}")
+            } else {
+                log("Failed to set GNSS mask")
+            }
+        } catch (e: Exception) {
+            log("Error setting GNSS mask: ${e.message}")
+        }
     }
 
     override suspend fun stopGNSSFeed() {

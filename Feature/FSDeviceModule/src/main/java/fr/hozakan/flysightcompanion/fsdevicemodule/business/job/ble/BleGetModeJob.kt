@@ -8,14 +8,12 @@ import fr.hozakan.flysightcompanion.bluetoothmodule.SimpleBluetoothGattCallback
 import fr.hozakan.flysightcompanion.framework.extension.bytesToHex
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.FlySightJobScheduler
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.GetModeJob
+import fr.hozakan.flysightcompanion.model.ControlPointStatus
 import fr.hozakan.flysightcompanion.model.DeviceMode
-import fr.hozakan.flysightcompanion.model.ble.FlySightCharacteristic
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import timber.log.Timber
-import java.time.LocalDateTime
-import kotlin.time.Duration
 
 class BleGetModeJob(
     private val gatt: BluetoothGatt,

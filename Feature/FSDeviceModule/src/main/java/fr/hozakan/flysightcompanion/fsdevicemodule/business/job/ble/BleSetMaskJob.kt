@@ -2,33 +2,33 @@ package fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble
 
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
+import fr.hozakan.flysightcompanion.bluetoothmodule.GattTask
 import fr.hozakan.flysightcompanion.bluetoothmodule.GattTaskQueue
 import fr.hozakan.flysightcompanion.bluetoothmodule.SimpleBluetoothGattCallback
 import fr.hozakan.flysightcompanion.framework.extension.bytesToHex
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.FlySightJobScheduler
-import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.SetModeJob
+import fr.hozakan.flysightcompanion.fsdevicemodule.business.job.SetMaskJob
 import fr.hozakan.flysightcompanion.model.ControlPointStatus
-import fr.hozakan.flysightcompanion.model.DeviceMode
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 
-class BleSetModeJob(
+class BleSetMaskJob(
     private val gatt: BluetoothGatt,
     private val gattCharacteristic: BluetoothGattCharacteristic,
     private val gattTaskQueue: GattTaskQueue,
     private val scheduler: FlySightJobScheduler
-) : SetModeJob {
+) : SetMaskJob {
 
-    override suspend fun setMode(
-        mode: DeviceMode,
+    override suspend fun setMask(
+        mask: UByte,
         timeout: Long
     ): Boolean {
         val resultDeferred = CompletableDeferred<Boolean>()
-        return scheduler.schedule( // ping job is high priority and should not used a scheduler
+        return scheduler.schedule(
             priority = 1,
-            labelProvider = { "Set Mode" }) {
+            labelProvider = { "Set GNSS Mask" }) {
             val gattCallback = object : SimpleBluetoothGattCallback() {
                 override fun onCharacteristicChanged(
                     gatt: BluetoothGatt,
@@ -37,19 +37,21 @@ class BleSetModeJob(
                 ) {
                     super.onCharacteristicChanged(gatt, characteristic, value)
                     Timber.d("onCharacteristicChanged: ${characteristic.uuid} (gattCharacteristic.uuid is ${gattCharacteristic.uuid}) ${value.bytesToHex()}")
-                    val cmdCode = value[0].toInt() and 0xFF
-                    val cmd = Command.fromValue(cmdCode)
-                    if (cmd == Command.ACK) {
-                        val cmdAckedCode = value[1].toInt() and 0xFF
-                        val cmdAcked = Command.fromValue(cmdAckedCode)
-                        if (cmdAcked == Command.DEVICE_MODE) {
-                            resultDeferred.complete(true)
-                        }
-                    } else if (cmd == Command.NAK) {
-                        val cmdAckedCode = value[1].toInt() and 0xFF
-                        val cmdAcked = Command.fromValue(cmdAckedCode)
-                        if (cmdAcked == Command.DEVICE_MODE) {
-                            resultDeferred.complete(false)
+
+                    if (characteristic.uuid == gattCharacteristic.uuid && value.isNotEmpty()) {
+                        val responseId = value[0].toInt() and 0xFF
+                        if (responseId == Command.CP_RESPONSE.value && value.size >= 3) {
+                            val originalCmd = value[1].toInt() and 0xFF
+                            val statusInt = value[2].toInt() and 0xFF
+                            val status = ControlPointStatus.fromValue(statusInt)
+
+                            if (originalCmd == Command.SET_GNSS_MASK.value) {
+                                if (status == ControlPointStatus.SUCCESS) {
+                                    resultDeferred.complete(true)
+                                } else {
+                                    resultDeferred.complete(false)
+                                }
+                            }
                         }
                     }
                 }
@@ -57,7 +59,7 @@ class BleSetModeJob(
 
             gattTaskQueue += gattCharacteristic.uuid to gattCallback
 
-            val task = TaskBuilder.buildSetModeTask(gatt, gattCharacteristic, mode) {}
+            val task = TaskBuilder.buildSetGnssMaskTask(gatt, gattCharacteristic, mask) {}
 
             gattTaskQueue.addTask(task)
             val returnValue = try {
@@ -79,6 +81,4 @@ class BleSetModeJob(
             returnValue
         }
     }
-
 }
-

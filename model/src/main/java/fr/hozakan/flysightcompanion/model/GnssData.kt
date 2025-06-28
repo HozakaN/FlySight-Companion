@@ -12,6 +12,8 @@ class GnssData(
     val velD: Int, // m/s
     val gpsFix: Int,
     val vAcc: Int,
+    val hAcc: Int,
+    val sAcc: Int,
     val gSpeed: Int, // m/s
     val speed: Int // m/s
 ) {
