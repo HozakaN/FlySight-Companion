@@ -80,6 +80,8 @@ val FakeGnssData = GnssData(
     velD = 0,
     gpsFix = 0,
     vAcc = 0,
+    hAcc = 0,
+    sAcc = 0,
     speed = 0,
     gSpeed = 0
 )

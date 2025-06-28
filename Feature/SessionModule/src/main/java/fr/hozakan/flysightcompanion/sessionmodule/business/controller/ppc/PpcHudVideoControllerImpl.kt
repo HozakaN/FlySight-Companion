@@ -12,8 +12,10 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -42,6 +44,9 @@ class PpcHudVideoControllerImpl(
     // Cached values to avoid recalculating the lines unnecessarily
 //    private var exitPoint: GnssData? = null
 //    private var laneStartPoint: GnssData? = null
+
+    private val _heightRepresentation = MutableStateFlow(0)
+    val heightRepresentation = _heightRepresentation.asStateFlow()
 
     init {
         sessionEvents

@@ -93,6 +93,8 @@ class FileGnssSource(
                             velD = dataPoint.velD.toInt(),
                             gpsFix = dataPoint.numSV,
                             vAcc = dataPoint.vAcc.toInt(),
+                            hAcc = dataPoint.hAcc.toInt(),
+                            sAcc = dataPoint.sAcc.toInt(),
                             speed = totalSpeed,
                             gSpeed = groundSpeed
                         )
@@ -148,6 +150,8 @@ class FileGnssSource(
                             velD = currentPoint.velD.toInt(),
                             gpsFix = currentPoint.numSV,
                             vAcc = currentPoint.vAcc.toInt(),
+                            hAcc = currentPoint.hAcc.toInt(),
+                            sAcc = currentPoint.sAcc.toInt(),
                             speed = totalSpeed,     // Setting the 3D speed
                             gSpeed = groundSpeed    // Setting the computed ground speed
                         )

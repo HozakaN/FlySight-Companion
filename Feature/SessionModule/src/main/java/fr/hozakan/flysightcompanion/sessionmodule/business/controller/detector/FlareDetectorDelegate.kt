@@ -134,10 +134,14 @@ class FlareDetectorDelegate(
                 // Check if we've gained enough altitude to consider it a flare
                 if (altitudeGain >= distanceUp) {
                     Timber.i("Flare detected! Gained $altitudeGain meters of altitude since direction change")
-
                     // Update the flare state to Flaring
+                    val startTime = startGnssData.iTow.toInt()
                     _currentFlareState.value = FlareState.Flaring(
-                        flareData = flareData
+                        flareData = flareData,
+                        startAltitude = startGnssData.hMsl,
+                        startTime = startGnssData.iTow.toInt(),
+                        timeSinceStart = gnssData.iTow.toInt() - startTime,
+                        altitudeGain = altitudeGain
                     )
                 }
                 flareData += prevData
@@ -162,6 +166,14 @@ class FlareDetectorDelegate(
                 } else {
                     val altitudeGain = gnssData.hMsl - initialUpAltitude!!.hMsl
                     Timber.i("Flare ongoing! Gained $altitudeGain meters of altitude since direction change")
+
+                    _currentFlareState.value = FlareState.Flaring(
+                        flareData = flareData + gnssData,
+                        startAltitude = initialUpAltitude!!.hMsl,
+                        startTime = initialUpAltitude!!.iTow.toInt(),
+                        timeSinceStart = gnssData.iTow.toInt() - initialUpAltitude!!.iTow.toInt(),
+                        altitudeGain = altitudeGain
+                    )
                 }
                 if (prevData != null) {
                     flareData += prevData
@@ -183,8 +195,13 @@ class FlareDetectorDelegate(
                 val filteredFlareData = flareData.filter { it.iTow <= initialDownAlt.iTow }
                 val altitudeGain = gnssData.hMsl - initialUpAltitude!!.hMsl
                 Timber.i("Flare ending. $altitudeGain meters above flare start")
+                val maxGain = flareData.maxOfOrNull { it.hMsl - initialUpAltitude!!.hMsl } ?: 0
                 _currentFlareState.value = FlareState.Flaring(
-                    flareData = filteredFlareData
+                    flareData = filteredFlareData,
+                    startAltitude = initialUpAltitude!!.hMsl,
+                    startTime = initialUpAltitude!!.iTow.toInt(),
+                    timeSinceStart = gnssData.iTow.toInt() - initialUpAltitude!!.iTow.toInt(),
+                    altitudeGain = maxGain
                 )
                 if (count > 5) {
                     val maxHeight = flareData.maxBy { it.hMsl }

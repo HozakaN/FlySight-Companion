@@ -958,7 +958,7 @@ private fun FlareContainer(
             is FlareState.FlareDone -> {}
             is FlareState.Flaring -> {
                 OngoingFlareContainer(
-                    flareState.flareData
+                    state = flareState
                 )
             }
 
@@ -968,12 +968,12 @@ private fun FlareContainer(
 }
 
 @Composable
-private fun OngoingFlareContainer(data: List<GnssData>) {
-    if (data.isEmpty()) return
+private fun OngoingFlareContainer(
+    state: FlareState.Flaring
+) {
+    if (state.flareData.isEmpty()) return
 
-    // Start altitude and time - from the first data point
-    val startAltitude = remember(data) { data.firstOrNull()?.hMsl ?: 0 }
-    val startTime = remember(data) { data.firstOrNull()?.iTow?.toInt() ?: 0 }
+    val altitudeGain = state.altitudeGain
 
     Canvas(
         modifier = Modifier
@@ -983,15 +983,12 @@ private fun OngoingFlareContainer(data: List<GnssData>) {
         val canvasWidth = size.width
         val canvasHeight = size.height
 
-        val maxGain = data.maxOfOrNull { it.hMsl - startAltitude } ?: 0
         val heightRepresentation = when {
-            maxGain > 70 -> 150f
+            altitudeGain > 70 -> 150f
             else -> 90f
         }
 
-        val lastTime = data.lastOrNull()?.iTow?.toInt() ?: startTime
-        val diffMs = lastTime - startTime
-        val maxTimeDiff = (diffMs / 1000f)
+        val maxTimeDiff = (state.timeSinceStart / 1000f)
         val widthRepresentation =
             when {
                 maxTimeDiff < 10 -> 12
@@ -1004,13 +1001,13 @@ private fun OngoingFlareContainer(data: List<GnssData>) {
         val heightFactor = canvasHeight / heightRepresentation
 
         // If we have more than one data point, draw the gain line
-        if (data.size > 1) {
+        if (state.flareData.size > 1) {
             // Create points for the line
-            val points = data.map { gnssData ->
-                val gain = gnssData.hMsl - startAltitude
+            val points = state.flareData.map { gnssData ->
+                val gain = gnssData.hMsl - state.startAltitude
 
                 // Calculate the x position based on time (0 to 20 seconds)
-                val timeDiffMs = gnssData.iTow.toInt() - startTime
+                val timeDiffMs = gnssData.iTow.toInt() - state.startTime
 
                 val timeDiffSec = timeDiffMs / 1000f
                 val x =
@@ -1035,7 +1032,7 @@ private fun OngoingFlareContainer(data: List<GnssData>) {
 
                 val distanceToLine = 8.dp.toPx()
                 drawContext.canvas.nativeCanvas.drawText(
-                    "+${maxGain} m",
+                    "+${altitudeGain} m",
                     lastPoint.x + distanceToLine,
                     lastPoint.y - distanceToLine,
                     android.graphics.Paint().apply {

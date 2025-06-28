@@ -13,7 +13,11 @@ interface FlareDetector {
 sealed interface FlareState {
     data object Idle : FlareState
     data class Flaring(
-        val flareData: List<GnssData>
+        val flareData: List<GnssData>,
+        val startAltitude: Int,
+        val startTime: Int,
+        val timeSinceStart: Int,
+        val altitudeGain: Int
     ) : FlareState
     data class FlareDone(
         val flare: Flare

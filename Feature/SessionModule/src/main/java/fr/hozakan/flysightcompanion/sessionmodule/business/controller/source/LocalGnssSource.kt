@@ -46,6 +46,8 @@ class LocalGnssSource(
                 velD = velD,
                 gpsFix = if (event.location.accuracy <= 8) 3 else if (event.location.accuracy <= 15) 2 else 1, // GPS fix quality based on accuracy
                 vAcc = event.location.verticalAccuracyMeters.toInt(), // Vertical accuracy in mm
+                hAcc = event.location.accuracy.toInt(),
+                sAcc = event.location.speedAccuracyMetersPerSecond.toInt(),
                 gSpeed = event.location.speed.toInt(), // Ground speed in mm/s
                 speed = event.location.speed.toInt() // 3D speed in mm/s (same as ground speed if vertical component isn't available)
             )
