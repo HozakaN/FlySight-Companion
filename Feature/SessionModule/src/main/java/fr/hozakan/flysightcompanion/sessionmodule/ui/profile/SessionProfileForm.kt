@@ -199,8 +199,7 @@ class SessionProfileForm(
                     form.exitDownThresh,
                     form.exitUpThresh,
                     form.timeAfterExit,
-                    form.displayFlareDetector,
-                    form.displayAllFlaresAfterJump
+                    form.displayFlareDetector
                 ))
                 
                 savedList
@@ -417,9 +416,6 @@ class SessionProfileForm(
                     if (index < savedList.size) {
                         form.displayFlareDetector = savedList[index++] as Boolean
                     }
-                    if (index < savedList.size) {
-                        form.displayAllFlaresAfterJump = savedList[index++] as Boolean
-                    }
 
                     form
                 } catch (e: Exception) {
@@ -463,7 +459,6 @@ class SessionProfileForm(
     internal var exitUpThresh by mutableStateOf(initialConfiguration.exitUpThresh)
     internal var timeAfterExit by mutableStateOf(initialConfiguration.timeAfterExit)
     internal var displayFlareDetector by mutableStateOf(initialConfiguration.displayFlareDetector)
-    internal var displayAllFlaresAfterJump by mutableStateOf(initialConfiguration.displayAllFlaresAfterJump)
 
     fun updateSessionProfileName(fileName: String) {
         name = fileName
@@ -625,11 +620,6 @@ class SessionProfileForm(
         isDirty = true
     }
 
-    fun updateDisplayAllFlaresAfterJump(value: Boolean) {
-        this.displayAllFlaresAfterJump = value
-        isDirty = true
-    }
-
     private fun checkValidity() {
         isValid =
             name != null &&
@@ -665,8 +655,7 @@ class SessionProfileForm(
             showGridLines = showGridLines,
             useUSForTTS = useUSForTTS,
             displayItems = displayItems,
-            displayFlareDetector = displayFlareDetector,
-            displayAllFlaresAfterJump = displayAllFlaresAfterJump
+            displayFlareDetector = displayFlareDetector
         )
     }
 }

@@ -34,8 +34,7 @@ data class SessionProfile(
     val showGridLines: Boolean,
     val displayItems: List<DisplayItem>,
     val useUSForTTS: Boolean,
-    val displayFlareDetector: Boolean,
-    val displayAllFlaresAfterJump: Boolean
+    val displayFlareDetector: Boolean
 ) : DisplayableConfig {
 
     companion object {
@@ -66,7 +65,6 @@ data class SessionProfile(
             showGridLines = true,
             useUSForTTS = true,
             displayFlareDetector = true,
-            displayAllFlaresAfterJump = false,
             displayItems = listOf(
                 DisplayItem(
                     displayableCapability = DisplayableCapability.Altitude,

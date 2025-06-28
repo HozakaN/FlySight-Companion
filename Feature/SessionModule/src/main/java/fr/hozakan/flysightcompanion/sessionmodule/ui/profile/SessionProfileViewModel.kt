@@ -65,8 +65,11 @@ class SessionProfileViewModel @Inject constructor(
         isCreatingConf = profileName.isEmpty()
         if (profileName.isEmpty()) {
             _state.update {
+                val default = SessionProfile.default()
                 it.copy(
-                    sessionProfile = SessionProfile.default(),
+                    sessionProfile = default.copy(
+                        configFile = default.configFile.copy(name = "")
+                    ),
                     profileFound = true
                 )
             }

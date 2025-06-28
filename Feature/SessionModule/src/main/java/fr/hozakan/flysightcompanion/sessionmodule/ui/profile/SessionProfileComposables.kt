@@ -445,7 +445,7 @@ fun SessionProfileScreenInternal(
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
 
                             NumberInputField(
-                                label = "Time after exit (s)",
+                                label = "Time after exit (ms)",
                                 value = form.timeAfterExit,
                                 onValueChange = { form.updateTimeAfterExit(it) }
                             )
@@ -674,30 +674,6 @@ private fun FlareDetectionCard(form: SessionProfileForm) {
                 configuration = FlySightTheme.typography.captionText,
                 modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
             )
-
-            // Only show this option if flare detection is enabled
-            if (form.displayFlareDetector) {
-                Spacer(modifier = Modifier.requiredHeight(16.dp))
-
-                // Display All Flares After Jump switch
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    FText(text = "Show all flares after jump")
-                    Switch(
-                        checked = form.displayAllFlaresAfterJump,
-                        onCheckedChange = { form.updateDisplayAllFlaresAfterJump(it) }
-                    )
-                }
-
-                FText(
-                    text = "Display a summary of all detected flares at the end of your jump.",
-                    configuration = FlySightTheme.typography.captionText,
-                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
-                )
-            }
         }
     }
 }
@@ -764,7 +740,7 @@ private fun AssociatedConfigFileContainer(
 
     DropdownContainer(
         label = "Associated config file",
-        selectedValue = selectedConfigFile?.name ?: "Select a configuration",
+        selectedValue = if (selectedConfigFile?.name == null || selectedConfigFile.name.isBlank()) "Select a configuration" else selectedConfigFile.name,
         options = selectableValues,
         onSelectionChanged = { newSource ->
             onConfigFileSelected(configFiles.first { it.name == newSource })
