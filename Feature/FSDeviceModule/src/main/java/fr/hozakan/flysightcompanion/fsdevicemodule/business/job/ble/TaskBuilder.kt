@@ -245,17 +245,18 @@ object TaskBuilder {
         )
     }
 
-    fun buildGetModeTask(
+    fun buildSetModeTask(
         gatt: BluetoothGatt,
         characteristic: BluetoothGattCharacteristic,
+        deviceMode: DeviceMode,
         commandLogger: (String) -> Unit
     ) : GattTask {
-        val command = CommandBuilder.buildGetModeCommand()
+        val command = CommandBuilder.buildSetModeCommand(deviceMode)
         return GattTask.WriteTask(
             gatt,
             characteristic,
             command,
-            BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
+            BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
             {
                 commandLogger(
                     "[COMMAND] [WRITE] [${
@@ -268,29 +269,6 @@ object TaskBuilder {
         )
     }
 
-    fun buildSetModeTask(
-        gatt: BluetoothGatt,
-        characteristic: BluetoothGattCharacteristic,
-        deviceMode: DeviceMode,
-        commandLogger: (String) -> Unit
-    ) : GattTask {
-        val command = CommandBuilder.buildSetModeCommand(deviceMode)
-        return GattTask.WriteTask(
-            gatt,
-            characteristic,
-            command,
-            BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
-            {
-                commandLogger(
-                    "[COMMAND] [WRITE] [${
-                        FlySightCharacteristic.fromUuid(
-                            characteristic.uuid
-                        )?.name
-                    }] ${command.bytesToHex()}"
-                )
-            }
-        )
-    }
 
     fun buildSetGnssMaskTask(
         gatt: BluetoothGatt,

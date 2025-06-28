@@ -26,38 +26,38 @@ class BleSetModeJob(
         timeout: Long
     ): Boolean {
         val resultDeferred = CompletableDeferred<Boolean>()
-        return scheduler.schedule( // ping job is high priority and should not used a scheduler
+        return scheduler.schedule(
             priority = 1,
-            labelProvider = { "Set Mode" }) {
+            labelProvider = { "Set Mode: $mode" }
+        ) {
             val gattCallback = object : SimpleBluetoothGattCallback() {
-                override fun onCharacteristicChanged(
-                    gatt: BluetoothGatt,
-                    characteristic: BluetoothGattCharacteristic,
-                    value: ByteArray
+                override fun onCharacteristicWrite(
+                    gatt: BluetoothGatt?,
+                    characteristic: BluetoothGattCharacteristic?,
+                    status: Int
                 ) {
-                    super.onCharacteristicChanged(gatt, characteristic, value)
-                    Timber.d("onCharacteristicChanged: ${characteristic.uuid} (gattCharacteristic.uuid is ${gattCharacteristic.uuid}) ${value.bytesToHex()}")
-                    val cmdCode = value[0].toInt() and 0xFF
-                    val cmd = Command.fromValue(cmdCode)
-                    if (cmd == Command.ACK) {
-                        val cmdAckedCode = value[1].toInt() and 0xFF
-                        val cmdAcked = Command.fromValue(cmdAckedCode)
-                        if (cmdAcked == Command.DEVICE_MODE) {
+                    super.onCharacteristicWrite(gatt, characteristic, status)
+                    Timber.d("onCharacteristicWrite: ${characteristic?.uuid} status: $status")
+                    if (characteristic?.uuid == gattCharacteristic.uuid) {
+                        if (status == BluetoothGatt.GATT_SUCCESS) {
                             resultDeferred.complete(true)
-                        }
-                    } else if (cmd == Command.NAK) {
-                        val cmdAckedCode = value[1].toInt() and 0xFF
-                        val cmdAcked = Command.fromValue(cmdAckedCode)
-                        if (cmdAcked == Command.DEVICE_MODE) {
+                        } else {
                             resultDeferred.complete(false)
                         }
                     }
                 }
+
             }
 
             gattTaskQueue += gattCharacteristic.uuid to gattCallback
 
-            val task = TaskBuilder.buildSetModeTask(gatt, gattCharacteristic, mode) {}
+            val task = TaskBuilder.buildSetModeTask(
+                gatt,
+                gattCharacteristic,
+                mode
+            ) {
+                Timber.d("[COMMAND] [WRITE] Set Mode: $mode")
+            }
 
             gattTaskQueue.addTask(task)
             val returnValue = try {
@@ -69,10 +69,10 @@ class BleSetModeJob(
                     resultDeferred.await()
                 }
             } catch (e: TimeoutCancellationException) {
-                Timber.i(e.toString())
+                Timber.d("Set mode timeout: ${e.message}")
                 false
             } catch (e: Exception) {
-                Timber.e(e)
+                Timber.e(e, "Set mode error")
                 false
             }
             gattTaskQueue -= gattCallback

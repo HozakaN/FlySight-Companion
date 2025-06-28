@@ -130,6 +130,9 @@ class BleFlySightDeviceDelegateImpl(
         MutableStateFlow<DeviceConnectionState>(DeviceConnectionState.Disconnected)
     override val connectionState = _connectionState.asStateFlow()
 
+    private val _deviceMode = MutableStateFlow<DeviceMode>(DeviceMode.Sleep)
+    override val deviceMode: StateFlow<DeviceMode> = _deviceMode.asStateFlow()
+
     private val _logs = MutableStateFlow<List<String>>(emptyList())
     override val logs = _logs.asStateFlow()
 
@@ -302,6 +305,7 @@ class BleFlySightDeviceDelegateImpl(
                     }
                     FlySightCharacteristic.MODE.uuid -> {
                         log("Status received from mode : ${value.bytesToHex()}")
+                        handleNewMode(value)
                     }
                     FlySightCharacteristic.GNSS_PV.uuid -> {
                         log("GNSS data received (${value.size}) : ${value.bytesToHex()}")
@@ -328,6 +332,15 @@ class BleFlySightDeviceDelegateImpl(
             }
         }
     )
+
+    private fun handleNewMode(value: ByteArray) {
+        val mode = DeviceMode.fromValue(value[0].toInt())
+        _deviceMode.value = mode ?: DeviceMode.Sleep
+    }
+
+    private fun handleNewMode(deviceMode: DeviceMode) {
+        _deviceMode.value = deviceMode
+    }
 
     private fun stateUpdater(newConnectionState: DeviceConnectionState) {
         _connectionState.update {
@@ -462,6 +475,13 @@ class BleFlySightDeviceDelegateImpl(
                 } catch (ex: Exception) {
                     Timber.d("mode exception : ${ex.message}")
                 }
+                val mode = _deviceMode.value
+                when (mode) {
+                    DeviceMode.Sleep -> {
+                        setMode(DeviceMode.Active)
+                    }
+                    else -> {}
+                }
                 readCurrentConfigFile()
 //                _records.value = LoadingState.Loading(emptyList())
 //                val records = retrieveRecordsInfo()
@@ -569,7 +589,7 @@ class BleFlySightDeviceDelegateImpl(
 
     private suspend fun setMode(mode: DeviceMode) {
         val gatt = this.gatt ?: return
-        val rx = this.rxCharacteristic ?: return
+        val rx = this.modeCharacteristic ?: return
 
         log("Setting Mode")
 
@@ -608,6 +628,7 @@ class BleFlySightDeviceDelegateImpl(
             try {
                 val mode = getModeJob.getMode()
                 log("Device mode : $mode")
+                handleNewMode(mode)
             } catch (e: Exception) {
                 log("Error obtaining device mode : $e")
                 null

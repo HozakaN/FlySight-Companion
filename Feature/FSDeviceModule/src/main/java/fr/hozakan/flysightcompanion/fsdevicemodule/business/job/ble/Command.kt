@@ -13,7 +13,6 @@ private const val FS_CRS_COMMAND_READ_DIR = 0x05
 private const val FS_CRS_COMMAND_FILE_DATA = 0x10
 private const val FS_CRS_COMMAND_FILE_INFO = 0x11
 private const val FS_CRS_COMMAND_FILE_ACK = 0x12
-private const val FS_CRS_COMMAND_GET_MODE = 0x13
 private const val FS_CRS_COMMAND_NAK = 0xf0
 private const val FS_CRS_COMMAND_ACK = 0xf1
 private const val FS_CRS_COMMAND_PING = 0xfe
@@ -22,6 +21,7 @@ private const val FS_CONTROL_COMMAND_START_PISTOL = 0x00
 private const val FS_CONTROL_COMMAND_CANCEL_PISTOL = 0x01
 private const val SD_CMD_SET_GNSS_BLE_MASK = 0x01
 private const val SD_CMD_GET_GNSS_BLE_MASK = 0x02
+private const val DS_CMD_SET_MODE = 0x04
 private const val CP_RESPONSE_ID = 0xF0
 
 enum class Command(val value: Int) {
@@ -34,7 +34,7 @@ enum class Command(val value: Int) {
     FILE_DATA(FS_CRS_COMMAND_FILE_DATA),
     FILE_INFO(FS_CRS_COMMAND_FILE_INFO),
     FILE_ACK(FS_CRS_COMMAND_FILE_ACK),
-    DEVICE_MODE(FS_CRS_COMMAND_GET_MODE),
+    DEVICE_MODE(DS_CMD_SET_MODE),
     NAK(FS_CRS_COMMAND_NAK),
     ACK(FS_CRS_COMMAND_ACK),
     PING(FS_CRS_COMMAND_PING),
@@ -89,11 +89,8 @@ object CommandBuilder {
     fun buildPingCommand(): ByteArray =
         byteArrayOf(FS_CRS_COMMAND_PING.toByte())
 
-    fun buildGetModeCommand(): ByteArray =
-        byteArrayOf(FS_CRS_COMMAND_GET_MODE.toByte())
-
     fun buildSetModeCommand(mode: DeviceMode): ByteArray =
-        byteArrayOf(FS_CRS_COMMAND_GET_MODE.toByte()) + byteArrayOf(mode.value.toByte())
+        byteArrayOf(DS_CMD_SET_MODE.toByte()) + byteArrayOf(mode.value.toByte())
 
     fun buildCancelCommand(): ByteArray =
         byteArrayOf(FS_CRS_COMMAND_CANCEL.toByte())
