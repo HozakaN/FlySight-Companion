@@ -171,15 +171,16 @@ class ListFlySightDevicesViewModel @Inject constructor(
     ): ListFlySightDeviceDisplayData {
         fun hasFirmwareUpdate(firmwareVersion: String): Boolean {
             val firmwareInfo =
-                firmwareCompatibilityMatrix.firmwares.firstOrNull { it.name == firmwareVersion }
-                    ?: firmwareCompatibilityMatrixWithBeta.firmwares.firstOrNull { it.name == firmwareVersion }
-            val indexOfFirmware = if (firmwareInfo?.isBeta == true) {
+                firmwareCompatibilityMatrix.getFirmwareInfoByName(firmwareVersion)
+                    ?: firmwareCompatibilityMatrixWithBeta.getFirmwareInfoByName(firmwareVersion)
+            val matrixToUse: FirmwareCompatibilityMatrix? = if (firmwareInfo?.isBeta == true) {
                 firmwareCompatibilityMatrixWithBeta
             } else if (firmwareInfo?.isBeta == false) {
                 firmwareCompatibilityMatrix
             } else {
                 null
-            }?.firmwares?.indexOf(firmwareInfo)
+            }
+            val indexOfFirmware: Int? = matrixToUse?.firmwares?.indexOf(firmwareInfo)
             return indexOfFirmware != null && indexOfFirmware != 0
         }
 

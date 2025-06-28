@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import fr.hozakan.flysightcompanion.bluetoothmodule.GattTask
 import fr.hozakan.flysightcompanion.framework.extension.bytesToHex
+import fr.hozakan.flysightcompanion.model.ControlPointStatus
 import fr.hozakan.flysightcompanion.model.DeviceMode
 import fr.hozakan.flysightcompanion.model.ble.FlySightCharacteristic
 
@@ -279,6 +280,30 @@ object TaskBuilder {
             characteristic,
             command,
             BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
+            {
+                commandLogger(
+                    "[COMMAND] [WRITE] [${
+                        FlySightCharacteristic.fromUuid(
+                            characteristic.uuid
+                        )?.name
+                    }] ${command.bytesToHex()}"
+                )
+            }
+        )
+    }
+
+    fun buildSetGnssMaskTask(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic,
+        mask: UByte,
+        commandLogger: (String) -> Unit
+    ) : GattTask {
+        val command = CommandBuilder.buildSetMaskCommand(mask)
+        return GattTask.WriteTask(
+            gatt,
+            characteristic,
+            command,
+            BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
             {
                 commandLogger(
                     "[COMMAND] [WRITE] [${

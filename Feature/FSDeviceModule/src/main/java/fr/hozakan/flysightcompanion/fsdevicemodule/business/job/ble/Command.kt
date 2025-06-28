@@ -1,5 +1,6 @@
 package fr.hozakan.flysightcompanion.fsdevicemodule.business.job.ble
 
+import fr.hozakan.flysightcompanion.model.ControlPointStatus
 import fr.hozakan.flysightcompanion.model.DeviceMode
 import java.nio.ByteBuffer
 
@@ -19,6 +20,9 @@ private const val FS_CRS_COMMAND_PING = 0xfe
 private const val FS_CRS_COMMAND_CANCEL = 0xff
 private const val FS_CONTROL_COMMAND_START_PISTOL = 0x00
 private const val FS_CONTROL_COMMAND_CANCEL_PISTOL = 0x01
+private const val SD_CMD_SET_GNSS_BLE_MASK = 0x01
+private const val SD_CMD_GET_GNSS_BLE_MASK = 0x02
+private const val CP_RESPONSE_ID = 0xF0
 
 enum class Command(val value: Int) {
     CREATE(FS_CRS_COMMAND_CREATE),
@@ -36,7 +40,10 @@ enum class Command(val value: Int) {
     PING(FS_CRS_COMMAND_PING),
     CANCEL(FS_CRS_COMMAND_CANCEL),
     START_GNSS(FS_CONTROL_COMMAND_START_PISTOL),
-    STOP_GNSS(FS_CONTROL_COMMAND_CANCEL_PISTOL);
+    STOP_GNSS(FS_CONTROL_COMMAND_CANCEL_PISTOL),
+    SET_GNSS_MASK(SD_CMD_SET_GNSS_BLE_MASK),
+    GET_GNSS_MASK(SD_CMD_GET_GNSS_BLE_MASK),
+    CP_RESPONSE(CP_RESPONSE_ID);
 
     companion object {
 
@@ -90,5 +97,11 @@ object CommandBuilder {
 
     fun buildCancelCommand(): ByteArray =
         byteArrayOf(FS_CRS_COMMAND_CANCEL.toByte())
+
+    fun buildGetMaskCommand(): ByteArray =
+        byteArrayOf(SD_CMD_GET_GNSS_BLE_MASK.toByte())
+
+    fun buildSetMaskCommand(mask: UByte): ByteArray =
+        byteArrayOf(SD_CMD_SET_GNSS_BLE_MASK.toByte()) + byteArrayOf(mask.toByte())
 
 }

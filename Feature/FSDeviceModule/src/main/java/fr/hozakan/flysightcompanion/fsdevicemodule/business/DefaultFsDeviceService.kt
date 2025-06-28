@@ -159,6 +159,7 @@ class DefaultFsDeviceService(
         val btDevicesAddresses = newBtDeviceList.map { it.address }
         val oldDevices =
             currentBtDevices.filter { !initialDeviceLoading || it.address in btDevicesAddresses }
+        val matrix = networkService.firmwareWithBetaCompatibilityMatrix.value
         initialDeviceLoading = false
         val oldDevicesAddresses = oldDevices.map { it.address }
         val newDevices = newBtDeviceList.filter { it.address !in oldDevicesAddresses }
@@ -166,7 +167,8 @@ class DefaultFsDeviceService(
             BleFlySightDeviceDelegateImpl(
                 it,
                 context,
-                configEncoder
+                configEncoder,
+                matrix
             )
         }
 

@@ -10,6 +10,10 @@ data class FirmwareCompatibilityMatrix(
     @SerializedName("batch_infos")
     val batchInfos: List<BatchInfo>
 ) {
+
+    fun getFirmwareInfoByName(name: String): FirmwareInfo? =
+        firmwares.firstOrNull { it.name == name }
+
     companion object {
         val placeholder = FirmwareCompatibilityMatrix("", emptyList(), emptyList(), emptyList())
     }
@@ -37,4 +41,12 @@ data class FirmwareInfo(
             "develop",
             ignoreCase = true
         )
+
+    val hasGnssMaskCommand: Boolean
+        get() = name !in gnssMaskCommandBlackList
 }
+
+private val gnssMaskCommandBlackList = listOf(
+    "v2024.12.30",
+    "v2024.11.11.release_candidate"
+)
