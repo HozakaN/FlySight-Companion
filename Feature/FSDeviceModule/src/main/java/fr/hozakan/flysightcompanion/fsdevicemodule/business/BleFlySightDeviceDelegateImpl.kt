@@ -360,11 +360,11 @@ class BleFlySightDeviceDelegateImpl(
         _services.update {
             servs
         }
+        val fsCharacteristicsUuids =
+            FlySightCharacteristic.values().map { characteristic -> characteristic.uuid }
         servs.forEach {
             val chars = it.characteristics
             chars.forEach { char ->
-                val fsCharacteristicsUuids =
-                    FlySightCharacteristic.values().map { characteristic -> characteristic.uuid }
                 if (char.uuid in fsCharacteristicsUuids) {
                     log("Discovered characteristic ${FlySightCharacteristic.fromUuid(char.uuid)?.name}")
                     when (char.uuid) {
@@ -475,13 +475,13 @@ class BleFlySightDeviceDelegateImpl(
                 } catch (ex: Exception) {
                     Timber.d("mode exception : ${ex.message}")
                 }
-                val mode = _deviceMode.value
-                when (mode) {
-                    DeviceMode.Sleep -> {
-                        setMode(DeviceMode.Active)
-                    }
-                    else -> {}
-                }
+//                val mode = _deviceMode.value
+//                when (mode) {
+//                    DeviceMode.Sleep -> {
+//                        setMode(DeviceMode.Active)
+//                    }
+//                    else -> {}
+//                }
                 readCurrentConfigFile()
 //                _records.value = LoadingState.Loading(emptyList())
 //                val records = retrieveRecordsInfo()
