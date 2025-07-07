@@ -335,7 +335,7 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActiv
                                                             )
                                                         )
                                                     },
-                                                    onShowFirmwareInfoClicked = { deviceId ->
+                                                    onShowFirmwareInfoClicked = {
                                                         navController.navigate(
                                                             AppScreen.DeviceTab.DeviceFirmware.buildRoute(
                                                                 deviceId

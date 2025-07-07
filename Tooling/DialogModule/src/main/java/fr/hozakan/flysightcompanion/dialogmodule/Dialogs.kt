@@ -38,6 +38,7 @@ import fr.hozakan.flysightcompanion.composablecommons.SimpleDialogActionBar
 import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
+import fr.hozakan.flysightcompanion.model.DeviceMode
 import fr.hozakan.flysightcompanion.model.DisplayableConfig
 import fr.hozakan.flysightcompanion.model.firmware.FirmwareUpdateStatus
 import fr.hozakan.flysightcompanion.model.session.profile.Coordinate
@@ -49,7 +50,8 @@ data class ConfigFileNameDialogResult(val name: String) : DialogResult
 data class PickConfigurationDialogResult(val configFile: DisplayableConfig) : DialogResult
 data class CreateReferencePointDialogResult(val referencePoint: ReferencePoint) : DialogResult
 
-data class AwaitActiveFlySightDialog(
+data class AwaitFlySightDeviceModeDialog(
+    val awaitPowerOn: Boolean = true,
     private val awaitMechanism: suspend () -> Unit
 ) : DialogItem {
     @Composable
@@ -63,7 +65,7 @@ data class AwaitActiveFlySightDialog(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    FText("Please power on your FlySight")
+                    FText("Please power ${if (awaitPowerOn) { "on"} else { "off" }} your FlySight")
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     SimpleDialogActionBar(
                         onCancel = {

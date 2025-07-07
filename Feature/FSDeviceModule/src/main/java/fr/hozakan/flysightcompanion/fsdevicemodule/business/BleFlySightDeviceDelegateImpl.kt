@@ -383,7 +383,7 @@ class BleFlySightDeviceDelegateImpl(
             val chars = it.characteristics
             chars.forEach { char ->
                 if (char.uuid in fsCharacteristicsUuids) {
-                    log("Hoz3 Discovered characteristic ${FlySightCharacteristic.fromUuid(char.uuid)?.name}")
+                    log("Discovered characteristic ${FlySightCharacteristic.fromUuid(char.uuid)?.name}")
                     when (char.uuid) {
                         FlySightCharacteristic.BATTERY.uuid -> {
                             batteryCharacteristic = char

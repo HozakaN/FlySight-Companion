@@ -11,6 +11,7 @@ import fr.hozakan.flysightcompanion.firmwaremodule.ui.FirmwareScreenViewModel
 import fr.hozakan.flysightcompanion.framework.dagger.ViewModelKey
 import fr.hozakan.flysightcompanion.framework.viewmodel.ViewModelFactory
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_config.DeviceConfigurationViewModel
+import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail.DeviceDetailActionsViewModel
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_detail.DeviceDetailViewModel
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.file.FileScreenViewModel
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDevicesViewModel
@@ -39,6 +40,12 @@ internal abstract class ViewModelBindings {
     @IntoMap
     @ViewModelKey(DeviceDetailViewModel::class)
     abstract fun bindDeviceDetailViewModel(deviceDetailViewModel: DeviceDetailViewModel): ViewModel
+
+    @InternalCoroutinesApi
+    @Binds
+    @IntoMap
+    @ViewModelKey(DeviceDetailActionsViewModel::class)
+    abstract fun bindDeviceDetailActionsViewModel(deviceDetailActionsViewModel: DeviceDetailActionsViewModel): ViewModel
 
     @InternalCoroutinesApi
     @Binds

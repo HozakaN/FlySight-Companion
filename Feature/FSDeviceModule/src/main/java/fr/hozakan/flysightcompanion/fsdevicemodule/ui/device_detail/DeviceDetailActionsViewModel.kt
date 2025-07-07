@@ -34,10 +34,31 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @SuppressLint("StaticFieldLeak")
-class DeviceDetailViewModel @Inject constructor(
+class DeviceDetailActionsViewModel @Inject constructor(
     private val context: Context,
     private val fsDeviceService: FsDeviceService,
     private val recordService: RecordService,
     private val networkService: NetworkService,
     private val dialogService: DialogService
-) : DeviceDetailViewBase(context, fsDeviceService, recordService, networkService, dialogService)
+) : DeviceDetailViewBase(context, fsDeviceService, recordService, networkService, dialogService) {
+    override fun loadDevice(deviceId: String) {
+        deviceJob?.cancel()
+        _state.update {
+            it.copy(
+                device = null,
+                currentDirectoryPath = listOf("/"),
+                directoryContent = emptyList()
+            )
+        }
+        deviceJob = viewModelScope.launch {
+            fsDeviceService.observeDevice(deviceId)
+                .collect { device ->
+                    _state.update {
+                        it.copy(
+                            device = device
+                        )
+                    }
+                }
+        }
+    }
+}

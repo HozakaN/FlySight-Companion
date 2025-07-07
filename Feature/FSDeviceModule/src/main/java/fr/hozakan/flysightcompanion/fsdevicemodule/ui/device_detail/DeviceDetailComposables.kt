@@ -68,12 +68,15 @@ import timber.log.Timber
 fun DeviceDetailMenuActions(
     deviceId: DeviceId,
     onShowDeviceConfigClicked: (config: ConfigFile) -> Unit,
-    onShowFirmwareInfoClicked: (DeviceId) -> Unit
+    onShowFirmwareInfoClicked: () -> Unit
 ) {
 
     val factory = LocalViewModelFactory.current
 
-    val viewModel: DeviceDetailViewModel = viewModel(factory = factory)
+    val viewModel: DeviceDetailActionsViewModel = viewModel(
+        key = "device_detail_actions_$deviceId",
+        factory = factory
+    )
 
     val state by viewModel.state.collectAsState()
 
@@ -81,42 +84,42 @@ fun DeviceDetailMenuActions(
         viewModel.loadDevice(deviceId)
     }
 
-    var configFileState by remember { mutableStateOf<LoadingState<ConfigFile>?>(null) }
-    LaunchedEffect(key1 = state.device?.configFile) {
-        val configFileStateFlow = state.device?.configFile
-        if (configFileStateFlow == null) {
-            configFileState = null
-        } else {
-            configFileStateFlow.collect {
-                configFileState = it
-            }
-        }
-    }
+//    var configFileState by remember { mutableStateOf<LoadingState<ConfigFile>?>(null) }
+//    LaunchedEffect(key1 = state.device?.configFile) {
+//        val configFileStateFlow = state.device?.configFile
+//        if (configFileStateFlow == null) {
+//            configFileState = null
+//        } else {
+//            configFileStateFlow.collect {
+//                configFileState = it
+//            }
+//        }
+//    }
+//
+//    Row {
+//        when (val immutableConfigFileState = configFileState) {
+//            is LoadingState.Loaded -> {
+//                TextButton(
+//                    onClick = {
+//                        onShowDeviceConfigClicked(immutableConfigFileState.value)
+//                    }
+//                ) {
+//                    Text(text = stringResource(R.string.device_detail_show_config))
+//                }
+//            }
+//
+//            else -> {}
+//        }
 
-    Row {
-        when (val immutableConfigFileState = configFileState) {
-            is LoadingState.Loaded -> {
-                TextButton(
-                    onClick = {
-                        onShowDeviceConfigClicked(immutableConfigFileState.value)
-                    }
-                ) {
-                    Text(text = stringResource(R.string.device_detail_show_config))
-                }
-            }
-
-            else -> {}
-        }
-        
         IconButton(
-            onClick = { onShowFirmwareInfoClicked(deviceId) }
+            onClick = { onShowFirmwareInfoClicked() }
         ) {
             Icon(
                 imageVector = Icons.Default.Memory,
                 contentDescription = stringResource(R.string.firmware_show_compatibility_matrix)
             )
         }
-    }
+//    }
 }
 
 @Composable
@@ -127,7 +130,10 @@ fun DeviceDetailScreen(
 ) {
     val factory = LocalViewModelFactory.current
 
-    val viewModel: DeviceDetailViewModel = viewModel(factory = factory)
+    val viewModel: DeviceDetailViewModel = viewModel(
+        key = "device_detail_$deviceId",
+        factory = factory
+    )
 
     val state by viewModel.state.collectAsState()
 

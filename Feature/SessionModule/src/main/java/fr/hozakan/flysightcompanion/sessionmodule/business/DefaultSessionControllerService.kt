@@ -2,7 +2,7 @@ package fr.hozakan.flysightcompanion.sessionmodule.business
 
 import android.content.Context
 import fr.hozakan.flysightcompanion.audiomodule.AudioService
-import fr.hozakan.flysightcompanion.dialogmodule.AwaitActiveFlySightDialog
+import fr.hozakan.flysightcompanion.dialogmodule.AwaitFlySightDeviceModeDialog
 import fr.hozakan.flysightcompanion.dialogmodule.DialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.DialogService
 import fr.hozakan.flysightcompanion.dialogmodule.HudWarningDialog
@@ -35,7 +35,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -84,7 +83,7 @@ class DefaultSessionControllerService(
                         fsDeviceService.devices.value.firstOrNull { it.volatileUuid == sessionSource.fsId }
                             ?: return@launch
                     if (fsDevice.deviceMode.value != DeviceMode.Active) {
-                        val result = dialogService.displayDialog(AwaitActiveFlySightDialog {
+                        val result = dialogService.displayDialog(AwaitFlySightDeviceModeDialog {
                             fsDevice.deviceMode.first { it == DeviceMode.Active }
                         })
                         if (result != OkDialogResult) {

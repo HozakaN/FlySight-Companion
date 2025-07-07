@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Usb
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -574,7 +575,7 @@ fun FlySightDeviceItem(
                         }
                         when (mode) {
                             DeviceMode.Active -> DeviceItemModeActive(device = device)
-                            DeviceMode.Sleep -> {
+                            DeviceMode.Pairing, DeviceMode.Sleep -> {
                                 val configFileState by device.configFile.collectAsState()
                                 FlySightDeviceItemConfigBody(
                                     device = device,
@@ -594,6 +595,9 @@ fun FlySightDeviceItem(
 //                        DeviceMode.Start -> TODO()
                             else -> {}
                         }
+                        FlySightActions(
+                            onFolderClicked = onDeviceClicked
+                        )
                     }
                 }
 
@@ -751,7 +755,10 @@ private fun BatteryLevelContainer(batteryLevel: Int) {
                 // Draw battery body
                 drawRoundRect(
                     color = Color.Gray,
-                    topLeft = Offset((size.width - batteryWidth) / 2, (size.height - batteryHeight) / 2),
+                    topLeft = Offset(
+                        (size.width - batteryWidth) / 2,
+                        (size.height - batteryHeight) / 2
+                    ),
                     size = androidx.compose.ui.geometry.Size(batteryWidth, batteryHeight),
                     cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius),
                     style = Stroke(width = strokeWidth)
@@ -760,8 +767,14 @@ private fun BatteryLevelContainer(batteryLevel: Int) {
                 // Draw battery terminal
                 drawRoundRect(
                     color = Color.Gray,
-                    topLeft = Offset(size.width * 0.7f + (size.width - batteryWidth) / 2, size.height * 0.25f),
-                    size = androidx.compose.ui.geometry.Size(strokeWidth * 1.5f, size.height * 0.5f),
+                    topLeft = Offset(
+                        size.width * 0.7f + (size.width - batteryWidth) / 2,
+                        size.height * 0.25f
+                    ),
+                    size = androidx.compose.ui.geometry.Size(
+                        strokeWidth * 1.5f,
+                        size.height * 0.5f
+                    ),
                     cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius / 2),
                     style = Stroke(width = strokeWidth)
                 )
@@ -778,7 +791,10 @@ private fun BatteryLevelContainer(batteryLevel: Int) {
                             batteryLevel > 20 -> Color.Yellow
                             else -> Color.Red
                         },
-                        topLeft = Offset(((size.width - batteryWidth) / 2) + strokeWidth, ((size.height - batteryHeight) / 2) + strokeWidth),
+                        topLeft = Offset(
+                            ((size.width - batteryWidth) / 2) + strokeWidth,
+                            ((size.height - batteryHeight) / 2) + strokeWidth
+                        ),
                         size = androidx.compose.ui.geometry.Size(levelWidth, levelHeight)
                     )
                 }
@@ -793,6 +809,20 @@ private fun BatteryLevelContainer(batteryLevel: Int) {
                 batteryLevel > 20 -> Color.Yellow
                 else -> Color.Red
             }
+        )
+    }
+}
+
+@Composable
+private fun FlySightActions(
+    onFolderClicked: () -> Unit
+) {
+    IconButton(
+        onClick = onFolderClicked
+    ) {
+        Icon(
+            imageVector = Icons.Default.Folder,
+            contentDescription = "Folder"
         )
     }
 }
@@ -824,7 +854,8 @@ private fun DeviceItemModeActive(
     }
 
     Surface(
-        modifier = Modifier.requiredHeight(160.dp)
+        modifier = Modifier
+            .requiredHeight(160.dp)
             .padding(8.dp),
         shape = RoundedCornerShape(16.dp),
         shadowElevation = 8.dp

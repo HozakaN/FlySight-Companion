@@ -68,7 +68,7 @@ fun DialogHandler() {
                 }
             }
 
-            is AwaitActiveFlySightDialog -> {
+            is AwaitFlySightDeviceModeDialog -> {
                 dial.Content {
                     dialog = null
                     dialItem.second.resume(it)
