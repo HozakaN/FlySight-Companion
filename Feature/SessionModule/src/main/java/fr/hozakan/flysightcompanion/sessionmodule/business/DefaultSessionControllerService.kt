@@ -107,8 +107,8 @@ class DefaultSessionControllerService(
 
             val exitDetector = ExitDetectorDelegate(
                 gnssFlow = gnssSource.gnssFlow,
-                minAltAglMeter = sessionProfile.exitDetectionWindowBottom,
-                cfgExitAltAglMeter = sessionProfile.exitDetectionWindowTop,
+                minExitDetectionAltMeter = sessionProfile.exitDetectionWindowBottom,
+                maxExitDetectionAltMeter = sessionProfile.exitDetectionWindowTop,
                 upThreshCmps = sessionProfile.exitUpThresh,
                 downThreshCmps = sessionProfile.exitDownThresh,
                 numDown = max(sessionProfile.exitPointsDown, 0),

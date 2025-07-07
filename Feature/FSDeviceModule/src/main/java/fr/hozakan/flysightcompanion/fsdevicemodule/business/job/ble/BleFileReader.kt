@@ -70,7 +70,6 @@ class BleFileReader(
             val fileState = try {
                 fileContent.await()
             } catch (ex: Exception) {
-                Timber.e("Hoz4 Hoz3 Error reading file $filePath: ${ex.message}; canceled : ${fileContent.isCancelled} completed : ${fileContent.isCompleted} active : ${fileContent.isActive}")
                 canceled = canceled || ex is CancellationException
                 if (ex is CancellationException) {
                     sendCancel()

@@ -60,7 +60,6 @@ class FlySightJobScheduler {
     private fun onJobFinished() {
         counter++
         synchronized(this) {
-            Timber.d("Hoz3 onJobFinished, counter: $counter, queue size: ${requestQueue.size}")
             if (requestQueue.isNotEmpty()) {
                 val request = requestQueue.removeAt(0)
                 request.deferred.complete(Unit)

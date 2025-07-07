@@ -39,7 +39,6 @@ class BleDirectoryFetcher(
 
     private val scope =
         CoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineName("BleDirectoryFetcherScope") + CoroutineExceptionHandler { _, throwable ->
-            Timber.d("Hoz3 DirectoryFetcher exception: $throwable")
             directoryListed?.completeExceptionally(throwable)
         })
 
@@ -64,7 +63,6 @@ class BleDirectoryFetcher(
             scheduler.schedule(
                 labelProvider = { "flow directory $directory" }
             ) {
-                Timber.i("Hoz3 Fetching directory $directory")
                 directoryListed = CompletableDeferred()
                 gattTaskQueue += FlySightCharacteristic.CRS_TX.uuid to gattCallback
                 val task = TaskBuilder.buildGetDirectoryTask(
@@ -75,13 +73,11 @@ class BleDirectoryFetcher(
                 )
                 gattTaskQueue.addTask(task)
 
-                Timber.d("Hoz3 Fetching directory $directory await()")
                 try {
                     directoryListed?.await()
                 } catch (ex: Exception) {
-                    Timber.d("Hoz3 await exception : $ex")
+                    Timber.d("await exception : $ex")
                 }
-                Timber.d("Hoz3 Fetching directory $directory await() done")
                 directoryListed = null
 
                 gattTaskQueue -= gattCallback
@@ -118,7 +114,6 @@ class BleDirectoryFetcher(
 
     private fun handleFileEntry(value: ByteArray) {
         val fileInfo = decodeFileInfo(value) ?: return
-        Timber.d("Hoz3 File entry received: ${fileInfo.fileName}")
         if (fileInfo.fileName.isEmpty()) {
             directoryListed?.complete(Unit)
             directoryListed = null
@@ -132,7 +127,7 @@ class BleDirectoryFetcher(
     private fun decodeFileInfo(byteArray: ByteArray): FileInfo? {
         if (byteArray.isEmpty()) return null
         val buffer = ByteBuffer.wrap(byteArray)
-        buffer.order(ByteOrder.LITTLE_ENDIAN) //TODO remove and check if it's needed
+        buffer.order(ByteOrder.LITTLE_ENDIAN)
 
         // Decode packet ID (1 byte)
         val packetId = buffer.get().toInt() and 0xFF
