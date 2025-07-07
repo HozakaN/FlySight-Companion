@@ -1195,38 +1195,40 @@ private fun DeviceConfigurationContainer(
 //                Box(
 //                    modifier = Modifier.requiredSize(24.dp)
 //                ) {
-                IconButton(
-                    modifier = Modifier.requiredSize(24.dp),
-                    onClick = {
-                        menuOpened = true
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = stringResource(
-                            R.string.list_device_item_configuration_menu_content_description
-                        )
-                    )
-                }
-                DropdownMenu(
-                    expanded = menuOpened,
-                    onDismissRequest = { menuOpened = false }
-                ) {
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                modifier = Modifier.fillMaxWidth(),
-                                text = stringResource(
-                                    R.string.list_device_item_configuration_menu_change
-                                ),
-                                textAlign = TextAlign.Center
-                            )
-                        },
+                Box {
+                    IconButton(
+                        modifier = Modifier.requiredSize(24.dp),
                         onClick = {
-                            menuOpened = false
-                            onChangeDeviceConfigurationClicked()
+                            menuOpened = true
                         }
-                    )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = stringResource(
+                                R.string.list_device_item_configuration_menu_content_description
+                            )
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuOpened,
+                        onDismissRequest = { menuOpened = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    text = stringResource(
+                                        R.string.list_device_item_configuration_menu_change
+                                    ),
+                                    textAlign = TextAlign.Center
+                                )
+                            },
+                            onClick = {
+                                menuOpened = false
+                                onChangeDeviceConfigurationClicked()
+                            }
+                        )
+                    }
                 }
             }
 //            }
