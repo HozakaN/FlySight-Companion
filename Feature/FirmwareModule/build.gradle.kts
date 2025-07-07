@@ -40,7 +40,7 @@ dependencies {
     implementation(project(":model"))
     implementation(project(":Tooling:framework"))
     implementation(project(":Feature:FSDeviceModule"))
-    implementation(project(":Tooling:NetworkModule"))
+    implementation(project(":Middleware:NetworkModule"))
     implementation(project(":Tooling:DesignSystem"))
 
     implementation(libs.androidx.core.ktx)
