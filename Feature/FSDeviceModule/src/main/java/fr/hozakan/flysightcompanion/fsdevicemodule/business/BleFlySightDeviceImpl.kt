@@ -28,6 +28,7 @@ class BleFlySightDeviceImpl(
     override val fileReceived: SharedFlow<FileState> = delegate.fileReceived
     override val ping: SharedFlow<Boolean> = delegate.ping
     override val firmwareVersion: StateFlow<String?> = delegate.firmwareVersion
+    override val stackVersion: StateFlow<String?> = delegate.stackVersion
     override val publicKeys: StateFlow<Pair<String, String>?> = delegate.publicKeys
     override val isBle: Boolean = true
     override val gnssFeed: SharedFlow<GnssData> = delegate.gnssFeed

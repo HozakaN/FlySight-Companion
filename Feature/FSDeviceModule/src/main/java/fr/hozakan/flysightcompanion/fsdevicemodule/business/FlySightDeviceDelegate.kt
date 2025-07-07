@@ -26,6 +26,7 @@ interface FlySightDeviceDelegate {
     val logs: StateFlow<List<String>>
     val fileReceived: SharedFlow<FileState>
     val firmwareVersion: StateFlow<String?>
+    val stackVersion: StateFlow<String?>
     val publicKeys: StateFlow<Pair<String, String>?>
     val gnssFeed: SharedFlow<GnssData>
     fun flowDirectory(directoryPath: List<String>): StateFlow<List<FileInfo>>

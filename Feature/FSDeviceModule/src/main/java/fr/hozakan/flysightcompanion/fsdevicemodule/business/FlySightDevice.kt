@@ -31,6 +31,7 @@ interface FlySightDevice {
     val fileReceived: SharedFlow<FileState>
     val ping: SharedFlow<Boolean>
     val firmwareVersion: StateFlow<String?>
+    val stackVersion: StateFlow<String?>
     val publicKeys: StateFlow<Pair<String, String>?>
     val gnssFeed: SharedFlow<GnssData>
     val isBle: Boolean

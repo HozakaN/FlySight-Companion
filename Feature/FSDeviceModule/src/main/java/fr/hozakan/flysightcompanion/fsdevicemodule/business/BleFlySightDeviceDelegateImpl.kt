@@ -146,7 +146,9 @@ class BleFlySightDeviceDelegateImpl(
     override val records: StateFlow<LoadingState<List<RecordFile>>> = _records.asStateFlow()
 
     private val _firmwareVersion = MutableStateFlow<String?>(null)
+    private val _stackVersion = MutableStateFlow<String?>(null)
     override val firmwareVersion: StateFlow<String?> = _firmwareVersion.asStateFlow()
+    override val stackVersion: StateFlow<String?> = _stackVersion.asStateFlow()
 
     private val _publicKeys = MutableStateFlow<Pair<String, String>?>(null)
     override val publicKeys: StateFlow<Pair<String, String>?> = _publicKeys.asStateFlow()
@@ -745,6 +747,13 @@ class BleFlySightDeviceDelegateImpl(
                                 content.substring(firmwareVersionCharacterIndex + "Firmware_Ver: ".length)
                                     .substringBefore("\n").trim()
                             _firmwareVersion.value = firmwareVersion
+                        }
+                        val stackVersionCharacterIndex = content.indexOf("Stack_Ver: ")
+                        if (stackVersionCharacterIndex >= 0) {
+                            val stackVersion =
+                                content.substring(firmwareVersionCharacterIndex + "Stack_Ver: ".length)
+                                    .substringBefore("\n").trim()
+                            _stackVersion.value = stackVersion
                         }
                         val publicKeyXCharacterIndex = content.indexOf("Pubkey_X: ")
                         val publicKeyX = if (publicKeyXCharacterIndex >= 0) {
