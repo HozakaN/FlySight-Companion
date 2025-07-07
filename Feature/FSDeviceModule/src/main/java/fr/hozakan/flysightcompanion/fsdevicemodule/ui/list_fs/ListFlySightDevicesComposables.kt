@@ -590,7 +590,8 @@ fun FlySightDeviceItem(
                                     onUpdateSystemConfClicked = onUpdateSystemConfClicked,
                                     onPushConfigToDeviceClicked = onPushConfigToDeviceClicked,
                                     onChangeDeviceConfigurationClicked = onChangeDeviceConfigurationClicked,
-                                    onUploadRecordToSystem = onUploadRecordToSystem
+                                    onUploadRecordToSystem = onUploadRecordToSystem,
+                                    onDeviceClicked = onDeviceClicked
                                 )
                             }
 //                        DeviceMode.Config -> TODO()
@@ -1121,7 +1122,8 @@ private fun FlySightDeviceItemConfigBody(
     onUpdateSystemConfClicked: () -> Unit,
     onPushConfigToDeviceClicked: () -> Unit,
     onChangeDeviceConfigurationClicked: () -> Unit,
-    onUploadRecordToSystem: () -> Unit
+    onUploadRecordToSystem: () -> Unit,
+    onDeviceClicked: () -> Unit
 ) {
     val rows = 2
     FlowRow(
@@ -1130,25 +1132,30 @@ private fun FlySightDeviceItemConfigBody(
         maxItemsInEachRow = rows
     ) {
         val itemModifier = Modifier
-            .padding(8.dp)
-            .height(220.dp)
+            .padding(start = 8.dp, top = 8.dp, end = 8.dp)
             .weight(1f)
-            .clip(RoundedCornerShape(8.dp))
 
-        Surface(
-            modifier = itemModifier
-        ) {
-            DeviceConfigurationContainer(
-                configFileState = configFileState,
-                updatingConfiguration = updatingConfiguration,
-                device = device,
-                onUploadConfigToSystem = onUploadConfigToSystem,
-                onUpdateSystemConfClicked = onUpdateSystemConfClicked,
-                onPushConfigToDeviceClicked = onPushConfigToDeviceClicked,
-                onChangeDeviceConfigurationClicked = onChangeDeviceConfigurationClicked,
-                unitSystem = unitSystem
-            )
+        Column(modifier = itemModifier) {
+            Surface(
+                modifier = Modifier
+                    .height(220.dp),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                DeviceConfigurationContainer(
+                    configFileState = configFileState,
+                    updatingConfiguration = updatingConfiguration,
+                    device = device,
+                    onUploadConfigToSystem = onUploadConfigToSystem,
+                    onUpdateSystemConfClicked = onUpdateSystemConfClicked,
+                    onPushConfigToDeviceClicked = onPushConfigToDeviceClicked,
+                    onChangeDeviceConfigurationClicked = onChangeDeviceConfigurationClicked,
+                    unitSystem = unitSystem
+                )
+            }
+            Spacer(modifier = Modifier.requiredHeight(8.dp))
+            FlySightActions(onFolderClicked = onDeviceClicked)
         }
+
 //        Surface(
 //            modifier = itemModifier
 //        ) {
