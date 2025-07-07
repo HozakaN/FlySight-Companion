@@ -16,7 +16,8 @@ enum class DeviceMode(
     Config(FS_MODE_STATE_CONFIG),
     Usb(FS_MODE_STATE_USB),
     Pairing(FS_MODE_STATE_PAIRING),
-    Start(FS_MODE_STATE_START);
+    Start(FS_MODE_STATE_START),
+    Unknown(-1);
 
 
     companion object {

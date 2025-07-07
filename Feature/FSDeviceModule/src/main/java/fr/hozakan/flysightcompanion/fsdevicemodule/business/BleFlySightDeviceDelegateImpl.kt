@@ -130,7 +130,9 @@ class BleFlySightDeviceDelegateImpl(
         MutableStateFlow<DeviceConnectionState>(DeviceConnectionState.Disconnected)
     override val connectionState = _connectionState.asStateFlow()
 
-    private val _deviceMode = MutableStateFlow<DeviceMode>(DeviceMode.Sleep)
+    private val modeSleepContinuations = mutableListOf<CancellableContinuation<Unit>>()
+
+    private val _deviceMode = MutableStateFlow(DeviceMode.Unknown)
     override val deviceMode: StateFlow<DeviceMode> = _deviceMode.asStateFlow()
 
     private val _logs = MutableStateFlow<List<String>>(emptyList())
@@ -336,6 +338,13 @@ class BleFlySightDeviceDelegateImpl(
     private fun handleNewMode(value: ByteArray) {
         val mode = DeviceMode.fromValue(value[0].toInt())
         _deviceMode.value = mode ?: DeviceMode.Sleep
+        if (mode == DeviceMode.Sleep) {
+            val continuations = ArrayList(modeSleepContinuations)
+            modeSleepContinuations.clear()
+            continuations.forEach { continuation ->
+                if (continuation.isActive) continuation.resume(Unit)
+            }
+        }
     }
 
     private fun handleNewMode(deviceMode: DeviceMode) {
@@ -470,10 +479,11 @@ class BleFlySightDeviceDelegateImpl(
 //                    }))
 //                }
                 stateUpdater(DeviceConnectionState.Connected)
-                try {
+                val mode = try {
                     getMode()
                 } catch (ex: Exception) {
                     Timber.d("mode exception : ${ex.message}")
+                    null
                 }
 //                val mode = _deviceMode.value
 //                when (mode) {
@@ -482,12 +492,15 @@ class BleFlySightDeviceDelegateImpl(
 //                    }
 //                    else -> {}
 //                }
+                startPingSystem()
+                if (mode != DeviceMode.Sleep) {
+                    awaitDeviceModeSleep()
+                }
                 readCurrentConfigFile()
 //                _records.value = LoadingState.Loading(emptyList())
 //                val records = retrieveRecordsInfo()
 //                _records.value = LoadingState.Loaded(records)
                 _records.value = LoadingState.Loaded(emptyList())
-                startPingSystem()
                 readCurrentFlySightFile()
                 val firmwareVersion = _firmwareVersion.value
                 if (firmwareVersion != null) {
@@ -503,6 +516,16 @@ class BleFlySightDeviceDelegateImpl(
         } else {
             gatt.disconnect()
             stateUpdater(DeviceConnectionState.ConnectionError)
+        }
+    }
+
+    private suspend fun awaitDeviceModeSleep() {
+        if (_deviceMode.value == DeviceMode.Sleep) return
+        return suspendCancellableCoroutine { continuation ->
+            modeSleepContinuations += continuation
+            continuation.invokeOnCancellation {
+                modeSleepContinuations -= continuation
+            }
         }
     }
 
@@ -610,15 +633,15 @@ class BleFlySightDeviceDelegateImpl(
         }
     }
 
-    private suspend fun getMode() {
+    private suspend fun getMode(): DeviceMode? {
 
         log("trying to get mode ${bluetoothDevice.address}")
-        val gatt = this.gatt ?: return
-        val rx = this.modeCharacteristic ?: return
+        val gatt = this.gatt ?: return null
+        val rx = this.modeCharacteristic ?: return null
 
         log("Reading Mode")
 
-        withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO) {
             val getModeJob = BleGetModeJob(
                 gatt = gatt,
                 gattCharacteristic = rx,
@@ -629,6 +652,7 @@ class BleFlySightDeviceDelegateImpl(
                 val mode = getModeJob.getMode()
                 log("Device mode : $mode")
                 handleNewMode(mode)
+                mode
             } catch (e: Exception) {
                 log("Error obtaining device mode : $e")
                 null

@@ -2,6 +2,7 @@ package fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -59,7 +60,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -96,6 +96,18 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 import androidx.compose.ui.platform.LocalConfiguration
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+import fr.hozakan.flysightcompanion.model.DeviceMode
+import fr.hozakan.flysightcompanion.model.GnssData
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
@@ -481,12 +493,14 @@ fun FlySightDeviceItem(
     Card {
         val connectionState by device.connectionState.collectAsState()
 
+        val mode by device.deviceMode.collectAsState()
+
         Timber.d("Composing FlySightDeviceItem with device state : $connectionState")
 
         val resultFilesState by device.records.collectAsState()
 
         val clickableModifier =
-            if (connectionState == DeviceConnectionState.Connected) {
+            if (connectionState == DeviceConnectionState.Connected && mode == DeviceMode.Sleep) {
                 if (device.hasFirmwareUpdate && device.canShowFirmwareWarning) {
                     Modifier.clickable {
                         firmwareUpdateDialogOpened = true
@@ -509,6 +523,7 @@ fun FlySightDeviceItem(
         ) {
             when (connectionState) {
                 DeviceConnectionState.Connected -> {
+
                     Column(
                         modifier = Modifier.padding(8.dp)
                     ) {
@@ -551,18 +566,28 @@ fun FlySightDeviceItem(
                                 Text(connectionText(connectionState))
                             }
                         }
-                        val configFileState by device.configFile.collectAsState()
-                        FlySightDeviceItemConfigBody(
-                            device = device,
-                            updatingConfiguration = updatingConfiguration,
-                            configFileState = configFileState,
-                            unitSystem = unitSystem,
-                            onUploadConfigToSystem = onUploadConfigToSystem,
-                            onUpdateSystemConfClicked = onUpdateSystemConfClicked,
-                            onPushConfigToDeviceClicked = onPushConfigToDeviceClicked,
-                            onChangeDeviceConfigurationClicked = onChangeDeviceConfigurationClicked,
-                            onUploadRecordToSystem = onUploadRecordToSystem
-                        )
+                        when (mode) {
+                            DeviceMode.Active -> DeviceItemModeActive(device = device)
+                            DeviceMode.Sleep -> {
+                                val configFileState by device.configFile.collectAsState()
+                                FlySightDeviceItemConfigBody(
+                                    device = device,
+                                    updatingConfiguration = updatingConfiguration,
+                                    configFileState = configFileState,
+                                    unitSystem = unitSystem,
+                                    onUploadConfigToSystem = onUploadConfigToSystem,
+                                    onUpdateSystemConfClicked = onUpdateSystemConfClicked,
+                                    onPushConfigToDeviceClicked = onPushConfigToDeviceClicked,
+                                    onChangeDeviceConfigurationClicked = onChangeDeviceConfigurationClicked,
+                                    onUploadRecordToSystem = onUploadRecordToSystem
+                                )
+                            }
+//                        DeviceMode.Config -> TODO()
+//                        DeviceMode.Usb -> TODO()
+//                        DeviceMode.Pairing -> TODO()
+//                        DeviceMode.Start -> TODO()
+                            else -> {}
+                        }
                     }
                 }
 
@@ -699,6 +724,74 @@ fun FlySightDeviceItem(
                 firmwareUpdateDialogOpened = false
             }
         )
+    }
+}
+
+@Composable
+private fun DeviceItemModeActive(
+    device: ListFlySightDeviceDisplayData
+) {
+    var gpsData: GnssData? by remember { mutableStateOf(null) }
+    LaunchedEffect(device) {
+        device.gnssFeed.collect {
+            gpsData = it
+        }
+    }
+    val cameraPositionState = rememberCameraPositionState()
+
+    LaunchedEffect(gpsData) {
+        val data = gpsData
+        if (data != null) {
+            cameraPositionState.move(
+                CameraUpdateFactory.newCameraPosition(
+                    CameraPosition.fromLatLngZoom(
+                        LatLng(data.lat, data.lon),
+                        10f
+                    )
+                )
+            )
+        }
+    }
+
+    Surface(
+        modifier = Modifier.requiredHeight(160.dp)
+            .padding(8.dp),
+        shape = RoundedCornerShape(16.dp),
+        shadowElevation = 8.dp
+    ) {
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState,
+            properties = MapProperties(
+                isMyLocationEnabled = false,
+                mapType = MapType.NORMAL,
+                isBuildingEnabled = false
+            ),
+            uiSettings = MapUiSettings(
+                zoomControlsEnabled = false,
+                compassEnabled = true,
+                mapToolbarEnabled = false,
+                indoorLevelPickerEnabled = false,
+                myLocationButtonEnabled = false,
+                rotationGesturesEnabled = false,
+                scrollGesturesEnabled = false,
+                scrollGesturesEnabledDuringRotateOrZoom = false,
+                tiltGesturesEnabled = false,
+                zoomGesturesEnabled = false
+            )
+        ) {
+            gpsData?.let {
+                Marker(
+                    state = MarkerState(
+                        position = LatLng(
+                            it.lat,
+                            it.lon
+                        )
+                    ),
+                    title = "Current Position"
+                )
+            }
+        }
     }
 }
 
@@ -1001,40 +1094,40 @@ private fun DeviceConfigurationContainer(
 //                Box(
 //                    modifier = Modifier.requiredSize(24.dp)
 //                ) {
-                    IconButton(
-                        modifier = Modifier.requiredSize(24.dp),
-                        onClick = {
-                            menuOpened = true
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = stringResource(
-                                R.string.list_device_item_configuration_menu_content_description
-                            )
-                        )
+                IconButton(
+                    modifier = Modifier.requiredSize(24.dp),
+                    onClick = {
+                        menuOpened = true
                     }
-                    DropdownMenu(
-                        expanded = menuOpened,
-                        onDismissRequest = { menuOpened = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = stringResource(
-                                        R.string.list_device_item_configuration_menu_change
-                                    ),
-                                    textAlign = TextAlign.Center
-                                )
-                            },
-                            onClick = {
-                                menuOpened = false
-                                onChangeDeviceConfigurationClicked()
-                            }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = stringResource(
+                            R.string.list_device_item_configuration_menu_content_description
                         )
-                    }
+                    )
                 }
+                DropdownMenu(
+                    expanded = menuOpened,
+                    onDismissRequest = { menuOpened = false }
+                ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = stringResource(
+                                    R.string.list_device_item_configuration_menu_change
+                                ),
+                                textAlign = TextAlign.Center
+                            )
+                        },
+                        onClick = {
+                            menuOpened = false
+                            onChangeDeviceConfigurationClicked()
+                        }
+                    )
+                }
+            }
 //            }
         }
         if (updatingConfiguration) {

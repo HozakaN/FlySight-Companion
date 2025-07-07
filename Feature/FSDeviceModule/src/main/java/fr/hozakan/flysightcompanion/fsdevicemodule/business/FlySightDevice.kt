@@ -3,6 +3,7 @@ package fr.hozakan.flysightcompanion.fsdevicemodule.business
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
+import fr.hozakan.flysightcompanion.model.DeviceMode
 import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.GnssData
@@ -20,6 +21,7 @@ interface FlySightDevice {
     val volatileUuid: DeviceId
     val name: String
     val connectionState: StateFlow<DeviceConnectionState>
+    val deviceMode: StateFlow<DeviceMode>
     val configFile: StateFlow<LoadingState<ConfigFile>>
     val rawConfigFile: StateFlow<FileState>
     val flySightFile: StateFlow<FileState>

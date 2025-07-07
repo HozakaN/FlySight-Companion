@@ -3,6 +3,7 @@ package fr.hozakan.flysightcompanion.fsdevicemodule.business
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
+import fr.hozakan.flysightcompanion.model.DeviceMode
 import fr.hozakan.flysightcompanion.model.FileInfo
 import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.GnssData
@@ -17,6 +18,7 @@ class BleFlySightDeviceImpl(
     override val volatileUuid: DeviceId = delegate.uuid
     override val name: String = delegate.name
     override val connectionState: StateFlow<DeviceConnectionState> = delegate.connectionState
+    override val deviceMode: StateFlow<DeviceMode> = delegate.deviceMode
     override val configFile: StateFlow<LoadingState<ConfigFile>> = delegate.configFile
     override val rawConfigFile: StateFlow<FileState> = delegate.rawConfigFile
     override val flySightFile: StateFlow<FileState> = delegate.flySightFile
