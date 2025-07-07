@@ -1,5 +1,6 @@
 package fr.hozakan.flysightcompanion.recordsmodule.ui.list
 
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import fr.hozakan.flysightcompanion.model.records.RecordFile
@@ -38,6 +39,12 @@ class ListRecordsViewModel @Inject constructor(
     fun exportRecord(record: RecordFile) {
         viewModelScope.launch {
             recordService.exportRecord(record)
+        }
+    }
+
+    fun saveToDownloads(record: RecordFile) {
+        viewModelScope.launch {
+            recordService.saveToDownloads(record)
         }
     }
 

@@ -1,5 +1,6 @@
 package fr.hozakan.flysightcompanion.recordsmodule.ui.list
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -82,6 +84,7 @@ fun ListRecordsScreen(
                 )
             }
         } else {
+            val context = LocalContext.current
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(8.dp),
@@ -96,6 +99,10 @@ fun ListRecordsScreen(
                         },
                         onExportRecordClicked = {
                             viewModel.exportRecord(record)
+                        },
+                        onSaveToDownloadsClicked = {
+                            viewModel.saveToDownloads(record)
+                            Toast.makeText(context, "File saved to Downloads", Toast.LENGTH_SHORT).show()
                         }
                     )
                 }
@@ -109,7 +116,8 @@ private fun RecordListItem(
     recordFile: RecordFile,
     onSelected: () -> Unit,
     onDeleteRecordClicked: () -> Unit,
-    onExportRecordClicked: () -> Unit
+    onExportRecordClicked: () -> Unit,
+    onSaveToDownloadsClicked: () -> Unit
 ) {
     Card(
         onClick = onSelected,
@@ -151,9 +159,7 @@ private fun RecordListItem(
                             text = {
                                 Text(
                                     modifier = Modifier.fillMaxWidth(),
-                                    text = stringResource(
-                                        R.string.list_records_share_record
-                                    ),
+                                    text = stringResource(R.string.list_records_share_record),
                                     textAlign = TextAlign.Center
                                 )
                             },
@@ -166,9 +172,20 @@ private fun RecordListItem(
                             text = {
                                 Text(
                                     modifier = Modifier.fillMaxWidth(),
-                                    text = stringResource(
-                                        R.string.list_records_delete_record
-                                    ),
+                                    text = stringResource(R.string.list_records_save_record),
+                                    textAlign = TextAlign.Center
+                                )
+                            },
+                            onClick = {
+                                menuOpened = false
+                                onSaveToDownloadsClicked()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    text = stringResource(R.string.list_records_delete_record),
                                     textAlign = TextAlign.Center
                                 )
                             },

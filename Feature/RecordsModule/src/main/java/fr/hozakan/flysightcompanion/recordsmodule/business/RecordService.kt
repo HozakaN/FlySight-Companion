@@ -14,4 +14,5 @@ interface RecordService {
     suspend fun analyzeRecord(recordFile: RecordFile): RecordAnalyze
     fun formatRecordDateTimeFromPathParts(datePart: String, timePart: String): LocalDateTime
     suspend fun exportRecord(recordFile: RecordFile)
+    suspend fun saveToDownloads(recordFile: RecordFile): Boolean
 }

@@ -3,8 +3,11 @@ package fr.hozakan.flysightcompanion.recordsmodule.business
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.media.MediaScannerConnection
+import android.os.Environment
 import android.widget.Toast
 import androidx.core.content.FileProvider
+import fr.hozakan.flysightcompanion.framework.service.applifecycle.ActivityLifecycleService
 import fr.hozakan.flysightcompanion.model.records.RecordAnalyze
 import fr.hozakan.flysightcompanion.model.records.RecordFile
 import fr.hozakan.flysightcompanion.recordsmodule.business.analyze.DefaultRecordAnalyzer
@@ -19,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -138,6 +142,36 @@ class FileBasedRecordService(
             shareIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             context.startActivity(shareIntent)
 
+        }
+    }
+
+    override suspend fun saveToDownloads(recordFile: RecordFile): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val fileContent = loadRecordRawContent(recordFile) ?: return@withContext false
+                
+                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                if (!downloadsDir.exists()) {
+                    downloadsDir.mkdirs()
+                }
+                
+                val fileName = recordFile.phoneFilePath
+                val file = File(downloadsDir, fileName)
+                file.writeText(fileContent)
+
+                // Notify MediaStore about the new file so it appears in Files app
+                MediaScannerConnection.scanFile(
+                    context,
+                    arrayOf(file.absolutePath),
+                    arrayOf("text/csv"),
+                    null
+                )
+
+                true
+            } catch (e: Exception) {
+                Timber.e(e, "Hoz3 ${e.message}")
+                false
+            }
         }
     }
 
