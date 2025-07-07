@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
@@ -35,37 +33,32 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.hozakan.flysightcompanion.composablecommons.DropdownContainer
 import fr.hozakan.flysightcompanion.composablecommons.EmptyIntTextField
 import fr.hozakan.flysightcompanion.composablecommons.ExpandableColumn
 import fr.hozakan.flysightcompanion.composablecommons.SimpleDialogActionBar
+import fr.hozakan.flysightcompanion.composablecommons.displayableRateValueFromRealOne
 import fr.hozakan.flysightcompanion.composablecommons.rateMaximumLabel
 import fr.hozakan.flysightcompanion.composablecommons.rateMinimumLabel
+import fr.hozakan.flysightcompanion.composablecommons.realRateValueFromDisplayableOne
 import fr.hozakan.flysightcompanion.composablecommons.speechValueForMode
 import fr.hozakan.flysightcompanion.composablecommons.speechValueFromMode
 import fr.hozakan.flysightcompanion.composablecommons.speechValueLabel
 import fr.hozakan.flysightcompanion.composablecommons.toneMaximumLabel
 import fr.hozakan.flysightcompanion.composablecommons.toneMinimumLabel
-import fr.hozakan.flysightcompanion.composablecommons.displayableRateValueFromRealOne
 import fr.hozakan.flysightcompanion.composablecommons.valueForToneMode
-import fr.hozakan.flysightcompanion.composablecommons.realRateValueFromDisplayableOne
 import fr.hozakan.flysightcompanion.composablecommons.valueFromToneMode
 import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.designsystem.extension.distanceTextResource
@@ -80,7 +73,6 @@ import fr.hozakan.flysightcompanion.framework.extension.distanceInUnit
 import fr.hozakan.flysightcompanion.framework.extension.fromDistanceUnitToMeter
 import fr.hozakan.flysightcompanion.framework.extension.fromSpeedUnitToCmPerSec
 import fr.hozakan.flysightcompanion.framework.extension.speedInUnit
-import fr.hozakan.flysightcompanion.model.config.ActiveLook
 import fr.hozakan.flysightcompanion.model.config.ActiveLookLine
 import fr.hozakan.flysightcompanion.model.config.ActiveLookLineType
 import fr.hozakan.flysightcompanion.model.config.ActiveLookMode
@@ -96,7 +88,6 @@ import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
 import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.config.Volume
-import fr.hozakan.flysightcompanion.model.defaultConfigFile
 import fr.hozakan.flysightcompanion.model.emptyConfigFile
 
 @Composable
@@ -957,6 +948,128 @@ fun ConfigDetailScreenInternal(
                                     }
                                 )
                             }
+                        }
+                    }
+                }
+                item {
+                    Card {
+                        ExpandableColumn(
+                            expanded = false,
+                            headerComposable = {
+                                Text(text = "Navigation")
+                            },
+                            contentPaddingValues = PaddingValues(
+                                start = 8.dp,
+                                end = 8.dp,
+                                bottom = 8.dp
+                            )
+                        ) {
+                            OutlinedTextField(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    /*.onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.navigationDeviceId == null) {
+                                            form.updateNavigationDeviceId("")
+                                        }
+                                    }*/,
+                                value = form.navigationDeviceId ?: "",
+                                onValueChange = {
+                                    form.updateNavigationDeviceId(it)
+                                },
+                                label = {
+                                    Text(text = "Device ID")
+                                }
+                            )
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+                            EmptyIntTextField(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    /*.onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.navigationLat == null) {
+                                            form.updateNavigationLat(0)
+                                        }
+                                    }*/,
+                                label = "Latitude (degrees * 10,000,000)",
+                                intValue = form.navigationLat,
+                                onValueChanged = {
+                                    form.updateNavigationLat(it)
+                                }
+                            )
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+                            EmptyIntTextField(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    /*.onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.navigationLon == null) {
+                                            form.updateNavigationLon(0)
+                                        }
+                                    }*/,
+                                label = "Longitude (degrees * 10,000,000)",
+                                intValue = form.navigationLon,
+                                onValueChanged = {
+                                    form.updateNavigationLon(it)
+                                }
+                            )
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+                            EmptyIntTextField(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    /*.onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.navigationBearing == null) {
+                                            form.updateNavigationBearing(0)
+                                        }
+                                    }*/,
+                                label = "Bearing (degrees)",
+                                intValue = form.navigationBearing,
+                                onValueChanged = {
+                                    form.updateNavigationBearing(it)
+                                }
+                            )
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+                            EmptyIntTextField(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    /*.onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.navigationEndNav == null) {
+                                            form.updateNavigationEndNav(0)
+                                        }
+                                    }*/,
+                                label = "End Navigation Altitude (meters)",
+                                intValue = form.navigationEndNav,
+                                onValueChanged = {
+                                    form.updateNavigationEndNav(it)
+                                }
+                            )
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+                            EmptyIntTextField(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    /*.onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.navigationMaxDist == null) {
+                                            form.updateNavigationMaxDist(0)
+                                        }
+                                    }*/,
+                                label = "Maximum Distance (meters)",
+                                intValue = form.navigationMaxDist,
+                                onValueChanged = {
+                                    form.updateNavigationMaxDist(it)
+                                }
+                            )
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+                            EmptyIntTextField(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    /*.onFocusChanged { focusState ->
+                                        if (!focusState.hasFocus && form.navigationMinAngle == null) {
+                                            form.updateNavigationMinAngle(0)
+                                        }
+                                    }*/,
+                                label = "Minimum Angle (degrees)",
+                                intValue = form.navigationMinAngle,
+                                onValueChanged = {
+                                    form.updateNavigationMinAngle(it)
+                                }
+                            )
                         }
                     }
                 }

@@ -14,6 +14,7 @@ import fr.hozakan.flysightcompanion.model.config.ActiveLookMode
 import fr.hozakan.flysightcompanion.model.config.Alarm
 import fr.hozakan.flysightcompanion.model.config.DynamicModel
 import fr.hozakan.flysightcompanion.model.config.InitMode
+import fr.hozakan.flysightcompanion.model.config.Navigation
 import fr.hozakan.flysightcompanion.model.config.RateMode
 import fr.hozakan.flysightcompanion.model.config.SilenceWindow
 import fr.hozakan.flysightcompanion.model.config.Speech
@@ -95,6 +96,15 @@ class ConfigDetailForm(
     //silence windows
     internal var silenceWindows by mutableStateOf(initialForm.silenceWindows)
     
+    //Navigation
+    internal var navigationDeviceId by mutableStateOf<String?>(initialForm.navigation.deviceId)
+    internal var navigationLat by mutableStateOf<Int?>(initialForm.navigation.lat)
+    internal var navigationLon by mutableStateOf<Int?>(initialForm.navigation.lon)
+    internal var navigationBearing by mutableStateOf<Int?>(initialForm.navigation.bearing)
+    internal var navigationEndNav by mutableStateOf<Int?>(initialForm.navigation.endNav)
+    internal var navigationMaxDist by mutableStateOf<Int?>(initialForm.navigation.maxDist)
+    internal var navigationMinAngle by mutableStateOf<Int?>(initialForm.navigation.minAngle)
+
     //ActiveLook
     internal var activeLookDeviceId by mutableStateOf<String?>(initialForm.activeLook.deviceId)
     internal var activeLookMode by mutableStateOf(initialForm.activeLook.mode)
@@ -339,30 +349,72 @@ class ConfigDetailForm(
         this.silenceWindows -= silenceWindow
         isDirty = true
     }
-    
+
+    fun updateNavigationDeviceId(deviceId: String?) {
+        this.navigationDeviceId = deviceId
+        isDirty = true
+        checkValidity()
+    }
+
+    fun updateNavigationLat(lat: Int?) {
+        this.navigationLat = lat
+        isDirty = true
+        checkValidity()
+    }
+
+    fun updateNavigationLon(lon: Int?) {
+        this.navigationLon = lon
+        isDirty = true
+        checkValidity()
+    }
+
+    fun updateNavigationBearing(bearing: Int?) {
+        this.navigationBearing = bearing
+        isDirty = true
+        checkValidity()
+    }
+
+    fun updateNavigationEndNav(endNav: Int?) {
+        this.navigationEndNav = endNav
+        isDirty = true
+        checkValidity()
+    }
+
+    fun updateNavigationMaxDist(maxDist: Int?) {
+        this.navigationMaxDist = maxDist
+        isDirty = true
+        checkValidity()
+    }
+
+    fun updateNavigationMinAngle(minAngle: Int?) {
+        this.navigationMinAngle = minAngle
+        isDirty = true
+        checkValidity()
+    }
+
     fun updateActiveLookDeviceId(deviceId: String?) {
         this.activeLookDeviceId = deviceId
         isDirty = true
         checkValidity()
     }
-    
+
     fun updateActiveLookMode(mode: ActiveLookMode) {
         this.activeLookMode = mode
         isDirty = true
         checkValidity()
     }
-    
+
     fun updateActiveLookRate(rate: Int?) {
         this.activeLookRate = rate
         isDirty = true
         checkValidity()
     }
-    
+
     fun addActiveLookLine(line: ActiveLookLine) {
         this.activeLookLines += line
         isDirty = true
     }
-    
+
     fun deleteActiveLookLine(line: ActiveLookLine) {
         this.activeLookLines -= line
         isDirty = true
@@ -424,6 +476,15 @@ class ConfigDetailForm(
             altitudeStep = altitudeStep ?: return null,
             altitudeUnit = altitudeUnit,
             silenceWindows = silenceWindows,
+            navigation = Navigation(
+                deviceId = navigationDeviceId ?: "",
+                lat = navigationLat ?: 0,
+                lon = navigationLon ?: 0,
+                bearing = navigationBearing ?: 0,
+                endNav = navigationEndNav ?: 1500,
+                maxDist = navigationMaxDist ?: 10000,
+                minAngle = navigationMinAngle ?: 5
+            ),
             activeLook = ActiveLook(
                 deviceId = activeLookDeviceId ?: "000000",
                 mode = activeLookMode,

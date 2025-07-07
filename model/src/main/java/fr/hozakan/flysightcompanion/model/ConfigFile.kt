@@ -7,6 +7,7 @@ import fr.hozakan.flysightcompanion.model.config.ActiveLookMode
 import fr.hozakan.flysightcompanion.model.config.Alarm
 import fr.hozakan.flysightcompanion.model.config.DynamicModel
 import fr.hozakan.flysightcompanion.model.config.InitMode
+import fr.hozakan.flysightcompanion.model.config.Navigation
 import fr.hozakan.flysightcompanion.model.config.RateMode
 import fr.hozakan.flysightcompanion.model.config.SilenceWindow
 import fr.hozakan.flysightcompanion.model.config.Speech
@@ -62,6 +63,8 @@ data class ConfigFile(
     val altitudeUnit: UnitSystem,
     //silence windows
     val silenceWindows: List<SilenceWindow>,
+    //Navigation
+    val navigation: Navigation,
     //ActiveLook
     val activeLook: ActiveLook
 ) : DisplayableConfig
@@ -99,6 +102,15 @@ val defaultConfigFile = ConfigFile(
     altitudeUnit = UnitSystem.Metric,
     altitudeStep = 0,
     silenceWindows = emptyList(),
+    navigation = Navigation(
+        deviceId = "",
+        lat = 0,
+        lon = 0,
+        bearing = 0,
+        endNav = 1500,
+        maxDist = 10000,
+        minAngle = 5
+    ),
     activeLook = ActiveLook(
         deviceId = "000000",
         mode = ActiveLookMode.NotActive,
@@ -142,6 +154,15 @@ fun emptyConfigFile() = ConfigFile(
     altitudeUnit = UnitSystem.Metric,
     altitudeStep = 0,
     silenceWindows = emptyList(),
+    navigation = Navigation(
+        deviceId = "",
+        lat = 0,
+        lon = 0,
+        bearing = 0,
+        endNav = 1500,
+        maxDist = 10000,
+        minAngle = 5
+    ),
     activeLook = ActiveLook(
         deviceId = "000000",
         mode = ActiveLookMode.NotActive,

@@ -20,6 +20,13 @@ import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.Horizontal
 import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.InitFileParser
 import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.InitModeParser
 import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.MultilineConfigItemParser
+import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.NavigationBearingParser
+import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.NavigationDeviceIdParser
+import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.NavigationEndNavParser
+import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.NavigationLatParser
+import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.NavigationLonParser
+import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.NavigationMaxDistParser
+import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.NavigationMinAngleParser
 import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.RateMaximumParser
 import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.RateMaximumValueParser
 import fr.hozakan.flysightcompanion.configfilesmodule.business.parser.RateMinimumParser
@@ -104,6 +111,13 @@ private val configItemsParsers = listOf(
     AltitudeUnitParser(),
     AltitudeStepParser(),
     SilenceWindowParser(),
+    NavigationDeviceIdParser(),
+    NavigationLatParser(),
+    NavigationLonParser(),
+    NavigationBearingParser(),
+    NavigationEndNavParser(),
+    NavigationMaxDistParser(),
+    NavigationMinAngleParser(),
     ActiveLookDeviceIdParser(),
     ActiveLookModeParser(),
     ActiveLookRateParser(),

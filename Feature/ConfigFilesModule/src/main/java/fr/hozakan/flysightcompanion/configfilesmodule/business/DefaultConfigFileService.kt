@@ -66,6 +66,12 @@ class DefaultConfigFileService(
                 toMutableList().also { mutableList -> mutableList.add(index, newConf) }
             }
         }
+        if (oldConf.name != newConf.name) {
+            //delete old conf file
+            val oldFile =
+                File("${getOrCreateConfigFilesFolder().absolutePath}${File.separator}${oldConf.name}.txt")
+            oldFile.delete()
+        }
         val fileContent = withContext(Dispatchers.IO) {
             buildFileContent(newConf)
         }

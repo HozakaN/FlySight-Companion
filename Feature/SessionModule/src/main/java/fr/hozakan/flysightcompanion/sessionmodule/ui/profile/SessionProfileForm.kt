@@ -17,6 +17,7 @@ import fr.hozakan.flysightcompanion.model.config.Alarm
 import fr.hozakan.flysightcompanion.model.config.AlarmType
 import fr.hozakan.flysightcompanion.model.config.DynamicModel
 import fr.hozakan.flysightcompanion.model.config.InitMode
+import fr.hozakan.flysightcompanion.model.config.Navigation
 import fr.hozakan.flysightcompanion.model.config.RateMode
 import fr.hozakan.flysightcompanion.model.config.SilenceWindow
 import fr.hozakan.flysightcompanion.model.config.Speech
@@ -25,6 +26,7 @@ import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
 import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
 import fr.hozakan.flysightcompanion.model.config.Volume
+import fr.hozakan.flysightcompanion.model.defaultConfigFile
 import fr.hozakan.flysightcompanion.model.session.profile.DisplayGrid
 import fr.hozakan.flysightcompanion.model.session.profile.DisplayItem
 import fr.hozakan.flysightcompanion.model.session.profile.DisplayItemBundle
@@ -119,6 +121,21 @@ class SessionProfileForm(
                     configFile.silenceWindows.forEach { silenceWindow ->
                         savedList.add(silenceWindow.top)
                         savedList.add(silenceWindow.bottom)
+                    }
+                    
+                    // Save navigation
+                    val navigation = configFile.navigation
+                    if (navigation != null) {
+                        savedList.add(true) // Navigation exists
+                        savedList.add(navigation.deviceId)
+                        savedList.add(navigation.lat)
+                        savedList.add(navigation.lon)
+                        savedList.add(navigation.bearing)
+                        savedList.add(navigation.endNav)
+                        savedList.add(navigation.maxDist)
+                        savedList.add(navigation.minAngle)
+                    } else {
+                        savedList.add(false) // Navigation doesn't exist
                     }
                     
                     // Save ActiveLook with all fields
@@ -281,6 +298,19 @@ class SessionProfileForm(
                             silenceWindows.add(SilenceWindow(top, bottom))
                         }
                         
+                        // Restore navigation
+                        val hasNavigation = savedList[index++] as Boolean
+                        val navigation = if (hasNavigation) {
+                            val deviceId = savedList[index++] as String
+                            val lat = savedList[index++] as Int
+                            val lon = savedList[index++] as Int
+                            val bearing = savedList[index++] as Int
+                            val endNav = savedList[index++] as Int
+                            val maxDist = savedList[index++] as Int
+                            val minAngle = savedList[index++] as Int
+                            Navigation(deviceId, lat, lon, bearing, endNav, maxDist, minAngle)
+                        } else defaultConfigFile().navigation.copy()
+                        
                         // Restore ActiveLook
                         val activeLookDeviceId = savedList[index++] as String
                         val activeLookMode = ActiveLookMode.valueOf(savedList[index++] as String)
@@ -327,6 +357,7 @@ class SessionProfileForm(
                             altitudeUnit = altitudeUnit,
                             altitudeStep = altitudeStep,
                             silenceWindows = silenceWindows,
+                            navigation = navigation,
                             activeLook = ActiveLook(activeLookDeviceId, activeLookMode, activeLookRate, activeLookLines)
                         )
                     } else {

@@ -335,6 +335,49 @@ class DefaultConfigEncoder : ConfigEncoder {
                 """.trimIndent()
                 )
             }
+
+            // Navigation settings
+            appendLine(
+                """
+		                ; Navigation settings
+
+                		; Activating navigation features requires the UNIQUE DEVICE ID
+                		; of this specific FlySight device to be entered below. This is
+                		; a deliberate step to ensure users understand the potential
+                		; implications of using navigation features.
+                
+                		; BEFORE ENABLING THIS FEATURE, YOU MUST ACKNOWLEDGE THE
+                		; FOLLOWING:
+                
+                		; 1. NAVIGATION DATA IS FOR SUPPLEMENTARY INFORMATION ONLY. It
+                		;    should NEVER be your primary source of navigation or
+                		;    situational awareness.
+                
+                		; 2. DO NOT USE THIS FEATURE FOR SAFETY-CRITICAL DECISIONS.
+                		;    Always prioritize visual confirmation, established safety
+                		;    procedures, and communication.
+                
+                		; 3. Be aware that other users may independently configure
+                		;    similar navigation targets, potentially leading to
+                		;    convergent flight paths. This system provides NO collision
+                		;    avoidance.
+                
+                		; 4. You are solely responsible for your flight path and safety.
+                
+                		; ENTER YOUR FLYSIGHT'S UNIQUE DEVICE ID BELOW TO ACTIVATE
+                		; NAVIGATION FEATURES:
+                
+                Device_ID:      ${configFile.navigation.deviceId} ; Device ID (24 hex characters)
+                Lat:            ${configFile.navigation.lat} ; Latitude (degrees * 10,000,000)
+                Lon:            ${configFile.navigation.lon} ; Longitude (degrees * 10,000,000)
+                Bearing:        ${configFile.navigation.bearing} ; Bearing (degrees)
+                End_Nav:        ${configFile.navigation.endNav} ; Minimum altitude for navigation (m)
+                Max_Dist:       ${configFile.navigation.maxDist} ; Maximum distance to target (m)
+                Min_Angle:      ${configFile.navigation.minAngle} ; Minimum angle for direction (degrees)
+                
+            """.trimIndent()
+            )
+
             appendLine(
                 """
                     
