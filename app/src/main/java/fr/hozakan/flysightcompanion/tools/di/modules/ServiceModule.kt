@@ -218,14 +218,10 @@ class ServiceModule {
     @Singleton
     @Provides
     fun provideExternalDisplayService(
-        application: BaseApplication,
-        activityLifecycleService: ActivityLifecycleService,
-        loggerService: LoggerService
+        activityLifecycleService: ActivityLifecycleService
     ): DisplayService {
         return DefaultDisplayService(
-            application.applicationContext,
-            activityLifecycleService,
-            loggerService
+            activityLifecycleService
         )
     }
 

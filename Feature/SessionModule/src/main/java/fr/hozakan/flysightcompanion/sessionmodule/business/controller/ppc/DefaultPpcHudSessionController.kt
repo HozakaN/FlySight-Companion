@@ -238,28 +238,26 @@ class DefaultPpcHudSessionController(
         val referenceCoord = referencePoint.coords
 
         // Create the center line (red line from lane start to reference point)
-        val centerLine = createLine(startCoord, referenceCoord, true)
+        val centerLine = createLine(startCoord, referenceCoord)
 
         // Calculate the heading between points
         val heading = computeHeading(startCoord, referenceCoord)
 
         // Create the two side lines (green lines)
         val laneWidthMeters = profile.performanceLaneWidth.toDouble()
-        val leftLine = createParallelLine(centerLine.points, heading, laneWidthMeters / 2, false)
-        val rightLine = createParallelLine(centerLine.points, heading, -laneWidthMeters / 2, false)
+        val leftLine = createParallelLine(centerLine.points, heading, laneWidthMeters / 2)
+        val rightLine = createParallelLine(centerLine.points, heading, -laneWidthMeters / 2)
 
         _performanceLanes.value = listOf(centerLine, leftLine, rightLine)
     }
 
     private fun createLine(
         start: Coordinate,
-        end: Coordinate,
-        isReference: Boolean
+        end: Coordinate
     ): PpcHudVideoControllerImpl.PerformanceLine {
-        // For a simple line, we just use the start and end points
         return PpcHudVideoControllerImpl.PerformanceLine(
             points = listOf(start, end),
-            isReference = isReference
+            isReference = true
         )
     }
 
@@ -341,8 +339,7 @@ class DefaultPpcHudSessionController(
     private fun createParallelLine(
         points: List<Coordinate>,
         heading: Double,
-        distanceMeters: Double,
-        isReference: Boolean
+        distanceMeters: Double
     ): PpcHudVideoControllerImpl.PerformanceLine {
         // Calculate the offset perpendicular to the heading
         val perpendicular = heading + Math.PI / 2
@@ -368,7 +365,7 @@ class DefaultPpcHudSessionController(
 
         return PpcHudVideoControllerImpl.PerformanceLine(
             points = offsetPoints,
-            isReference = isReference
+            isReference = false
         )
     }
 

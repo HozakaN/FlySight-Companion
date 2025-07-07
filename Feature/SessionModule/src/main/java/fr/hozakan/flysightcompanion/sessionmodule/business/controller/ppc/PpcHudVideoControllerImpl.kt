@@ -3,7 +3,6 @@ package fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc
 import android.content.Context
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.model.GnssData
-import fr.hozakan.flysightcompanion.model.display.Display
 import fr.hozakan.flysightcompanion.model.session.profile.Coordinate
 import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionEvent
@@ -54,11 +53,6 @@ class PpcHudVideoControllerImpl(
                 handleEvent(event)
             }
             .launchIn(scope)
-        displayService.displays
-            .onEach { displays ->
-                handleDisplays(displays)
-            }
-            .launchIn(scope)
 //        exitDetection
 //            .onEach { exitDetection ->
 //                exitPoint = exitDetection
@@ -71,20 +65,6 @@ class PpcHudVideoControllerImpl(
 //                updatePerformanceLanes()
 //            }
 //            .launchIn(scope)
-    }
-
-    private fun handleDisplays(displays: List<Display>) {
-//        if (displays.isNotEmpty()) {
-//            val firstDisplay = displays.first()
-//            val pres = presentation
-//            if (pres != null) {
-//                if (pres.display != firstDisplay.internal) {
-//                    pres.dismiss()
-//                }
-//            }
-//            presentation = VideoPresentation(context, displays.first().internal)
-//            presentation?.show()
-//        }
     }
 
     private fun handleEvent(event: SessionEvent) {
