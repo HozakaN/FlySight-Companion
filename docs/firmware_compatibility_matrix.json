@@ -2,6 +2,12 @@
   "desc":"my desc",
   "firmwares": [
     {
+      "name": "v2025.05.31.develop",
+      "app_compatibility": [
+        "2.0.0-RC7"
+      ]
+    },
+    {
       "name": "v2025.05.17.develop",
       "app_compatibility": [
         "2.0.0-RC2",
@@ -77,6 +83,19 @@
       "firmware_compatibility": [
         "v2024.12.30",
         "v2025.05.17.develop"
+      ]
+    },
+    {
+      "name":"2.0.0-RC6",
+      "firmware_compatibility": [
+        "v2024.12.30",
+        "v2025.05.17.develop"
+      ]
+    },
+    {
+      "name":"2.0.0-RC7",
+      "firmware_compatibility": [
+        "v2025.05.31.develop"
       ]
     }
   ],
