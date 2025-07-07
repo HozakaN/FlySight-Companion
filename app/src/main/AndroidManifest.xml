@@ -7,9 +7,9 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher_flysight"
+        android:icon="@mipmap/ic_launcher_flysight_logo_only"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_flysight"
+        android:roundIcon="@mipmap/ic_launcher_flysight_logo_only_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FlySightCompanion"
         tools:targetApi="36">
