@@ -79,6 +79,7 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 import java.util.concurrent.CancellationException
 import kotlin.coroutines.resume
+import kotlin.math.min
 
 
 private val record_directory_date_regex =
@@ -152,6 +153,9 @@ class BleFlySightDeviceDelegateImpl(
 
     private val _gnssFeed = MutableSharedFlow<GnssData>()
     override val gnssFeed: SharedFlow<GnssData> = _gnssFeed.asSharedFlow()
+
+    private val _batteryLevel = MutableStateFlow(100)
+    override val batteryLevel: StateFlow<Int> = _batteryLevel.asStateFlow()
 
     private val parser: ConfigParser = DefaultConfigParser()
 
@@ -329,6 +333,10 @@ class BleFlySightDeviceDelegateImpl(
                         }
                     }
 
+                    FlySightCharacteristic.BATTERY.uuid -> {
+                        _batteryLevel.value = min(_batteryLevel.value, value[0].toInt())
+                    }
+
                     else -> {}
                 }
             }
@@ -375,7 +383,7 @@ class BleFlySightDeviceDelegateImpl(
             val chars = it.characteristics
             chars.forEach { char ->
                 if (char.uuid in fsCharacteristicsUuids) {
-                    log("Discovered characteristic ${FlySightCharacteristic.fromUuid(char.uuid)?.name}")
+                    log("Hoz3 Discovered characteristic ${FlySightCharacteristic.fromUuid(char.uuid)?.name}")
                     when (char.uuid) {
                         FlySightCharacteristic.BATTERY.uuid -> {
                             batteryCharacteristic = char
@@ -384,6 +392,8 @@ class BleFlySightDeviceDelegateImpl(
                             log("is battery char writable without response : ${char.isWritableWithoutResponse()}")
                             log("is battery char indicatable : ${char.isIndicatable()}")
                             log("is battery char notifiable : ${char.isNotifiable()}")
+                            enableNotifications(gatt, char)
+                            gatt.setCharacteristicNotification(char, true)
                         }
 
                         FlySightCharacteristic.CRS_RX.uuid -> {

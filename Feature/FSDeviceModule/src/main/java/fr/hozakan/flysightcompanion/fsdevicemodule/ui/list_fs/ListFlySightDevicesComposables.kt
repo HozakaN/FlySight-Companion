@@ -59,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -551,6 +552,11 @@ fun FlySightDeviceItem(
                                     contentDescription = "This device is connected through Usb"
                                 )
                             }
+                            if (mode == DeviceMode.Active) {
+                                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                                val batteryLevel by device.batteryLevel.collectAsState()
+                                BatteryLevelContainer(batteryLevel = batteryLevel)
+                            }
                             if (device.hasFirmwareUpdate && device.canShowFirmwareWarning) {
                                 Spacer(modifier = Modifier.requiredWidth(8.dp))
                                 Icon(
@@ -722,6 +728,70 @@ fun FlySightDeviceItem(
             onValidate = {
                 onUpdateFirmwareClicked()
                 firmwareUpdateDialogOpened = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun BatteryLevelContainer(batteryLevel: Int) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier.requiredSize(width = 42.dp, height = 20.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val batteryWidth = size.width * 0.7f
+                val batteryHeight = size.height * 0.9f
+                val cornerRadius = 4.dp.toPx()
+                val strokeWidth = 2.dp.toPx()
+
+                // Draw battery body
+                drawRoundRect(
+                    color = Color.Gray,
+                    topLeft = Offset((size.width - batteryWidth) / 2, (size.height - batteryHeight) / 2),
+                    size = androidx.compose.ui.geometry.Size(batteryWidth, batteryHeight),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius),
+                    style = Stroke(width = strokeWidth)
+                )
+
+                // Draw battery terminal
+                drawRoundRect(
+                    color = Color.Gray,
+                    topLeft = Offset(size.width * 0.7f + (size.width - batteryWidth) / 2, size.height * 0.25f),
+                    size = androidx.compose.ui.geometry.Size(strokeWidth * 1.5f, size.height * 0.5f),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius / 2),
+                    style = Stroke(width = strokeWidth)
+                )
+
+                // Draw battery level
+                val levelPercentage = batteryLevel / 100f
+                val levelWidth = (batteryWidth - strokeWidth * 2) * levelPercentage
+                val levelHeight = batteryHeight - strokeWidth * 2
+
+                if (levelWidth > 0) {
+                    drawRect(
+                        color = when {
+                            batteryLevel > 50 -> Color.Green
+                            batteryLevel > 20 -> Color.Yellow
+                            else -> Color.Red
+                        },
+                        topLeft = Offset(((size.width - batteryWidth) / 2) + strokeWidth, ((size.height - batteryHeight) / 2) + strokeWidth),
+                        size = androidx.compose.ui.geometry.Size(levelWidth, levelHeight)
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.requiredWidth(4.dp))
+        Text(
+            text = "$batteryLevel%",
+            style = MaterialTheme.typography.bodySmall,
+            color = when {
+                batteryLevel > 50 -> Color.Green
+                batteryLevel > 20 -> Color.Yellow
+                else -> Color.Red
             }
         )
     }

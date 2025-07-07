@@ -553,6 +553,7 @@ private class FakeDeviceDelegateImpl(
         MutableStateFlow(initialConnectionState)
     override val deviceMode: StateFlow<DeviceMode> =
         MutableStateFlow(DeviceMode.Sleep)
+    override val batteryLevel: StateFlow<Int> = MutableStateFlow(0)
     override val configFile: StateFlow<LoadingState<ConfigFile>> =
         MutableStateFlow(initialConfigFileState)
     override val rawConfigFile: StateFlow<FileState>

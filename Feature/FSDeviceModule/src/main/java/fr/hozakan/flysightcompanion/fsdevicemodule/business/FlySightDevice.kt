@@ -22,6 +22,7 @@ interface FlySightDevice {
     val name: String
     val connectionState: StateFlow<DeviceConnectionState>
     val deviceMode: StateFlow<DeviceMode>
+    val batteryLevel: StateFlow<Int>
     val configFile: StateFlow<LoadingState<ConfigFile>>
     val rawConfigFile: StateFlow<FileState>
     val flySightFile: StateFlow<FileState>
