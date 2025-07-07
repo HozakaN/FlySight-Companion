@@ -74,7 +74,7 @@
 
     <string name="screen_title_device_detail">Device Detail</string>
     <string name="screen_title_config_list">Config files</string>
-    <string name="screen_title_record_list">Records</string>
+    <string name="screen_title_record_list">Logbook</string>
     <string name="screen_title_file">File %1$s</string>
     <string name="screen_title_plot_settings">Plot settings</string>
     <string name="screen_title_prepare_session">Prepare your session</string>

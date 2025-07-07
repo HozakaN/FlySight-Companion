@@ -273,6 +273,14 @@ data class TextConfiguration(
         )
 
         @Stable
+        val TabTitleSmall = TextConfiguration(
+            style = AppTypography.bodySmall,
+            fontSize = TextUnit.Unspecified,
+            fontStyle = null,
+            fontWeight = null,
+        )
+
+        @Stable
         val PlainScreenTextLarge = TextConfiguration(
             style = AppTypography.titleMedium,
             fontSize = TextUnit.Unspecified,
