@@ -574,7 +574,11 @@ fun FlySightDeviceItem(
                             }
                         }
                         when (mode) {
-                            DeviceMode.Active -> DeviceItemModeActive(device = device)
+                            DeviceMode.Active -> DeviceItemModeActive(
+                                device = device,
+                                onDeviceClicked = onDeviceClicked
+                            )
+
                             DeviceMode.Pairing, DeviceMode.Sleep -> {
                                 val configFileState by device.configFile.collectAsState()
                                 FlySightDeviceItemConfigBody(
@@ -595,9 +599,6 @@ fun FlySightDeviceItem(
 //                        DeviceMode.Start -> TODO()
                             else -> {}
                         }
-                        FlySightActions(
-                            onFolderClicked = onDeviceClicked
-                        )
                     }
                 }
 
@@ -829,7 +830,8 @@ private fun FlySightActions(
 
 @Composable
 private fun DeviceItemModeActive(
-    device: ListFlySightDeviceDisplayData
+    device: ListFlySightDeviceDisplayData,
+    onDeviceClicked: () -> Unit
 ) {
     var gpsData: GnssData? by remember { mutableStateOf(null) }
     LaunchedEffect(device) {
@@ -853,46 +855,53 @@ private fun DeviceItemModeActive(
         }
     }
 
-    Surface(
+    Column(
         modifier = Modifier
-            .requiredHeight(160.dp)
-            .padding(8.dp),
-        shape = RoundedCornerShape(16.dp),
-        shadowElevation = 8.dp
+            .padding(8.dp)
     ) {
-        GoogleMap(
-            modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState,
-            properties = MapProperties(
-                isMyLocationEnabled = false,
-                mapType = MapType.NORMAL,
-                isBuildingEnabled = false
-            ),
-            uiSettings = MapUiSettings(
-                zoomControlsEnabled = false,
-                compassEnabled = true,
-                mapToolbarEnabled = false,
-                indoorLevelPickerEnabled = false,
-                myLocationButtonEnabled = false,
-                rotationGesturesEnabled = false,
-                scrollGesturesEnabled = false,
-                scrollGesturesEnabledDuringRotateOrZoom = false,
-                tiltGesturesEnabled = false,
-                zoomGesturesEnabled = false
-            )
+        Surface(
+            modifier = Modifier
+                .requiredHeight(160.dp),
+            shape = RoundedCornerShape(16.dp),
+            shadowElevation = 8.dp
         ) {
-            gpsData?.let {
-                Marker(
-                    state = MarkerState(
-                        position = LatLng(
-                            it.lat,
-                            it.lon
-                        )
-                    ),
-                    title = "Current Position"
+            GoogleMap(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(
+                    isMyLocationEnabled = false,
+                    mapType = MapType.NORMAL,
+                    isBuildingEnabled = false
+                ),
+                uiSettings = MapUiSettings(
+                    zoomControlsEnabled = false,
+                    compassEnabled = true,
+                    mapToolbarEnabled = false,
+                    indoorLevelPickerEnabled = false,
+                    myLocationButtonEnabled = false,
+                    rotationGesturesEnabled = false,
+                    scrollGesturesEnabled = false,
+                    scrollGesturesEnabledDuringRotateOrZoom = false,
+                    tiltGesturesEnabled = false,
+                    zoomGesturesEnabled = false
                 )
+            ) {
+                gpsData?.let {
+                    Marker(
+                        state = MarkerState(
+                            position = LatLng(
+                                it.lat,
+                                it.lon
+                            )
+                        ),
+                        title = "Current Position"
+                    )
+                }
             }
         }
+        Spacer(modifier = Modifier.requiredHeight(8.dp))
+        FlySightActions(onFolderClicked = onDeviceClicked)
     }
 }
 
