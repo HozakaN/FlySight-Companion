@@ -20,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +48,39 @@ import java.util.UUID
 data class ConfigFileNameDialogResult(val name: String) : DialogResult
 data class PickConfigurationDialogResult(val configFile: DisplayableConfig) : DialogResult
 data class CreateReferencePointDialogResult(val referencePoint: ReferencePoint) : DialogResult
+
+data class AwaitActiveFlySightDialog(
+    private val awaitMechanism: suspend () -> Unit
+) : DialogItem {
+    @Composable
+    override fun Content(onResult: (DialogResult) -> Unit) {
+        Dialog(
+            onDismissRequest = {
+                onResult(DialogResult.Dismiss)
+            }
+        ) {
+            Card {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    FText("Please power on your FlySight")
+                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+                    SimpleDialogActionBar(
+                        onCancel = {
+                            onResult(DialogResult.Dismiss)
+                        },
+                        showValidateButton = false
+                    )
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                awaitMechanism()
+                onResult(OkDialogResult)
+            }
+        }
+    }
+}
 
 data class ConfigFileNameDialog(
     private val name: String? = null
@@ -90,7 +124,6 @@ data class ConfigFileNameDialog(
                 }
             }
         }
-
     }
 }
 

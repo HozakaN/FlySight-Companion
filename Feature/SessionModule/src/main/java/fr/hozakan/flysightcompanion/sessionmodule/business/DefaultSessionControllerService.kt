@@ -2,6 +2,7 @@ package fr.hozakan.flysightcompanion.sessionmodule.business
 
 import android.content.Context
 import fr.hozakan.flysightcompanion.audiomodule.AudioService
+import fr.hozakan.flysightcompanion.dialogmodule.AwaitActiveFlySightDialog
 import fr.hozakan.flysightcompanion.dialogmodule.DialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.DialogService
 import fr.hozakan.flysightcompanion.dialogmodule.HudWarningDialog
@@ -11,6 +12,7 @@ import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionServ
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.MutableFlySightDevice
 import fr.hozakan.flysightcompanion.locationmodule.LocationService
+import fr.hozakan.flysightcompanion.model.DeviceMode
 import fr.hozakan.flysightcompanion.model.session.FlyBlindConfiguration
 import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
 import fr.hozakan.flysightcompanion.model.session.profile.SessionSource
@@ -33,6 +35,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.math.max
@@ -55,7 +59,7 @@ class DefaultSessionControllerService(
     private val scope = CoroutineScope(SupervisorJob())
 
     private var job: Job? = null
-    private var _sessionController= MutableStateFlow<SessionController?>(null)
+    private var _sessionController = MutableStateFlow<SessionController?>(null)
     override val sessionController: StateFlow<SessionController?> = _sessionController.asStateFlow()
 
     override suspend fun playSession(
@@ -74,19 +78,36 @@ class DefaultSessionControllerService(
                 SessionSource.Local -> LocalGnssSource(
                     locationService = locationService
                 )
+
                 is SessionSource.FlySight -> {
-                    val fsDevice = fsDeviceService.devices.value.firstOrNull { it.volatileUuid == sessionSource.fsId } ?: return@launch
-                    FlySightGnssSource(
-                        fsDevice = fsDevice as MutableFlySightDevice
-                    )
+                    val fsDevice =
+                        fsDeviceService.devices.value.firstOrNull { it.volatileUuid == sessionSource.fsId }
+                            ?: return@launch
+                    if (fsDevice.deviceMode.value != DeviceMode.Active) {
+                        val result = dialogService.displayDialog(AwaitActiveFlySightDialog {
+                            fsDevice.deviceMode.first { it == DeviceMode.Active }
+                        })
+                        if (result != OkDialogResult) {
+                            null
+                        } else {
+                            FlySightGnssSource(
+                                fsDevice = fsDevice as MutableFlySightDevice
+                            )
+                        }
+                    } else {
+                        FlySightGnssSource(
+                            fsDevice = fsDevice as MutableFlySightDevice
+                        )
+                    }
                 }
+
                 is SessionSource.Record -> {
                     FileGnssSource(
                         recordFile = sessionSource.file,
                         recordService = recordService
                     )
                 }
-            }
+            } ?: return@launch
 
             val shouldLaunch = if (sessionSource !is SessionSource.Record) {
                 val acknowledged = dialogService.displayDialog(HudWarningDialog)
@@ -132,11 +153,13 @@ class DefaultSessionControllerService(
                     profile = sessionProfile,
                     type = sessionType,
                 )
+
                 SessionType.PlaneDisplay -> DefaultPlaneDisplaySessionController(
                     type = sessionType,
                     gnssSource = gnssSource,
                     userService = userPrefService
                 )
+
                 SessionType.FlyBlind -> DefaultFlyBlindSessionController(
                     context = context,
                     recordService = recordService,
@@ -147,6 +170,7 @@ class DefaultSessionControllerService(
                     exitDetectorDelegate = exitDetector,
                     type = sessionType
                 )
+
                 SessionType.SpaceInvaders -> TODO()
                 SessionType.FlyToDraw -> TODO()
             }
