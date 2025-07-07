@@ -301,6 +301,7 @@
 
     <string name="list_records_no_records">Il n\'y a pas encore d\'enregistrement</string>
     <string name="list_records_delete_record">@string/misc_delete</string>
+    <string name="list_records_share_record">Exporter</string>
 
     <string name="record_detail_menu">Menu</string>
     <string name="record_detail_menu_plot_settings">Paramètres du graphique</string>

@@ -93,6 +93,9 @@ fun ListRecordsScreen(
                         onSelected = { onRecordSelected(record) },
                         onDeleteRecordClicked = {
                             viewModel.deleteRecord(record)
+                        },
+                        onExportRecordClicked = {
+                            viewModel.exportRecord(record)
                         }
                     )
                 }
@@ -105,7 +108,8 @@ fun ListRecordsScreen(
 private fun RecordListItem(
     recordFile: RecordFile,
     onSelected: () -> Unit,
-    onDeleteRecordClicked: () -> Unit
+    onDeleteRecordClicked: () -> Unit,
+    onExportRecordClicked: () -> Unit
 ) {
     Card(
         onClick = onSelected,
@@ -143,6 +147,21 @@ private fun RecordListItem(
                         expanded = menuOpened,
                         onDismissRequest = { menuOpened = false }
                     ) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    text = stringResource(
+                                        R.string.list_records_share_record
+                                    ),
+                                    textAlign = TextAlign.Center
+                                )
+                            },
+                            onClick = {
+                                menuOpened = false
+                                onExportRecordClicked()
+                            }
+                        )
                         DropdownMenuItem(
                             text = {
                                 Text(

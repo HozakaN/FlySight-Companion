@@ -1,6 +1,10 @@
 package fr.hozakan.flysightcompanion.recordsmodule.business
 
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
+import android.widget.Toast
+import androidx.core.content.FileProvider
 import fr.hozakan.flysightcompanion.model.records.RecordAnalyze
 import fr.hozakan.flysightcompanion.model.records.RecordFile
 import fr.hozakan.flysightcompanion.recordsmodule.business.analyze.DefaultRecordAnalyzer
@@ -65,7 +69,10 @@ class FileBasedRecordService(
         }
     }
 
-    override fun formatRecordDateTimeFromPathParts(datePart: String, timePart: String): LocalDateTime {
+    override fun formatRecordDateTimeFromPathParts(
+        datePart: String,
+        timePart: String
+    ): LocalDateTime {
         return LocalDateTime.parse("${datePart}_$timePart", dateTimeFormatter)
     }
 
@@ -98,7 +105,8 @@ class FileBasedRecordService(
     }
 
     override suspend fun analyzeRecord(recordFile: RecordFile): RecordAnalyze {
-        val rawContent = loadRecordRawContent(recordFile) ?: return RecordAnalyze.error("Record is empty")
+        val rawContent =
+            loadRecordRawContent(recordFile) ?: return RecordAnalyze.error("Record is empty")
 //        val fileContent = javaClass.classLoader
 //            ?.getResource("RECORD_beaufort_jump_9_2_temps.CSV")?.readText() ?: ""
         val parser = DefaultRecordParser()
@@ -110,6 +118,29 @@ class FileBasedRecordService(
         return analyze
     }
 
+    override suspend fun exportRecord(recordFile: RecordFile) {
+        val fileContent = loadRecordRawContent(recordFile)
+        if (fileContent != null) {
+            val outStream = context.openFileOutput("track.csv", Context.MODE_PRIVATE)
+            outStream.write(fileContent.toByteArray())
+            outStream.close()
+
+            val file = File("${context.filesDir}", "track.csv")
+            val uri =
+                FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+
+            val trackIntent = Intent(Intent.ACTION_SEND)
+            trackIntent.type = "text/csv"
+            trackIntent.putExtra(Intent.EXTRA_STREAM, uri)
+            trackIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+            val shareIntent = Intent.createChooser(trackIntent, "Share track file")
+            shareIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(shareIntent)
+
+        }
+    }
+
 //    override fun getFile(recordFile: RecordFile): File {
 //        return File("${getOrCreateRecordsFolder().absolutePath}${File.separator}${recordFile.phoneFilePath}")
 //    }
@@ -117,14 +148,14 @@ class FileBasedRecordService(
     private fun getOrCreateRecordsFolder(): File {
         val folder =
             File("${context.filesDir.absolutePath}${File.separator}$RECORDS_FOLDER")
-        val success = folder.exists() ||  (folder.mkdir() && addDefaultResults())
+        val success = folder.exists() || (folder.mkdir() && addDefaultResults())
         return if (success) folder else throw IllegalAccessException("Cannot access app folder")
     }
 
     private fun addDefaultResults(): Boolean {
         scope.launch(Dispatchers.IO) {
-        val fileContent = javaClass.classLoader
-            ?.getResource("RECORD_beaufort_jump_9_2_temps.CSV")?.readText() ?: ""
+            val fileContent = javaClass.classLoader
+                ?.getResource("RECORD_beaufort_jump_9_2_temps.CSV")?.readText() ?: ""
             createRecord(
                 recordFile = RecordFile(
                     dateTime = LocalDateTime.parse("24-11-23_20-38-56", dateTimeFormatter)

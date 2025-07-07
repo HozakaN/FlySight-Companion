@@ -35,4 +35,10 @@ class ListRecordsViewModel @Inject constructor(
         }
     }
 
+    fun exportRecord(record: RecordFile) {
+        viewModelScope.launch {
+            recordService.exportRecord(record)
+        }
+    }
+
 }
