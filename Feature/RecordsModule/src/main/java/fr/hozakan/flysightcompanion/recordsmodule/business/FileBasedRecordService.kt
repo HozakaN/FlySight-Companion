@@ -169,7 +169,7 @@ class FileBasedRecordService(
 
                 true
             } catch (e: Exception) {
-                Timber.e(e, "Hoz3 ${e.message}")
+                Timber.e(e)
                 false
             }
         }

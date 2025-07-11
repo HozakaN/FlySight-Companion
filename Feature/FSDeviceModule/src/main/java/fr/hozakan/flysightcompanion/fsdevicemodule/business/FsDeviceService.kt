@@ -15,7 +15,11 @@ interface FsDeviceService {
     val devices: StateFlow<List<FlySightDevice>>
     val logs: StateFlow<List<Log>>
     fun observeDevice(deviceId: String): Flow<FlySightDevice?>
-    suspend fun refreshBtDevices()
+    suspend fun refreshKnownDevices()
+    suspend fun getUnknownDevices(): Flow<LoadingState<List<FlySightDevice>>>
+
+    suspend fun addNewDevice()
+    suspend fun removeDevice(device: FlySightDevice)
     suspend fun connectToDevice(device: FlySightDevice)
     suspend fun disconnectFromDevice(device: FlySightDevice)
     suspend fun updateDeviceConfig(device: FlySightDevice, configFile: ConfigFile)

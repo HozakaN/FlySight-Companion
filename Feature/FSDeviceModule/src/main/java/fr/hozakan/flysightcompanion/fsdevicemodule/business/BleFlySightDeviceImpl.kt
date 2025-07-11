@@ -17,6 +17,7 @@ class BleFlySightDeviceImpl(
 
     override val volatileUuid: DeviceId = delegate.uuid
     override val name: String = delegate.name
+    override val address: String = delegate.address
     override val connectionState: StateFlow<DeviceConnectionState> = delegate.connectionState
     override val deviceMode: StateFlow<DeviceMode> = delegate.deviceMode
     override val batteryLevel: StateFlow<Int> = delegate.batteryLevel

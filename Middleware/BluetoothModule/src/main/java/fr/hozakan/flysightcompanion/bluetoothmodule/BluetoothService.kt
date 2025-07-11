@@ -7,9 +7,11 @@ import kotlinx.coroutines.flow.Flow
 interface BluetoothService {
     fun checkBluetoothState(): BluetoothState
     suspend fun enableBluetooth(): Boolean
-    fun getPairedDevices(): Flow<LoadingState<List<BluetoothDevice>>>
+    fun discoverDevices(): Flow<LoadingState<List<BluetoothDevice>>>
     suspend fun awaitBluetoothAvailability()
-    suspend fun addDevice()
+    suspend fun addDevice(device: BluetoothDevice): Boolean
+
+//    suspend fun forgetDevice(device: BluetoothDevice)
 
     sealed interface BluetoothState {
         data object NotAvailable : BluetoothState

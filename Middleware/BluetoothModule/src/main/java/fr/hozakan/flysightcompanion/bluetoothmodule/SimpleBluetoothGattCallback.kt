@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
-import timber.log.Timber
 
 abstract class SimpleBluetoothGattCallback {
 
@@ -61,23 +60,23 @@ abstract class SimpleBluetoothGattCallback {
 
     open fun onServiceChanged(gatt: BluetoothGatt) {}
 
-    inner class AndroidVersionSafeBluetoothGattCallback(
-        private val scope: SimpleBluetoothGattCallback
+    inner class AndroidFragmentationSafeBluetoothGattCallback(
+        private val innerCallback: SimpleBluetoothGattCallback
     ) : BluetoothGattCallback() {
         override fun onPhyUpdate(gatt: BluetoothGatt?, txPhy: Int, rxPhy: Int, status: Int) {
-            scope.onPhyUpdate(gatt, txPhy, rxPhy, status)
+            innerCallback.onPhyUpdate(gatt, txPhy, rxPhy, status)
         }
 
         override fun onPhyRead(gatt: BluetoothGatt?, txPhy: Int, rxPhy: Int, status: Int) {
-            scope.onPhyRead(gatt, txPhy, rxPhy, status)
+            innerCallback.onPhyRead(gatt, txPhy, rxPhy, status)
         }
 
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
-            scope.onConnectionStateChange(gatt, status, newState)
+            innerCallback.onConnectionStateChange(gatt, status, newState)
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-            scope.onServicesDiscovered(gatt, status)
+            innerCallback.onServicesDiscovered(gatt, status)
         }
 
         override fun onCharacteristicRead(
@@ -88,7 +87,7 @@ abstract class SimpleBluetoothGattCallback {
             gatt ?: return
             characteristic ?: return
             val value = characteristic.value ?: return
-            scope.onCharacteristicRead(gatt, characteristic, value, status)
+            innerCallback.onCharacteristicRead(gatt, characteristic, value, status)
         }
 
         override fun onCharacteristicRead(
@@ -97,7 +96,7 @@ abstract class SimpleBluetoothGattCallback {
             value: ByteArray,
             status: Int
         ) {
-            scope.onCharacteristicRead(gatt, characteristic, value, status)
+            innerCallback.onCharacteristicRead(gatt, characteristic, value, status)
         }
 
         override fun onCharacteristicWrite(
@@ -105,7 +104,7 @@ abstract class SimpleBluetoothGattCallback {
             characteristic: BluetoothGattCharacteristic?,
             status: Int
         ) {
-            scope.onCharacteristicWrite(gatt, characteristic, status)
+            innerCallback.onCharacteristicWrite(gatt, characteristic, status)
         }
 
         override fun onCharacteristicChanged(
@@ -115,7 +114,7 @@ abstract class SimpleBluetoothGattCallback {
             gatt ?: return
             characteristic ?: return
             val value = characteristic.value ?: return
-            scope.onCharacteristicChanged(gatt, characteristic, value)
+            innerCallback.onCharacteristicChanged(gatt, characteristic, value)
         }
 
         override fun onCharacteristicChanged(
@@ -123,7 +122,7 @@ abstract class SimpleBluetoothGattCallback {
             characteristic: BluetoothGattCharacteristic,
             value: ByteArray
         ) {
-            scope.onCharacteristicChanged(gatt, characteristic, value)
+            innerCallback.onCharacteristicChanged(gatt, characteristic, value)
         }
 
         override fun onDescriptorRead(
@@ -134,7 +133,7 @@ abstract class SimpleBluetoothGattCallback {
             gatt ?: return
             descriptor ?: return
             val value = descriptor.value ?: return
-            scope.onDescriptorRead(gatt, descriptor, status, value)
+            innerCallback.onDescriptorRead(gatt, descriptor, status, value)
         }
 
         override fun onDescriptorRead(
@@ -143,7 +142,7 @@ abstract class SimpleBluetoothGattCallback {
             status: Int,
             value: ByteArray
         ) {
-            scope.onDescriptorRead(gatt, descriptor, status, value)
+            innerCallback.onDescriptorRead(gatt, descriptor, status, value)
         }
 
         override fun onDescriptorWrite(
@@ -151,27 +150,27 @@ abstract class SimpleBluetoothGattCallback {
             descriptor: BluetoothGattDescriptor?,
             status: Int
         ) {
-            scope.onDescriptorWrite(gatt, descriptor, status)
+            innerCallback.onDescriptorWrite(gatt, descriptor, status)
         }
 
         override fun onReliableWriteCompleted(gatt: BluetoothGatt?, status: Int) {
-            scope.onReliableWriteCompleted(gatt, status)
+            innerCallback.onReliableWriteCompleted(gatt, status)
         }
 
         override fun onReadRemoteRssi(gatt: BluetoothGatt?, rssi: Int, status: Int) {
-            scope.onReadRemoteRssi(gatt, rssi, status)
+            innerCallback.onReadRemoteRssi(gatt, rssi, status)
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt?, mtu: Int, status: Int) {
-            scope.onMtuChanged(gatt, mtu, status)
+            innerCallback.onMtuChanged(gatt, mtu, status)
         }
 
         override fun onServiceChanged(gatt: BluetoothGatt) {
-            scope.onServiceChanged(gatt)
+            innerCallback.onServiceChanged(gatt)
         }
     }
 
 }
 
 fun SimpleBluetoothGattCallback.asBluetoothGattCallback(): BluetoothGattCallback =
-    AndroidVersionSafeBluetoothGattCallback(scope = this)
+    AndroidFragmentationSafeBluetoothGattCallback(innerCallback = this)

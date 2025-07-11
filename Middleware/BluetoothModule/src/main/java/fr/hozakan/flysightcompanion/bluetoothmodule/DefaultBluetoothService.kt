@@ -4,18 +4,23 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanRecord
 import android.bluetooth.le.ScanResult
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.provider.Settings
+import android.content.IntentFilter
 import fr.hozakan.flysightcompanion.framework.extension.bytesToHex
-import fr.hozakan.flysightcompanion.framework.service.applifecycle.ActivityLifecycleService
 import fr.hozakan.flysightcompanion.framework.service.async.ActivityOperationsService
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
+import fr.hozakan.flysightcompanion.model.ble.FlySightCharacteristic
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -30,8 +35,7 @@ import kotlin.coroutines.resume
 
 class DefaultBluetoothService(
     private val context: Context,
-    private val activityOperationsService: ActivityOperationsService,
-    private val activityLifecycleService: ActivityLifecycleService,
+    private val activityOperationsService: ActivityOperationsService
 ) : BluetoothService {
 
     private val bluetoothAdapter: BluetoothAdapter?
@@ -77,7 +81,7 @@ class DefaultBluetoothService(
 
     @OptIn(DelicateCoroutinesApi::class)
     @SuppressLint("MissingPermission")
-    override fun getPairedDevices(): Flow<LoadingState<List<BluetoothDevice>>> {
+    override fun discoverDevices(): Flow<LoadingState<List<BluetoothDevice>>> {
         return channelFlow {
             if (isClosedForSend) return@channelFlow
             send(LoadingState.Loading())
@@ -96,10 +100,12 @@ class DefaultBluetoothService(
                                     val manufacturerId = data2.bytesToHex().run {
                                         substring(2, length - 2)
                                     }
-                                    if (manufacturerId == "DB09" && result.isConnectable && result.device.bondState == BluetoothDevice.BOND_BONDED) {
-                                        devices += result.device
-                                        if (!isClosedForSend) {
-                                            send(LoadingState.Loading(devices))
+                                    if (manufacturerId == "DB09" && result.isConnectable/* && result.device.bondState == BluetoothDevice.BOND_BONDED*/) {
+                                        if (result.device.address !in devices.map { it.address }) {
+                                            devices += result.device
+                                            if (!isClosedForSend) {
+                                                send(LoadingState.Loading(devices))
+                                            }
                                         }
                                     }
                                 }
@@ -146,17 +152,65 @@ class DefaultBluetoothService(
         }
     }
 
-    override suspend fun addDevice() {
-        try {
-            val intentOpenBluetoothSettings = Intent()
-            intentOpenBluetoothSettings.action = Settings.ACTION_BLUETOOTH_SETTINGS
-            intentOpenBluetoothSettings.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            context.startActivity(intentOpenBluetoothSettings)
-            activityLifecycleService.awaitNextResume()
-        } catch (e: Exception) {
-            Timber.e(e)
+    @SuppressLint("MissingPermission")
+    override suspend fun addDevice(device: BluetoothDevice): Boolean {
+        if (device.bondState == BluetoothDevice.BOND_BONDED) return true
+        val deferred = CompletableDeferred<Boolean>()
+        scope.launch {
+            var gatt: BluetoothGatt? = null
+            val bondStateReceiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    if (intent?.action == BluetoothDevice.ACTION_BOND_STATE_CHANGED) {
+                        val bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.BOND_NONE)
+                        val bondedDevice = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                        
+                        if (bondedDevice?.address == device.address) {
+                            when (bondState) {
+                                BluetoothDevice.BOND_BONDED -> {
+                                    context?.unregisterReceiver(this)
+                                    deferred.complete(true)
+                                    gatt?.disconnect()
+                                    gatt?.close()
+                                }
+                                BluetoothDevice.BOND_NONE -> {
+                                    context?.unregisterReceiver(this)
+                                    deferred.complete(false)
+                                    gatt?.disconnect()
+                                    gatt?.close()
+                                }
+                                BluetoothDevice.BOND_BONDING -> {}
+                            }
+                        }
+                    }
+                }
+            }
+            
+            val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
+            context.registerReceiver(bondStateReceiver, filter)
+
+            gatt = device.connectGatt(
+                context,
+                false,
+                object : SimpleBluetoothGattCallback() {
+                    override fun onConnectionStateChange(
+                        gatt: BluetoothGatt?,
+                        status: Int,
+                        newState: Int
+                    ) {
+                        if (newState == BluetoothProfile.STATE_CONNECTED) {
+                            gatt?.discoverServices()
+                        }
+                    }
+
+                    override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
+                        device.createBond()
+                    }
+                }.asBluetoothGattCallback()
+            )
         }
+        return deferred.await()
     }
+
 }
 
 private fun ScanRecord.customAdvertisementDataMap(): Map<Int, ByteArray>? {

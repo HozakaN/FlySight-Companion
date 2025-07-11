@@ -20,6 +20,7 @@ interface FlySightDevice {
     @Deprecated("Check usage")
     val volatileUuid: DeviceId
     val name: String
+    val address: String
     val connectionState: StateFlow<DeviceConnectionState>
     val deviceMode: StateFlow<DeviceMode>
     val batteryLevel: StateFlow<Int>

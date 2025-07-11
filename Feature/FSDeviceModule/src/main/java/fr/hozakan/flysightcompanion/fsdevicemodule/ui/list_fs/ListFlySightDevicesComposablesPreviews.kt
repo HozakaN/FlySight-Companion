@@ -48,7 +48,8 @@ fun ListFlySightDevicesScreenInternalRefreshingWithoutDevicePreview() {
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
         onPreventDialogForFirmwareVersion = {},
-        onUpdateFirmwareClicked = {}
+        onUpdateFirmwareClicked = {},
+        onForgetDeviceClicked = {}
     )
 }
 
@@ -77,7 +78,8 @@ fun ListFlySightDevicesScreenInternalRefreshingWithoutDeviceStep2Preview() {
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
         onPreventDialogForFirmwareVersion = {},
-        onUpdateFirmwareClicked = {}
+        onUpdateFirmwareClicked = {},
+        onForgetDeviceClicked = {}
     )
 }
 
@@ -106,7 +108,8 @@ fun ListFlySightDevicesScreenInternalRefreshingWithoutDeviceStep3Preview() {
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
         onPreventDialogForFirmwareVersion = {},
-        onUpdateFirmwareClicked = {}
+        onUpdateFirmwareClicked = {},
+        onForgetDeviceClicked = {}
     )
 }
 
@@ -135,7 +138,8 @@ fun ListFlySightDevicesScreenInternalNoDevicePreview() {
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
         onPreventDialogForFirmwareVersion = {},
-        onUpdateFirmwareClicked = {}
+        onUpdateFirmwareClicked = {},
+        onForgetDeviceClicked = {}
     )
 }
 
@@ -184,7 +188,8 @@ fun ListFlySightDevicesScreenInternalWithDevicePreview() {
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
         onPreventDialogForFirmwareVersion = {},
-        onUpdateFirmwareClicked = {}
+        onUpdateFirmwareClicked = {},
+        onForgetDeviceClicked = {}
     )
 }
 
@@ -237,7 +242,8 @@ fun ListFlySightDevicesScreenInternalWithDeviceConnectedPreview() {
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
         onPreventDialogForFirmwareVersion = {},
-        onUpdateFirmwareClicked = {}
+        onUpdateFirmwareClicked = {},
+        onForgetDeviceClicked = {}
     )
 }
 
@@ -264,7 +270,8 @@ fun FlySightDeviceItemDisconnectedPreview() {
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
         onPreventDialogForFirmwareVersion = {},
-        onUpdateFirmwareClicked = {}
+        onUpdateFirmwareClicked = {},
+        onForgetDeviceClicked = {}
     )
 }
 
@@ -291,7 +298,8 @@ fun FlySightDeviceItemConnectingPreview() {
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
         onPreventDialogForFirmwareVersion = {},
-        onUpdateFirmwareClicked = {}
+        onUpdateFirmwareClicked = {},
+        onForgetDeviceClicked = {}
     )
 }
 
@@ -320,7 +328,8 @@ fun FlySightDeviceItemConnectedAndNominalConfigFilePreview() {
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
         onPreventDialogForFirmwareVersion = {},
-        onUpdateFirmwareClicked = {}
+        onUpdateFirmwareClicked = {},
+        onForgetDeviceClicked = {}
     )
 }
 
@@ -348,7 +357,8 @@ fun FlySightDeviceItemConnectedAndConfigFileUnknownPreview() {
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
         onPreventDialogForFirmwareVersion = {},
-        onUpdateFirmwareClicked = {}
+        onUpdateFirmwareClicked = {},
+        onForgetDeviceClicked = {}
     )
 }
 
@@ -384,7 +394,8 @@ fun FlySightDeviceItemConnectedAndConfigFileDiffersPreview() {
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
         onPreventDialogForFirmwareVersion = {},
-        onUpdateFirmwareClicked = {}
+        onUpdateFirmwareClicked = {},
+        onForgetDeviceClicked = {}
     )
 }
 
@@ -420,7 +431,8 @@ fun FlySightDeviceItemConnectedAndConfigFileLoadingPreview() {
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
         onPreventDialogForFirmwareVersion = {},
-        onUpdateFirmwareClicked = {}
+        onUpdateFirmwareClicked = {},
+        onForgetDeviceClicked = {}
     )
 }
 
@@ -459,7 +471,8 @@ fun FlySightDeviceItemConnectedAndUpdatingConfigurationPreview() {
             onChangeDeviceConfigurationClicked = {},
             onUploadRecordToSystem = {},
             onPreventDialogForFirmwareVersion = {},
-            onUpdateFirmwareClicked = {}
+            onUpdateFirmwareClicked = {},
+            onForgetDeviceClicked = {}
         )
     }
 }
@@ -487,7 +500,8 @@ fun FlySightDeviceItemErrorPreview() {
         onChangeDeviceConfigurationClicked = {},
         onUploadRecordToSystem = {},
         onPreventDialogForFirmwareVersion = {},
-        onUpdateFirmwareClicked = {}
+        onUpdateFirmwareClicked = {},
+        onForgetDeviceClicked = {}
     )
 }
 
@@ -549,6 +563,8 @@ private class FakeDeviceDelegateImpl(
 ) : MutableFlySightDevice {
     override val volatileUuid: String
         get() = "uuid"
+    override val address: String
+        get() = "address"
     override val connectionState: StateFlow<DeviceConnectionState> =
         MutableStateFlow(initialConnectionState)
     override val deviceMode: StateFlow<DeviceMode> =
@@ -569,6 +585,8 @@ private class FakeDeviceDelegateImpl(
     override val ping: SharedFlow<Boolean>
         get() = MutableSharedFlow()
     override val firmwareVersion: StateFlow<String?>
+        get() = MutableStateFlow("")
+    override val stackVersion: StateFlow<String?>
         get() = MutableStateFlow("")
     override val publicKeys: StateFlow<Pair<String, String>?>
         get() = MutableStateFlow(null)

@@ -104,9 +104,6 @@ class BleFlySightDeviceDelegateImpl(
         private set(value) {
             field = value
             if (value == null) {
-                _services.update {
-                    emptyList()
-                }
                 rxCharacteristic = null
                 txCharacteristic = null
                 gnssCharacteristic = null
@@ -138,9 +135,6 @@ class BleFlySightDeviceDelegateImpl(
 
     private val _logs = MutableStateFlow<List<String>>(emptyList())
     override val logs = _logs.asStateFlow()
-
-    private val _services = MutableStateFlow<List<BluetoothGattService>>(emptyList())
-    val services = _services.asStateFlow()
 
     private val _records = MutableStateFlow<LoadingState<List<RecordFile>>>(LoadingState.Idle)
     override val records: StateFlow<LoadingState<List<RecordFile>>> = _records.asStateFlow()
@@ -374,14 +368,9 @@ class BleFlySightDeviceDelegateImpl(
     @SuppressLint("MissingPermission")
     private fun doDiscoverGattServices(gatt: BluetoothGatt) {
         Timber.d("doDiscoverGattServices")
-        val servs = gatt.services
-        Timber.d("services : ${servs.map { it.uuid }}")
-        _services.update {
-            servs
-        }
         val fsCharacteristicsUuids =
             FlySightCharacteristic.values().map { characteristic -> characteristic.uuid }
-        servs.forEach {
+        gatt.services.forEach {
             val chars = it.characteristics
             chars.forEach { char ->
                 if (char.uuid in fsCharacteristicsUuids) {
@@ -474,7 +463,7 @@ class BleFlySightDeviceDelegateImpl(
                 }
             }
         }
-        gatt.requestMtu(250)
+//        gatt.requestMtu(250)
         if (txCharacteristic != null && rxCharacteristic != null) {
             scope?.launch {
 //                scheduler.schedule(
@@ -527,6 +516,7 @@ class BleFlySightDeviceDelegateImpl(
             }
         } else {
             gatt.disconnect()
+            gatt.close()
             stateUpdater(DeviceConnectionState.ConnectionError)
         }
     }
@@ -1095,6 +1085,7 @@ class BleFlySightDeviceDelegateImpl(
         val closed = gatt?.let { connection ->
             val job = scope?.async {
                 try {
+                    connection.disconnect()
                     connection.close()
                     _connectionState.update {
                         DeviceConnectionState.Disconnected
@@ -1120,7 +1111,6 @@ class BleFlySightDeviceDelegateImpl(
         _configFile.value = LoadingState.Idle
 //        _logs.value = emptyList()
         _rawConfigFile.value = FileState.Nothing
-        _services.value = emptyList()
         scope?.cancel()
         scope = null
         gatt = null

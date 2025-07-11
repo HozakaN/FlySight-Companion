@@ -1,20 +1,29 @@
 package fr.hozakan.flysightcompanion.dialogmodule
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -38,17 +47,181 @@ import fr.hozakan.flysightcompanion.composablecommons.SimpleDialogActionBar
 import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
-import fr.hozakan.flysightcompanion.model.DeviceMode
+import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
+import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.DisplayableConfig
 import fr.hozakan.flysightcompanion.model.firmware.FirmwareUpdateStatus
 import fr.hozakan.flysightcompanion.model.session.profile.Coordinate
 import fr.hozakan.flysightcompanion.model.session.profile.ReferencePoint
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.UUID
 
 data class ConfigFileNameDialogResult(val name: String) : DialogResult
 data class PickConfigurationDialogResult(val configFile: DisplayableConfig) : DialogResult
 data class CreateReferencePointDialogResult(val referencePoint: ReferencePoint) : DialogResult
+
+data class AddFlySightDialog(
+    private val scanFlow: Flow<LoadingState<List<Pair<String, String>>>>,
+    private val deviceClicked: (String) -> Unit,
+    private val connectionStateFlow: StateFlow<DeviceConnectionState>
+) : DialogItem {
+
+    @Composable
+    private fun DeviceItem(
+        device: Pair<String, String>,
+        isSelected: Boolean,
+        connectionState: DeviceConnectionState,
+        onClick: () -> Unit
+    ) {
+        Card(
+            modifier = Modifier
+                .defaultMinSize(minWidth = 300.dp)
+                .clickable {
+                    onClick()
+                }
+                .padding(vertical = 4.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = when {
+                connectionState is DeviceConnectionState.Connecting -> CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
+                )
+
+                isSelected -> CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+
+                else -> CardDefaults.cardColors()
+            }
+        ) {
+            Row(
+                modifier = Modifier
+                    .defaultMinSize(minWidth = 200.dp)
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(8.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Bluetooth,
+                        contentDescription = "Bluetooth Device",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.requiredWidth(16.dp))
+
+                Column {
+                    Text(
+                        text = device.first ?: "Unknown Device",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.requiredHeight(4.dp))
+                    Text(
+                        text = device.second ?: "Unknown Address",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
+            }
+        }
+    }
+
+    @Composable
+    override fun Content(onResult: (DialogResult) -> Unit) {
+        Dialog(
+            onDismissRequest = {
+                onResult(DialogResult.Dismiss)
+            }
+        ) {
+            val deviceState by scanFlow.collectAsState(initial = LoadingState.Loading(emptyList()))
+            var connectionState by remember {
+                mutableStateOf<DeviceConnectionState>(
+                    DeviceConnectionState.Disconnected
+                )
+            }
+            var selectedItem by remember { mutableStateOf<Int?>(null) }
+
+            LaunchedEffect(Unit) {
+                connectionStateFlow.collect { state ->
+                    connectionState = state
+                    if (state is DeviceConnectionState.Connected) {
+                        onResult(OkDialogResult)
+                    } else if (state !is DeviceConnectionState.Connecting) {
+                        selectedItem = null
+                    }
+                }
+            }
+
+            Card {
+                Column(
+                    modifier = Modifier
+                        .defaultMinSize(minWidth = 300.dp, minHeight = 400.dp)
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        FText(
+                            text = "Select a FlySight",
+                            configuration = FlySightTheme.typography.cardTitle
+                        )
+                        if (deviceState is LoadingState.Loading) {
+                            Spacer(modifier = Modifier.requiredWidth(16.dp))
+                            CircularProgressIndicator()
+                        }
+                    }
+                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+                    when (val state = deviceState) {
+                        is LoadingState.Error -> {}
+                        LoadingState.Idle -> {}
+                        is LoadingState.Loading,
+                        is LoadingState.Loaded -> {
+                            val devices = state.content ?: return@Column
+                            LazyColumn(
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                itemsIndexed(devices) { index, device ->
+                                    DeviceItem(
+                                        device = device,
+                                        isSelected = selectedItem == index,
+                                        connectionState = connectionState,
+                                        onClick = {
+                                            selectedItem = index
+                                            deviceClicked(device.second)
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+//                    SimpleDialogActionBar(
+//                        onCancel = {
+//                            onResult(DialogResult.Dismiss)
+//                        },
+//                        showValidateButton = false
+//                    )
+                }
+            }
+
+//            LaunchedEffect(Unit) {
+//                awaitMechanism()
+//                onResult(OkDialogResult)
+//            }
+        }
+    }
+}
 
 data class AwaitFlySightDeviceModeDialog(
     val awaitPowerOn: Boolean = true,
@@ -65,7 +238,15 @@ data class AwaitFlySightDeviceModeDialog(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    FText("Please power ${if (awaitPowerOn) { "on"} else { "off" }} your FlySight")
+                    FText(
+                        "Please power ${
+                            if (awaitPowerOn) {
+                                "on"
+                            } else {
+                                "off"
+                            }
+                        } your FlySight"
+                    )
                     Spacer(modifier = Modifier.requiredHeight(8.dp))
                     SimpleDialogActionBar(
                         onCancel = {

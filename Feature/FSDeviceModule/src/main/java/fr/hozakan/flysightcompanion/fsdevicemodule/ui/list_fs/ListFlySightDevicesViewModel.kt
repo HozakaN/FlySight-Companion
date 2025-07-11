@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @SuppressLint("StaticFieldLeak")
@@ -84,6 +85,11 @@ class ListFlySightDevicesViewModel @Inject constructor(
 
         fsDeviceService.devices.flatMapLatest { devices ->
             loggerService.log("[ListFlySightDevicesViewModel]: new list of ${devices.size} devices")
+            if (devices.isEmpty()) {
+                _state.update { state ->
+                    state.copy(devices = emptyList())
+                }
+            }
             combine(devices.map {
                 loggerService.log("[ListFlySightDevicesViewModel]: devices.map $it")
                 combine(
@@ -130,6 +136,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
             }
         }.onEach { devices ->
             _state.update { state ->
+                Timber.d("Hoz will update state with devices $devices")
                 state.copy(devices = devices)
             }
         }.launchIn(viewModelScope)
@@ -205,7 +212,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
 
     fun addDevice() {
         viewModelScope.launch {
-            bluetoothService.addDevice()
+            fsDeviceService.addNewDevice()
             refreshBluetoothDeviceList()
         }
     }
@@ -229,7 +236,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
     @SuppressLint("MissingPermission")
     fun refreshBluetoothDeviceList() {
         viewModelScope.launch {
-            fsDeviceService.refreshBtDevices()
+            fsDeviceService.refreshKnownDevices()
         }
     }
 
@@ -299,7 +306,8 @@ class ListFlySightDevicesViewModel @Inject constructor(
                         _state.update { state ->
                             state.copy(
                                 event = it.error.message?.asFlowEvent()
-                                    ?: context.getString(R.string.misc_unknown_error).asFlowEvent()
+                                    ?: context.getString(R.string.misc_unknown_error)
+                                        .asFlowEvent()
                             )
                         }
                     }
@@ -326,7 +334,8 @@ class ListFlySightDevicesViewModel @Inject constructor(
     }
 
     fun uploadRecordToSystem(device: ListFlySightDeviceDisplayData) {
-        device.records.filterIsInstance<LoadingState.Loaded<List<RecordFile>>>().map { it.value }
+        device.records.filterIsInstance<LoadingState.Loaded<List<RecordFile>>>()
+            .map { it.value }
             .take(1).mapNotNull { records ->
                 records.maxByOrNull { it.dateTime }
             }.flatMapConcat { record ->
@@ -375,6 +384,12 @@ class ListFlySightDevicesViewModel @Inject constructor(
     fun updateFirmware(device: ListFlySightDeviceDisplayData) {
         viewModelScope.launch {
             fsDeviceService.updateFirmware(device)
+        }
+    }
+
+    fun forgetDevice(device: ListFlySightDeviceDisplayData) {
+        viewModelScope.launch {
+            fsDeviceService.removeDevice(device.device)
         }
     }
 }

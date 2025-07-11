@@ -121,12 +121,13 @@ fun ListFlySightDevicesMenuActions() {
 
     val state by viewModel.state.collectAsState()
 
+    var showInfoDialog by remember { mutableStateOf(false) }
+
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (state.hasBluetoothPermission
             && state.bluetoothState == BluetoothService.BluetoothState.Available
-            && state.devices.isNotEmpty()
         ) {
             if (state.refreshingDeviceList is LoadingState.Loading) {
                 CircularProgressIndicator(
@@ -147,17 +148,16 @@ fun ListFlySightDevicesMenuActions() {
             }
             Spacer(modifier = Modifier.requiredWidth(8.dp))
         }
-    }
-    var showInfoDialog by remember { mutableStateOf(false) }
-    IconButton(
-        onClick = {
-            showInfoDialog = true
-        },
-    ) {
-        Icon(
-            imageVector = Icons.Default.Info,
-            contentDescription = stringResource(R.string.list_device_info)
-        )
+        IconButton(
+            onClick = {
+                showInfoDialog = true
+            },
+        ) {
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = stringResource(R.string.list_device_info)
+            )
+        }
     }
     if (showInfoDialog) {
         Dialog(
@@ -251,6 +251,9 @@ fun ListFlySightDevicesScreen(
         },
         onUpdateFirmwareClicked = {
             viewModel.updateFirmware(it)
+        },
+        onForgetDeviceClicked = {
+            viewModel.forgetDevice(it)
         }
     )
 }
@@ -271,7 +274,8 @@ internal fun ListFlySightDevicesScreenInternal(
     onChangeDeviceConfigurationClicked: (ListFlySightDeviceDisplayData) -> Unit,
     onUploadRecordToSystem: (ListFlySightDeviceDisplayData) -> Unit,
     onPreventDialogForFirmwareVersion: (ListFlySightDeviceDisplayData) -> Unit,
-    onUpdateFirmwareClicked: (ListFlySightDeviceDisplayData) -> Unit
+    onUpdateFirmwareClicked: (ListFlySightDeviceDisplayData) -> Unit,
+    onForgetDeviceClicked: (ListFlySightDeviceDisplayData) -> Unit
 ) {
 
     Surface(
@@ -444,6 +448,9 @@ internal fun ListFlySightDevicesScreenInternal(
                             },
                             onUpdateFirmwareClicked = {
                                 onUpdateFirmwareClicked(device)
+                            },
+                            onForgetDeviceClicked = {
+                                onForgetDeviceClicked(device)
                             }
                         )
                     }
@@ -489,9 +496,11 @@ fun FlySightDeviceItem(
     onChangeDeviceConfigurationClicked: () -> Unit,
     onUploadRecordToSystem: () -> Unit,
     onPreventDialogForFirmwareVersion: () -> Unit,
-    onUpdateFirmwareClicked: () -> Unit
+    onUpdateFirmwareClicked: () -> Unit,
+    onForgetDeviceClicked: () -> Unit
 ) {
     var firmwareUpdateDialogOpened by remember { mutableStateOf(false) }
+    var deviceMenuOpened by remember { mutableStateOf(false) }
     Card {
         val connectionState by device.connectionState.collectAsState()
 
@@ -684,29 +693,61 @@ fun FlySightDeviceItem(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .requiredHeight(height = 192.dp)
-                            .padding(8.dp),
+                            .requiredHeight(height = 192.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.CenterEnd
                         ) {
-                            Text(
-                                text = device.name,
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                            Spacer(modifier = Modifier.requiredWidth(8.dp))
-                            if (device.isBle) {
-                                Icon(
-                                    imageVector = Icons.Default.Bluetooth,
-                                    contentDescription = "This device is connected through Bluetooth"
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = device.name,
+                                    style = MaterialTheme.typography.titleLarge
                                 )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.Usb,
-                                    contentDescription = "This device is connected through Usb"
-                                )
+                                Spacer(modifier = Modifier.requiredWidth(8.dp))
+                                if (device.isBle) {
+                                    Icon(
+                                        imageVector = Icons.Default.Bluetooth,
+                                        contentDescription = "This device is connected through Bluetooth"
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Usb,
+                                        contentDescription = "This device is connected through Usb"
+                                    )
+                                }
+                            }
+                            Box {
+                                IconButton(
+                                    onClick = {
+                                        deviceMenuOpened = true
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.MoreVert,
+                                        contentDescription = "Device menu"
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = deviceMenuOpened,
+                                    onDismissRequest = { deviceMenuOpened = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text("Forget")
+                                        },
+                                        onClick = {
+                                            deviceMenuOpened = false
+                                            onForgetDeviceClicked()
+                                        }
+                                    )
+                                }
                             }
                         }
                         Spacer(modifier = Modifier.requiredHeight(32.dp))

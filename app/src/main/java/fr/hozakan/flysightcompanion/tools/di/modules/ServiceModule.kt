@@ -67,12 +67,10 @@ class ServiceModule {
     @Provides
     fun provideBluetoothService(
         baseApplication: BaseApplication,
-        activityOperationsService: ActivityOperationsService,
-        activityLifecycleService: ActivityLifecycleService
+        activityOperationsService: ActivityOperationsService
     ): BluetoothService = DefaultBluetoothService(
         baseApplication.applicationContext,
-        activityOperationsService,
-        activityLifecycleService
+        activityOperationsService
     )
 
     @Singleton
