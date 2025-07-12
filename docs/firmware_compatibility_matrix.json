@@ -4,7 +4,8 @@
     {
       "name": "v2025.05.31.develop",
       "app_compatibility": [
-        "2.0.0-RC7"
+        "2.0.0-RC7",
+        "2.0.0-RC8"
       ]
     },
     {
@@ -94,6 +95,12 @@
     },
     {
       "name":"2.0.0-RC7",
+      "firmware_compatibility": [
+        "v2025.05.31.develop"
+      ]
+    },
+    {
+      "name":"2.0.0-RC8",
       "firmware_compatibility": [
         "v2025.05.31.develop"
       ]
