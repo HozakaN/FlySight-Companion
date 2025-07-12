@@ -135,10 +135,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
                 computeDisplayData
             }
         }.onEach { devices ->
-            _state.update { state ->
-                Timber.d("Hoz will update state with devices $devices")
-                state.copy(devices = devices)
-            }
+            _state.update { state -> state.copy(devices = devices) }
         }.launchIn(viewModelScope)
 
         fsDeviceService.isRefreshingDeviceList.onEach { isRefreshing ->
