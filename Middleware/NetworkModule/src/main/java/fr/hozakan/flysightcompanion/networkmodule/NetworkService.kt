@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface NetworkService {
     //    suspend fun getAvailableFirmwares(): List<FirmwareVersion>
 //    val firmwares: StateFlow<List<FirmwareVersion>>
-    val firmwareCompatibilityMatrix: StateFlow<FirmwareCompatibilityMatrix>
-    val firmwareWithBetaCompatibilityMatrix: StateFlow<FirmwareCompatibilityMatrix>
+    suspend fun getFirmwareCompatibilityMatrix(): FirmwareCompatibilityMatrix?
     suspend fun downloadFirmware(deviceBatch: String, firmwareInfo: FirmwareInfo): ByteArray?
+    suspend fun downloadStack(stackVersion: String): ByteArray?
 }

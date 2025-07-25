@@ -1,0 +1,117 @@
+{
+  "desc":"my desc",
+  "firmwares": [
+    {
+      "name": "v2025.05.31.develop",
+      "app_compatibility": [
+        "2.0.0-RC7",
+        "2.0.0-RC8",
+        "2.0.0-RC9"
+      ],
+      "stack_version":"1.19.0"
+    },
+    {
+      "name": "v2024.12.30",
+      "app_compatibility": [
+        "1.0.0-RC3",
+        "1.0.0-RC4",
+        "2.0.0-RC1",
+        "2.0.0-RC2",
+        "2.0.0-RC3",
+        "2.0.0-RC4",
+        "2.0.0-RC5"
+      ],
+      "stack_version":"1.19.0"
+    }
+  ],
+  "apps": [
+    {
+      "name":"1.0.0-RC3",
+      "firmware_compatibility": [
+        "v2024.12.30"
+      ]
+    },
+    {
+      "name":"1.0.0-RC4",
+      "firmware_compatibility": [
+        "v2024.12.30"
+      ]
+    },
+    {
+      "name":"2.0.0-RC1",
+      "firmware_compatibility": [
+        "v2024.12.30"
+      ]
+    },
+    {
+      "name":"2.0.0-RC2",
+      "firmware_compatibility": [
+        "v2024.12.30"
+      ]
+    },
+    {
+      "name":"2.0.0-RC3",
+      "firmware_compatibility": [
+        "v2024.12.30"
+      ]
+    },
+    {
+      "name":"2.0.0-RC4",
+      "firmware_compatibility": [
+        "v2024.12.30"
+      ]
+    },
+    {
+      "name":"2.0.0-RC5",
+      "firmware_compatibility": [
+        "v2024.12.30"
+      ]
+    },
+    {
+      "name":"2.0.0-RC6",
+      "firmware_compatibility": [
+        "v2024.12.30"
+      ]
+    },
+    {
+      "name":"2.0.0-RC7",
+      "firmware_compatibility": [
+        "v2025.05.31.develop"
+      ]
+    },
+    {
+      "name":"2.0.0-RC8",
+      "firmware_compatibility": [
+        "v2025.05.31.develop"
+      ]
+    },
+    {
+      "name":"2.0.0-RC9",
+      "firmware_compatibility": [
+        "v2025.05.31.develop"
+      ]
+    }
+  ],
+  "batch_infos":[
+    {
+      "key":"04486bee2d3dd60fd0de481a072d12ae5492c52c0cb2bbdde697b16aad1ca903f30dc18b7fd51a2c186ad135c46d74d1e0ed7ddd58012b07d3cf23ef6e3dcf346d",
+      "batch_prefix":"B2"
+    },
+    {
+      "key":"04211d721dbd9114a6bbe9ba1256ccbbfbf2c4015b139126ab56c331935e29c01684376accf8911f7948b16c205cbb3e5c9fb0d7cd898c807707d190605942a3da",
+      "batch_prefix":"B3"
+    },
+    {
+      "key":"04dac40d2597e371390a84f3196d4256b5c96a89373afb3584dcbc226b74bcbc0c1a9e73519a9031a551284297fe34e7aae6baafacf5fedcc641f6f4a4fd9f3c3c",
+      "batch_prefix":"B4"
+    },
+    {
+      "key":"043157e02846ddfd2a78347e099ba1d86c92920b101137f28091ed0dec3b4589c28974a8b369353e833aec4eea132d73ebf631de527cefb79542fe55fe03afd6b8",
+      "batch_prefix":"B5"
+    },
+    {
+      "key":"048ee7870905b3e792df0ed796b996c9ff743d196c2e8abbf1a39f39733cceac80e504ce88cba4f21b9362a0ee5afa6e5e24ed808f535306b4a56aac0725938d32",
+      "batch_prefix":"B6"
+    }
+  ]
+}

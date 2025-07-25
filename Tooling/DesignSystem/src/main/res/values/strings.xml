@@ -87,6 +87,7 @@
     <string name="firmware_current_versions">Current Versions</string>
     <string name="firmware_app_version">App Version:</string>
     <string name="firmware_version">Firmware Version:</string>
+    <string name="stack_version">Stack Version:</string>
     <string name="firmware_available_firmwares">Available firmwares</string>
     <string name="firmware_version_column">Firmware Version</string>
     <string name="firmware_compatible_apps_column">Compatible App Versions</string>

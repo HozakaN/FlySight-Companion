@@ -584,7 +584,7 @@ data class UpdateFirmwareDialog(
                     val text = remember(firmwareUpdateState) {
                         when (val state = firmwareUpdateState) {
                             FirmwareUpdateStatus.Downloading -> "Downloading firmware from internet..."
-                            FirmwareUpdateStatus.Pushing -> "Pushing firmware to the FlySight..."
+                            FirmwareUpdateStatus.PushingFirmware -> "Pushing firmware to the FlySight..."
                             FirmwareUpdateStatus.DisconnectingFromBluetooth,
                             FirmwareUpdateStatus.AwaitingUsbConnection -> "Connect the FlySight to the phone through USB..."
 
@@ -608,9 +608,10 @@ data class UpdateFirmwareDialog(
                                 FirmwareUpdateStatus.ErrorInfo.Unknown -> "An error occurred"
                                 FirmwareUpdateStatus.ErrorInfo.IncompatibleAppVersion -> "This firmware is not compatible with this app version."
                                 FirmwareUpdateStatus.ErrorInfo.AlreadyUpToDate -> "Already up to date"
+                                FirmwareUpdateStatus.ErrorInfo.PushStackError -> "Error while pushing the stack"
                             }
 
-                            is FirmwareUpdateStatus.PushingWithAmount -> {
+                            is FirmwareUpdateStatus.PushingFirmwareWithAmount -> {
                                 val factor = if (state.maxValue > 1_000_000) 1_000_000 else 1_000
                                 val maxValueText = if (state.maxValue > 1_000_000) {
                                     "${state.maxValue / factor} MB"
@@ -622,12 +623,28 @@ data class UpdateFirmwareDialog(
                                     ${state.currentValue / factor} / $maxValueText
                                 """.trimIndent()
                             }
+
+                            FirmwareUpdateStatus.PushingStack -> "Pushing the stack to the FlySight..."
+                            is FirmwareUpdateStatus.PushingStackWithAmount -> {
+                                val factor = if (state.maxValue > 1_000_000) 1_000_000 else 1_000
+                                val maxValueText = if (state.maxValue > 1_000_000) {
+                                    "${state.maxValue / factor} MB"
+                                } else {
+                                    "${state.maxValue / factor} KB"
+                                }
+                                """
+                                    Pushing the stack to the FlySight...
+                                    ${state.currentValue / factor} / $maxValueText
+                                """.trimIndent()
+                            }
                         }
                     }
                     when (firmwareUpdateState) {
                         FirmwareUpdateStatus.Downloading,
-                        FirmwareUpdateStatus.Pushing,
-                        is FirmwareUpdateStatus.PushingWithAmount,
+                        FirmwareUpdateStatus.PushingFirmware,
+                        FirmwareUpdateStatus.PushingStack,
+                        is FirmwareUpdateStatus.PushingFirmwareWithAmount,
+                        is FirmwareUpdateStatus.PushingStackWithAmount,
                         FirmwareUpdateStatus.DisconnectingFromBluetooth -> {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,

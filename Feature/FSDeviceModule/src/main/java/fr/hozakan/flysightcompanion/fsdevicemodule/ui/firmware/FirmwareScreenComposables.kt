@@ -1,4 +1,4 @@
-package fr.hozakan.flysightcompanion.firmwaremodule.ui
+package fr.hozakan.flysightcompanion.fsdevicemodule.ui.firmware
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -66,14 +66,14 @@ fun FirmwareScreen(
             item {
                 CurrentVersionsCard(
                     currentAppVersion = state.currentAppVersion,
-                    currentFirmwareVersion = state.currentFirmwareVersion
+                    currentFirmwareVersion = state.currentFirmwareVersion,
+                    currentStackVersion = state.currentStackVersion
                 )
             }
 
             item {
                 CompatibilityMatrixTable(
                     matrix = state.compatibilityMatrix,
-                    betaMatrix = state.betaCompatibilityMatrix,
                     currentAppVersion = state.currentAppVersion,
                     currentFirmwareVersion = state.currentFirmwareVersion,
                     onUpdateFirmwareClicked = { firmwareInfo ->
@@ -88,7 +88,8 @@ fun FirmwareScreen(
 @Composable
 fun CurrentVersionsCard(
     currentAppVersion: String,
-    currentFirmwareVersion: String?
+    currentFirmwareVersion: String?,
+    currentStackVersion: String?
 ) {
     Card {
         Column(
@@ -124,6 +125,18 @@ fun CurrentVersionsCard(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(stringResource(R.string.stack_version))
+                Text(
+                    text = currentStackVersion ?: "Loading",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
@@ -131,7 +144,6 @@ fun CurrentVersionsCard(
 @Composable
 fun CompatibilityMatrixTable(
     matrix: FirmwareCompatibilityMatrix,
-    betaMatrix: FirmwareCompatibilityMatrix,
     currentAppVersion: String,
     currentFirmwareVersion: String?,
     onUpdateFirmwareClicked: (FirmwareInfo) -> Unit
@@ -142,7 +154,6 @@ fun CompatibilityMatrixTable(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            var showBeta by remember { mutableStateOf(false) }
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -150,17 +161,6 @@ fun CompatibilityMatrixTable(
                     text = stringResource(R.string.firmware_available_firmwares),
                     configuration = FlySightTheme.typography.cardTitle
                 )
-                Spacer(modifier = Modifier.weight(1f))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Beta")
-                    Spacer(modifier = Modifier.requiredWidth(8.dp))
-                    Switch(
-                        checked = showBeta,
-                        onCheckedChange = { showBeta = it },
-                    )
-                }
             }
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -184,13 +184,8 @@ fun CompatibilityMatrixTable(
                 )
             }
 
-            val firmwares = if (showBeta) {
-                betaMatrix.firmwares
-            } else {
-                matrix.firmwares
-            }
             // Table Rows
-            firmwares.forEach { firmware ->
+            matrix.firmwares.forEach { firmware ->
                 FirmwareCompatibilityRow(
                     firmwareInfo = firmware,
                     currentAppVersion = currentAppVersion,

@@ -49,6 +49,7 @@ dependencies {
     implementation(project(":Middleware:NetworkModule"))
     implementation(project(":Tooling:LoggerModule"))
     implementation(project(":Tooling:DialogModule"))
+    implementation(project(":Feature:FirmwareModule"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

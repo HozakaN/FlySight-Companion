@@ -39,7 +39,6 @@ android {
 dependencies {
     implementation(project(":model"))
     implementation(project(":Tooling:framework"))
-    implementation(project(":Feature:FSDeviceModule"))
     implementation(project(":Middleware:NetworkModule"))
     implementation(project(":Tooling:DesignSystem"))
 

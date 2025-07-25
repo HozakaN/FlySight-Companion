@@ -3,13 +3,13 @@ package fr.hozakan.flysightcompanion.fsdevicemodule.business
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.content.Context
-import androidx.core.content.edit
 import fr.hozakan.flysightcompanion.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigEncoder
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightcompanion.dialogmodule.AddFlySightDialog
 import fr.hozakan.flysightcompanion.dialogmodule.DialogService
 import fr.hozakan.flysightcompanion.dialogmodule.UpdateFirmwareDialog
+import fr.hozakan.flysightcompanion.firmwaremodule.business.FirmwareUpdateService
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDeviceDisplayData
@@ -64,7 +64,8 @@ class DefaultFsDeviceService(
     private val loggerService: LoggerService,
     private val dialogService: DialogService,
     private val appVersionService: AppVersionService,
-    private val userPrefService: UserPrefService
+    private val userPrefService: UserPrefService,
+    private val firmwareUpdateService: FirmwareUpdateService
 ) : FsDeviceService {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -163,7 +164,10 @@ class DefaultFsDeviceService(
                                 if (loadingState.currentLoad?.isNotEmpty() == true) {
                                     synchronized(this) {
                                         _bluetoothDevices.update {
-                                            mergeBtDevices(it, loadingState.currentLoad ?: emptyList())
+                                            mergeBtDevices(
+                                                it,
+                                                loadingState.currentLoad ?: emptyList()
+                                            )
                                         }
                                     }
                                 }
@@ -181,7 +185,7 @@ class DefaultFsDeviceService(
 
     override suspend fun getUnknownDevices(): Flow<LoadingState<List<FlySightDevice>>> {
 
-        val matrix = networkService.firmwareWithBetaCompatibilityMatrix.value
+        val matrix = firmwareUpdateService.firmwareCompatibilityMatrix.value
 
         fun mergeUnknownBtDevices(
             currentBtDevices: List<BleFlySightDeviceDelegate>,
@@ -234,7 +238,7 @@ class DefaultFsDeviceService(
         val btDevicesAddresses = newBtDeviceList.map { it.address }
         val oldDevices =
             currentBtDevices.filter { !initialDeviceLoading || it.address in btDevicesAddresses }
-        val matrix = networkService.firmwareWithBetaCompatibilityMatrix.value
+        val matrix = firmwareUpdateService.firmwareCompatibilityMatrix.value
         initialDeviceLoading = false
         val oldDevicesAddresses = oldDevices.map { it.address }
         val newDevices = newBtDeviceList.filter { it.address !in oldDevicesAddresses }
@@ -266,7 +270,7 @@ class DefaultFsDeviceService(
             return devices
         }
 
-        val matrix = networkService.firmwareWithBetaCompatibilityMatrix.value
+        val matrix = firmwareUpdateService.firmwareCompatibilityMatrix.value
 
         var devices: List<BluetoothDevice> = emptyList()
         val newDeviceConnectionStateFlow: MutableStateFlow<DeviceConnectionState> =
@@ -288,13 +292,17 @@ class DefaultFsDeviceService(
                             LoadingState.Idle -> LoadingState.Idle
                             is LoadingState.Loaded -> {
                                 devices = mergeUnknownBtDevices(devices, state.value)
-                                LoadingState.Loaded(devices.map { (it.name ?: "Unknown Device") to it.address })
+                                LoadingState.Loaded(devices.map {
+                                    (it.name ?: "Unknown Device") to it.address
+                                })
                             }
 
                             is LoadingState.Loading -> {
                                 devices =
                                     mergeUnknownBtDevices(devices, state.currentLoad ?: emptyList())
-                                LoadingState.Loading(devices.map { (it.name ?: "Unknown Device") to it.address })
+                                LoadingState.Loading(devices.map {
+                                    (it.name ?: "Unknown Device") to it.address
+                                })
                             }
                         }
                     },
@@ -397,7 +405,7 @@ class DefaultFsDeviceService(
     @OptIn(FlowPreview::class)
     override suspend fun updateFirmware(device: FlySightDevice) {
         val realDevice = device.unwrap()
-        val compatibilityMatrix = networkService.firmwareCompatibilityMatrix.value
+        val compatibilityMatrix = firmwareUpdateService.firmwareCompatibilityMatrix.value
         val appVersion = appVersionService.appVersion
         val latestCompatibleVersionIndex =
             compatibilityMatrix.firmwares.indexOfFirst { appVersion in it.appCompatibility }
@@ -427,8 +435,9 @@ class DefaultFsDeviceService(
                 dialogService.displayDialog(dialogItem)
             }
             val currentFirmwareVersion = realDevice.firmwareVersion.value
+            val currentStackVersion = realDevice.stackVersion.value
             val appVersion = appVersionService.appVersion
-            val compatibilityMatrix = networkService.firmwareCompatibilityMatrix.value
+            val compatibilityMatrix = firmwareUpdateService.firmwareCompatibilityMatrix.value
             if (appVersion !in firmwareInfo.appCompatibility) {
                 flow.value =
                     FirmwareUpdateStatus.Error(FirmwareUpdateStatus.ErrorInfo.IncompatibleAppVersion)
@@ -464,9 +473,9 @@ class DefaultFsDeviceService(
                 FirmwareUpdateStatus.Error(FirmwareUpdateStatus.ErrorInfo.DownloadError)
                 return@withContext
             }
-            flow.value = FirmwareUpdateStatus.Pushing
+            flow.value = FirmwareUpdateStatus.PushingFirmware
             if (!realDevice.writeBinaryFile("/FW/APP.SFB", binaryFile) { sentDataSize ->
-                    flow.value = FirmwareUpdateStatus.PushingWithAmount(
+                    flow.value = FirmwareUpdateStatus.PushingFirmwareWithAmount(
                         maxValue = binaryFile.size,
                         currentValue = sentDataSize
                     )
@@ -474,6 +483,23 @@ class DefaultFsDeviceService(
                 FirmwareUpdateStatus.Error(FirmwareUpdateStatus.ErrorInfo.PushFirmwareError)
                 return@withContext
             }
+//            if (currentStackVersion != firmwareInfo.stackVersion) {
+                flow.value = FirmwareUpdateStatus.PushingStack
+                val stackBinary = networkService.downloadStack(firmwareInfo.stackVersion)
+                if (stackBinary == null) {
+                    FirmwareUpdateStatus.Error(FirmwareUpdateStatus.ErrorInfo.DownloadError)
+                    return@withContext
+                }
+                if (!realDevice.writeBinaryFile("/FW/stack.bin", stackBinary) { sentDataSize ->
+                        flow.value = FirmwareUpdateStatus.PushingStackWithAmount(
+                            maxValue = binaryFile.size,
+                            currentValue = sentDataSize
+                        )
+                    }) {
+                    FirmwareUpdateStatus.Error(FirmwareUpdateStatus.ErrorInfo.PushStackError)
+                    return@withContext
+                }
+//            }
             flow.value = FirmwareUpdateStatus.DisconnectingFromBluetooth
             realDevice.disconnect()
             flow.value = FirmwareUpdateStatus.AwaitingUsbConnection
@@ -494,19 +520,19 @@ class DefaultFsDeviceService(
 
             //Wait for the file to be received
             val timeout = 30_000.milliseconds
-            val firmwareVersion: String?
+            val versions: Pair<String?, String?>?
             val timer = measureTime {
-                firmwareVersion = try {
+                versions = try {
                     realDevice.flySightFile
                         .filter { it is FileState.Success }
                         .timeout(timeout)
                         .first()
-                    realDevice.firmwareVersion.value
+                    realDevice.firmwareVersion.value to realDevice.stackVersion.value
                 } catch (ex: TimeoutCancellationException) {
                     null
                 }
             }
-            flow.value = if (firmwareVersion == firmwareInfo.name) {
+            flow.value = if (versions?.first == firmwareInfo.name && versions.second == firmwareInfo.stackVersion) {
                 userPrefService.updateFirmwareWarningForDeviceIdAndFirmwareVersion(
                     device.name,
                     firmwareInfo.name

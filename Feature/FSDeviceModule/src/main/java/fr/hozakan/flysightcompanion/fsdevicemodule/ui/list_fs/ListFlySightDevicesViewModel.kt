@@ -11,6 +11,7 @@ import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.framework.service.permission.AndroidPermissionsService
 import fr.hozakan.flysightcompanion.designsystem.R
+import fr.hozakan.flysightcompanion.firmwaremodule.business.FirmwareUpdateService
 import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
 import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
@@ -53,7 +54,8 @@ class ListFlySightDevicesViewModel @Inject constructor(
     private val fsDeviceService: FsDeviceService,
     private val configFileService: ConfigFileService,
     private val permissionsService: AndroidPermissionsService,
-    private val loggerService: LoggerService
+    private val loggerService: LoggerService,
+    private val firmwareUpdateService: FirmwareUpdateService
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -104,15 +106,14 @@ class ListFlySightDevicesViewModel @Inject constructor(
             combine(
                 configFileService.configFiles,
                 recordService.records,
-                networkService.firmwareCompatibilityMatrix,
-                networkService.firmwareWithBetaCompatibilityMatrix
-            ) { configFiles, records, matrix, matrixWithBeta ->
-                configFiles to records triple (matrix to matrixWithBeta)
+                firmwareUpdateService.firmwareCompatibilityMatrix
+            ) { configFiles, records, matrix ->
+                configFiles to records triple matrix
             }) { devices, configFilesAndRecordsAndMatrix ->
             devices to configFilesAndRecordsAndMatrix
         }.map { blob ->
             blob.first.map { device ->
-                val firmwareInfo = blob.second.third.first.firmwares.firstOrNull()
+                val firmwareInfo = blob.second.third.firmwares.firstOrNull()
                 val canShowFirmwareWarning =
                     firmwareInfo?.name?.let { firmwareName ->
                         userPrefService.canShowFirmwareWarningForVersion(
@@ -127,8 +128,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
                     device.second.third ?: "",
                     blob.second.first,
                     blob.second.second,
-                    blob.second.third.first,
-                    blob.second.third.second,
+                    blob.second.third,
                     canShowFirmwareWarning == true,
                     appVersionService.appVersion
                 )
@@ -146,7 +146,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
             }
         }.launchIn(viewModelScope)
 
-        networkService.firmwareCompatibilityMatrix.onEach { matrix ->
+        firmwareUpdateService.firmwareCompatibilityMatrix.onEach { matrix ->
             _state.update {
                 it.copy(
                     compatibilityMatrix = matrix
@@ -169,22 +169,13 @@ class ListFlySightDevicesViewModel @Inject constructor(
         configFiles: List<ConfigFile>,
         recordFiles: List<RecordFile>,
         firmwareCompatibilityMatrix: FirmwareCompatibilityMatrix,
-        firmwareCompatibilityMatrixWithBeta: FirmwareCompatibilityMatrix,
         canShowFirmwareWarning: Boolean,
         appVersion: String
     ): ListFlySightDeviceDisplayData {
         fun hasFirmwareUpdate(firmwareVersion: String): Boolean {
             val firmwareInfo =
                 firmwareCompatibilityMatrix.getFirmwareInfoByName(firmwareVersion)
-                    ?: firmwareCompatibilityMatrixWithBeta.getFirmwareInfoByName(firmwareVersion)
-            val matrixToUse: FirmwareCompatibilityMatrix? = if (firmwareInfo?.isBeta == true) {
-                firmwareCompatibilityMatrixWithBeta
-            } else if (firmwareInfo?.isBeta == false) {
-                firmwareCompatibilityMatrix
-            } else {
-                null
-            }
-            val indexOfFirmware: Int? = matrixToUse?.firmwares?.indexOf(firmwareInfo)
+            val indexOfFirmware: Int? = firmwareCompatibilityMatrix.firmwares.indexOf(firmwareInfo)
             return indexOfFirmware != null && indexOfFirmware != 0
         }
 

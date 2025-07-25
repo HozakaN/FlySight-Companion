@@ -9,9 +9,19 @@ sealed interface FirmwareUpdateStatus {
     /**
      * Pushing the firmware onto the FlySight
      */
-    data object Pushing : FirmwareUpdateStatus
+    data object PushingFirmware : FirmwareUpdateStatus
 
-    data class PushingWithAmount(
+    data class PushingFirmwareWithAmount(
+        val maxValue: Int,
+        val currentValue: Int
+    ) : FirmwareUpdateStatus
+
+    /**
+     * Pushing the firmware onto the FlySight
+     */
+    data object PushingStack : FirmwareUpdateStatus
+
+    data class PushingStackWithAmount(
         val maxValue: Int,
         val currentValue: Int
     ) : FirmwareUpdateStatus
@@ -68,6 +78,7 @@ sealed interface FirmwareUpdateStatus {
         data object CantReconnect : ErrorInfo
         data object DownloadError : ErrorInfo
         data object PushFirmwareError : ErrorInfo
+        data object PushStackError : ErrorInfo
         data object Unknown : ErrorInfo
         data object IncompatibleAppVersion : ErrorInfo
         data object AlreadyUpToDate : ErrorInfo

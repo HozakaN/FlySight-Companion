@@ -34,13 +34,10 @@ data class AppVersionInfo(
 data class FirmwareInfo(
     val name: String,
     @SerializedName("app_compatibility")
-    val appCompatibility: List<String>
+    val appCompatibility: List<String>,
+    @SerializedName("stack_version")
+    val stackVersion: String
 ) {
-    val isBeta: Boolean
-        get() = name.contains("beta", ignoreCase = true) || name.contains(
-            "develop",
-            ignoreCase = true
-        )
 
     val hasGnssMaskCommand: Boolean
         get() = name !in gnssMaskCommandBlackList

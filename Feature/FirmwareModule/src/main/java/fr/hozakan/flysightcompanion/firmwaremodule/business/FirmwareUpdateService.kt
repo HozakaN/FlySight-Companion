@@ -1,7 +1,8 @@
 package fr.hozakan.flysightcompanion.firmwaremodule.business
 
-import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
+import fr.hozakan.flysightcompanion.model.firmware.FirmwareCompatibilityMatrix
+import kotlinx.coroutines.flow.StateFlow
 
 interface FirmwareUpdateService {
-    suspend fun checkForUpdates(device: FlySightDevice): FirmwareUpdateStatus
+    val firmwareCompatibilityMatrix: StateFlow<FirmwareCompatibilityMatrix>
 }

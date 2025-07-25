@@ -9,6 +9,7 @@ import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.dialogmodule.AwaitFlySightDeviceModeDialog
 import fr.hozakan.flysightcompanion.dialogmodule.DialogService
 import fr.hozakan.flysightcompanion.dialogmodule.OkDialogResult
+import fr.hozakan.flysightcompanion.firmwaremodule.business.FirmwareUpdateService
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
@@ -34,12 +35,13 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @SuppressLint("StaticFieldLeak")
-abstract class DeviceDetailViewBase constructor(
+abstract class DeviceDetailViewBase(
     private val context: Context,
     private val fsDeviceService: FsDeviceService,
     private val recordService: RecordService,
     private val networkService: NetworkService,
-    private val dialogService: DialogService
+    private val dialogService: DialogService,
+    private val firmwareUpdateService: FirmwareUpdateService
 ) : ViewModel() {
 
     protected val _state = MutableStateFlow(
@@ -85,36 +87,27 @@ abstract class DeviceDetailViewBase constructor(
 
             fun hasFirmwareUpdate(
                 firmwareVersion: String,
-                firmwareCompatibilityMatrix: FirmwareCompatibilityMatrix,
-                firmwareCompatibilityMatrixWithBeta: FirmwareCompatibilityMatrix
+                firmwareCompatibilityMatrix: FirmwareCompatibilityMatrix
             ): Boolean {
                 val firmwareInfo =
                     firmwareCompatibilityMatrix.firmwares.firstOrNull { it.name == firmwareVersion }
-                        ?: firmwareCompatibilityMatrixWithBeta.firmwares.firstOrNull { it.name == firmwareVersion }
-                val indexOfFirmware = if (firmwareInfo?.isBeta == true) {
-                    firmwareCompatibilityMatrixWithBeta
-                } else if (firmwareInfo?.isBeta == false) {
-                    firmwareCompatibilityMatrix
-                } else {
-                    null
-                }?.firmwares?.indexOf(firmwareInfo)
-                return indexOfFirmware != null && indexOfFirmware != 0
+                    val indexOfFirmware = firmwareCompatibilityMatrix.firmwares.indexOf(firmwareInfo)
+                return indexOfFirmware != 0
             }
 
             fsDeviceService.observeDevice(deviceId)
                 .flatMapLatest { device ->
                     if (device != null) {
                         combine(
-                            networkService.firmwareCompatibilityMatrix,
-                            networkService.firmwareWithBetaCompatibilityMatrix,
+                            firmwareUpdateService.firmwareCompatibilityMatrix,
                             device.flySightFile
-                        ) { matrix, matrixWithBeta, flySightFile ->
-                            device to (matrix to matrixWithBeta) triple if (flySightFile is FileState.Success) device.firmwareVersion.value else null
+                        ) { matrix, flySightFile ->
+                            device to matrix triple if (flySightFile is FileState.Success) device.firmwareVersion.value else null
                         }
                     } else {
-                        flowOf(null to (networkService.firmwareCompatibilityMatrix.value to networkService.firmwareWithBetaCompatibilityMatrix.value) triple null)
+                        flowOf(null to firmwareUpdateService.firmwareCompatibilityMatrix.value triple null)
                     }
-                }.collect { (device, matrixes, firmwareVersion) ->
+                }.collect { (device, matrix, firmwareVersion) ->
 
 //                }
 //            fsDeviceService.observeDevice(deviceId)
@@ -128,8 +121,7 @@ abstract class DeviceDetailViewBase constructor(
                     _state.update {
                         val hasFirmwareUpdate = hasFirmwareUpdate(
                             firmwareVersion ?: "",
-                            matrixes.first,
-                            matrixes.second
+                            matrix
                         )
                         it.copy(
                             device = device,

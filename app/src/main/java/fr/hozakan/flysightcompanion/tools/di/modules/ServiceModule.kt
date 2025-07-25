@@ -19,6 +19,8 @@ import fr.hozakan.flysightcompanion.dialogmodule.DialogService
 import fr.hozakan.flysightcompanion.dialogmodule.MutableDialogService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DefaultDisplayService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
+import fr.hozakan.flysightcompanion.firmwaremodule.business.DefaultFirmwareUpdateService
+import fr.hozakan.flysightcompanion.firmwaremodule.business.FirmwareUpdateService
 import fr.hozakan.flysightcompanion.framework.service.applifecycle.ActivityLifecycleService
 import fr.hozakan.flysightcompanion.framework.service.async.ActivityOperationsService
 import fr.hozakan.flysightcompanion.framework.service.permission.AndroidPermissionsService
@@ -75,6 +77,18 @@ class ServiceModule {
 
     @Singleton
     @Provides
+    fun provideFirmwareUpdateService(
+        baseApplication: BaseApplication,
+        gson: Gson,
+        networkService: NetworkService
+    ): FirmwareUpdateService = DefaultFirmwareUpdateService(
+        context = baseApplication.applicationContext,
+        gson = gson,
+        networkService = networkService
+    )
+
+    @Singleton
+    @Provides
     fun provideFsDeviceService(
         baseApplication: BaseApplication,
         bluetoothService: BluetoothService,
@@ -86,7 +100,8 @@ class ServiceModule {
         loggerService: LoggerService,
         dialogService: DialogService,
         appVersionService: AppVersionService,
-        userPrefService: UserPrefService
+        userPrefService: UserPrefService,
+        firmwareUpdateService: FirmwareUpdateService
     ): FsDeviceService = DefaultFsDeviceService(
         baseApplication.applicationContext,
         bluetoothService,
@@ -98,7 +113,8 @@ class ServiceModule {
         loggerService,
         dialogService,
         appVersionService,
-        userPrefService
+        userPrefService,
+        firmwareUpdateService
     )
 
     @Singleton

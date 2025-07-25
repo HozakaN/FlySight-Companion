@@ -741,7 +741,7 @@ class BleFlySightDeviceDelegateImpl(
                         val stackVersionCharacterIndex = content.indexOf("Stack_Ver: ")
                         if (stackVersionCharacterIndex >= 0) {
                             val stackVersion =
-                                content.substring(firmwareVersionCharacterIndex + "Stack_Ver: ".length)
+                                content.substring(stackVersionCharacterIndex + "Stack_Ver: ".length)
                                     .substringBefore("\n").trim()
                             _stackVersion.value = stackVersion
                         }

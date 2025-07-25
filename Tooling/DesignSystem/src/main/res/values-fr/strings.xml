@@ -87,6 +87,7 @@
     <string name="firmware_current_versions">Versions actuelles</string>
     <string name="firmware_app_version">Android application:</string>
     <string name="firmware_version">FlySight firmware:</string>
+    <string name="stack_version">Stack:</string>
     <string name="firmware_available_firmwares">Firmwares disponibles</string>
     <string name="firmware_version_column">Version firmware</string>
     <string name="firmware_compatible_apps_column">Applications compatibles</string>

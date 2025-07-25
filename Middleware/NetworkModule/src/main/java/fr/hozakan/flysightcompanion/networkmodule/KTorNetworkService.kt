@@ -42,40 +42,6 @@ class KTorNetworkService(
         install(HttpRedirect)
     }
 
-//    private val _firmwares = MutableStateFlow<List<FirmwareVersion>>(emptyList())
-//    override val firmwares: StateFlow<List<FirmwareVersion>> = _firmwares.asStateFlow()
-
-    private val _firmwareCompatibilityMatrix =
-        MutableStateFlow(FirmwareCompatibilityMatrix.placeholder)
-    override val firmwareCompatibilityMatrix: StateFlow<FirmwareCompatibilityMatrix> =
-        _firmwareCompatibilityMatrix.asStateFlow()
-    private val _firmwareWithBetaCompatibilityMatrix =
-        MutableStateFlow(FirmwareCompatibilityMatrix.placeholder)
-    override val firmwareWithBetaCompatibilityMatrix: StateFlow<FirmwareCompatibilityMatrix> =
-        _firmwareWithBetaCompatibilityMatrix.asStateFlow()
-
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-    init {
-        scope.launch {
-//            _firmwares.value = getAvailableFirmwares()
-            val firmwareCompatibilityMatrix1 = getFirmwareCompatibilityMatrix()
-            _firmwareWithBetaCompatibilityMatrix.value = firmwareCompatibilityMatrix1
-            val firmwareCompatibilityMatrix2 = firmwareCompatibilityMatrix1.copy(
-                firmwares = firmwareCompatibilityMatrix1.firmwares.filterNot {
-                    it.name.contains(
-                        "beta",
-                        ignoreCase = true
-                    ) || it.name.contains(
-                        "develop",
-                        ignoreCase = true
-                    ) || it.name.contains("release_candidate", ignoreCase = true)
-                }
-            )
-            _firmwareCompatibilityMatrix.value = firmwareCompatibilityMatrix2
-        }
-    }
-
     private suspend fun getAvailableFirmwares(): List<FirmwareVersion> {
         return try {
             client.get {
@@ -96,7 +62,7 @@ class KTorNetworkService(
         } ?: emptyList()
     }
 
-    private suspend fun getFirmwareCompatibilityMatrix(): FirmwareCompatibilityMatrix {
+    override suspend fun getFirmwareCompatibilityMatrix(): FirmwareCompatibilityMatrix? {
         return try {
             client.get {
                 url(githubCompatibilityMatrixUrl)
@@ -105,14 +71,13 @@ class KTorNetworkService(
             Timber.i(ex)
             null
         }?.let { response ->
-            val result: FirmwareCompatibilityMatrix = if (response.status == HttpStatusCode.OK) {
+            if (response.status == HttpStatusCode.OK) {
                 val content = response.readRawBytes().toString(Charsets.UTF_8)
                 parseCompatibilityMatrix(content)
             } else {
-                FirmwareCompatibilityMatrix.placeholder
+                null
             }
-            result
-        } ?: FirmwareCompatibilityMatrix.placeholder
+        }
     }
 
     private fun parseFirmwarePage(content: String): List<FirmwareVersion> {
@@ -127,13 +92,13 @@ class KTorNetworkService(
             }
     }
 
-    private fun parseCompatibilityMatrix(content: String): FirmwareCompatibilityMatrix {
+    private fun parseCompatibilityMatrix(content: String): FirmwareCompatibilityMatrix? {
         val json = Gson()
         return try {
             json.fromJson(content, FirmwareCompatibilityMatrix::class.java)
         } catch (e: Exception) {
             Timber.e(e)
-            FirmwareCompatibilityMatrix.placeholder
+            null
         }
     }
 
@@ -148,14 +113,40 @@ class KTorNetworkService(
         }
         return response.bodyAsBytes()
     }
+
+    override suspend fun downloadStack(stackVersion: String): ByteArray? {
+        val response =
+            client.get("$stackDownloadSite${getStackFileName(stackVersion)}")
+        if (response.status != HttpStatusCode.OK) {
+            return null
+        }
+        return response.bodyAsBytes()
+    }
 }
 
 private const val flySightUpdateUrl = "https://flysight.ca/firmware"
 private const val flySightFirmwareDownloadSite =
     "https://flysight.ca/wp-admin/admin-post.php?action=download_firmware&firmware_file="
 
+private const val stackDownloadSite =
+    "https://flysight.ca/wp-admin/admin-post.php?action=download_stack&stack_file="
+
 private const val githubTagPagesUrl = "https://github.com/flysight/flysight-2-firmware/tags"
 private const val githubTagMarker = "<a href=\"/flysight/flysight-2-firmware/releases/tag/"
 
 private const val githubCompatibilityMatrixUrl =
     "https://hozakan.github.io/FlySight-Companion/firmware_compatibility_matrix.json"
+
+private fun getStackFileName(stackVersion: String): String {
+    return when (stackVersion) {
+        "1.19.0" -> {
+            "stm32wb5x_BLE_Stack_full_fw_v1.19.0.bin"
+        }
+        "1.16.0" -> {
+            "stm32wb5x_BLE_Stack_full_fw_v1.16.0.bin"
+        }
+        else -> {
+            "stm32wb5x_BLE_Stack_full_fw_v1.19.0.bin"
+        }
+    }
+}

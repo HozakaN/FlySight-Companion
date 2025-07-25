@@ -1,12 +1,12 @@
-package fr.hozakan.flysightcompanion.firmwaremodule.ui
+package fr.hozakan.flysightcompanion.fsdevicemodule.ui.firmware
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import fr.hozakan.flysightcompanion.firmwaremodule.business.FirmwareUpdateService
 import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
 import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.DeviceId
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FsDeviceService
-import fr.hozakan.flysightcompanion.model.FileState
 import fr.hozakan.flysightcompanion.model.firmware.FirmwareCompatibilityMatrix
 import fr.hozakan.flysightcompanion.model.firmware.FirmwareInfo
 import fr.hozakan.flysightcompanion.networkmodule.NetworkService
@@ -14,30 +14,26 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class FirmwareScreenViewModel @Inject constructor(
     private val appVersionService: AppVersionService,
     private val networkService: NetworkService,
-    private val deviceService: FsDeviceService
+    private val deviceService: FsDeviceService,
+    private val firmwareUpdateService: FirmwareUpdateService
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
         FirmwareScreenState(
             device = null,
             compatibilityMatrix = FirmwareCompatibilityMatrix.placeholder,
-            betaCompatibilityMatrix = FirmwareCompatibilityMatrix.placeholder,
             currentAppVersion = appVersionService.appVersion,
-            currentFirmwareVersion = ""
+            currentFirmwareVersion = "",
+            currentStackVersion = ""
         )
     )
 
@@ -53,21 +49,21 @@ class FirmwareScreenViewModel @Inject constructor(
                 .flatMapLatest { device ->
                     if (device != null) {
                         combine(
-                            networkService.firmwareCompatibilityMatrix,
-                            networkService.firmwareWithBetaCompatibilityMatrix,
-                            device.firmwareVersion
-                        ) { matrix, betaMatrix, firmwareVersion ->
-                            device to (matrix to betaMatrix) triple firmwareVersion
+                            firmwareUpdateService.firmwareCompatibilityMatrix,
+                            device.firmwareVersion,
+                            device.stackVersion
+                        ) { matrix, firmwareVersion, stackVersion ->
+                            device to matrix triple (firmwareVersion to stackVersion)
                         }
                     } else {
-                        flowOf(null to (networkService.firmwareCompatibilityMatrix.value to networkService.firmwareWithBetaCompatibilityMatrix.value) triple null)
+                        flowOf(null to firmwareUpdateService.firmwareCompatibilityMatrix.value triple (null to null))
                     }
-                }.collect { (device, matrices, firmwareVersion) ->
+                }.collect { (device, matrix, versions) ->
                     _state.value = _state.value.copy(
                         device = device,
-                        compatibilityMatrix = matrices.first,
-                        betaCompatibilityMatrix = matrices.second,
-                        currentFirmwareVersion = firmwareVersion
+                        compatibilityMatrix = matrix,
+                        currentFirmwareVersion = versions.first,
+                        currentStackVersion = versions.second
                     )
                 }
         }

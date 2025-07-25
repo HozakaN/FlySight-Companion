@@ -9,6 +9,7 @@ import fr.hozakan.flysightcompanion.designsystem.R
 import fr.hozakan.flysightcompanion.dialogmodule.AwaitFlySightDeviceModeDialog
 import fr.hozakan.flysightcompanion.dialogmodule.DialogService
 import fr.hozakan.flysightcompanion.dialogmodule.OkDialogResult
+import fr.hozakan.flysightcompanion.firmwaremodule.business.FirmwareUpdateService
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.fsdevicemodule.business.FlySightDevice
@@ -39,5 +40,13 @@ class DeviceDetailViewModel @Inject constructor(
     private val fsDeviceService: FsDeviceService,
     private val recordService: RecordService,
     private val networkService: NetworkService,
-    private val dialogService: DialogService
-) : DeviceDetailViewBase(context, fsDeviceService, recordService, networkService, dialogService)
+    private val dialogService: DialogService,
+    private val firmwareUpdateService: FirmwareUpdateService
+) : DeviceDetailViewBase(
+    context,
+    fsDeviceService,
+    recordService,
+    networkService,
+    dialogService,
+    firmwareUpdateService
+)

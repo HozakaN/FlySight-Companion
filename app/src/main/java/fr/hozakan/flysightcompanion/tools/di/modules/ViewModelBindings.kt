@@ -7,7 +7,7 @@ import dagger.Module
 import dagger.multibindings.IntoMap
 import fr.hozakan.flysightcompanion.configfilesmodule.ui.config_detail.ConfigDetailViewModel
 import fr.hozakan.flysightcompanion.configfilesmodule.ui.list_files.ListConfigFilesViewModel
-import fr.hozakan.flysightcompanion.firmwaremodule.ui.FirmwareScreenViewModel
+import fr.hozakan.flysightcompanion.fsdevicemodule.ui.firmware.FirmwareScreenViewModel
 import fr.hozakan.flysightcompanion.framework.dagger.ViewModelKey
 import fr.hozakan.flysightcompanion.framework.viewmodel.ViewModelFactory
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.device_config.DeviceConfigurationViewModel

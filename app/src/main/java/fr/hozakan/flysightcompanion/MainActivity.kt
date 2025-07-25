@@ -79,7 +79,7 @@ import fr.hozakan.flysightcompanion.dialogmodule.LocalDialogService
 import fr.hozakan.flysightcompanion.dialogmodule.MutableDialogService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.externaldisplaymodule.ScreenExtensions
-import fr.hozakan.flysightcompanion.firmwaremodule.ui.FirmwareScreen
+import fr.hozakan.flysightcompanion.fsdevicemodule.ui.firmware.FirmwareScreen
 import fr.hozakan.flysightcompanion.framework.compose.LocalMenuState
 import fr.hozakan.flysightcompanion.framework.compose.LocalViewModelFactory
 import fr.hozakan.flysightcompanion.framework.dagger.Injectable
