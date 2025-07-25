@@ -506,7 +506,6 @@ class CreateReferencePointDialog : DialogItem {
 
                     fun isValid(): Boolean {
                         return name.isNotBlank() &&
-                                description.isNotBlank() &&
                                 latitudeText.toDoubleOrNull() != null &&
                                 longitudeText.toDoubleOrNull() != null
                     }
