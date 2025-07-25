@@ -5,17 +5,10 @@
       "name": "v2025.05.31.develop",
       "app_compatibility": [
         "2.0.0-RC7",
-        "2.0.0-RC8"
-      ]
-    },
-    {
-      "name": "v2025.05.17.develop",
-      "app_compatibility": [
-        "2.0.0-RC2",
-        "2.0.0-RC3",
-        "2.0.0-RC4",
-        "2.0.0-RC5"
-      ]
+        "2.0.0-RC8",
+        "2.0.0-RC9"
+      ],
+      "stack_version":1.19.0
     },
     {
       "name": "v2024.12.30",
@@ -27,29 +20,21 @@
         "2.0.0-RC3",
         "2.0.0-RC4",
         "2.0.0-RC5"
-      ]
-    },
-    {
-      "name": "v2024.11.11.release_candidate",
-      "app_compatibility": [
-        "1.0.0-RC3",
-        "1.0.0-RC4"
-      ]
+      ],
+      "stack_version":1.19.0
     }
   ],
   "apps": [
     {
       "name":"1.0.0-RC3",
       "firmware_compatibility": [
-        "v2024.12.30",
-        "v2024.11.11.release_candidate"
+        "v2024.12.30"
       ]
     },
     {
       "name":"1.0.0-RC4",
       "firmware_compatibility": [
-        "v2024.12.30",
-        "v2024.11.11.release_candidate"
+        "v2024.12.30"
       ]
     },
     {
@@ -61,36 +46,31 @@
     {
       "name":"2.0.0-RC2",
       "firmware_compatibility": [
-        "v2024.12.30",
-        "v2025.05.17.develop"
+        "v2024.12.30"
       ]
     },
     {
       "name":"2.0.0-RC3",
       "firmware_compatibility": [
-        "v2024.12.30",
-        "v2025.05.17.develop"
+        "v2024.12.30"
       ]
     },
     {
       "name":"2.0.0-RC4",
       "firmware_compatibility": [
-        "v2024.12.30",
-        "v2025.05.17.develop"
+        "v2024.12.30"
       ]
     },
     {
       "name":"2.0.0-RC5",
       "firmware_compatibility": [
-        "v2024.12.30",
-        "v2025.05.17.develop"
+        "v2024.12.30"
       ]
     },
     {
       "name":"2.0.0-RC6",
       "firmware_compatibility": [
-        "v2024.12.30",
-        "v2025.05.17.develop"
+        "v2024.12.30"
       ]
     },
     {
@@ -101,6 +81,12 @@
     },
     {
       "name":"2.0.0-RC8",
+      "firmware_compatibility": [
+        "v2025.05.31.develop"
+      ]
+    },
+    {
+      "name":"2.0.0-RC9",
       "firmware_compatibility": [
         "v2025.05.31.develop"
       ]
