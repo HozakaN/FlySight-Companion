@@ -1063,7 +1063,7 @@ private fun GMapContainer(sessionController: PpcHudSessionController) {
         ) {
             13f
         } else {
-            16f
+            14f
         },
         animationSpec = tween(durationMillis = 1_500)
     )

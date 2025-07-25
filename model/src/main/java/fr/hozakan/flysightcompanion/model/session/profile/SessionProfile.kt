@@ -47,7 +47,7 @@ data class SessionProfile(
             showMap = false,
             showPerformanceLane = true,
             showPerformanceLaneInMap = false,
-            performanceLaneWidth = 200,
+            performanceLaneWidth = 600,
             competitionWindowTop = 2500,
             competitionWindowBottom = 1500,
             exitDetectionWindowTop = 3350,
