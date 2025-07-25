@@ -485,7 +485,10 @@ data object HudWarningDialog : DialogItem {
     }
 }
 
-class CreateReferencePointDialog : DialogItem {
+data class CreateReferencePointDialog(
+    val initialLatitude: Double? = null,
+    val initialLongitude: Double? = null
+) : DialogItem {
 
     @Composable
     override fun Content(onResult: (DialogResult) -> Unit) {
@@ -501,8 +504,16 @@ class CreateReferencePointDialog : DialogItem {
                     var isDirty by remember { mutableStateOf(false) }
                     var name by remember { mutableStateOf("") }
                     var description by remember { mutableStateOf("") }
-                    var latitudeText by remember { mutableStateOf("45.077200") }
-                    var longitudeText by remember { mutableStateOf("3.761141") }
+                    var latitudeText by remember { 
+                        mutableStateOf(
+                            initialLatitude?.let { "%.6f".format(it).replace(",", ".") } ?: "45.077200"
+                        ) 
+                    }
+                    var longitudeText by remember { 
+                        mutableStateOf(
+                            initialLongitude?.let { "%.6f".format(it).replace(",", ".") } ?: "3.761141"
+                        ) 
+                    }
 
                     fun isValid(): Boolean {
                         return name.isNotBlank() &&

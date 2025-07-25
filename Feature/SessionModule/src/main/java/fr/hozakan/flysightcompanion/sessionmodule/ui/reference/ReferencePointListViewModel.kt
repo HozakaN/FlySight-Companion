@@ -64,4 +64,10 @@ class ReferencePointListViewModel @Inject constructor(
             referencePointsService.createReferencePoint()
         }
     }
+
+    fun onMapLongClick(latitude: Double, longitude: Double) {
+        viewModelScope.launch {
+            referencePointsService.createReferencePointWithCoordinates(latitude, longitude)
+        }
+    }
 }

@@ -38,6 +38,21 @@ class DefaultReferencePointsService(
         }
     }
 
+    override suspend fun createReferencePointWithCoordinates(latitude: Double, longitude: Double) {
+        when (val result = dialogService.displayDialog(
+            CreateReferencePointDialog(
+                initialLatitude = latitude,
+                initialLongitude = longitude
+            )
+        )) {
+            is CreateReferencePointDialogResult -> {
+                addReferencePoint(result.referencePoint)
+            }
+            DialogResult.Dismiss -> {}
+            else -> error("Create reference point result should not have another type (${result::class.java})")
+        }
+    }
+
     private fun loadReferencePoints() {
         sharedPrefs.getString("ref_points", "")?.let { refPointsStr ->
             var referencePoints = refPointsStr.split("\n").mapNotNull { refPointStr ->

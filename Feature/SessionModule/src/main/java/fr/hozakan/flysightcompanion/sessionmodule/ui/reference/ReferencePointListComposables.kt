@@ -77,7 +77,8 @@ fun ReferencePointListScreen() {
         state = state,
         onReferencePointClicked = { viewModel.onReferencePointClicked(it) },
         onReferencePointDelete = { viewModel.onReferencePointDelete(it) },
-        onCreateReferencePointClicked = { viewModel.onCreateReferencePointClicked() }
+        onCreateReferencePointClicked = { viewModel.onCreateReferencePointClicked() },
+        onMapLongClick = { latitude, longitude -> viewModel.onMapLongClick(latitude, longitude) }
     )
 }
 
@@ -87,7 +88,8 @@ fun ReferencePointListScreenInternal(
     state: ReferencePointListState,
     onReferencePointClicked: (ReferencePoint) -> Unit,
     onReferencePointDelete: (ReferencePoint) -> Unit,
-    onCreateReferencePointClicked: () -> Unit
+    onCreateReferencePointClicked: () -> Unit,
+    onMapLongClick: (Double, Double) -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -122,6 +124,9 @@ fun ReferencePointListScreenInternal(
 
             GoogleMap(
                 cameraPositionState = cameraPositionState,
+                onMapLongClick = { latLng ->
+                    onMapLongClick(latLng.latitude, latLng.longitude)
+                }
             ) {
                 state.referencePoints.forEach { refPoint ->
                     Marker(
