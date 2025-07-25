@@ -8,7 +8,7 @@
         "2.0.0-RC8",
         "2.0.0-RC9"
       ],
-      "stack_version":1.19.0
+      "stack_version":"1.19.0"
     },
     {
       "name": "v2024.12.30",
@@ -21,7 +21,7 @@
         "2.0.0-RC4",
         "2.0.0-RC5"
       ],
-      "stack_version":1.19.0
+      "stack_version":"1.19.0"
     }
   ],
   "apps": [
