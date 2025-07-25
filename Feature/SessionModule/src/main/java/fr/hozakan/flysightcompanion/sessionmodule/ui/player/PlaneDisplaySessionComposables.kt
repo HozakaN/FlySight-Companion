@@ -51,9 +51,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import fr.hozakan.flysightcompanion.designsystem.theme.TextConfiguration
+import fr.hozakan.flysightcompanion.model.GnssData
+import fr.hozakan.flysightcompanion.model.session.profile.SessionType
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.VideoController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.TimeMutableSource
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.PlaneDisplaySessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.PlaneDisplaySessionController.Companion.ACRO_MAX_EXIT_HEIGHT
@@ -63,6 +69,9 @@ import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_disp
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.PlaneDisplaySessionController.Companion.acroSliderRange
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.PlaneDisplaySessionController.Companion.perfSliderRange
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.shareIn
 import timber.log.Timber
 import kotlin.math.max
 import kotlin.math.min
@@ -222,6 +231,36 @@ fun PlaneDisplaySessionPlayer(
 
                 Spacer(modifier = Modifier.requiredHeight(24.dp))
 
+                // Exit height range info
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(32.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val (minHeight, maxHeight) = when (discipline) {
+                        0 -> PERF_MIN_EXIT_HEIGHT to PERF_MAX_EXIT_HEIGHT
+                        else -> ACRO_MIN_EXIT_HEIGHT to ACRO_MAX_EXIT_HEIGHT
+                    }
+                    
+                    FText(
+                        text = "Min: ${minHeight}m",
+                        configuration = TextConfiguration.Default.copy(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+                    
+                    FText(
+                        text = "Max: ${maxHeight}m",
+                        configuration = TextConfiguration.Default.copy(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.requiredHeight(16.dp))
+
                 // Drop zone elevation row with edit button
                 Row(
                     modifier = Modifier
@@ -319,3 +358,48 @@ fun PlaneDisplaySessionPlayer(
         )
     }
 }
+
+private class FakePlaneDisplayController : PlaneDisplaySessionController {
+    override val type: SessionType = SessionType.PlaneDisplay
+    
+    override val gnssFlow = MutableSharedFlow<GnssData>()
+    
+    override val timeMutableSource: TimeMutableSource? = null
+    
+    override val videoController: VideoController = object : VideoController {
+        override fun destroy() {}
+    }
+    
+    override val elevation = MutableStateFlow(3200)
+    override val dzElevation = MutableStateFlow(100)
+    override val discipline = MutableStateFlow(0)
+    override val colorBlindOption = MutableStateFlow(false)
+    
+    override fun updateColorBlindOption(enabled: Boolean) {}
+    override fun updateDiscipline(discipline: Int) {}
+    override fun updateDzElev(dzElev: Int) {}
+    override fun pause() {}
+    override fun play() {}
+    override fun play(callback: SessionController.SessionControllerCallback) {}
+    override suspend fun resetDetectors() {}
+    override fun destroy() {}
+}
+
+@Preview(showBackground = true, device = "spec:width=2992px,height=1344px,dpi=486")
+@Composable
+fun PlaneDisplaySessionPlayerPreview() {
+    PlaneDisplaySessionPlayer(
+        controller = FakePlaneDisplayController(),
+        onExitClicked = {}
+    )
+}
+
+@Preview(showBackground = true, device = "spec:width=1920px,height=1200px,dpi=240")
+@Composable
+fun PlaneDisplaySessionPlayerTabletPreview() {
+    PlaneDisplaySessionPlayer(
+        controller = FakePlaneDisplayController(),
+        onExitClicked = {}
+    )
+}
+
