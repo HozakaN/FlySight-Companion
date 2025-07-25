@@ -310,6 +310,41 @@ data class ConfigFileNameDialog(
     }
 }
 
+class ForgetDeviceDialog() : DialogItem {
+    @Composable
+    override fun Content(onResult: (DialogResult) -> Unit) {
+        Dialog(
+            onDismissRequest = {
+                onResult(DialogResult.Dismiss)
+            }
+        ) {
+            Card {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(R.string.dialog_forget_device_text),
+                        style = MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.requiredHeight(16.dp))
+                    SimpleDialogActionBar(
+                        onCancel = {
+                            onResult(DialogResult.Dismiss)
+                        },
+                        onValidate = {
+                            onResult(OkDialogResult)
+                        },
+                        validateButtonText = stringResource(R.string.dialog_forget_device_button_text)
+                    )
+                }
+            }
+        }
+    }
+
+}
+
 data class PickConfigurationDialog(
     val configProvider: () -> List<DisplayableConfig>
 ) : DialogItem {

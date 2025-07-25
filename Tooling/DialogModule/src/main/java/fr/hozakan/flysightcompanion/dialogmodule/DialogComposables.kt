@@ -81,6 +81,13 @@ fun DialogHandler() {
                     dialItem.second.resume(it)
                 }
             }
+
+            is ForgetDeviceDialog -> {
+                dial.Content {
+                    dialog = null
+                    dialItem.second.resume(it)
+                }
+            }
         }
     }
 

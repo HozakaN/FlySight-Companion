@@ -101,7 +101,8 @@ class ServiceModule {
         dialogService: DialogService,
         appVersionService: AppVersionService,
         userPrefService: UserPrefService,
-        firmwareUpdateService: FirmwareUpdateService
+        firmwareUpdateService: FirmwareUpdateService,
+        activityLifecycleService: ActivityLifecycleService
     ): FsDeviceService = DefaultFsDeviceService(
         baseApplication.applicationContext,
         bluetoothService,
@@ -114,7 +115,8 @@ class ServiceModule {
         dialogService,
         appVersionService,
         userPrefService,
-        firmwareUpdateService
+        firmwareUpdateService,
+        activityLifecycleService
     )
 
     @Singleton

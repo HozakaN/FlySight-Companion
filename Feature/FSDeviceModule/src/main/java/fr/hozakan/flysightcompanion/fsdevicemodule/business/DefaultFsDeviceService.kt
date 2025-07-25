@@ -3,13 +3,18 @@ package fr.hozakan.flysightcompanion.fsdevicemodule.business
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.content.Context
+import android.content.Intent
+import android.provider.Settings
 import fr.hozakan.flysightcompanion.bluetoothmodule.BluetoothService
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigEncoder
 import fr.hozakan.flysightcompanion.configfilesmodule.business.ConfigFileService
 import fr.hozakan.flysightcompanion.dialogmodule.AddFlySightDialog
 import fr.hozakan.flysightcompanion.dialogmodule.DialogService
+import fr.hozakan.flysightcompanion.dialogmodule.ForgetDeviceDialog
+import fr.hozakan.flysightcompanion.dialogmodule.OkDialogResult
 import fr.hozakan.flysightcompanion.dialogmodule.UpdateFirmwareDialog
 import fr.hozakan.flysightcompanion.firmwaremodule.business.FirmwareUpdateService
+import fr.hozakan.flysightcompanion.framework.service.applifecycle.ActivityLifecycleService
 import fr.hozakan.flysightcompanion.framework.service.loading.LoadingState
 import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
 import fr.hozakan.flysightcompanion.fsdevicemodule.ui.list_fs.ListFlySightDeviceDisplayData
@@ -65,7 +70,8 @@ class DefaultFsDeviceService(
     private val dialogService: DialogService,
     private val appVersionService: AppVersionService,
     private val userPrefService: UserPrefService,
-    private val firmwareUpdateService: FirmwareUpdateService
+    private val firmwareUpdateService: FirmwareUpdateService,
+    private val activityLifecycleService: ActivityLifecycleService
 ) : FsDeviceService {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -346,6 +352,18 @@ class DefaultFsDeviceService(
                 }
             }
             refreshKnownDevices()
+            val result = dialogService.displayDialog(ForgetDeviceDialog())
+            if (result is OkDialogResult) {
+                try {
+                    val intentOpenBluetoothSettings = Intent()
+                    intentOpenBluetoothSettings.action = Settings.ACTION_BLUETOOTH_SETTINGS
+                    intentOpenBluetoothSettings.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    context.startActivity(intentOpenBluetoothSettings)
+                    activityLifecycleService.awaitNextResume()
+                } catch (e: Exception) {
+                    Timber.e(e)
+                }
+            }
         }
     }
 

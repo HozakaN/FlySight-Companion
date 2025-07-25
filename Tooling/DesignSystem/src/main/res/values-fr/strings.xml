@@ -82,6 +82,8 @@
     <string name="screen_title_device_firmware">Firmware</string>
 
     <string name="dialog_pick_config_title">Choisissez une nouvelle configuration pour votre FlySight</string>
+    <string name="dialog_forget_device_text">Vous devriez également supprimer l\'appareil de votre système</string>
+    <string name="dialog_forget_device_button_text">Ouvrir les paramètres systèmes</string>
 
     <!-- Firmware Screen -->
     <string name="firmware_current_versions">Versions actuelles</string>
