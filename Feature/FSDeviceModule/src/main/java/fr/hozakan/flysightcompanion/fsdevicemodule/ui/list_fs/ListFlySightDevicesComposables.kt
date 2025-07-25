@@ -604,7 +604,26 @@ fun FlySightDeviceItem(
                                 )
                             }
 //                        DeviceMode.Config -> TODO()
-//                        DeviceMode.Usb -> TODO()
+                            DeviceMode.Usb -> {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .requiredHeight(height = 192.dp)
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Usb,
+                                        contentDescription = "USB connection icon"
+                                    )
+                                    Spacer(modifier = Modifier.requiredWidth(8.dp))
+                                    FText(
+                                        text = stringResource(R.string.device_connection_usb_connected),
+                                        configuration = TextConfiguration.PlainScreenTextMedium
+                                    )
+                                }
+                            }
 //                        DeviceMode.Pairing -> TODO()
 //                        DeviceMode.Start -> TODO()
                             else -> {}

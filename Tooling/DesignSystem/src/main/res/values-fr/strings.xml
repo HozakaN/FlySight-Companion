@@ -200,6 +200,7 @@
     <string name="device_connection_button_connect">Connexion</string>
     <string name="device_connection_button_disconnect">Déconnexion</string>
     <string name="device_connection_button_connecting">Connexion…</string>
+    <string name="device_connection_usb_connected">Appareil connecté par USB</string>
 
     <string name="config_detail_menu_action_unit_system_picker_content_description">Sélectionneur d\'unité</string>
     <string name="config_detail_config_file_not_found">Configuration introuvable</string>

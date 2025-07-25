@@ -200,6 +200,7 @@
     <string name="device_connection_button_connect">Connect</string>
     <string name="device_connection_button_disconnect">Disconnect</string>
     <string name="device_connection_button_connecting">Connecting…</string>
+    <string name="device_connection_usb_connected">Device connected through USB</string>
 
     <string name="config_detail_menu_action_unit_system_picker_content_description">Unit system picker</string>
     <string name="config_detail_config_file_not_found">Config file not found</string>
