@@ -126,7 +126,6 @@ class DefaultSessionControllerService(
             _state.value = SessionControllerState.Playing(sessionType, sessionProfile)
 
             val exitDetector = ExitDetectorDelegate(
-                gnssFlow = gnssSource.gnssFlow,
                 minExitDetectionAltMeter = sessionProfile.exitDetectionWindowBottom,
                 maxExitDetectionAltMeter = sessionProfile.exitDetectionWindowTop,
                 upThreshCmps = sessionProfile.exitUpThresh,
@@ -145,8 +144,7 @@ class DefaultSessionControllerService(
                     appVersionService = appVersionService,
                     exitDetectorDelegate = exitDetector,
                     flareDetectorDelegate = FlareDetectorDelegate(
-                        gnssFlow = gnssSource.gnssFlow,
-                        exitDetectionFlow = exitDetector.exitFound
+                        exitDetector = { exitDetector.exitFound.value != null }
                     ),
                     gnssSource = gnssSource,
                     profile = sessionProfile,

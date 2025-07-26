@@ -23,17 +23,17 @@ class FlyBlindComputationUnit(
 
     private var previousData: GnssData? = null
 
-    private fun reset() {
+    public fun reset() {
         _distance.value = 0.0
         _heading.value = 0.0
     }
 
-    fun handleDataBatch(gnssData: List<GnssData>) {
-        reset()
-        gnssData.lastOrNull()?.let { data ->
-            handleNewData(data)
-        }
-    }
+//    fun handleDataBatch(gnssData: List<GnssData>) {
+//        reset()
+//        gnssData.lastOrNull()?.let { data ->
+//            handleNewData(data)
+//        }
+//    }
 
     fun handleNewData(data: GnssData) {
         if (data.gpsFix >= 3) {

@@ -16,7 +16,6 @@ import timber.log.Timber
 
 
 class ExitDetectorDelegate(
-    gnssFlow: SharedFlow<GnssData>,
     /**
      * Do not detect exits if lower than this altitude in mm above ground. Exit
      * detection is disabled if this is less than 0
@@ -63,17 +62,6 @@ class ExitDetectorDelegate(
      **/
     private var currGnssData: GnssData? = null
 
-    private val scope =
-        CoroutineScope(SupervisorJob() + CoroutineName("ExitDetectorDelegate") + Dispatchers.Default)
-
-    init {
-        gnssFlow
-            .onEach {
-                handleNewData(it)
-            }
-            .launchIn(scope)
-    }
-
     /**
      * Reset the detector to initial state
      */
@@ -82,21 +70,16 @@ class ExitDetectorDelegate(
         direction = Direction.UP
         count = 0
         currGnssData = null
+        Timber.d("Hoz3 exitFound reset 1")
         _exitFound.value = null
     }
 
-    override suspend fun clearAndProcessExitDetectionData(gnssDataList: List<GnssData>) {
+    override suspend fun clear() {
         // Reset detector state
         reset()
-
-        // Process all points up to the rewind index
-        gnssDataList
-            .forEach { gnssData ->
-                handleNewData(gnssData)
-            }
     }
 
-    private fun handleNewData(
+    override fun handleNewData(
         gnssData: GnssData
     ) {
         if (minExitDetectionAltMeter < 0 || gnssData.hMsl < minExitDetectionAltMeter + dzElevation) {
@@ -112,6 +95,7 @@ class ExitDetectorDelegate(
                 if (gnssData.velD * 100 > downThreshCmps) {
                     count = 1
                     currGnssData = gnssData
+                    Timber.d("Hoz3 direction is now down $gnssData")
                     direction = Direction.DOWN
                 } else if (gnssData.velD * 100 < upThreshCmps) {
                     count++
@@ -120,6 +104,7 @@ class ExitDetectorDelegate(
                 }
                 if (exitAltValid && count > numUp) {
                     exitAltValid = false
+                    Timber.d("Hoz3 exitFound reset 2")
                     _exitFound.value = null
                 }
             }
@@ -129,6 +114,7 @@ class ExitDetectorDelegate(
                     if (count == 0) {
                         currGnssData = gnssData
                     }
+                    Timber.d("Hoz3 count++")
                     count++
                 } else if (gnssData.velD * 100 < upThreshCmps) {
                     count = 1
@@ -138,6 +124,7 @@ class ExitDetectorDelegate(
                 }
                 if (!exitAltValid && count > numDown) {
                     exitAltValid = true
+                    Timber.d("Hoz3 exitFound set")
                     _exitFound.value = currGnssData
                 }
             }

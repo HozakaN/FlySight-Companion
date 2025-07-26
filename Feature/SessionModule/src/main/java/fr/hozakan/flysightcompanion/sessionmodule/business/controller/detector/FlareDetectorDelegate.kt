@@ -20,8 +20,8 @@ import timber.log.Timber
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FlareDetectorDelegate(
-    private val gnssFlow: SharedFlow<GnssData>,
-    private val exitDetectionFlow: StateFlow<GnssData?>,
+//    private val exitDetectionFlow: StateFlow<GnssData?>,
+    private val exitDetector: () -> Boolean,
     /**
      * Distance to travel up to detect a flare, in meters
      */
@@ -48,9 +48,9 @@ class FlareDetectorDelegate(
 
     private var count = 0
 
-    private val scope = CoroutineScope(SupervisorJob() + CoroutineName("FlareDetectorDelegate") + Dispatchers.Default)
+//    private val scope = CoroutineScope(SupervisorJob() + CoroutineName("FlareDetectorDelegate") + Dispatchers.Default)
 
-    init {
+    /*init {
         exitDetectionFlow
             .flatMapLatest { exit ->
                 if (exit == null) {
@@ -64,20 +64,20 @@ class FlareDetectorDelegate(
                 handleNewGnssData(gnssData)
             }
             .launchIn(scope)
-    }
+    }*/
 
-    override suspend fun clearAndProcessFlareDetectionData(gnssDataList: List<GnssData>) {
+    override suspend fun clear() {
         // Reset detector state
         reset()
         _registeredFlares.value = emptyList()
 
-        if (exitDetectionFlow.value == null) return
+//        if (exitDetectionFlow.value == null) return
 
         // Process all points up to the rewind index
-        gnssDataList
-            .forEach { gnssData ->
-                handleNewGnssData(gnssData)
-            }
+//        gnssDataList
+//            .forEach { gnssData ->
+//                handleNewGnssData(gnssData)
+//            }
     }
 
     private fun reset() {
@@ -90,7 +90,7 @@ class FlareDetectorDelegate(
         flareData.clear()
     }
 
-    private fun handleNewGnssData(gnssData: GnssData) {
+    override fun handleNewData(gnssData: GnssData) {
         when (_currentFlareState.value) {
             is FlareState.FlareDone -> {
                 reset()
@@ -107,6 +107,9 @@ class FlareDetectorDelegate(
 
     private fun detectFlareStart(gnssData: GnssData) {
         val prevData = currGnssData
+        if (!exitDetector()) {
+            return
+        }
 
         // Store current data for next comparison
         currGnssData = gnssData

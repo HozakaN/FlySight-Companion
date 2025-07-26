@@ -30,7 +30,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlin.collections.plus
 
 class DefaultFlyBlindSessionController(
     context: Context,
@@ -94,10 +93,12 @@ class DefaultFlyBlindSessionController(
                             val pickedTiming = source.userInteractionEndEvent.first()
                             (gnssSource as? FileGnssSource)?.getGnssPointsUpToTime(pickedTiming.toLong() * 1_000L)
                                 ?.let { pastGnssData ->
-                                    exitDetectorDelegate.clearAndProcessExitDetectionData(
-                                        pastGnssData
-                                    )
-                                    computationUnit.handleDataBatch(pastGnssData)
+                                    exitDetectorDelegate.clear()
+                                    computationUnit.reset()
+                                    pastGnssData.forEach { data ->
+                                        computationUnit.handleNewData(data)
+                                        exitDetectorDelegate.handleNewData(data)
+                                    }
                                 }
                         }
                 }
@@ -134,7 +135,8 @@ class DefaultFlyBlindSessionController(
     }
 
     override suspend fun resetDetectors() {
-        exitDetectorDelegate.clearAndProcessExitDetectionData(emptyList())
+        exitDetectorDelegate.clear()
+        computationUnit.reset()
     }
 
     override fun destroy() {

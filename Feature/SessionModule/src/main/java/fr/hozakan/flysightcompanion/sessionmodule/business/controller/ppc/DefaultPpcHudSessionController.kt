@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -142,14 +143,13 @@ class DefaultPpcHudSessionController(
                             val pickedTiming = source.userInteractionEndEvent.first()
                             (gnssSource as? FileGnssSource)?.getGnssPointsUpToTime(pickedTiming.toLong() * 1_000L)
                                 ?.let { pastGnssData ->
-                                    sessionComputationUnit.handleDataBatch(pastGnssData)
-                                    exitDetectorDelegate.clearAndProcessExitDetectionData(
-                                        pastGnssData
-                                    )
-                                    flareDetectorDelegate.clearAndProcessFlareDetectionData(
-                                        pastGnssData
-                                    )
+                                    sessionComputationUnit.clear()
+                                    exitDetectorDelegate.clear()
+                                    flareDetectorDelegate.clear()
                                     pastGnssData.lastOrNull()?.let { data ->
+                                        sessionComputationUnit.handleNewData(data)
+                                        exitDetectorDelegate.handleNewData(data)
+                                        flareDetectorDelegate.handleNewData(data)
                                         moveTo(data)
                                     }
                                 }
@@ -160,9 +160,12 @@ class DefaultPpcHudSessionController(
                 sessionComputationUnit.exitDetected,
                 laneStartPoint
             ) { exitPoint, laneStartPoint ->
+                Timber.d("Hoz3 combine exitPoint = $exitPoint; laneStartPoint = $laneStartPoint")
                 if (exitPoint != null && laneStartPoint != null) {
+                    Timber.d("Hoz3 updatePerformanceLanes() 1")
                     updatePerformanceLanes()
                 } else {
+                    Timber.d("Hoz3 _performanceLanes.value = emptyList()")
                     _performanceLanes.value = emptyList()
                 }
             }
@@ -197,9 +200,10 @@ class DefaultPpcHudSessionController(
     }
 
     override suspend fun resetDetectors() {
-        exitDetectorDelegate.clearAndProcessExitDetectionData(emptyList())
-        flareDetectorDelegate.clearAndProcessFlareDetectionData(emptyList())
+        exitDetectorDelegate.clear()
+        flareDetectorDelegate.clear()
         sessionComputationUnit.reset()
+        _performanceLanes.value = emptyList()
     }
 
     override fun destroy() {
@@ -214,12 +218,17 @@ class DefaultPpcHudSessionController(
             gnssPoints = gnssPoints.take(500)
         }
         sessionComputationUnit.handleNewData(gnssData)
+        exitDetectorDelegate.handleNewData(gnssData)
+        flareDetectorDelegate.handleNewData(gnssData)
 //        updatePerformanceLanes()
         updateFlyerDistanceToPerformanceLanes(gnssData)
     }
 
     private fun updatePerformanceLanes() {
-        if (_performanceLanes.value.isNotEmpty()) return
+        if (_performanceLanes.value.isNotEmpty()) {
+            Timber.d("Hoz3 updatePerformanceLanes() returns")
+            return
+        }
 //        if (!profile.showPerformanceLaneInMap) {
 //            _performanceLanes.value = emptyList()
 //            return
@@ -262,10 +271,12 @@ class DefaultPpcHudSessionController(
     }
 
     private fun moveTo(gnssData: GnssData) {
+        Timber.d("Hoz3 moveTo called")
         val exitPoint = sessionComputationUnit.exitDetected.value
         // Use dateTime for time comparison instead of separate timestamp fields
         val currentTime = gnssData.iTow
         val exitTime = exitPoint?.iTow ?: run {
+            Timber.d("Hoz3 exitTime empty")
             _performanceLanes.value = emptyList()
             return
         }
@@ -273,11 +284,14 @@ class DefaultPpcHudSessionController(
         if (currentTime - exitTime < 0.toUInt()) {
             // Current time is before exit detection
 //            exitPoint = null
+            Timber.d("Hoz3 currentTime - exitTime < 0.toUInt() currentTime = $currentTime; exitTime = $exitTime, currentTime - exitTime = ${currentTime - exitTime}")
             _performanceLanes.value = emptyList() // Clear lines
         }
 
         val laneStartPoint = sessionComputationUnit.laneStartPoint.value
+        Timber.d("Hoz3 laneStartPoint called $laneStartPoint")
         val laneStartTime = laneStartPoint?.iTow ?: run {
+            Timber.d("Hoz3 lateStartPoint is null")
             _performanceLanes.value = emptyList()
             return
         }
@@ -285,9 +299,11 @@ class DefaultPpcHudSessionController(
         if (currentTime - laneStartTime < 0.toUInt()) {
             // Current time is before lane start
 //            laneStartPoint = null
+            Timber.d("Hoz3 currentTime - laneStartTime < 0.toUInt() currentTime = $currentTime; laneStartTime = $laneStartTime, currentTime - exitTime = ${currentTime - laneStartTime}")
             _performanceLanes.value = emptyList() // Clear lines
         }
 
+        Timber.d("Hoz3 updatePerformanceLanes() 2")
         updatePerformanceLanes()
         updateFlyerDistanceToPerformanceLanes(gnssData)
     }
