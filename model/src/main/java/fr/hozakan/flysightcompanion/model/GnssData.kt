@@ -15,7 +15,8 @@ class GnssData(
     val hAcc: Int,
     val sAcc: Int,
     val gSpeed: Int, // m/s
-    val speed: Int // m/s
+    val speed: Int, // m/s
+    val debugIndex: Int = -1
 ) {
     override fun toString(): String {
         return String.format(

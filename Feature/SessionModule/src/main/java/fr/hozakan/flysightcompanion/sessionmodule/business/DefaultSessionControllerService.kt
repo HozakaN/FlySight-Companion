@@ -125,7 +125,14 @@ class DefaultSessionControllerService(
             }
             _state.value = SessionControllerState.Playing(sessionType, sessionProfile)
 
+            val confirmationPolicy = if (sessionProfile.exitDetectionConfirmationDuration > 0) {
+                ExitDetectorDelegate.ConfirmationPolicy.Timed(sessionProfile.exitDetectionConfirmationDuration)
+            } else {
+                ExitDetectorDelegate.ConfirmationPolicy.None
+            }
+            
             val exitDetector = ExitDetectorDelegate(
+                confirmationPolicy = confirmationPolicy,
                 minExitDetectionAltMeter = sessionProfile.exitDetectionWindowBottom,
                 maxExitDetectionAltMeter = sessionProfile.exitDetectionWindowTop,
                 upThreshCmps = sessionProfile.exitUpThresh,

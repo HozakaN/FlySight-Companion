@@ -215,6 +215,7 @@ class SessionProfileForm(
                     form.exitPointsUp,
                     form.exitDownThresh,
                     form.exitUpThresh,
+                    form.exitDetectionConfirmationDuration,
                     form.timeAfterExit,
                     form.displayFlareDetector
                 ))
@@ -441,6 +442,7 @@ class SessionProfileForm(
                     form.exitPointsUp = savedList[index++] as Int
                     form.exitDownThresh = savedList[index++] as Int
                     form.exitUpThresh = savedList[index++] as Int
+                    form.exitDetectionConfirmationDuration = savedList[index++] as Long
                     form.timeAfterExit = savedList[index++] as Int
                     
                     // Add displayFlareDetector if available (might not be in older saved states)
@@ -488,6 +490,7 @@ class SessionProfileForm(
     internal var exitPointsUp by mutableStateOf(initialConfiguration.exitPointsUp)
     internal var exitDownThresh by mutableStateOf(initialConfiguration.exitDownThresh)
     internal var exitUpThresh by mutableStateOf(initialConfiguration.exitUpThresh)
+    internal var exitDetectionConfirmationDuration by mutableStateOf(initialConfiguration.exitDetectionConfirmationDuration)
     internal var timeAfterExit by mutableStateOf(initialConfiguration.timeAfterExit)
     internal var displayFlareDetector by mutableStateOf(initialConfiguration.displayFlareDetector)
 
@@ -640,6 +643,11 @@ class SessionProfileForm(
         this.exitUpThresh = value
         isDirty = true
     }
+    
+    fun updateExitDetectionConfirmationDuration(value: Long) {
+        this.exitDetectionConfirmationDuration = value
+        isDirty = true
+    }
 
     fun updateTimeAfterExit(value: Int) {
         this.timeAfterExit = value
@@ -677,6 +685,7 @@ class SessionProfileForm(
             exitPointsUp = exitPointsUp,
             exitDownThresh = exitDownThresh,
             exitUpThresh = exitUpThresh,
+            exitDetectionConfirmationDuration = exitDetectionConfirmationDuration,
             timeAfterExit = timeAfterExit,
             showVisualAlertWhenExitDetected = showVisualAlertWhenExitDetected,
             playAudioAlertWhenExitDetected = playAudioAlertWhenExitDetected,

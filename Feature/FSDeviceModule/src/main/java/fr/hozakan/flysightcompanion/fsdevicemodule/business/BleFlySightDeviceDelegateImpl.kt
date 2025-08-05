@@ -312,15 +312,15 @@ class BleFlySightDeviceDelegateImpl(
                     FlySightCharacteristic.GNSS_PV.uuid -> {
                         log("GNSS data received (${value.size}) : ${value.bytesToHex()}")
                         val firmwareInfo = compatibilityMatrix.getFirmwareInfoByName(_firmwareVersion.value ?: "")
-                        val parser: GnssFeedParser = if (firmwareInfo?.hasGnssMaskCommand == true) {
+                        val parser: GnssFeedParser = /*if (firmwareInfo?.hasGnssMaskCommand == true) {*/
                             GnssFeedParserV2 {
                                 log(it)
                             }
-                        } else {
-                            GnssFeedParserV1 {
-                                log(it)
-                            }
-                        }
+//                        } else {
+//                            GnssFeedParserV1 {
+//                                log(it)
+//                            }
+//                        }
 
                         val gnssData = parser.parse(value)
                         if (gnssData == null) return

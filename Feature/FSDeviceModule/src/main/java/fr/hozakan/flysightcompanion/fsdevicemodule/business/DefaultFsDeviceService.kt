@@ -34,6 +34,7 @@ import fr.hozakan.flysightcompanion.usbmodule.UsbService
 import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -43,9 +44,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -89,13 +93,27 @@ class DefaultFsDeviceService(
             .apply()
     }
 
-    private val _logs = MutableStateFlow<List<Log>>(emptyList())
-    override val logs: StateFlow<List<Log>> = _logs.asStateFlow()
-
-
     private val _devices: StateFlow<List<MutableFlySightDevice>> = _bluetoothDevices
         .map { devices -> devices.map { device -> BleFlySightDeviceImpl(device) } }
         .stateIn(scope, SharingStarted.WhileSubscribed(), emptyList())
+
+//    private val _logs = MutableStateFlow<List<Log>>(emptyList())
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val logs: StateFlow<List<Log>> = _devices
+        .flatMapLatest { devices ->
+            if (devices.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                combine(devices.map { it.logs }) { logsArrays ->
+                    logsArrays.flatMap { logMessages ->
+                        logMessages.map { message -> Log(message) }
+                    }
+                }
+            }
+        }
+        .stateIn(scope, SharingStarted.WhileSubscribed(), emptyList())
+
+
 
     override val devices: StateFlow<List<FlySightDevice>> = _devices
 

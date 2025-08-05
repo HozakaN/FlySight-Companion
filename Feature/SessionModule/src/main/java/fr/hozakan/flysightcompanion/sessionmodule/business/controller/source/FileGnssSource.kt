@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.time.ZoneOffset
 import kotlin.math.abs
 
@@ -58,7 +57,7 @@ class FileGnssSource(
                     _timeMutableSource.setEndValue(timeDiffSeconds)
                     
                     // Prepare all GNSS data points with timestamps for batch processing
-                    val gnssPointsWithTimestamps = dataPoints.map { dataPoint ->
+                    val gnssPointsWithTimestamps = dataPoints.mapIndexed { index, dataPoint ->
                         val relativeTimeMilliseconds = dataPoint.dateTime.toInstant(ZoneOffset.UTC)
                             .toEpochMilli() - firstDataPointTime
 
@@ -97,7 +96,8 @@ class FileGnssSource(
                             hAcc = dataPoint.hAcc.toInt(),
                             sAcc = dataPoint.sAcc.toInt(),
                             speed = totalSpeed,
-                            gSpeed = groundSpeed
+                            gSpeed = groundSpeed,
+                            debugIndex = index
                         )
                         
                         GnssDataWithTimestamp(gnssData, relativeTimeMilliseconds)

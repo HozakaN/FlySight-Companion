@@ -441,6 +441,17 @@ fun SessionProfileScreenInternal(
                                 configuration = FlySightTheme.typography.captionText,
                                 modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
                             )
+                            Spacer(modifier = Modifier.requiredHeight(8.dp))
+                            NumberInputField(
+                                label = "Exit confirmation delay (ms)",
+                                value = form.exitDetectionConfirmationDuration.toInt(),
+                                onValueChange = { form.updateExitDetectionConfirmationDuration(it.toLong()) }
+                            )
+                            FText(
+                                text = "Time to wait before confirming exit (0 to disable confirmation)",
+                                configuration = FlySightTheme.typography.captionText,
+                                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                            )
 
                             Spacer(modifier = Modifier.requiredHeight(8.dp))
 

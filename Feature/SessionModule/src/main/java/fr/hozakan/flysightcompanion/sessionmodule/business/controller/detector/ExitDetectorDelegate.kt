@@ -5,17 +5,18 @@ import fr.hozakan.flysightcompanion.model.session.Direction
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 
 class ExitDetectorDelegate(
+    private val confirmationPolicy: ConfirmationPolicy = ConfirmationPolicy.None,
     /**
      * Do not detect exits if lower than this altitude in mm above ground. Exit
      * detection is disabled if this is less than 0
@@ -62,6 +63,15 @@ class ExitDetectorDelegate(
      **/
     private var currGnssData: GnssData? = null
 
+    /** Job for handling timed confirmation policy */
+    private var confirmationJob: Job? = null
+
+    /** Current GNSS data for confirmation validation */
+    private var currentGnssData: GnssData? = null
+
+    /** Coroutine scope for handling confirmation policy */
+    private val coroutineScope = CoroutineScope(SupervisorJob() + CoroutineName("exitDetectorDelegate") + Dispatchers.Default)
+
     /**
      * Reset the detector to initial state
      */
@@ -70,6 +80,9 @@ class ExitDetectorDelegate(
         direction = Direction.UP
         count = 0
         currGnssData = null
+        currentGnssData = null
+        confirmationJob?.cancel()
+        confirmationJob = null
         Timber.d("Hoz3 exitFound reset 1")
         _exitFound.value = null
     }
@@ -82,6 +95,8 @@ class ExitDetectorDelegate(
     override fun handleNewData(
         gnssData: GnssData
     ) {
+        currentGnssData = gnssData
+        
         if (minExitDetectionAltMeter < 0 || gnssData.hMsl < minExitDetectionAltMeter + dzElevation) {
             return
         }
@@ -104,6 +119,8 @@ class ExitDetectorDelegate(
                 }
                 if (exitAltValid && count > numUp) {
                     exitAltValid = false
+                    confirmationJob?.cancel()
+                    confirmationJob = null
                     Timber.d("Hoz3 exitFound reset 2")
                     _exitFound.value = null
                 }
@@ -124,11 +141,48 @@ class ExitDetectorDelegate(
                 }
                 if (!exitAltValid && count > numDown) {
                     exitAltValid = true
-                    Timber.d("Hoz3 exitFound set")
+                    Timber.d("Hoz3 exitFound set ${currGnssData?.debugIndex}")
                     _exitFound.value = currGnssData
+                    startConfirmationPolicy()
                 }
             }
         }
     }
 
+    private fun startConfirmationPolicy() {
+        when (confirmationPolicy) {
+            is ConfirmationPolicy.None -> {
+                // No confirmation needed, exit is immediately confirmed
+            }
+            is ConfirmationPolicy.Timed -> {
+                // Cancel any existing confirmation job
+                confirmationJob?.cancel()
+                
+                // Start new confirmation job
+                confirmationJob = coroutineScope.launch {
+                    delay(confirmationPolicy.duration)
+                    
+                    // Check if vertical speed is greater than 20 m/s (2000 cm/s)
+                    val currentData = currentGnssData
+                    if (currentData == null || currentData.velD * 100 <= 2000) {
+                        // Exit not confirmed - reset detection
+                        Timber.d("Hoz3 exit not confirmed, resetting detection. VelD: ${currentData?.velD}")
+                        reset()
+                    } else {
+                        Timber.d("Hoz3 exit confirmed. VelD: ${currentData.velD}")
+                    }
+                }
+            }
+        }
+    }
+
+    sealed interface ConfirmationPolicy {
+        data object None : ConfirmationPolicy
+
+        /**
+         * If after [duration] exit is not confirmed, exit detection is reset.
+         * Default duration is 6 seconds
+         */
+        data class Timed(val duration: Long = 6_000L) : ConfirmationPolicy
+    }
 }
