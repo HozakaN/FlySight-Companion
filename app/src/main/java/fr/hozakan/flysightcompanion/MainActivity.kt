@@ -1,9 +1,12 @@
 package fr.hozakan.flysightcompanion
 
+import android.app.KeyguardManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
@@ -113,6 +116,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import fr.hozakan.flysightcompanion.R as LocalR
@@ -730,6 +734,7 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActiv
     }
 
     private var originalBrightness: Float = -1f
+
     override fun lock(lock: Boolean) {
         requestedOrientation = if (lock) {
             ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
@@ -773,8 +778,27 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActiv
             }
 
             if (lock) {
-                // Keep screen on when locked
-                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON/* and WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN*/)
+                // Keep screen on and prevent power button from turning it off
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                
+                // Use modern APIs for Android 8.1+ (API 27+) or fallback to deprecated flags for older versions
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                    // Modern APIs (API 27+)
+                    setShowWhenLocked(true)
+                    setTurnScreenOn(true)
+                    
+                    // For dismissing keyguard on modern Android
+                    val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+                    keyguardManager.requestDismissKeyguard(this@MainActivity, null)
+                } else {
+                    // Legacy approach for older versions (API 26)
+                    @Suppress("DEPRECATION")
+                    window.addFlags(
+                        WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                    )
+                }
 
                 // Store original brightness if not already stored
                 val layoutParams = window.attributes
@@ -792,8 +816,23 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActiv
                     addFlags(WindowManager.LayoutParams.SCREEN_BRIGHTNESS_CHANGED)
                 }
             } else {
-                // Allow screen to turn off when unlocked
-                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON/* and WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN*/)
+                // Allow screen to turn off when unlocked and remove power button override
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                
+                // Reset modern APIs for Android 8.1+ (API 27+) or clear deprecated flags for older versions
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                    // Reset modern APIs
+                    setShowWhenLocked(false)
+                    setTurnScreenOn(false)
+                } else {
+                    // Clear legacy flags
+                    @Suppress("DEPRECATION")
+                    window.clearFlags(
+                        WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                    )
+                }
 
                 // Restore original brightness
                 if (originalBrightness >= 0) {
@@ -810,6 +849,7 @@ class MainActivity : AppCompatActivity(), ScreenExtensions, LocationCheckerActiv
                     }
                 }
             }
+
         }
     }
 
