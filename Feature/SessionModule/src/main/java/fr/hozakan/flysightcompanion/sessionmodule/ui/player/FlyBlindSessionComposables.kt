@@ -323,32 +323,6 @@ fun HeadingContainerPreview() {
 }
 
 @Composable
-fun OrientableArrow(
-    modifier: Modifier = Modifier,
-    heading: Double
-) {
-    Box(
-        modifier = modifier
-    ) {
-        Box(
-            modifier = Modifier
-                .graphicsLayer {
-                    scaleX = 4f
-                    scaleY = 4f
-                    rotationZ = heading.toFloat()
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.ArrowUpward,
-                contentDescription = "",
-                tint = Color.Green,
-            )
-        }
-    }
-}
-
-@Composable
 private fun FlyBlindLockedContent(
     onExitClicked: () -> Unit,
     resetExitDetection: () -> Unit

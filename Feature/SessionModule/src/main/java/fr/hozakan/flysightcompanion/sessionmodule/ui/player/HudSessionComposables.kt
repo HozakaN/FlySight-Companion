@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -904,8 +905,26 @@ private fun SessionMainContainer(
     ) {
         if (controller.profile.showPerformanceLane) {
             PerformanceLaneContainer(controller) {
-                if (controller.profile.showMap) {
-                    GMapContainer(controller)
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (controller.profile.showMap) {
+                        GMapContainer(controller)
+                    }
+                    val heading by controller.heading.collectAsState()
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(48.dp),
+                        contentAlignment = Alignment.BottomStart
+                    ) {
+                        OrientableArrow(
+                            heading = heading,
+                            logoSize = 40.dp
+                        )
+                    }
                 }
             }
         } else if (controller.profile.showMap) {
@@ -1395,6 +1414,7 @@ class FakeSessionController(
         MutableStateFlow(emptyList())
     override val gnssFlow: SharedFlow<GnssData> = MutableSharedFlow()
     override val laneStartPoint: StateFlow<GnssData?> = MutableStateFlow(null)
+    override val heading: StateFlow<Double> = MutableStateFlow(0.0)
     override val timeMutableSource: TimeMutableSource? = null
     override val videoController: VideoController = fakeVideoController
     override val distanceToCenter: StateFlow<Float?> = MutableStateFlow(null)

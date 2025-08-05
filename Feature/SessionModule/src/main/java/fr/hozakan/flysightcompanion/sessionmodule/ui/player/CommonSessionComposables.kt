@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Pause
@@ -46,6 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import fr.hozakan.flysightcompanion.composablecommons.DropdownContainer
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
@@ -59,6 +61,33 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
+@Composable
+fun OrientableArrow(
+    modifier: Modifier = Modifier,
+    logoSize: Dp = 24.dp,
+    heading: Double,
+) {
+    Box(
+        modifier = modifier
+    ) {
+        Box(
+            modifier = Modifier
+                .graphicsLayer {
+                    scaleX = 4f
+                    scaleY = 4f
+                    rotationZ = heading.toFloat()
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                modifier = Modifier.requiredSize(logoSize),
+                imageVector = Icons.Default.ArrowUpward,
+                contentDescription = "",
+                tint = Color.Green,
+            )
+        }
+    }
+}
 
 @Composable
 internal fun SpeedContainer(

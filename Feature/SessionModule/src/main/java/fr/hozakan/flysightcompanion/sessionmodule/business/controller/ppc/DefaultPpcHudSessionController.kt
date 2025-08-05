@@ -122,6 +122,8 @@ class DefaultPpcHudSessionController(
 
     override val laneStartPoint: StateFlow<GnssData?> = sessionComputationUnit.laneStartPoint
 
+    override val heading: StateFlow<Double> = sessionComputationUnit.heading
+
     override val sessionEvents: SharedFlow<SessionEvent> = sessionComputationUnit.sessionEvents
 
     // StateFlow to hold the three performance lanes

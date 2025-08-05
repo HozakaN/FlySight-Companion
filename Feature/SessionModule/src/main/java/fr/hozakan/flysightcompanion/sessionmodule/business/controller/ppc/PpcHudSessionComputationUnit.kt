@@ -1,7 +1,9 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc
 
+import fr.hozakan.flysightcompanion.framework.math.computeHeading
 import fr.hozakan.flysightcompanion.framework.math.computeHorizontalDistance
 import fr.hozakan.flysightcompanion.framework.math.fromNMToMeters
+import fr.hozakan.flysightcompanion.framework.math.radToDeg
 import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.GnssData
@@ -12,6 +14,7 @@ import fr.hozakan.flysightcompanion.model.config.SpeechMode
 import fr.hozakan.flysightcompanion.model.config.ToneLimitBehaviour
 import fr.hozakan.flysightcompanion.model.config.ToneMode
 import fr.hozakan.flysightcompanion.model.config.UnitSystem
+import fr.hozakan.flysightcompanion.model.session.profile.Coordinate
 import fr.hozakan.flysightcompanion.model.session.profile.DisplayItemBundle
 import fr.hozakan.flysightcompanion.model.session.profile.DisplayableCapability
 import fr.hozakan.flysightcompanion.model.session.profile.SessionProfile
@@ -51,6 +54,9 @@ class PpcHudSessionComputationUnit(
         _referencePointDistances.asStateFlow()
 
     private val config = profile.configFile
+
+    private val _heading = MutableStateFlow(0.0)
+    val heading: StateFlow<Double> = _heading.asStateFlow()
 
     private val scope = CoroutineScope(SupervisorJob() + CoroutineName("SessionComputationUnit"))
 
@@ -103,6 +109,8 @@ class PpcHudSessionComputationUnit(
     private var x1 = 0
     private var x2 = 0
 
+    private var previousData: GnssData? = null
+
     init {
         flagSayAltitude =
             config.altitudeStep > 0 || config.speeches.any { it.mode == SpeechMode.AltitudeAboveDropzone }
@@ -138,6 +146,7 @@ class PpcHudSessionComputationUnit(
         _timeInWindow.value = 0f
         _distanceInWindow.value = 0
         _speedInWindow.value = 0
+        _heading.value = 0.0
         _competitionWindowStart.value = null
         _competitionWindowEnd.value = null
 //        exitDetector.clearAndProcessBatchData(emptyList())
@@ -154,6 +163,28 @@ class PpcHudSessionComputationUnit(
                 flagFirstFix = true
             }
             if (profile.showPerformanceLane) {
+                val previous = previousData
+                if (previous != null) {
+                    profile.referencePoint?.let { refPoint ->
+                        val currentCoord = Coordinate(
+                            latitude = gnssData.lat,
+                            longitude = gnssData.lon
+                        )
+                        val refPointHeading = computeHeading(
+                            from = currentCoord,
+                            to = refPoint.coords
+                        ).radToDeg()
+                        val flyerHeading = computeHeading(
+                            from = Coordinate(
+                                latitude = previous.lat,
+                                longitude = previous.lon
+                            ),
+                            to = currentCoord
+                        ).radToDeg()
+                        _heading.value = (refPointHeading - flyerHeading)
+                    }
+                }
+                previousData = gnssData
                 exitDetector.exitFound.value?.let { exitPoint ->
                     if (_laneStartPoint.value == null) {
                         // Check if current time is at least timeAfterExit seconds after the exit point detection

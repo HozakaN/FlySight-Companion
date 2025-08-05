@@ -19,6 +19,8 @@ interface PpcHudSessionController : SessionController, ExitDetector, FlareDetect
 
     val laneStartPoint: StateFlow<GnssData?>
 
+    val heading: StateFlow<Double>
+
     val distanceToCenter: StateFlow<Float?>
 
     val referencePointDistances: StateFlow<Map<String, Double>>
