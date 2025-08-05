@@ -61,6 +61,7 @@ import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionCon
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.VideoController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.TimeMutableSource
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
+import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.PlaneDisplaySessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.PlaneDisplaySessionController.Companion.ACRO_MAX_EXIT_HEIGHT
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.PlaneDisplaySessionController.Companion.ACRO_MIN_EXIT_HEIGHT
@@ -68,9 +69,11 @@ import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_disp
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.PlaneDisplaySessionController.Companion.PERF_MIN_EXIT_HEIGHT
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.PlaneDisplaySessionController.Companion.acroSliderRange
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.PlaneDisplaySessionController.Companion.perfSliderRange
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.BatteryLevel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.shareIn
 import timber.log.Timber
 import kotlin.math.max
@@ -365,7 +368,10 @@ private class FakePlaneDisplayController : PlaneDisplaySessionController {
     override val gnssFlow = MutableSharedFlow<GnssData>()
     
     override val timeMutableSource: TimeMutableSource? = null
-    
+
+
+    override val deviceState: StateFlow<Pair<DeviceConnectionState, BatteryLevel>?> =
+        MutableStateFlow(DeviceConnectionState.Connected to 0)
     override val videoController: VideoController = object : VideoController {
         override fun destroy() {}
     }

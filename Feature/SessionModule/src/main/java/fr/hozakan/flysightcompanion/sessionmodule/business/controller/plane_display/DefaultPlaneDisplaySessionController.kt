@@ -1,5 +1,6 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display
 
+import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.session.profile.SessionType
@@ -8,6 +9,7 @@ import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.Gns
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.TimeMutableSource
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.VideoController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.BatteryLevel
 import fr.hozakan.flysightcompanion.userpreferencesmodule.UserPrefService
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -42,6 +44,7 @@ class DefaultPlaneDisplaySessionController(
 
     override val timeMutableSource: TimeMutableSource? = gnssSource.timeMutableSource
 
+    override val deviceState: StateFlow<Pair<DeviceConnectionState, BatteryLevel>?> = gnssSource.deviceState
     override val gnssFlow: SharedFlow<GnssData> = gnssSource.gnssFlow
 
     override val videoController: VideoController = PlaneDisplayVideoController()

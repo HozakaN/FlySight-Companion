@@ -2,6 +2,7 @@ package fr.hozakan.flysightcompanion.sessionmodule.business.controller.source
 
 import fr.hozakan.flysightcompanion.framework.math.computeGroundSpeed
 import fr.hozakan.flysightcompanion.framework.math.computeTotalSpeed
+import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.records.RecordFile
@@ -16,6 +17,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.time.ZoneOffset
@@ -32,6 +35,8 @@ class FileGnssSource(
     override val gnssFlow: SharedFlow<GnssData> = _gnssFlow.asSharedFlow()
 
     override val timeMutableSource: TimeMutableSource? = _timeMutableSource
+
+    override val deviceState: StateFlow<Pair<DeviceConnectionState, BatteryLevel>?> = MutableStateFlow(null)
     
     // Store all GNSS data points for batch processing
     private val _allGnssPoints = MutableStateFlow<List<GnssDataWithTimestamp>>(emptyList())

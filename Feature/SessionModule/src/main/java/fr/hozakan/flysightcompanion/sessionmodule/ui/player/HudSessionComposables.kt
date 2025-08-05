@@ -76,12 +76,14 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
+import fr.hozakan.flysightcompanion.composablecommons.BatteryLevelContainer
 import fr.hozakan.flysightcompanion.designsystem.theme.FlySightTheme
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.math.computeGlideRatio
 import fr.hozakan.flysightcompanion.framework.math.computeGroundSpeed
 import fr.hozakan.flysightcompanion.framework.math.computeInverseGlideRatio
 import fr.hozakan.flysightcompanion.model.ConfigFile
+import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.config.AlarmType
 import fr.hozakan.flysightcompanion.model.session.Flare
@@ -99,6 +101,7 @@ import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionEve
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.TimeMutableSource
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.VideoController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.ppc.PpcHudVideoControllerImpl
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.BatteryLevel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -925,6 +928,54 @@ private fun SessionMainContainer(
                             logoSize = 40.dp
                         )
                     }
+
+                    val deviceState by controller.deviceState.collectAsState()
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(24.dp),
+                        contentAlignment = Alignment.TopStart
+                    ) {
+                        deviceState?.let { (connectionState, batteryLevel) ->
+                            Row(
+                                modifier = Modifier
+                                    .background(
+                                        color = Color.Black,
+                                        shape = RoundedCornerShape(32.dp)
+                                    )
+                                    .padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                BatteryLevelContainer(batteryLevel = batteryLevel)
+                                if (connectionState != DeviceConnectionState.Connected) {
+                                    Spacer(modifier = Modifier.requiredWidth(8.dp))
+                                    Text(
+                                        text = when (connectionState) {
+                                            DeviceConnectionState.Connecting -> "Connecting"
+                                            DeviceConnectionState.ConnectionError -> "Error"
+                                            DeviceConnectionState.Disconnected -> "Disconnected"
+                                            else -> { "" }
+                                        },
+                                        color = Color.Red,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(48.dp),
+                        contentAlignment = Alignment.BottomStart
+                    ) {
+                        OrientableArrow(
+                            heading = heading,
+                            logoSize = 40.dp
+                        )
+                    }
                 }
             }
         } else if (controller.profile.showMap) {
@@ -1416,6 +1467,10 @@ class FakeSessionController(
     override val laneStartPoint: StateFlow<GnssData?> = MutableStateFlow(null)
     override val heading: StateFlow<Double> = MutableStateFlow(0.0)
     override val timeMutableSource: TimeMutableSource? = null
+    override val deviceState: StateFlow<Pair<DeviceConnectionState, BatteryLevel>?> =
+        MutableStateFlow(
+            DeviceConnectionState.Disconnected to 90
+        )
     override val videoController: VideoController = fakeVideoController
     override val distanceToCenter: StateFlow<Float?> = MutableStateFlow(null)
     override val referencePointDistances: StateFlow<Map<String, Double>> =

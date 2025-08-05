@@ -3,6 +3,7 @@ package fr.hozakan.flysightcompanion.sessionmodule.business.controller.flyblind
 import android.content.Context
 import fr.hozakan.flysightcompanion.audiomodule.AudioService
 import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
+import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.session.FlyBlindConfiguration
@@ -13,6 +14,7 @@ import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionCon
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.VideoController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.detector.ExitDetector
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.detector.MutableExitDetector
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.BatteryLevel
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.FileGnssSource
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.GnssSource
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.TimeMutableSource
@@ -57,6 +59,8 @@ class DefaultFlyBlindSessionController(
     override val gnssFlow: SharedFlow<GnssData> = gnssSource.gnssFlow
 
     override val timeMutableSource: TimeMutableSource? = gnssSource.timeMutableSource
+
+    override val deviceState: StateFlow<Pair<DeviceConnectionState, BatteryLevel>?> = gnssSource.deviceState
 
     private var recorder: Recorder? = if (gnssSource !is FileGnssSource) {
         TrackCsvRecorder(

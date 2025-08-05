@@ -1,9 +1,12 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.controller
 
+import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.session.profile.SessionType
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.BatteryLevel
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.TimeMutableSource
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 
 interface SessionController {
     val type: SessionType
@@ -12,6 +15,7 @@ interface SessionController {
 
     val timeMutableSource: TimeMutableSource?
 
+    val deviceState: StateFlow<Pair<DeviceConnectionState, BatteryLevel>?>
     val videoController: VideoController
 
     fun pause()

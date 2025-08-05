@@ -6,6 +6,7 @@ import fr.hozakan.flysightcompanion.externaldisplaymodule.DisplayService
 import fr.hozakan.flysightcompanion.framework.math.computeHeading
 import fr.hozakan.flysightcompanion.framework.math.computeSignedDistanceToLine
 import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
+import fr.hozakan.flysightcompanion.model.DeviceConnectionState
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.session.profile.Coordinate
@@ -23,6 +24,7 @@ import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionCon
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionEvent
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.TimeMutableSource
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.VideoController
+import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.BatteryLevel
 import fr.hozakan.flysightcompanion.sessionmodule.business.recorder.Recorder
 import fr.hozakan.flysightcompanion.sessionmodule.business.recorder.TrackCsvRecorder
 import kotlinx.coroutines.CoroutineName
@@ -77,6 +79,8 @@ class DefaultPpcHudSessionController(
 
     override val timeMutableSource: TimeMutableSource?
         get() = gnssSource.timeMutableSource
+
+    override val deviceState: StateFlow<Pair<DeviceConnectionState, BatteryLevel>?> = gnssSource.deviceState
 
     private val scope =
         CoroutineScope(SupervisorJob() + CoroutineName("DefaultPpcHudSessionController"))
