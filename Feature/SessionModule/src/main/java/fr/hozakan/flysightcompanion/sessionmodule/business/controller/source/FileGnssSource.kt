@@ -3,6 +3,7 @@ package fr.hozakan.flysightcompanion.sessionmodule.business.controller.source
 import fr.hozakan.flysightcompanion.framework.math.computeGroundSpeed
 import fr.hozakan.flysightcompanion.framework.math.computeTotalSpeed
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
+import fr.hozakan.flysightcompanion.model.DeviceMode
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.records.RecordFile
@@ -36,7 +37,7 @@ class FileGnssSource(
 
     override val timeMutableSource: TimeMutableSource? = _timeMutableSource
 
-    override val deviceState: StateFlow<Pair<DeviceConnectionState, BatteryLevel>?> = MutableStateFlow(null)
+    override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> = MutableStateFlow(null)
     
     // Store all GNSS data points for batch processing
     private val _allGnssPoints = MutableStateFlow<List<GnssDataWithTimestamp>>(emptyList())

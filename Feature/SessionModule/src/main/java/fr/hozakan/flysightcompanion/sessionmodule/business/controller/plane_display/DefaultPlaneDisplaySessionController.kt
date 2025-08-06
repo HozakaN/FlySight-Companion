@@ -1,6 +1,7 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display
 
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
+import fr.hozakan.flysightcompanion.model.DeviceMode
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.session.profile.SessionType
@@ -44,7 +45,7 @@ class DefaultPlaneDisplaySessionController(
 
     override val timeMutableSource: TimeMutableSource? = gnssSource.timeMutableSource
 
-    override val deviceState: StateFlow<Pair<DeviceConnectionState, BatteryLevel>?> = gnssSource.deviceState
+    override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> = gnssSource.deviceState
     override val gnssFlow: SharedFlow<GnssData> = gnssSource.gnssFlow
 
     override val videoController: VideoController = PlaneDisplayVideoController()

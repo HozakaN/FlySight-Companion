@@ -196,7 +196,6 @@ class PpcHudSessionComputationUnit(
                         val timeDiffMs = currentTimeMs - exitTimeMs
 
                         if (timeDiffMs >= timeAfterExitMs) {
-                            Timber.d("Hoz3 laneStartPoint set")
                             _laneStartPoint.value = gnssData
                             scope.launch {
                                 _sessionEvents.emit(SessionEvent.PerformanceLaneStart(gnssData))
@@ -237,7 +236,6 @@ class PpcHudSessionComputationUnit(
         reset()
         prevFlagHasFix = false
         // Reset lane start point
-        Timber.d("Hoz3 lateStart point reset")
         _laneStartPoint.value = null
 
 //         Feed the exit detector with these points

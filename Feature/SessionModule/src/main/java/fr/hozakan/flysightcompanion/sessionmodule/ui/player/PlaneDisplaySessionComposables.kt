@@ -61,7 +61,9 @@ import fr.hozakan.flysightcompanion.sessionmodule.business.controller.SessionCon
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.VideoController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.TimeMutableSource
 import fr.hozakan.flysightcompanion.designsystem.widget.FText
+import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
+import fr.hozakan.flysightcompanion.model.DeviceMode
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.PlaneDisplaySessionController
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.PlaneDisplaySessionController.Companion.ACRO_MAX_EXIT_HEIGHT
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.plane_display.PlaneDisplaySessionController.Companion.ACRO_MIN_EXIT_HEIGHT
@@ -370,8 +372,8 @@ private class FakePlaneDisplayController : PlaneDisplaySessionController {
     override val timeMutableSource: TimeMutableSource? = null
 
 
-    override val deviceState: StateFlow<Pair<DeviceConnectionState, BatteryLevel>?> =
-        MutableStateFlow(DeviceConnectionState.Connected to 0)
+    override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> =
+        MutableStateFlow(DeviceConnectionState.Connected to 0 triple DeviceMode.Active)
     override val videoController: VideoController = object : VideoController {
         override fun destroy() {}
     }

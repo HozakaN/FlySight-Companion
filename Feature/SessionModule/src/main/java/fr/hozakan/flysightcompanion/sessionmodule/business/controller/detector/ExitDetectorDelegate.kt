@@ -83,7 +83,6 @@ class ExitDetectorDelegate(
         currentGnssData = null
         confirmationJob?.cancel()
         confirmationJob = null
-        Timber.d("Hoz3 exitFound reset 1")
         _exitFound.value = null
     }
 
@@ -110,7 +109,6 @@ class ExitDetectorDelegate(
                 if (gnssData.velD * 100 > downThreshCmps) {
                     count = 1
                     currGnssData = gnssData
-                    Timber.d("Hoz3 direction is now down $gnssData")
                     direction = Direction.DOWN
                 } else if (gnssData.velD * 100 < upThreshCmps) {
                     count++
@@ -121,7 +119,6 @@ class ExitDetectorDelegate(
                     exitAltValid = false
                     confirmationJob?.cancel()
                     confirmationJob = null
-                    Timber.d("Hoz3 exitFound reset 2")
                     _exitFound.value = null
                 }
             }
@@ -131,7 +128,6 @@ class ExitDetectorDelegate(
                     if (count == 0) {
                         currGnssData = gnssData
                     }
-                    Timber.d("Hoz3 count++")
                     count++
                 } else if (gnssData.velD * 100 < upThreshCmps) {
                     count = 1
@@ -141,7 +137,6 @@ class ExitDetectorDelegate(
                 }
                 if (!exitAltValid && count > numDown) {
                     exitAltValid = true
-                    Timber.d("Hoz3 exitFound set ${currGnssData?.debugIndex}")
                     _exitFound.value = currGnssData
                     startConfirmationPolicy()
                 }
@@ -166,10 +161,7 @@ class ExitDetectorDelegate(
                     val currentData = currentGnssData
                     if (currentData == null || currentData.velD * 100 <= 2000) {
                         // Exit not confirmed - reset detection
-                        Timber.d("Hoz3 exit not confirmed, resetting detection. VelD: ${currentData?.velD}")
                         reset()
-                    } else {
-                        Timber.d("Hoz3 exit confirmed. VelD: ${currentData.velD}")
                     }
                 }
             }

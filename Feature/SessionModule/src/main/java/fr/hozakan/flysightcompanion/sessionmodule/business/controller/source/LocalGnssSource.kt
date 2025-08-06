@@ -4,6 +4,7 @@ import android.location.Location
 import fr.hozakan.flysightcompanion.locationmodule.LocationService
 import fr.hozakan.flysightcompanion.locationmodule.LocationServiceEvent
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
+import fr.hozakan.flysightcompanion.model.DeviceMode
 import fr.hozakan.flysightcompanion.model.GnssData
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -28,7 +29,7 @@ class LocalGnssSource(
 
     private val scope = CoroutineScope(SupervisorJob() + CoroutineName("LocalGnssSource") + Dispatchers.IO)
 
-    override val deviceState: StateFlow<Pair<DeviceConnectionState, BatteryLevel>?> =
+    override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> =
         MutableStateFlow(null)
     override val gnssFlow: SharedFlow<GnssData> = locationService
         .events

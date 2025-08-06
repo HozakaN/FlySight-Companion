@@ -82,8 +82,10 @@ import fr.hozakan.flysightcompanion.designsystem.widget.FText
 import fr.hozakan.flysightcompanion.framework.math.computeGlideRatio
 import fr.hozakan.flysightcompanion.framework.math.computeGroundSpeed
 import fr.hozakan.flysightcompanion.framework.math.computeInverseGlideRatio
+import fr.hozakan.flysightcompanion.framework.tooling.triple
 import fr.hozakan.flysightcompanion.model.ConfigFile
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
+import fr.hozakan.flysightcompanion.model.DeviceMode
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.config.AlarmType
 import fr.hozakan.flysightcompanion.model.session.Flare
@@ -937,29 +939,50 @@ private fun SessionMainContainer(
                             .padding(24.dp),
                         contentAlignment = Alignment.TopStart
                     ) {
-                        deviceState?.let { (connectionState, batteryLevel) ->
-                            Row(
-                                modifier = Modifier
-                                    .background(
-                                        color = Color.Black,
-                                        shape = RoundedCornerShape(32.dp)
-                                    )
-                                    .padding(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                BatteryLevelContainer(batteryLevel = batteryLevel)
-                                if (connectionState != DeviceConnectionState.Connected) {
-                                    Spacer(modifier = Modifier.requiredWidth(8.dp))
-                                    Text(
-                                        text = when (connectionState) {
-                                            DeviceConnectionState.Connecting -> "Connecting"
-                                            DeviceConnectionState.ConnectionError -> "Error"
-                                            DeviceConnectionState.Disconnected -> "Disconnected"
-                                            else -> { "" }
-                                        },
-                                        color = Color.Red,
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
+                        deviceState?.let { (connectionState, batteryLevel, deviceMode) ->
+                            Column {
+                                Row(
+                                    modifier = Modifier
+                                        .background(
+                                            color = Color.Black,
+                                            shape = RoundedCornerShape(32.dp)
+                                        )
+                                        .padding(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    BatteryLevelContainer(batteryLevel = batteryLevel)
+                                    if (connectionState != DeviceConnectionState.Connected) {
+                                        Spacer(modifier = Modifier.requiredWidth(8.dp))
+                                        Text(
+                                            text = when (connectionState) {
+                                                DeviceConnectionState.Connecting -> "Connecting"
+                                                DeviceConnectionState.ConnectionError -> "Error"
+                                                DeviceConnectionState.Disconnected -> "Disconnected"
+                                                else -> {
+                                                    ""
+                                                }
+                                            },
+                                            color = Color.Red,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                }
+                                if (deviceMode != DeviceMode.Active) {
+                                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .background(
+                                                color = Color.Black,
+                                                shape = RoundedCornerShape(32.dp)
+                                            )
+                                            .padding(8.dp)
+                                    ) {
+                                        Text(
+                                            text = deviceMode.name,
+                                            color = Color.Red,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -1467,9 +1490,9 @@ class FakeSessionController(
     override val laneStartPoint: StateFlow<GnssData?> = MutableStateFlow(null)
     override val heading: StateFlow<Double> = MutableStateFlow(0.0)
     override val timeMutableSource: TimeMutableSource? = null
-    override val deviceState: StateFlow<Pair<DeviceConnectionState, BatteryLevel>?> =
+    override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> =
         MutableStateFlow(
-            DeviceConnectionState.Disconnected to 90
+            DeviceConnectionState.Disconnected to 90 triple DeviceMode.Active
         )
     override val videoController: VideoController = fakeVideoController
     override val distanceToCenter: StateFlow<Float?> = MutableStateFlow(null)

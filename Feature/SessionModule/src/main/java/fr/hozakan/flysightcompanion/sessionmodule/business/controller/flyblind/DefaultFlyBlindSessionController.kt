@@ -4,6 +4,7 @@ import android.content.Context
 import fr.hozakan.flysightcompanion.audiomodule.AudioService
 import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
+import fr.hozakan.flysightcompanion.model.DeviceMode
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.session.FlyBlindConfiguration
@@ -60,7 +61,7 @@ class DefaultFlyBlindSessionController(
 
     override val timeMutableSource: TimeMutableSource? = gnssSource.timeMutableSource
 
-    override val deviceState: StateFlow<Pair<DeviceConnectionState, BatteryLevel>?> = gnssSource.deviceState
+    override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> = gnssSource.deviceState
 
     private var recorder: Recorder? = if (gnssSource !is FileGnssSource) {
         TrackCsvRecorder(

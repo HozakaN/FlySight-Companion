@@ -7,6 +7,7 @@ import fr.hozakan.flysightcompanion.framework.math.computeHeading
 import fr.hozakan.flysightcompanion.framework.math.computeSignedDistanceToLine
 import fr.hozakan.flysightcompanion.framework.service.versionning.AppVersionService
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
+import fr.hozakan.flysightcompanion.model.DeviceMode
 import fr.hozakan.flysightcompanion.model.FakeGnssData
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.session.profile.Coordinate
@@ -80,7 +81,7 @@ class DefaultPpcHudSessionController(
     override val timeMutableSource: TimeMutableSource?
         get() = gnssSource.timeMutableSource
 
-    override val deviceState: StateFlow<Pair<DeviceConnectionState, BatteryLevel>?> = gnssSource.deviceState
+    override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> = gnssSource.deviceState
 
     private val scope =
         CoroutineScope(SupervisorJob() + CoroutineName("DefaultPpcHudSessionController"))
@@ -166,12 +167,9 @@ class DefaultPpcHudSessionController(
                 sessionComputationUnit.exitDetected,
                 laneStartPoint
             ) { exitPoint, laneStartPoint ->
-                Timber.d("Hoz3 combine exitPoint = $exitPoint; laneStartPoint = $laneStartPoint")
                 if (exitPoint != null && laneStartPoint != null) {
-                    Timber.d("Hoz3 updatePerformanceLanes() 1")
                     updatePerformanceLanes()
                 } else {
-                    Timber.d("Hoz3 _performanceLanes.value = emptyList()")
                     _performanceLanes.value = emptyList()
                 }
             }
@@ -218,6 +216,7 @@ class DefaultPpcHudSessionController(
     }
 
     private fun eatData(gnssData: GnssData) {
+        Timber.d("Hoz3 data : ${gnssData.lat} ${gnssData.lon} ${gnssData.iTow} ${gnssData.gpsFix}")
         gnssPoints += gnssData
         if (gnssPoints.size > 500) {
             //drop after 500 points
@@ -232,7 +231,6 @@ class DefaultPpcHudSessionController(
 
     private fun updatePerformanceLanes() {
         if (_performanceLanes.value.isNotEmpty()) {
-            Timber.d("Hoz3 updatePerformanceLanes() returns")
             return
         }
 //        if (!profile.showPerformanceLaneInMap) {
@@ -277,12 +275,10 @@ class DefaultPpcHudSessionController(
     }
 
     private fun moveTo(gnssData: GnssData) {
-        Timber.d("Hoz3 moveTo called")
         val exitPoint = sessionComputationUnit.exitDetected.value
         // Use dateTime for time comparison instead of separate timestamp fields
         val currentTime = gnssData.iTow
         val exitTime = exitPoint?.iTow ?: run {
-            Timber.d("Hoz3 exitTime empty")
             _performanceLanes.value = emptyList()
             return
         }
@@ -290,14 +286,11 @@ class DefaultPpcHudSessionController(
         if (currentTime - exitTime < 0.toUInt()) {
             // Current time is before exit detection
 //            exitPoint = null
-            Timber.d("Hoz3 currentTime - exitTime < 0.toUInt() currentTime = $currentTime; exitTime = $exitTime, currentTime - exitTime = ${currentTime - exitTime}")
             _performanceLanes.value = emptyList() // Clear lines
         }
 
         val laneStartPoint = sessionComputationUnit.laneStartPoint.value
-        Timber.d("Hoz3 laneStartPoint called $laneStartPoint")
         val laneStartTime = laneStartPoint?.iTow ?: run {
-            Timber.d("Hoz3 lateStartPoint is null")
             _performanceLanes.value = emptyList()
             return
         }
@@ -305,11 +298,9 @@ class DefaultPpcHudSessionController(
         if (currentTime - laneStartTime < 0.toUInt()) {
             // Current time is before lane start
 //            laneStartPoint = null
-            Timber.d("Hoz3 currentTime - laneStartTime < 0.toUInt() currentTime = $currentTime; laneStartTime = $laneStartTime, currentTime - exitTime = ${currentTime - laneStartTime}")
             _performanceLanes.value = emptyList() // Clear lines
         }
 
-        Timber.d("Hoz3 updatePerformanceLanes() 2")
         updatePerformanceLanes()
         updateFlyerDistanceToPerformanceLanes(gnssData)
     }

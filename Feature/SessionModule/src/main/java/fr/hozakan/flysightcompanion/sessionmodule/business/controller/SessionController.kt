@@ -1,6 +1,7 @@
 package fr.hozakan.flysightcompanion.sessionmodule.business.controller
 
 import fr.hozakan.flysightcompanion.model.DeviceConnectionState
+import fr.hozakan.flysightcompanion.model.DeviceMode
 import fr.hozakan.flysightcompanion.model.GnssData
 import fr.hozakan.flysightcompanion.model.session.profile.SessionType
 import fr.hozakan.flysightcompanion.sessionmodule.business.controller.source.BatteryLevel
@@ -15,7 +16,7 @@ interface SessionController {
 
     val timeMutableSource: TimeMutableSource?
 
-    val deviceState: StateFlow<Pair<DeviceConnectionState, BatteryLevel>?>
+    val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?>
     val videoController: VideoController
 
     fun pause()
