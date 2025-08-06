@@ -83,6 +83,8 @@ class DefaultPpcHudSessionController(
 
     override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> = gnssSource.deviceState
 
+    override val hasFix: StateFlow<Boolean> = gnssSource.hasFix
+
     private val scope =
         CoroutineScope(SupervisorJob() + CoroutineName("DefaultPpcHudSessionController"))
     private var startJob: Job? = null

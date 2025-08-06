@@ -28,4 +28,6 @@ interface PpcHudSessionController : SessionController, ExitDetector, FlareDetect
     val timeInWindow: StateFlow<Float>
     val distanceInWindow: StateFlow<Int>
     val speedInWindow: StateFlow<Int>
+
+    val hasFix: StateFlow<Boolean>
 }

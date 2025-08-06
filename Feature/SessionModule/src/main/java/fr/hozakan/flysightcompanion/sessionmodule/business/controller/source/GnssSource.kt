@@ -12,4 +12,5 @@ interface GnssSource {
     val timeMutableSource: TimeMutableSource?
 
     val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?>
+    val hasFix: StateFlow<Boolean>
 }

@@ -38,6 +38,8 @@ class FileGnssSource(
     override val timeMutableSource: TimeMutableSource? = _timeMutableSource
 
     override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> = MutableStateFlow(null)
+
+    override val hasFix: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
     
     // Store all GNSS data points for batch processing
     private val _allGnssPoints = MutableStateFlow<List<GnssDataWithTimestamp>>(emptyList())

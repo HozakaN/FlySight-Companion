@@ -933,6 +933,8 @@ private fun SessionMainContainer(
 
                     val deviceState by controller.deviceState.collectAsState()
 
+                    val hasFix by controller.hasFix.collectAsState()
+
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -979,6 +981,23 @@ private fun SessionMainContainer(
                                     ) {
                                         Text(
                                             text = deviceMode.name,
+                                            color = Color.Red,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                }
+                                if (!hasFix) {
+                                    Spacer(modifier = Modifier.requiredHeight(8.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .background(
+                                                color = Color.Black,
+                                                shape = RoundedCornerShape(32.dp)
+                                            )
+                                            .padding(8.dp)
+                                    ) {
+                                        Text(
+                                            text = "NO FIX",
                                             color = Color.Red,
                                             style = MaterialTheme.typography.bodyMedium
                                         )
@@ -1494,6 +1513,7 @@ class FakeSessionController(
         MutableStateFlow(
             DeviceConnectionState.Disconnected to 90 triple DeviceMode.Active
         )
+    override val hasFix: StateFlow<Boolean> = MutableStateFlow(true)
     override val videoController: VideoController = fakeVideoController
     override val distanceToCenter: StateFlow<Float?> = MutableStateFlow(null)
     override val referencePointDistances: StateFlow<Map<String, Double>> =

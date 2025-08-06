@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
@@ -31,6 +32,9 @@ class LocalGnssSource(
 
     override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> =
         MutableStateFlow(null)
+
+    override val hasFix: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
+
     override val gnssFlow: SharedFlow<GnssData> = locationService
         .events
         .filterIsInstance<LocationServiceEvent.NewLocationEvent>()

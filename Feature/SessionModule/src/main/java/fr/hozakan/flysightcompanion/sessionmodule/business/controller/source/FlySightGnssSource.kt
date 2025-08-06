@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.stateIn
@@ -32,25 +33,23 @@ class FlySightGnssSource(
         CoroutineScope(SupervisorJob() + CoroutineName("FlySightGnssSource") + Dispatchers.IO)
 
     override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> =
-        combine(fsDevice.connectionState, fsDevice.batteryLevel, fsDevice.deviceMode) { connectionState, batteryLevel, mode ->
+        combine(
+            fsDevice.connectionState,
+            fsDevice.batteryLevel,
+            fsDevice.deviceMode
+        ) { connectionState, batteryLevel, mode ->
             connectionState to batteryLevel triple mode
         }
             .stateIn(scope, SharingStarted.WhileSubscribed(), null)
 
-//        combine(fsDevice.connectionState, fsDevice.batteryLevel) { connectionState, batteryLevel ->
-//        connectionState to batteryLevel
-//    }.state
-
-//    private val scope = CoroutineScope(SupervisorJob() + CoroutineName("FlySightGnssSource") + Dispatchers.IO)
-//
-//    init {
-//        if (fsDevice.connectionState == DeviceConnectionState.Disconnected) {
-//            scope.launch {
-//                if (fsDevice.connect()) {
-//                    fsDevice.
-//                }
-//            }
-//        }
-//    }
+    private var lastDataWithFix: GnssData? = null
+    override val hasFix: StateFlow<Boolean> = gnssFlow.map { gnssData ->
+        if (gnssData.gpsFix > 3) {
+            lastDataWithFix = gnssData
+        }
+        val lastFix = lastDataWithFix
+        lastFix != null && gnssData.iTow - lastFix.iTow < 2000u
+    }
+        .stateIn(scope, SharingStarted.WhileSubscribed(), false)
 
 }
