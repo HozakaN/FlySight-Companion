@@ -176,7 +176,7 @@ class ListFlySightDevicesViewModel @Inject constructor(
             val firmwareInfo =
                 firmwareCompatibilityMatrix.getFirmwareInfoByName(firmwareVersion)
             val indexOfFirmware: Int? = firmwareCompatibilityMatrix.firmwares.indexOf(firmwareInfo)
-            return indexOfFirmware != null && indexOfFirmware != 0
+            return indexOfFirmware != null && indexOfFirmware > 0
         }
 
         val phoneConfigNames = configFiles.map { it.name }
