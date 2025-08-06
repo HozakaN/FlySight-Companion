@@ -32,13 +32,14 @@ class FlySightGnssSource(
     private val scope =
         CoroutineScope(SupervisorJob() + CoroutineName("FlySightGnssSource") + Dispatchers.IO)
 
-    override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> =
+    override val deviceState: StateFlow<Pair<Pair<DeviceConnectionState, DeviceMode>, Pair<BatteryLevel, Boolean>>?> =
         combine(
             fsDevice.connectionState,
             fsDevice.batteryLevel,
-            fsDevice.deviceMode
-        ) { connectionState, batteryLevel, mode ->
-            connectionState to batteryLevel triple mode
+            fsDevice.deviceMode,
+            fsDevice.isCharging
+        ) { connectionState, batteryLevel, mode, isCharging ->
+            (connectionState to mode) to (batteryLevel to isCharging)
         }
             .stateIn(scope, SharingStarted.WhileSubscribed(), null)
 

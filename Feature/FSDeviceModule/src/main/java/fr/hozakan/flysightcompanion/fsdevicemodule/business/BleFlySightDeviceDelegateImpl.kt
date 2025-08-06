@@ -79,6 +79,7 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 import java.util.concurrent.CancellationException
 import kotlin.coroutines.resume
+import kotlin.math.max
 import kotlin.math.min
 
 
@@ -114,6 +115,10 @@ class BleFlySightDeviceDelegateImpl(
         }
     private var scope: CoroutineScope? = null
     private var isNewConnection = true
+    private var previousBatteryLevel: Int? = null
+    private var batteryHistory = mutableListOf<Int>()
+//    private var batteryCounter = 0
+    private val maxHistorySize = 100
 
     private var batteryCharacteristic: BluetoothGattCharacteristic? = null
     private var rxCharacteristic: BluetoothGattCharacteristic? = null
@@ -150,6 +155,8 @@ class BleFlySightDeviceDelegateImpl(
     private val _gnssFeed = MutableSharedFlow<GnssData>()
     override val gnssFeed: SharedFlow<GnssData> = _gnssFeed.asSharedFlow()
 
+    private val _isCharging = MutableStateFlow(false)
+    override val isCharging: StateFlow<Boolean> = _isCharging.asStateFlow()
     private val _batteryLevel = MutableStateFlow(100)
     override val batteryLevel: StateFlow<Int> = _batteryLevel.asStateFlow()
 
@@ -330,7 +337,14 @@ class BleFlySightDeviceDelegateImpl(
                     }
 
                     FlySightCharacteristic.BATTERY.uuid -> {
-                        _batteryLevel.value = min(_batteryLevel.value, value[0].toInt())
+                        val newBatteryLevel = value[0].toInt()
+                        val isCharging = detectCharging(newBatteryLevel)
+                        _isCharging.value = isCharging
+                        _batteryLevel.value = /*if (isCharging) {*/
+//                            max(_batteryLevel.value, newBatteryLevel)
+//                        } else {
+                            min(_batteryLevel.value, newBatteryLevel)
+//                        }
                     }
 
                     else -> {}
@@ -338,6 +352,62 @@ class BleFlySightDeviceDelegateImpl(
             }
         }
     )
+
+    private fun detectCharging(batteryLevel: Int): Boolean {
+//        batteryCounter++
+//        if (batteryCounter.mod(5) != 0) return _isCharging.value
+        
+        // Add to history and maintain max size
+        batteryHistory.add(batteryLevel)
+        if (batteryHistory.size > maxHistorySize) {
+            batteryHistory.removeAt(0)
+        }
+        
+        // Need at least 3 readings to determine trend
+        if (batteryHistory.size < 3) {
+            return _isCharging.value
+        }
+        
+        // Analyze trend over recent history
+        val chargingTrend = analyzeChargingTrend()
+        
+        Timber.d("Hoz3 battery history: $batteryHistory, trend: $chargingTrend")
+        return chargingTrend
+    }
+    
+    private fun analyzeChargingTrend(): Boolean {
+        if (batteryHistory.size < 3) return false
+        
+        // Count positive, negative, and stable changes
+        var positiveChanges = 0
+        var negativeChanges = 0
+        var stableCount = 0
+        
+        for (i in 1 until batteryHistory.size) {
+            val change = batteryHistory[i] - batteryHistory[i - 1]
+            when {
+                change > 0 -> positiveChanges++
+                change < 0 -> negativeChanges++
+                else -> stableCount++
+            }
+        }
+        
+        val totalChanges = positiveChanges + negativeChanges + stableCount
+        
+        // Consider charging if:
+        // 1. More than 60% of changes are positive or stable
+        // 2. AND positive changes outnumber negative changes
+        // 3. OR current level is higher than the average of first half of history
+        val positiveRatio = (positiveChanges + stableCount).toFloat() / totalChanges
+        val hasUpwardTrend = positiveChanges > negativeChanges
+        
+        // Additional check: compare current level to early readings
+        val earlyAverage = batteryHistory.take(batteryHistory.size / 2).average()
+        val recentAverage = batteryHistory.takeLast(batteryHistory.size / 2).average()
+        val showsGrowth = recentAverage > earlyAverage
+        
+        return (positiveRatio > 0.6f && hasUpwardTrend) || showsGrowth
+    }
 
     private fun handleNewMode(value: ByteArray) {
         val mode = DeviceMode.fromValue(value[0].toInt())

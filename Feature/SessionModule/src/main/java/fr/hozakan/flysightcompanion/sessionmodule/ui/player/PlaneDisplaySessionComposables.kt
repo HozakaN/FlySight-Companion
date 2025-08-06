@@ -372,8 +372,8 @@ private class FakePlaneDisplayController : PlaneDisplaySessionController {
     override val timeMutableSource: TimeMutableSource? = null
 
 
-    override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> =
-        MutableStateFlow(DeviceConnectionState.Connected to 0 triple DeviceMode.Active)
+    override val deviceState: StateFlow<Pair<Pair<DeviceConnectionState, DeviceMode>, Pair<BatteryLevel, Boolean>>?> =
+        MutableStateFlow((DeviceConnectionState.Connected to DeviceMode.Active) to (0 to true))
     override val videoController: VideoController = object : VideoController {
         override fun destroy() {}
     }

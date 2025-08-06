@@ -941,7 +941,13 @@ private fun SessionMainContainer(
                             .padding(24.dp),
                         contentAlignment = Alignment.TopStart
                     ) {
-                        deviceState?.let { (connectionState, batteryLevel, deviceMode) ->
+
+                        deviceState?.let { (pair1, pair2) ->
+                            val connectionState = pair1.first
+                            val deviceMode = pair1.second
+                            val batteryLevel = pair2.first
+                            val isCharging = pair2.second
+
                             Column {
                                 Row(
                                     modifier = Modifier
@@ -952,7 +958,7 @@ private fun SessionMainContainer(
                                         .padding(8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    BatteryLevelContainer(batteryLevel = batteryLevel)
+                                    BatteryLevelContainer(batteryLevel = batteryLevel, isCharging = isCharging)
                                     if (connectionState != DeviceConnectionState.Connected) {
                                         Spacer(modifier = Modifier.requiredWidth(8.dp))
                                         Text(
@@ -1509,10 +1515,8 @@ class FakeSessionController(
     override val laneStartPoint: StateFlow<GnssData?> = MutableStateFlow(null)
     override val heading: StateFlow<Double> = MutableStateFlow(0.0)
     override val timeMutableSource: TimeMutableSource? = null
-    override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> =
-        MutableStateFlow(
-            DeviceConnectionState.Disconnected to 90 triple DeviceMode.Active
-        )
+    override val deviceState:StateFlow<Pair<Pair<DeviceConnectionState, DeviceMode>, Pair<BatteryLevel, Boolean>>?> =
+        MutableStateFlow((DeviceConnectionState.Disconnected to DeviceMode.Active) to (90 to false))
     override val hasFix: StateFlow<Boolean> = MutableStateFlow(true)
     override val videoController: VideoController = fakeVideoController
     override val distanceToCenter: StateFlow<Float?> = MutableStateFlow(null)

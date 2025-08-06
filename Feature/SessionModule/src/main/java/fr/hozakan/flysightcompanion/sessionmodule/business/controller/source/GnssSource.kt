@@ -11,6 +11,6 @@ interface GnssSource {
     val gnssFlow: SharedFlow<GnssData>
     val timeMutableSource: TimeMutableSource?
 
-    val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?>
+    val deviceState: StateFlow<Pair<Pair<DeviceConnectionState, DeviceMode>, Pair<BatteryLevel, Boolean>>?>
     val hasFix: StateFlow<Boolean>
 }

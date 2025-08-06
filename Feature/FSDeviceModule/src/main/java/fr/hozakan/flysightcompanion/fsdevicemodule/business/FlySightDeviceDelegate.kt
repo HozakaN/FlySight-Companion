@@ -18,6 +18,7 @@ interface FlySightDeviceDelegate {
     val isBle: Boolean
     val connectionState: StateFlow<DeviceConnectionState>
     val deviceMode: StateFlow<DeviceMode>
+    val isCharging: StateFlow<Boolean>
     val batteryLevel: StateFlow<Int>
     val configFile: StateFlow<LoadingState<ConfigFile>>
     val rawConfigFile: StateFlow<FileState>

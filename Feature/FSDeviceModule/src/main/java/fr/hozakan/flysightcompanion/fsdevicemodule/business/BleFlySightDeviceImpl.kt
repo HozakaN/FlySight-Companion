@@ -20,6 +20,7 @@ class BleFlySightDeviceImpl(
     override val address: String = delegate.address
     override val connectionState: StateFlow<DeviceConnectionState> = delegate.connectionState
     override val deviceMode: StateFlow<DeviceMode> = delegate.deviceMode
+    override val isCharging: StateFlow<Boolean> = delegate.isCharging
     override val batteryLevel: StateFlow<Int> = delegate.batteryLevel
     override val configFile: StateFlow<LoadingState<ConfigFile>> = delegate.configFile
     override val rawConfigFile: StateFlow<FileState> = delegate.rawConfigFile

@@ -566,7 +566,8 @@ fun FlySightDeviceItem(
                             if (mode == DeviceMode.Active) {
                                 Spacer(modifier = Modifier.requiredWidth(8.dp))
                                 val batteryLevel by device.batteryLevel.collectAsState()
-                                BatteryLevelContainer(batteryLevel = batteryLevel)
+                                val isCharging by device.isCharging.collectAsState()
+                                BatteryLevelContainer(batteryLevel = batteryLevel, isCharging = isCharging)
                             }
                             if (device.hasFirmwareUpdate && device.canShowFirmwareWarning) {
                                 Spacer(modifier = Modifier.requiredWidth(8.dp))

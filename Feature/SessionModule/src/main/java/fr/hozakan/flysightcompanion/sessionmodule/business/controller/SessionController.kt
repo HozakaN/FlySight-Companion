@@ -16,7 +16,7 @@ interface SessionController {
 
     val timeMutableSource: TimeMutableSource?
 
-    val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?>
+    val deviceState: StateFlow<Pair<Pair<DeviceConnectionState, DeviceMode>, Pair<BatteryLevel, Boolean>>?>
     val videoController: VideoController
 
     fun pause()

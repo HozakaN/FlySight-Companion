@@ -61,7 +61,7 @@ class DefaultFlyBlindSessionController(
 
     override val timeMutableSource: TimeMutableSource? = gnssSource.timeMutableSource
 
-    override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> = gnssSource.deviceState
+    override val deviceState: StateFlow<Pair<Pair<DeviceConnectionState, DeviceMode>, Pair<BatteryLevel, Boolean>>?> = gnssSource.deviceState
 
     private var recorder: Recorder? = if (gnssSource !is FileGnssSource) {
         TrackCsvRecorder(

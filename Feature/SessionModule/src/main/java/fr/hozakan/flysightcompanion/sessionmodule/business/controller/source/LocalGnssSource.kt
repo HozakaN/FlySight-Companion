@@ -30,7 +30,7 @@ class LocalGnssSource(
 
     private val scope = CoroutineScope(SupervisorJob() + CoroutineName("LocalGnssSource") + Dispatchers.IO)
 
-    override val deviceState: StateFlow<Triple<DeviceConnectionState, BatteryLevel, DeviceMode>?> =
+    override val deviceState: StateFlow<Pair<Pair<DeviceConnectionState, DeviceMode>, Pair<BatteryLevel, Boolean>>?> =
         MutableStateFlow(null)
 
     override val hasFix: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()

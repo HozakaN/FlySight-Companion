@@ -19,7 +19,10 @@ import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun BatteryLevelContainer(batteryLevel: Int) {
+fun BatteryLevelContainer(
+    batteryLevel: Int,
+    isCharging: Boolean
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -81,6 +84,19 @@ fun BatteryLevelContainer(batteryLevel: Int) {
                 }
             }
         }
+//        if (isCharging) {
+//            Spacer(modifier = Modifier.requiredWidth(4.dp))
+//            Box(
+//                modifier = Modifier.requiredSize(width = 12.dp, height = 16.dp),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Default.ElectricBolt,
+//                    contentDescription = "Charging",
+//                    tint = Color.Yellow
+//                )
+//            }
+//        }
         Spacer(modifier = Modifier.requiredWidth(4.dp))
         Text(
             text = "$batteryLevel%",
