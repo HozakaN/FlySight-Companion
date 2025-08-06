@@ -218,7 +218,6 @@ class DefaultPpcHudSessionController(
     }
 
     private fun eatData(gnssData: GnssData) {
-        Timber.d("Hoz3 data : ${gnssData.lat} ${gnssData.lon} ${gnssData.iTow} ${gnssData.gpsFix}")
         gnssPoints += gnssData
         if (gnssPoints.size > 500) {
             //drop after 500 points

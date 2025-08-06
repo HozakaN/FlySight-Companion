@@ -1111,6 +1111,7 @@ class BleFlySightDeviceDelegateImpl(
         _configFile.value = LoadingState.Idle
 //        _logs.value = emptyList()
         _rawConfigFile.value = FileState.Nothing
+        _batteryLevel.value = 100
         scope?.cancel()
         scope = null
         gatt = null
