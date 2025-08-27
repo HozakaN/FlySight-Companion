@@ -19,6 +19,12 @@ class DefaultConfigEncoder : ConfigEncoder {
                 $DESCRIPTION_INDICATOR:           ${configFile.description}
                 $KIND_INDICATOR:                  ${configFile.group}
 
+                ; Sensors settings
+                
+                Enable_Baro: 0 ; Disable barometer
+                Enable_Hum:  0 ; Disable humidity sensor
+                Enable_Mag:  0 ; Disable magnetometer
+
                 ; GPS settings
 
             """.trimIndent()

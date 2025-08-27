@@ -339,6 +339,7 @@ class BleFlySightDeviceDelegateImpl(
                     FlySightCharacteristic.BATTERY.uuid -> {
                         val newBatteryLevel = value[0].toInt()
                         val isCharging = detectCharging(newBatteryLevel)
+                        Timber.d("Hoz4 charge received : $newBatteryLevel")
                         _isCharging.value = isCharging
                         _batteryLevel.value = /*if (isCharging) {*/
 //                            max(_batteryLevel.value, newBatteryLevel)
@@ -653,11 +654,14 @@ class BleFlySightDeviceDelegateImpl(
             while (_connectionState.value == DeviceConnectionState.Connected) {
                 delay(14_000)
                 val ping = pingDevice()
+                Timber.d("Hoz5 ping $ping")
                 _ping.emit(ping)
+                Timber.d("Hoz5 ping $ping emitted")
                 if (!ping) {
                     log("Device $name not responding to pings")
-                    disconnect()
-                    return@launch
+                    Timber.d("Hoz3 Device $name not responding to pings")
+//                    disconnect()
+//                    return@launch
                 }
             }
         }
@@ -665,6 +669,7 @@ class BleFlySightDeviceDelegateImpl(
 
     private suspend fun pingDevice(): Boolean {
         log("pinging device ${bluetoothDevice.address}")
+        Timber.d("Hoz4 pinging device ${bluetoothDevice.address}")
         val gatt = this.gatt ?: return false
         val rx = this.rxCharacteristic ?: return false
 
@@ -678,6 +683,7 @@ class BleFlySightDeviceDelegateImpl(
             pingJob.ping()
         } catch (e: Exception) {
             log("Error pinging device : $e")
+            Timber.d("Hoz4 Error pinging device : $e")
             false
         }
     }
@@ -1149,6 +1155,7 @@ class BleFlySightDeviceDelegateImpl(
 
     @SuppressLint("MissingPermission")
     override suspend fun disconnect(): Boolean {
+        Timber.d("Hoz3 disconnect called scope = $scope")
         if (scope == null) {
             return false
         }
