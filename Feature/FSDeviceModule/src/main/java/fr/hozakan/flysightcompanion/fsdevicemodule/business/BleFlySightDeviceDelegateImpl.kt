@@ -157,6 +157,8 @@ class BleFlySightDeviceDelegateImpl(
 
     private val _isCharging = MutableStateFlow(false)
     override val isCharging: StateFlow<Boolean> = _isCharging.asStateFlow()
+
+    private val _cachedBatteryLevel = MutableStateFlow(100)
     private val _batteryLevel = MutableStateFlow(100)
     override val batteryLevel: StateFlow<Int> = _batteryLevel.asStateFlow()
 
@@ -341,11 +343,7 @@ class BleFlySightDeviceDelegateImpl(
                         val isCharging = detectCharging(newBatteryLevel)
                         Timber.d("Hoz4 charge received : $newBatteryLevel")
                         _isCharging.value = isCharging
-                        _batteryLevel.value = /*if (isCharging) {*/
-//                            max(_batteryLevel.value, newBatteryLevel)
-//                        } else {
-                            min(_batteryLevel.value, newBatteryLevel)
-//                        }
+                        _cachedBatteryLevel.value = newBatteryLevel
                     }
 
                     else -> {}
@@ -565,6 +563,7 @@ class BleFlySightDeviceDelegateImpl(
 //                    else -> {}
 //                }
                 startPingSystem()
+                startBatteryCacheSystem()
                 if (mode != DeviceMode.Sleep) {
                     awaitDeviceModeSleep()
                 }
@@ -646,6 +645,16 @@ class BleFlySightDeviceDelegateImpl(
             )
 
             fetcher.listDirectory(directoryPath)
+        }
+    }
+
+    private fun startBatteryCacheSystem() {
+        scope?.launch(Dispatchers.IO) {
+            _batteryLevel.value = _cachedBatteryLevel.value
+            while (_connectionState.value == DeviceConnectionState.Connected) {
+                delay(10_000)
+                _batteryLevel.value = _cachedBatteryLevel.value
+            }
         }
     }
 
@@ -1188,6 +1197,7 @@ class BleFlySightDeviceDelegateImpl(
         _configFile.value = LoadingState.Idle
 //        _logs.value = emptyList()
         _rawConfigFile.value = FileState.Nothing
+        _cachedBatteryLevel.value = 100
         _batteryLevel.value = 100
         scope?.cancel()
         scope = null
